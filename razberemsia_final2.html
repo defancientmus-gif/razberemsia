@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0c1830">
+<title>Разберёмся</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --g1:rgba(255,255,255,0.12);--g2:rgba(255,255,255,0.22);--g3:rgba(255,255,255,0.34);
+  --bd:rgba(255,255,255,0.32);--bd2:rgba(255,255,255,0.16);
+  --w:rgba(255,255,255,1);--w9:rgba(255,255,255,0.92);--w7:rgba(255,255,255,0.72);--w4:rgba(255,255,255,0.42);
+  --gold:rgba(255,210,100,0.95);--r:22px;--rsm:14px;
+  --sh:0 8px 32px rgba(0,0,0,0.18);--sh2:0 4px 16px rgba(0,0,0,0.12);
+}
+html{font-size:17px;}
+body{font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;color:var(--w);}
+#bgc{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
+.fogw{position:fixed;inset:0;z-index:1;pointer-events:none;}
+.fog{position:absolute;left:-20%;right:-20%;border-radius:50%;filter:blur(40px);}
+.f1{bottom:5%;height:30%;background:radial-gradient(ellipse,rgba(255,240,180,0.28) 0%,transparent 70%);animation:fd1 28s ease-in-out infinite;}
+.f2{bottom:12%;height:22%;background:radial-gradient(ellipse,rgba(200,230,180,0.2) 0%,transparent 70%);animation:fd2 22s ease-in-out infinite;}
+.f3{bottom:20%;height:18%;background:radial-gradient(ellipse,rgba(255,220,150,0.15) 0%,transparent 70%);animation:fd1 35s ease-in-out infinite reverse;}
+@keyframes fd1{0%,100%{transform:translateX(0)}33%{transform:translateX(3%)}66%{transform:translateX(-2%)}}
+@keyframes fd2{0%,100%{transform:translateX(0)}40%{transform:translateX(-4%)}}
+.app{position:relative;z-index:10;max-width:500px;margin:0 auto;min-height:100vh;padding-bottom:24px;}
+
+/* ── ШАПКА ── */
+.top{padding:15px 18px 13px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;background:rgba(20,30,10,0.3);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid rgba(255,220,120,0.15);}
+.logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--w);letter-spacing:.8px;}
+.logo em{color:var(--gold);font-style:italic;}
+.top-r{display:flex;gap:8px;align-items:center;}
+.ibtn{width:44px;height:44px;background:var(--g1);border:1px solid var(--bd2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-appearance:none;transition:all .15s;}
+.ibtn:active{background:var(--g3);transform:scale(.9);}
+.ibtn.lit{background:rgba(255,200,60,0.25);border-color:rgba(255,200,60,0.4);}
+
+/* ── МУЗЫКАЛЬНАЯ ПАНЕЛЬ ── */
+.mpanel{position:fixed;top:70px;right:14px;z-index:60;background:rgba(15,25,10,0.82);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(255,220,120,0.2);border-radius:18px;padding:12px;width:210px;box-shadow:var(--sh);display:none;animation:popIn .2s ease;}
+.mpanel.open{display:block;}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(-8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.mpt{font-size:11px;font-weight:700;color:var(--w4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.mtr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;transition:background .15s;margin-bottom:4px;border:1px solid transparent;}
+.mtr:active{background:var(--g2);}
+.mtr.on{background:rgba(255,200,60,0.15);border-color:rgba(255,200,60,0.25);}
+.mti{font-size:20px;flex-shrink:0;}
+.mtn{font-size:14px;font-weight:600;color:var(--w9);}
+.mts{font-size:11px;color:var(--w4);margin-top:1px;}
+.mvol{margin-top:10px;padding:0 4px;}
+.mvl{font-size:11px;color:var(--w4);margin-bottom:5px;}
+input[type=range]{width:100%;accent-color:rgba(255,200,60,0.8);}
+
+/* ── ЭКРАНЫ ── */
+.screen{display:none;padding:16px 18px;}
+.screen.on{display:block;animation:fUp .28s ease;}
+@keyframes fUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── СТЕКЛО ── */
+.gl{background:var(--g1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);}
+.glm{background:var(--g2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);}
+
+/* ── ЭКРАН ВХОДА ── */
+.lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:20px;text-align:center;}
+.lock-ico{font-size:64px;margin-bottom:20px;animation:lockFloat 3s ease-in-out infinite;}
+@keyframes lockFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.lock-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--w);margin-bottom:10px;}
+.lock-sub{font-size:15px;color:var(--w7);margin-bottom:30px;line-height:1.6;}
+.lock-box{width:100%;max-width:320px;}
+.lock-in{width:100%;background:var(--g2);border:1px solid var(--bd);border-radius:16px;padding:16px 20px;font-size:20px;font-family:'Nunito',sans-serif;color:var(--w);outline:none;text-align:center;letter-spacing:4px;margin-bottom:12px;min-height:58px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+.lock-in::placeholder{letter-spacing:1px;font-size:16px;color:var(--w4);}
+.lock-btn{width:100%;background:rgba(255,190,50,0.35);color:rgba(255,230,120,0.98);border:1px solid rgba(255,190,50,0.45);border-radius:16px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;min-height:56px;-webkit-appearance:none;margin-bottom:10px;}
+.lock-btn:active{background:rgba(255,190,50,0.55);}
+.lock-btn2{width:100%;background:transparent;color:var(--w4);border:1px solid var(--bd2);border-radius:16px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Nunito',sans-serif;min-height:50px;-webkit-appearance:none;}
+.lock-btn2:active{background:var(--g2);}
+.lock-err{font-size:14px;color:rgba(255,150,140,0.9);margin-top:8px;min-height:20px;}
+.lock-hint{font-size:13px;color:var(--w4);margin-top:16px;line-height:1.6;}
+
+/* ── ПРИВЕТСТВИЕ ── */
+.greeting{padding:26px 24px 22px;margin-bottom:14px;text-align:center;}
+.gtm{font-size:12px;font-weight:600;color:var(--w4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
+.gnm{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--w);line-height:1.2;margin-bottom:10px;text-shadow:0 2px 20px rgba(0,0,0,0.3);}
+.gsb{font-size:15px;color:var(--w7);line-height:1.65;}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(120,220,140,0.9);display:inline-block;margin-right:7px;animation:dp 2s ease-in-out infinite;vertical-align:middle;}
+@keyframes dp{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.4);opacity:1;box-shadow:0 0 8px rgba(120,220,140,0.6)}}
+
+/* ── АЛЕРТ ── */
+.alert{padding:16px 20px;margin-bottom:13px;display:flex;align-items:center;gap:15px;cursor:pointer;min-height:66px;background:rgba(255,195,60,0.18);border:1px solid rgba(255,210,80,0.35);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .12s;}
+.alert:active{transform:scale(.98);}
+.ali{font-size:28px;flex-shrink:0;}
+.alt{font-size:16px;font-weight:700;color:rgba(255,235,140,0.98);}
+.als{font-size:13px;color:rgba(255,210,100,0.7);margin-top:3px;}
+
+/* ── КАРТОЧКИ МЕНЮ ── */
+.cards{display:flex;flex-direction:column;gap:10px;}
+.card{padding:19px 20px;display:flex;align-items:center;gap:17px;cursor:pointer;min-height:78px;width:100%;text-align:left;font-family:'Nunito',sans-serif;background:var(--g1);border:1px solid var(--bd2);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--sh2);transition:all .15s;-webkit-appearance:none;}
+.card:active{transform:scale(.97);background:var(--g2);}
+.cico{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.ct{font-size:18px;font-weight:700;color:var(--w);}
+.cs{font-size:13px;color:var(--w7);margin-top:4px;}
+.ca{margin-left:auto;font-size:22px;color:var(--w4);}
+.sos{padding:19px 20px;display:flex;align-items:center;gap:17px;cursor:pointer;min-height:78px;width:100%;text-align:left;font-family:'Nunito',sans-serif;background:rgba(180,40,40,0.2);border:1px solid rgba(255,100,90,0.3);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin-top:4px;transition:transform .12s;-webkit-appearance:none;}
+.sos:active{transform:scale(.97);}
+.sost{font-size:18px;font-weight:800;color:rgba(255,185,180,0.98);}
+.soss{font-size:13px;color:rgba(255,155,148,0.7);margin-top:3px;}
+
+/* ── КНОПКА НАЗАД ── */
+.brow{margin-bottom:16px;}
+.bbtn{display:flex;align-items:center;gap:12px;background:var(--g2);border:1px solid var(--bd);border-radius:var(--r);padding:15px 20px;width:100%;cursor:pointer;font-family:'Nunito',sans-serif;-webkit-appearance:none;transition:all .12s;min-height:60px;box-shadow:var(--sh2);}
+.bbtn:active{transform:scale(.98);background:var(--g3);}
+.barr{font-size:28px;color:var(--gold);line-height:1;flex-shrink:0;}
+.blbl{font-size:17px;font-weight:700;color:var(--w);}
+.bhnt{font-size:12px;color:var(--w4);margin-top:2px;}
+
+/* ── ЭЛЕМЕНТЫ СПИСКА ── */
+.item-card{background:var(--g1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:10px;position:relative;}
+.il{font-size:11px;font-weight:700;color:var(--w4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.iv{font-size:20px;font-weight:700;color:var(--w);}
+.ib{font-size:15px;color:var(--w9);line-height:1.7;margin-top:6px;}
+.item-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.sbtn{background:rgba(255,255,255,0.12);color:var(--w9);border:1px solid var(--bd2);border-radius:11px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;min-height:42px;-webkit-appearance:none;transition:background .12s;}
+.sbtn:active{background:rgba(255,255,255,0.24);}
+.sbtn.del{background:rgba(200,50,50,0.18);color:rgba(255,150,140,0.9);border-color:rgba(200,50,50,0.25);}
+.sbtn.del:active{background:rgba(200,50,50,0.32);}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:50px;padding:3px 12px;margin-top:10px;background:rgba(255,220,100,0.15);color:rgba(255,220,100,0.8);border:1px solid rgba(255,220,100,0.2);}
+
+/* ── НАПОМИНАНИЯ ── */
+.rem-card{background:var(--g1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);padding:16px 20px;margin-bottom:10px;display:flex;align-items:flex-start;gap:15px;}
+.rdot{width:13px;height:13px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.rt{font-size:17px;font-weight:700;color:var(--w);}
+.rw{font-size:13px;color:var(--w7);margin-top:4px;}
+.sms{display:inline-block;background:rgba(80,210,130,0.2);color:rgba(140,255,180,0.9);border:1px solid rgba(80,210,130,0.25);font-size:11px;font-weight:700;border-radius:50px;padding:2px 9px;margin-left:7px;vertical-align:middle;}
+
+/* ── КОНТАКТЫ ── */
+.con-card{background:var(--g1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);padding:15px 20px;margin-bottom:10px;display:flex;align-items:center;gap:15px;}
+.ava{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--w);flex-shrink:0;}
+.cn{font-size:17px;font-weight:700;color:var(--w);}
+.cp{font-size:13px;color:var(--w7);margin-top:3px;}
+.call-btn{margin-left:auto;background:rgba(80,200,120,0.2);color:rgba(140,255,170,0.95);border:1px solid rgba(80,200,120,0.3);border-radius:13px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;min-height:48px;-webkit-appearance:none;}
+.call-btn:active{background:rgba(80,200,120,0.38);}
+
+/* ── КНОПКА ДОБАВИТЬ ── */
+.add-btn{background:transparent;border:1.5px dashed rgba(255,255,255,0.2);border-radius:var(--r);padding:16px;width:100%;font-size:15px;font-weight:600;color:var(--w4);cursor:pointer;font-family:'Nunito',sans-serif;min-height:56px;margin-top:4px;-webkit-appearance:none;transition:all .15s;}
+.add-btn:active{background:var(--g2);color:var(--w);}
+
+/* ── ПУСТОЙ СПИСОК ── */
+.empty{text-align:center;padding:40px 20px;color:var(--w4);}
+.empty-ico{font-size:48px;margin-bottom:12px;opacity:.6;}
+.empty-t{font-size:17px;font-weight:600;margin-bottom:6px;}
+.empty-s{font-size:14px;line-height:1.6;}
+
+/* ── ЧАТ ── */
+.chatb{overflow:hidden;}
+.chtop{padding:15px 18px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--bd2);background:rgba(0,0,0,0.1);}
+.chav{width:46px;height:46px;border-radius:50%;background:rgba(255,220,100,0.15);border:2px solid rgba(255,220,100,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.chnm{font-size:16px;font-weight:700;color:var(--w);}
+.chst{font-size:12px;color:rgba(140,255,170,0.8);font-weight:600;margin-top:2px;}
+.msgs{padding:14px;min-height:260px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:13px;background:rgba(0,0,0,0.1);}
+.msg{display:flex;gap:9px;}
+.msg.u{flex-direction:row-reverse;}
+.bub{max-width:80%;padding:12px 16px;font-size:15px;line-height:1.6;border-radius:20px;}
+.msg.ai .bub{background:rgba(255,255,255,0.15);color:var(--w);border:1px solid rgba(255,255,255,0.18);border-radius:4px 20px 20px 20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.msg.u .bub{background:rgba(255,190,60,0.25);color:var(--w);border:1px solid rgba(255,200,80,0.25);border-radius:20px 4px 20px 20px;}
+.mav{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px;}
+.typing{display:flex;gap:5px;align-items:center;padding:13px 17px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.18);border-radius:4px 20px 20px 20px;width:fit-content;}
+.typing span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.65);animation:tp 1.2s ease-in-out infinite;}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.qqs{padding:11px 14px;display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--bd2);background:rgba(0,0,0,0.08);}
+.qq{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--w9);cursor:pointer;font-family:'Nunito',sans-serif;min-height:40px;-webkit-appearance:none;}
+.qq:active{background:rgba(255,255,255,0.24);}
+.crow{padding:12px 14px;display:flex;gap:9px;border-top:1px solid var(--bd2);background:rgba(0,0,0,0.1);}
+.cin{flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:11px 14px;font-size:15px;font-family:'Nunito',sans-serif;color:var(--w);outline:none;resize:none;min-height:46px;max-height:110px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.cin::placeholder{color:var(--w4);}
+.cin:focus{border-color:rgba(255,210,80,0.5);}
+.send{background:rgba(255,200,60,0.28);color:rgba(255,235,150,0.98);border:1px solid rgba(255,200,60,0.38);border-radius:14px;padding:11px 15px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;min-width:84px;min-height:46px;-webkit-appearance:none;}
+.send:active{background:rgba(255,200,60,0.48);}
+.send:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ── SETUP AI ── */
+.setup{padding:20px;margin-bottom:13px;background:rgba(255,200,60,0.12);border:1px solid rgba(255,200,60,0.25);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+.stit{font-size:17px;font-weight:800;color:rgba(255,230,120,0.98);margin-bottom:8px;}
+.stxt{font-size:14px;color:rgba(255,210,100,0.78);line-height:1.7;margin-bottom:13px;}
+.sin{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:12px 14px;font-size:15px;font-family:'Nunito',sans-serif;color:var(--w);outline:none;margin-bottom:9px;min-height:48px;}
+.sin::placeholder{color:var(--w4);}
+.sgo{background:rgba(255,190,50,0.35);color:rgba(255,230,120,0.98);border:1px solid rgba(255,190,50,0.45);border-radius:12px;padding:13px 18px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;width:100%;min-height:50px;-webkit-appearance:none;}
+.sgo:active{background:rgba(255,190,50,0.55);}
+.err{background:rgba(200,50,50,0.18);border:1px solid rgba(255,100,100,0.28);border-radius:11px;padding:11px 14px;font-size:14px;color:rgba(255,180,175,0.95);margin-top:9px;line-height:1.5;display:none;}
+
+/* ── НАСТРОЙКИ ── */
+.settings-card{background:var(--g1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;margin-bottom:10px;}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bd2);}
+.set-row:last-child{border-bottom:none;padding-bottom:0;}
+.set-lbl{font-size:16px;font-weight:600;color:var(--w);}
+.set-sub{font-size:13px;color:var(--w4);margin-top:2px;}
+.toggle{width:52px;height:28px;border-radius:14px;background:rgba(255,255,255,0.15);border:1px solid var(--bd2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle.on{background:rgba(100,200,130,0.4);border-color:rgba(100,200,130,0.4);}
+.toggle::after{content:'';position:absolute;width:22px;height:22px;border-radius:50%;background:white;top:2px;left:2px;transition:transform .2s;box-shadow:0 2px 4px rgba(0,0,0,0.2);}
+.toggle.on::after{transform:translateX(24px);}
+.font-btns{display:flex;gap:6px;}
+.font-btn{background:var(--g2);border:1px solid var(--bd);border-radius:10px;padding:6px 12px;font-size:14px;font-weight:700;color:var(--w);cursor:pointer;font-family:'Nunito',sans-serif;min-height:38px;-webkit-appearance:none;}
+.font-btn.active{background:rgba(255,200,60,0.25);border-color:rgba(255,200,60,0.4);}
+.danger-btn{background:rgba(200,50,50,0.2);color:rgba(255,150,140,0.9);border:1px solid rgba(200,50,50,0.3);border-radius:12px;padding:12px 20px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;width:100%;min-height:48px;-webkit-appearance:none;margin-top:10px;}
+.danger-btn:active{background:rgba(200,50,50,0.35);}
+
+/* ── МОДАЛКА ── */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:flex-end;justify-content:center;}
+.mbg.open{display:flex;}
+.modal{background:rgba(15,25,10,0.92);backdrop-filter:blur(50px);-webkit-backdrop-filter:blur(50px);border:1px solid rgba(255,220,100,0.12);border-radius:28px 28px 0 0;padding:24px 20px 42px;width:100%;max-width:500px;animation:sUp .22s ease;}
+@keyframes sUp{from{transform:translateY(55px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:4px;margin:0 auto 20px;}
+.mtit{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--w);margin-bottom:18px;}
+.ml{font-size:13px;font-weight:700;color:var(--w4);margin-bottom:5px;}
+.mi{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);border-radius:12px;padding:12px 14px;font-size:16px;font-family:'Nunito',sans-serif;color:var(--w);outline:none;margin-bottom:12px;min-height:50px;}
+.mi::placeholder{color:var(--w4);}
+.mi:focus{border-color:rgba(255,210,80,0.4);}
+.mchk{display:flex;align-items:center;gap:11px;font-size:15px;font-weight:600;color:var(--w9);margin-bottom:17px;cursor:pointer;}
+.mchk input{width:20px;height:20px;cursor:pointer;}
+.ms{width:100%;background:rgba(255,190,50,0.32);color:rgba(255,230,120,0.98);border:1px solid rgba(255,190,50,0.4);border-radius:15px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;min-height:54px;-webkit-appearance:none;}
+.ms:active{background:rgba(255,190,50,0.52);}
+.mcc{width:100%;background:none;border:none;color:var(--w4);font-size:15px;font-weight:600;cursor:pointer;font-family:'Nunito',sans-serif;padding:12px;margin-top:6px;min-height:46px;-webkit-appearance:none;}
+
+/* ── ТОСТ ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(20,40,20,0.9);border:1px solid rgba(100,200,130,0.3);color:rgba(140,255,170,0.95);padding:12px 24px;border-radius:50px;font-size:14px;font-weight:700;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:rgba(40,10,10,0.9);border-color:rgba(200,80,80,0.3);color:rgba(255,160,150,0.95);}
+
+/* ── НОТКИ ── */
+.nf{position:fixed;pointer-events:none;z-index:3;opacity:0;animation:nr 3s ease-out forwards;}
+@keyframes nr{0%{opacity:0;transform:translateY(0) rotate(0deg)}30%{opacity:.7}100%{opacity:0;transform:translateY(-110px) rotate(22deg)}}
+
+/* ── БЕЗОПАСНОСТЬ ── */
+.sec-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(80,200,130,0.15);border:1px solid rgba(80,200,130,0.25);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:700;color:rgba(140,255,170,0.9);margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<canvas id="bgc"></canvas>
+<div class="fogw"><div class="fog f1"></div><div class="fog f2"></div><div class="fog f3"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+<header class="top">
+  <div class="logo">Разберём<em>ся</em></div>
+  <div class="top-r">
+    <button class="ibtn" id="mbtn" onclick="togglePanel()">🎵</button>
+    <button class="ibtn" onclick="goHome()">🏠</button>
+  </div>
+</header>
+
+<!-- МУЗЫКАЛЬНАЯ ПАНЕЛЬ -->
+<div class="mpanel" id="mpanel">
+  <div class="mpt">Выбрать музыку</div>
+  <div class="mtr" id="tr0" onclick="pt(0)"><div class="mti">🌄</div><div><div class="mtn">Карпатский рассвет</div><div class="mts">Флейта · Пад · Ветер</div></div></div>
+  <div class="mtr" id="tr1" onclick="pt(1)"><div class="mti">🌙</div><div><div class="mtn">Ночной лес</div><div class="mts">Глубокий · Медленный</div></div></div>
+  <div class="mtr" id="tr2" onclick="pt(2)"><div class="mti">🍃</div><div><div class="mtn">Лесной ручей</div><div class="mts">Светлый · Журчание</div></div></div>
+  <div class="mtr" id="tr3" onclick="pt(3)"><div class="mti">✨</div><div><div class="mtn">Эльфийский хор</div><div class="mts">Хорус · Арпеджио</div></div></div>
+  <div class="mtr" id="tr4" onclick="pt(4)"><div class="mti">🎻</div><div><div class="mtn">Горная баллада</div><div class="mts">Струнные · Тепло</div></div></div>
+  <div class="mvol"><div class="mvl">Громкость</div><input type="range" min="0" max="100" value="45" oninput="sv(this.value)"></div>
+</div>
+
+<!-- ══ ЭКРАН ВХОДА ══ -->
+<div id="s-lock" class="screen on">
+  <div class="lock-screen">
+    <div class="lock-ico" id="lock-ico">🔐</div>
+    <div class="lock-title" id="lock-title">Добро пожаловать</div>
+    <div class="lock-sub" id="lock-sub">Ваш личный блокнот защищён паролем. Введите пароль чтобы войти.</div>
+    <div class="lock-box">
+      <input class="lock-in" id="lock-in" type="password" placeholder="Введите пароль" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLock()">
+      <button class="lock-btn" onclick="doLock()" id="lock-btn">Войти</button>
+      <div class="lock-err" id="lock-err"></div>
+      <div class="lock-hint" id="lock-hint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ГЛАВНАЯ ══ -->
+<div id="s-home" class="screen">
+  <div class="glm greeting">
+    <div class="gtm" id="tlbl">Добрый день</div>
+    <div class="gnm" id="user-name-display">Михаил<br><em style="font-size:22px;opacity:.75">всё хорошо</em></div>
+    <div class="gsb"><span class="dot"></span>Я рядом — ваш личный блокнот и помощник</div>
+  </div>
+  <div class="alert" onclick="go('reminders')">
+    <div class="ali">💊</div>
+    <div><div class="alt" id="next-reminder-title">Напоминания</div><div class="als" id="next-reminder-sub">Нажмите чтобы посмотреть</div></div>
+  </div>
+  <div class="cards">
+    <button class="card" onclick="go('ai')"><div class="cico">💬</div><div><div class="ct">Помощник</div><div class="cs">Спросите что угодно</div></div><div class="ca">›</div></button>
+    <button class="card" onclick="go('passwords')"><div class="cico">🔑</div><div><div class="ct">Мои пароли</div><div class="cs" id="pwd-count">Загрузка...</div></div><div class="ca">›</div></button>
+    <button class="card" onclick="go('notes')"><div class="cico">📓</div><div><div class="ct">Заметки и рецепты</div><div class="cs" id="notes-count">Загрузка...</div></div><div class="ca">›</div></button>
+    <button class="card" onclick="go('reminders')"><div class="cico">🔔</div><div><div class="ct">Напоминания</div><div class="cs" id="rem-count">Загрузка...</div></div><div class="ca">›</div></button>
+    <button class="card" onclick="go('contacts')"><div class="cico">📞</div><div><div class="ct">Близкие</div><div class="cs" id="con-count">Загрузка...</div></div><div class="ca">›</div></button>
+    <button class="card" onclick="go('settings')"><div class="cico">⚙️</div><div><div class="ct">Настройки</div><div class="cs">Размер шрифта, безопасность</div></div><div class="ca">›</div></button>
+    <button class="sos" onclick="askAI('Мне только что позвонили незнакомые люди и попросили данные карты или перевести деньги. Что делать прямо сейчас?')">
+      <div class="cico" style="background:rgba(180,40,40,0.2);border-color:rgba(255,100,90,0.25);">🛡️</div>
+      <div><div class="sost">Позвонили мошенники?</div><div class="soss">Нажмите — помогу разобраться сейчас</div></div>
+    </button>
+  </div>
+</div>
+
+<!-- ══ ПОМОЩНИК ══ -->
+<div id="s-ai" class="screen">
+  <div class="brow"><button class="bbtn" onclick="go('home')"><span class="barr">←</span><div><div class="blbl">На главную</div><div class="bhnt">Вернуться назад</div></div></button></div>
+  <div id="setup" class="setup">
+    <div class="stit">🔧 Включить живого помощника</div>
+    <div class="stxt">Вставьте ключ Anthropic API — один раз, и помощник заработает. Ключ хранится зашифрованно только на вашем устройстве.<br><br>Получить ключ: <strong style="color:var(--gold)">console.anthropic.com</strong></div>
+    <input class="sin" id="api-in" type="password" placeholder="sk-ant-...">
+    <button class="sgo" onclick="saveApiKey()">✓ Сохранить и включить</button>
+    <div class="err" id="api-err"></div>
+  </div>
+  <div class="gl chatb">
+    <div class="chtop"><div class="chav">🤝</div><div><div class="chnm">Помощник «Разберёмся»</div><div class="chst" id="chst">● Готов помочь</div></div></div>
+    <div class="msgs" id="msgs">
+      <div class="msg ai"><div class="mav">🤝</div><div class="bub">Здравствуйте! Спросите меня что угодно — про телефон, интернет, мошенников или что-то ещё. Отвечу просто и понятно. Чем помочь?</div></div>
+    </div>
+    <div class="qqs">
+      <button class="qq" onclick="sq('Как не попасться на мошенников?')">🛡️ Мошенники</button>
+      <button class="qq" onclick="sq('Как сделать шрифт покрупнее на телефоне?')">📱 Телефон</button>
+      <button class="qq" onclick="sq('Как войти на Госуслуги?')">🏛️ Госуслуги</button>
+      <button class="qq" onclick="sq('Что такое Wi-Fi и как подключиться?')">📶 Wi-Fi</button>
+      <button class="qq" onclick="sq('Как перенести фотографии с телефона?')">🖼️ Фото</button>
+    </div>
+    <div class="crow">
+      <textarea class="cin" id="cin" rows="1" placeholder="Напишите вопрос..." onkeydown="onKey(event)" oninput="rsz(this)"></textarea>
+      <button class="send" id="sbtn" onclick="sendMsg()">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ПАРОЛИ ══ -->
+<div id="s-passwords" class="screen">
+  <div class="brow"><button class="bbtn" onclick="go('home')"><span class="barr">←</span><div><div class="blbl">На главную</div><div class="bhnt">Вернуться назад</div></div></button></div>
+  <div class="sec-badge">🔒 Данные зашифрованы</div>
+  <div id="passwords-list"></div>
+  <button class="add-btn" onclick="openModal('password')">+ Добавить пароль</button>
+</div>
+
+<!-- ══ ЗАМЕТКИ ══ -->
+<div id="s-notes" class="screen">
+  <div class="brow"><button class="bbtn" onclick="go('home')"><span class="barr">←</span><div><div class="blbl">На главную</div><div class="bhnt">Вернуться назад</div></div></button></div>
+  <div id="notes-list"></div>
+  <button class="add-btn" onclick="openModal('note')">+ Добавить заметку или рецепт</button>
+</div>
+
+<!-- ══ НАПОМИНАНИЯ ══ -->
+<div id="s-reminders" class="screen">
+  <div class="brow"><button class="bbtn" onclick="go('home')"><span class="barr">←</span><div><div class="blbl">На главную</div><div class="bhnt">Вернуться назад</div></div></button></div>
+  <div style="font-size:13px;color:var(--w4);margin-bottom:12px;">С меткой <span class="sms">📱 СМС</span> — придут на телефон</div>
+  <div id="reminders-list"></div>
+  <button class="add-btn" onclick="openModal('reminder')">+ Добавить напоминание</button>
+</div>
+
+<!-- ══ БЛИЗКИЕ ══ -->
+<div id="s-contacts" class="screen">
+  <div class="brow"><button class="bbtn" onclick="go('home')"><span class="barr">←</span><div><div class="blbl">На главную</div><div class="bhnt">Вернуться назад</div></div></button></div>
+  <div id="contacts-list"></div>
+  <button class="add-btn" onclick="openModal('contact')">+ Добавить контакт</button>
+</div>
+
+<!-- ══ НАСТРОЙКИ ══ -->
+<div id="s-settings" class="screen">
+  <div class="brow"><button class="bbtn" onclick="go('home')"><span class="barr">←</span><div><div class="blbl">На главную</div><div class="bhnt">Вернуться назад</div></div></button></div>
+
+  <div class="settings-card">
+    <div style="font-size:13px;font-weight:700;color:var(--w4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Внешний вид</div>
+    <div class="set-row">
+      <div><div class="set-lbl">Размер текста</div><div class="set-sub">Сделайте удобнее для глаз</div></div>
+      <div class="font-btns">
+        <button class="font-btn" onclick="setFont(15)">А</button>
+        <button class="font-btn active" onclick="setFont(17)">А+</button>
+        <button class="font-btn" onclick="setFont(20)">А++</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <div style="font-size:13px;font-weight:700;color:var(--w4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Безопасность</div>
+    <div class="set-row">
+      <div><div class="set-lbl">Ваше имя</div><div class="set-sub" id="current-name-display">Михаил</div></div>
+      <button class="sbtn" onclick="openModal('name')">Изменить</button>
+    </div>
+    <div class="set-row">
+      <div><div class="set-lbl">Изменить пароль</div><div class="set-sub">Смените мастер-пароль</div></div>
+      <button class="sbtn" onclick="openModal('changepass')">Изменить</button>
+    </div>
+    <button class="danger-btn" onclick="confirmReset()">🗑 Удалить все данные</button>
+  </div>
+
+  <div class="settings-card">
+    <div style="font-size:13px;font-weight:700;color:var(--w4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">О приложении</div>
+    <div class="set-row">
+      <div><div class="set-lbl">Версия</div><div class="set-sub">Разберёмся v1.0</div></div>
+    </div>
+    <div class="set-row" style="border:none">
+      <div><div class="set-lbl">Данные</div><div class="set-sub">Хранятся зашифрованно на вашем устройстве. Никуда не передаются.</div></div>
+    </div>
+  </div>
+
+  <button class="bbtn" onclick="logout()" style="margin-top:10px;background:rgba(200,50,50,0.15);border-color:rgba(200,50,50,0.25);">
+    <span class="barr" style="color:rgba(255,150,140,0.9);">🚪</span>
+    <div><div class="blbl" style="color:rgba(255,150,140,0.9);">Выйти</div><div class="bhnt">Заблокировать приложение</div></div>
+  </button>
+</div>
+
+</div><!-- /app -->
+
+<!-- МОДАЛКА -->
+<div class="mbg" id="mbg">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mtit" id="mtit"></div>
+    <div id="mbody"></div>
+    <button class="ms" id="msave" onclick="saveModal()">✓ Сохранить</button>
+    <button class="mcc" onclick="closeModal()">Отмена</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ══ ЖИВОЙ ФОН ══
+const cv=document.getElementById('bgc'),cx=cv.getContext('2d');
+let W,H,T=0;
+function rsz_canvas(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+rsz_canvas();window.addEventListener('resize',rsz_canvas);
+const stars=Array.from({length:55},()=>({x:Math.random(),y:Math.random()*0.42,r:Math.random()*1.2+0.4,tw:Math.random()*6.28}));
+const birds=Array.from({length:5},()=>({x:Math.random(),y:0.09+Math.random()*0.13,sp:0.00007+Math.random()*0.0001,ph:Math.random()*6.28}));
+function drawBg(ts){
+  T=ts*0.001;cx.clearRect(0,0,W,H);
+  const sk=cx.createLinearGradient(0,0,0,H);
+  sk.addColorStop(0,'#0c1830');sk.addColorStop(0.15,'#1c2850');sk.addColorStop(0.32,'#48205a');
+  sk.addColorStop(0.48,'#a03850');sk.addColorStop(0.60,'#e86840');sk.addColorStop(0.70,'#f5a020');
+  sk.addColorStop(0.78,'#fdd050');sk.addColorStop(0.86,'#fff0a0');sk.addColorStop(1,'#ffe070');
+  cx.fillStyle=sk;cx.fillRect(0,0,W,H);
+  const sx=W*0.62,sy=H*0.73;
+  const sg=cx.createRadialGradient(sx,sy,0,sx,sy,H*0.32);
+  sg.addColorStop(0,'rgba(255,248,180,0.88)');sg.addColorStop(0.12,'rgba(255,210,70,0.55)');
+  sg.addColorStop(0.4,'rgba(255,150,30,0.2)');sg.addColorStop(1,'rgba(255,80,0,0)');
+  cx.fillStyle=sg;cx.beginPath();cx.arc(sx,sy,H*0.32,0,6.28);cx.fill();
+  cx.fillStyle='rgba(255,252,200,0.98)';cx.beginPath();cx.arc(sx,sy,13,0,6.28);cx.fill();
+  stars.forEach(s=>{s.tw+=0.014;const a=(0.45+0.45*Math.sin(s.tw))*0.65;cx.beginPath();cx.arc(s.x*W,s.y*H,s.r,0,6.28);cx.fillStyle=`rgba(240,248,255,${a})`;cx.fill();});
+  [{x:0.09,y:0.11,w:0.19,sp:0.000035},{x:0.4,y:0.07,w:0.22,sp:0.000025},{x:0.68,y:0.14,w:0.17,sp:0.00004}].forEach(c=>{
+    const cx2=((c.x+T*c.sp)%1.25)*W,cy=c.y*H,cw=c.w*W,ch=cw*0.28;
+    const dist=Math.hypot(cx2-sx,cy-sy),glow=Math.max(0,1-dist/(W*0.55));
+    const gr=cx.createRadialGradient(cx2,cy,0,cx2,cy,cw*0.55);
+    gr.addColorStop(0,`rgba(255,242,185,${0.52+glow*0.3})`);gr.addColorStop(0.5,`rgba(255,215,140,${0.28+glow*0.18})`);gr.addColorStop(1,'rgba(200,155,90,0)');
+    cx.fillStyle=gr;
+    [[0,0.5,0.5],[-.15,0.28,0.44],[.13,0.23,0.38]].forEach(([dx,wr,hr])=>{cx.beginPath();cx.ellipse(cx2+dx*cw,cy,cw*wr,ch*hr,0,0,6.28);cx.fill();});
+  });
+  [[0.50,'rgba(75,55,100,0.5)',8],[0.56,'rgba(55,85,65,0.62)',7],[0.62,'rgba(35,70,45,0.78)',6]].forEach(([yb,col,cnt])=>{
+    cx.beginPath();cx.moveTo(0,H);const ph=[];
+    for(let i=0;i<=cnt;i++)ph.push({x:i/cnt,h:0.08+Math.sin(i*2.1+yb*10)*0.08});
+    cx.lineTo(0,yb*H);
+    ph.forEach((p,i)=>{if(i===0){cx.lineTo(p.x*W,(yb-p.h)*H);}else{const pp=ph[i-1];cx.quadraticCurveTo((pp.x+p.x)/2*W,(yb-pp.h*0.5)*H,p.x*W,(yb-p.h)*H);}});
+    cx.lineTo(W,yb*H);cx.lineTo(W,H);cx.closePath();cx.fillStyle=col;cx.fill();
+  });
+  cx.fillStyle='rgba(12,35,16,0.94)';
+  const tb=H*0.72;
+  [{x:0,h:.14,w:.028},{x:.04,h:.18,w:.023},{x:.08,h:.13,w:.026},{x:.12,h:.16,w:.024},{x:.16,h:.12,w:.028},{x:.20,h:.15,w:.022},{x:.24,h:.17,w:.025},{x:.28,h:.11,w:.023},{x:.66,h:.13,w:.024},{x:.70,h:.16,w:.026},{x:.74,h:.12,w:.023},{x:.78,h:.18,w:.025},{x:.82,h:.14,w:.024},{x:.86,h:.15,w:.026},{x:.90,h:.12,w:.023},{x:.94,h:.17,w:.025},{x:.98,h:.13,w:.023}].forEach(tr=>{
+    const tx=tr.x*W,th=tr.h*H,tw=tr.w*W;
+    cx.fillRect(tx-tw*.06,tb-th*.28,tw*.12,th*.28);
+    [[0,1],[.18,.7],[.34,.46]].forEach(([yf,wf])=>{cx.beginPath();cx.moveTo(tx,tb-th+yf*th*.5);cx.lineTo(tx-tw*wf,tb-th*.3+yf*th*.5);cx.lineTo(tx+tw*wf,tb-th*.3+yf*th*.5);cx.closePath();cx.fill();});
+  });
+  const lg=cx.createLinearGradient(0,tb,0,H);lg.addColorStop(0,'rgba(12,35,16,.94)');lg.addColorStop(1,'rgba(8,20,10,.97)');cx.fillStyle=lg;cx.fillRect(0,tb,W,H-tb);
+  const mg=cx.createLinearGradient(0,H*.76,0,H);mg.addColorStop(0,'rgba(175,145,35,0)');mg.addColorStop(.35,'rgba(155,125,25,.68)');mg.addColorStop(1,'rgba(75,55,8,.94)');
+  cx.fillStyle=mg;cx.fillRect(0,H*.76,W,H*0.24);
+  cx.strokeStyle='rgba(195,165,38,.35)';cx.lineWidth=1;
+  for(let i=0;i<75;i++){const gx=((i*137.5)%1)*W,gy=H*.77+((i*97)%1)*(H*.18),gh=7+((i*53)%1)*13;cx.beginPath();cx.moveTo(gx,gy);cx.quadraticCurveTo(gx+((i%3)-1)*5,gy-gh*.6,gx+((i%5)-2)*3,gy-gh);cx.stroke();}
+  birds.forEach(b=>{b.x=(b.x+b.sp)%1.15;const bx=b.x*W,by=b.y*H+Math.sin(T*2+b.ph)*5,wing=Math.sin(T*7+b.ph)*.3;cx.strokeStyle='rgba(15,8,4,.5)';cx.lineWidth=1.1;cx.beginPath();cx.moveTo(bx-5,by+wing*4);cx.quadraticCurveTo(bx,by-wing*3,bx+5,by+wing*4);cx.stroke();});
+  requestAnimationFrame(drawBg);
+}
+requestAnimationFrame(drawBg);
+
+// ══ МУЗЫКА ══
+let ac=null,mg_gain=null,ct=-1,vv=0.45,oscs=[],lfos=[],nsn=null;
+function bctx(){if(ac)return;ac=new(window.AudioContext||window.webkitAudioContext)();mg_gain=ac.createGain();mg_gain.gain.value=0;mg_gain.connect(ac.destination);}
+function stopAll(){oscs.forEach(o=>{try{o.stop();}catch(e){}});lfos.forEach(o=>{try{o.stop();}catch(e){}});if(nsn){try{nsn.stop();}catch(e){}}oscs=[];lfos=[];nsn=null;}
+function mo(f,type,vol,lr,ld,fq=800,Q=0.5){const o=ac.createOscillator(),g=ac.createGain(),fl=ac.createBiquadFilter();o.type=type;o.frequency.value=f;fl.type='lowpass';fl.frequency.value=fq;fl.Q.value=Q;g.gain.value=vol;if(lr>0){const lfo=ac.createOscillator(),lg=ac.createGain();lfo.frequency.value=lr;lg.gain.value=ld;lfo.connect(lg);lg.connect(o.frequency);lfo.start();lfos.push(lfo);}o.connect(fl);fl.connect(g);g.connect(mg_gain);o.start();oscs.push(o);}
+function mn(f,Q,vol){const buf=ac.createBuffer(1,ac.sampleRate*3,ac.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const ns=ac.createBufferSource();ns.buffer=buf;ns.loop=true;const fl=ac.createBiquadFilter();fl.type='bandpass';fl.frequency.value=f;fl.Q.value=Q;const g=ac.createGain();g.gain.value=vol;ns.connect(fl);fl.connect(g);g.connect(mg_gain);ns.start();nsn=ns;}
+function flute(f,v){mo(f,'sine',v,5.2,f*.012,2200,.3);mo(f*2,'sine',v*.18,5.5,f*.008,1800,.2);}
+function chorus(f,v){[-.015,0,.015,-.008,.008].forEach((d,i)=>mo(f*(1+d),'sine',v*.17,.1+i*.05,f*.004,3000,.3));}
+function strings(f,v){mo(f,'sawtooth',v*.3,5.8,f*.01,400,.8);mo(f,'sine',v*.2,5.5,f*.006,600,.4);}
+const SC={C:[261.6,329.6,392,523.2,659.2,784],N:[138.6,174.6,207.6,277.2,370],B:[293.6,369.9,440,587.3,740],E:[349.2,440,523.2,698.4,880,1046.5],G:[196,246.9,293.6,392,493.8]};
+function pt(idx){
+  bctx();ac.resume();stopAll();
+  document.querySelectorAll('.mtr').forEach((t,i)=>t.classList.toggle('on',i===idx));
+  ct=idx;mg_gain.gain.cancelScheduledValues(ac.currentTime);mg_gain.gain.linearRampToValueAtTime(vv,ac.currentTime+2.5);
+  document.getElementById('mbtn').classList.add('lit');
+  if(idx===0){SC.C.forEach((f,i)=>{if(i<3)flute(f,.055-.005*i);mo(f/2,'sine',.07,.08,f*.005,300,.4);});mn(280,.25,.009);scheduleMel(SC.C,0);}
+  else if(idx===1){SC.N.forEach((f,i)=>mo(f/2,'sine',.06-i*.008,.05+i*.02,f*.006,200,.3));mn(180,.2,.012);mn(6000,2,.004);}
+  else if(idx===2){SC.B.forEach((f,i)=>{if(i<3)flute(f,.048-.004*i);});mn(800,.8,.016);mn(300,.3,.006);}
+  else if(idx===3){SC.E.forEach(f=>chorus(f,.22));flute(SC.E[0]*2,.028);mn(2000,1.5,.006);scheduleArp(SC.E);}
+  else if(idx===4){SC.G.forEach((f,i)=>strings(f,.042-i*.004));flute(SC.G[2],.038);mn(250,.2,.007);scheduleMel(SC.G,4);}
+  spawnNotes();
+}
+function scheduleMel(sc,tid){
+  const pat=[0,2,4,2,1,3,4,3];let t=ac.currentTime+3,i=0;
+  function nx(){if(ct!==tid||!ac)return;const f=sc[pat[i%pat.length]];const o=ac.createOscillator(),g=ac.createGain(),fl=ac.createBiquadFilter();o.type=tid===4?'sawtooth':'sine';o.frequency.value=f;fl.type='lowpass';fl.frequency.value=tid===4?500:2400;fl.Q.value=tid===4?.7:.3;g.gain.value=0;o.connect(fl);fl.connect(g);g.connect(mg_gain);o.start(t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.15);g.gain.linearRampToValueAtTime(0,t+(tid===4?1.8:.9));o.stop(t+(tid===4?2:1));oscs.push(o);const dur=(tid===4?2:1.2)+Math.random()*.8;t+=dur;i++;setTimeout(nx,dur*(tid===4?900:850));}
+  setTimeout(nx,3000);
+}
+function scheduleArp(sc){let t=ac.currentTime+1,i=0;function nx(){if(ct!==3||!ac)return;const f=sc[i%sc.length]*2;const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0;o.connect(g);g.connect(mg_gain);o.start(t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.028,t+.05);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.stop(t+.38);oscs.push(o);t+=.26;i++;setTimeout(nx,230);}setTimeout(nx,1000);}
+function spawnNotes(){const ns=['♩','♪','♫','♬'];for(let i=0;i<3;i++){setTimeout(()=>{const el=document.createElement('div');el.className='nf';el.textContent=ns[Math.floor(Math.random()*ns.length)];el.style.cssText=`left:${20+Math.random()*60}%;bottom:${10+Math.random()*30}%;color:rgba(255,220,100,.7);font-size:${14+Math.random()*10}px;animation-delay:${Math.random()*.4}s;`;document.body.appendChild(el);setTimeout(()=>el.remove(),3500);},i*800);}}
+function sv(v){vv=v/100;if(mg_gain&&ac){mg_gain.gain.cancelScheduledValues(ac.currentTime);mg_gain.gain.linearRampToValueAtTime(vv,ac.currentTime+.3);}}
+function togglePanel(){document.getElementById('mpanel').classList.toggle('open');}
+
+// ══ ВРЕМЯ ══
+(function(){const h=new Date().getHours();const el=document.getElementById('tlbl');if(el)el.textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';})();
+
+// ══ TOAST ══
+function showToast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ══ НАВИГАЦИЯ ══
+const SCREENS=['lock','home','ai','passwords','notes','reminders','contacts','settings'];
+function go(id){
+  SCREENS.forEach(s=>document.getElementById('s-'+s).classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.getElementById('mpanel').classList.remove('open');
+  window.scrollTo(0,0);
+  if(id==='passwords')renderPasswords();
+  if(id==='notes')renderNotes();
+  if(id==='reminders')renderReminders();
+  if(id==='contacts')renderContacts();
+}
+function goHome(){go('home');updateCounts();}
+
+// ══ WEB CRYPTO — ШИФРОВАНИЕ ══
+const SALT_KEY='rz_salt_v1';
+const IV_LEN=12;
+
+async function deriveKey(password,salt){
+  const enc=new TextEncoder();
+  const keyMaterial=await crypto.subtle.importKey('raw',enc.encode(password),{name:'PBKDF2'},false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},keyMaterial,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+
+async function encrypt(data,key){
+  const iv=crypto.getRandomValues(new Uint8Array(IV_LEN));
+  const enc=new TextEncoder();
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(data)));
+  const buf=new Uint8Array(IV_LEN+ct.byteLength);
+  buf.set(iv,0);buf.set(new Uint8Array(ct),IV_LEN);
+  return btoa(String.fromCharCode(...buf));
+}
+
+async function decrypt(b64,key){
+  try{
+    const buf=new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0)));
+    const iv=buf.slice(0,IV_LEN);
+    const ct=buf.slice(IV_LEN);
+    const dec=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+    return JSON.parse(new TextDecoder().decode(dec));
+  }catch(e){return null;}
+}
+
+// ══ СОСТОЯНИЕ ══
+let CryptoKey=null;
+let AppData={passwords:[],notes:[],reminders:[],contacts:[],userName:'Михаил'};
+let modalType=null,editingId=null;
+
+// ══ IndexedDB ══
+let db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('razberemsia_v1',1);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains('vault'))d.createObjectStore('vault',{keyPath:'id'});
+    };
+    req.onsuccess=e=>{db=e.target.result;res(db);};
+    req.onerror=()=>rej(req.error);
+  });
+}
+
+async function saveVault(){
+  if(!CryptoKey||!db)return;
+  const encrypted=await encrypt(AppData,CryptoKey);
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('vault','readwrite');
+    tx.objectStore('vault').put({id:'main',data:encrypted});
+    tx.oncomplete=res;tx.onerror=rej;
+  });
+}
+
+async function loadVault(){
+  if(!CryptoKey||!db)return null;
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('vault','readonly');
+    const req=tx.objectStore('vault').get('main');
+    req.onsuccess=async()=>{
+      if(!req.result){res(null);return;}
+      const data=await decrypt(req.result.data,CryptoKey);
+      res(data);
+    };
+    req.onerror=rej;
+  });
+}
+
+// ══ МАСТЕР-ПАРОЛЬ ══
+let isFirstTime=false;
+
+async function initLock(){
+  await openDB();
+  // Проверяем есть ли соль (значит уже был пароль)
+  const salt=localStorage.getItem(SALT_KEY);
+  if(!salt){
+    // Первый запуск — создать пароль
+    isFirstTime=true;
+    document.getElementById('lock-ico').textContent='🌟';
+    document.getElementById('lock-title').textContent='Добро пожаловать!';
+    document.getElementById('lock-sub').textContent='Первый запуск. Придумайте пароль для защиты ваших данных. Запомните его — он понадобится каждый раз.';
+    document.getElementById('lock-btn').textContent='Создать пароль';
+    document.getElementById('lock-hint').textContent='Совет: используйте что-то простое но личное. Например дату рождения или имя питомца.';
+  } else {
+    document.getElementById('lock-hint').textContent='Забыли пароль? Обратитесь к тому кто помог настроить приложение.';
+  }
+}
+
+async function doLock(){
+  const pw=document.getElementById('lock-in').value;
+  const errEl=document.getElementById('lock-err');
+  errEl.textContent='';
+  if(!pw||pw.length<3){errEl.textContent='Введите пароль (минимум 3 символа)';return;}
+
+  if(isFirstTime){
+    // Создаём соль и ключ
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(SALT_KEY,btoa(String.fromCharCode(...salt)));
+    CryptoKey=await deriveKey(pw,salt);
+    // Загружаем дефолтные данные
+    AppData={
+      passwords:[],
+      notes:[
+        {id:Date.now()+'1',label:'рецепт',title:'Борщ по-домашнему',body:'Свёкла, капуста, картошка, морковь, мясо. Варить полтора часа на медленном огне.',tag:'рецепт'},
+        {id:Date.now()+'2',label:'адрес',title:'Поликлиника',body:'Спросите врача о точном адресе вашей поликлиники.',tag:'адрес'},
+      ],
+      reminders:[
+        {id:Date.now()+'3',title:'Таблетка от давления',when:'Каждый день · 09:00 и 21:00',sms:true,color:'#FF7070'},
+      ],
+      contacts:[],
+      userName:'Михаил'
+    };
+    await saveVault();
+    isFirstTime=false;
+    enterApp();
+  } else {
+    // Пробуем войти
+    const saltB64=localStorage.getItem(SALT_KEY);
+    const salt=new Uint8Array(atob(saltB64).split('').map(c=>c.charCodeAt(0)));
+    CryptoKey=await deriveKey(pw,salt);
+    const data=await loadVault();
+    if(!data){
+      errEl.textContent='Неверный пароль. Попробуйте ещё раз.';
+      CryptoKey=null;
+      return;
+    }
+    AppData=data;
+    enterApp();
+  }
+}
+
+function enterApp(){
+  document.getElementById('lock-in').value='';
+  // Обновляем имя пользователя
+  const nameEl=document.getElementById('user-name-display');
+  if(nameEl)nameEl.innerHTML=`${AppData.userName}<br><em style="font-size:22px;opacity:.75">всё хорошо</em>`;
+  const nameDisp=document.getElementById('current-name-display');
+  if(nameDisp)nameDisp.textContent=AppData.userName;
+  updateCounts();
+  go('home');
+  // Показать подсказку музыки через 3с
+  setTimeout(()=>{document.getElementById('mpanel').classList.add('open');setTimeout(()=>document.getElementById('mpanel').classList.remove('open'),5000);},3000);
+}
+
+function logout(){
+  CryptoKey=null;
+  isFirstTime=false;
+  document.getElementById('lock-ico').textContent='🔐';
+  document.getElementById('lock-title').textContent='Добро пожаловать';
+  document.getElementById('lock-sub').textContent='Ваш личный блокнот защищён паролем. Введите пароль чтобы войти.';
+  document.getElementById('lock-btn').textContent='Войти';
+  document.getElementById('lock-err').textContent='';
+  document.getElementById('lock-in').value='';
+  go('lock');
+}
+
+// ══ СЧЁТЧИКИ ══
+function updateCounts(){
+  const pd=document.getElementById('pwd-count');
+  const nd=document.getElementById('notes-count');
+  const rd=document.getElementById('rem-count');
+  const cd=document.getElementById('con-count');
+  if(pd)pd.textContent=AppData.passwords.length?`${AppData.passwords.length} сохранено`:'Нет сохранённых';
+  if(nd)nd.textContent=AppData.notes.length?`${AppData.notes.length} записей`:'Нет записей';
+  if(rd)rd.textContent=AppData.reminders.length?`${AppData.reminders.length} активных`:'Нет напоминаний';
+  if(cd)cd.textContent=AppData.contacts.length?`${AppData.contacts.length} контактов`:'Нет контактов';
+  // Ближайшее напоминание
+  if(AppData.reminders.length){
+    const r=AppData.reminders[0];
+    const rt=document.getElementById('next-reminder-title');
+    const rs=document.getElementById('next-reminder-sub');
+    if(rt)rt.textContent=r.title;
+    if(rs)rs.textContent=r.when;
+  }
+}
+
+// ══ РЕНДЕР ПАРОЛЕЙ ══
+function renderPasswords(){
+  const el=document.getElementById('passwords-list');
+  if(!el)return;
+  if(!AppData.passwords.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">🔑</div><div class="empty-t">Нет сохранённых паролей</div><div class="empty-s">Нажмите кнопку ниже чтобы добавить первый пароль</div></div>`;
+    return;
+  }
+  el.innerHTML=AppData.passwords.map((p,i)=>`
+    <div class="item-card">
+      <div class="il">${escHtml(p.site)}</div>
+      <div class="iv" id="pval-${p.id}">••••••••••</div>
+      <div class="item-actions">
+        <button class="sbtn" onclick="togglePwd('${p.id}','${escHtml(p.pass)}')">👁 Показать</button>
+        <button class="sbtn del" onclick="deleteItem('passwords','${p.id}')">🗑 Удалить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function togglePwd(id,val){
+  const el=document.getElementById('pval-'+id);
+  const btn=el.nextElementSibling.firstElementChild;
+  if(el.textContent.startsWith('•')){el.textContent=val;btn.textContent='🙈 Скрыть';}
+  else{el.textContent='••••••••••';btn.textContent='👁 Показать';}
+}
+
+// ══ РЕНДЕР ЗАМЕТОК ══
+function renderNotes(){
+  const el=document.getElementById('notes-list');
+  if(!el)return;
+  if(!AppData.notes.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">📓</div><div class="empty-t">Нет заметок</div><div class="empty-s">Сохраняйте рецепты, адреса и важные сведения</div></div>`;
+    return;
+  }
+  el.innerHTML=AppData.notes.map(n=>`
+    <div class="item-card">
+      <div class="il">${escHtml(n.label||'заметка')}</div>
+      <div class="iv" style="font-size:18px">${escHtml(n.title)}</div>
+      <div class="ib">${escHtml(n.body)}</div>
+      <span class="tag">${escHtml(n.tag||n.label||'заметка')}</span>
+      <div class="item-actions">
+        <button class="sbtn del" onclick="deleteItem('notes','${n.id}')">🗑 Удалить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══ РЕНДЕР НАПОМИНАНИЙ ══
+function renderReminders(){
+  const el=document.getElementById('reminders-list');
+  if(!el)return;
+  if(!AppData.reminders.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">🔔</div><div class="empty-t">Нет напоминаний</div><div class="empty-s">Добавьте напоминания о лекарствах, врачах и важных делах</div></div>`;
+    return;
+  }
+  el.innerHTML=AppData.reminders.map(r=>`
+    <div class="rem-card">
+      <div class="rdot" style="background:${r.color||'#70B0FF'}"></div>
+      <div style="flex:1">
+        <div class="rt">${escHtml(r.title)}${r.sms?'<span class="sms">📱 СМС</span>':''}</div>
+        <div class="rw">${escHtml(r.when)}</div>
+      </div>
+      <button class="sbtn del" onclick="deleteItem('reminders','${r.id}')" style="flex-shrink:0">🗑</button>
+    </div>
+  `).join('');
+}
+
+// ══ РЕНДЕР КОНТАКТОВ ══
+function renderContacts(){
+  const el=document.getElementById('contacts-list');
+  if(!el)return;
+  if(!AppData.contacts.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">📞</div><div class="empty-t">Нет контактов</div><div class="empty-s">Добавьте близких людей чтобы быстро до них дозвониться</div></div>`;
+    return;
+  }
+  el.innerHTML=AppData.contacts.map(c=>`
+    <div class="con-card">
+      <div class="ava">${escHtml(c.initials||c.name.slice(0,2).toUpperCase())}</div>
+      <div>
+        <div class="cn">${escHtml(c.name)}</div>
+        <div class="cp">${escHtml(c.phone)}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <a href="tel:${escHtml(c.phone)}" class="call-btn">📞</a>
+        <button class="sbtn del" onclick="deleteItem('contacts','${c.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══ УДАЛЕНИЕ ══
+async function deleteItem(store,id){
+  if(!confirm('Удалить? Это нельзя отменить.'))return;
+  AppData[store]=AppData[store].filter(x=>x.id!==id);
+  await saveVault();
+  updateCounts();
+  if(store==='passwords')renderPasswords();
+  if(store==='notes')renderNotes();
+  if(store==='reminders')renderReminders();
+  if(store==='contacts')renderContacts();
+  showToast('Удалено');
+}
+
+// ══ МОДАЛКА ══
+const MODALS={
+  password:{title:'🔑 Новый пароль',html:`
+    <div class="ml">Сайт или приложение</div>
+    <input class="mi" id="m-site" placeholder="Например: Госуслуги">
+    <div class="ml">Пароль</div>
+    <input class="mi" id="m-pass" type="password" placeholder="Введите пароль">
+  `},
+  note:{title:'📓 Новая заметка',html:`
+    <div class="ml">Название</div>
+    <input class="mi" id="m-title" placeholder="Например: Рецепт борща">
+    <div class="ml">Тип</div>
+    <select class="mi" id="m-tag"><option value="рецепт">🍲 Рецепт</option><option value="адрес">📍 Адрес</option><option value="важное">⭐ Важное</option><option value="документы">📄 Документы</option><option value="другое">📌 Другое</option></select>
+    <div class="ml">Текст</div>
+    <textarea class="mi" id="m-body" rows="3" placeholder="Напишите что хотите запомнить..."></textarea>
+  `},
+  reminder:{title:'🔔 Новое напоминание',html:`
+    <div class="ml">Что напомнить</div>
+    <input class="mi" id="m-rtitle" placeholder="Например: Выпить таблетку">
+    <div class="ml">Когда</div>
+    <input class="mi" id="m-when" placeholder="Например: Каждый день в 09:00">
+    <label class="mchk"><input type="checkbox" id="m-sms" checked> Отправлять СМС на телефон</label>
+  `},
+  contact:{title:'📞 Новый контакт',html:`
+    <div class="ml">Имя</div>
+    <input class="mi" id="m-cname" placeholder="Например: Аня (дочь)">
+    <div class="ml">Номер телефона</div>
+    <input class="mi" id="m-phone" type="tel" placeholder="+7 900 000-00-00">
+  `},
+  name:{title:'👤 Ваше имя',html:`
+    <div class="ml">Как вас зовут?</div>
+    <input class="mi" id="m-uname" placeholder="Введите имя">
+  `},
+  changepass:{title:'🔒 Новый пароль',html:`
+    <div class="ml">Текущий пароль</div>
+    <input class="mi" id="m-oldpass" type="password" placeholder="Введите текущий пароль">
+    <div class="ml">Новый пароль</div>
+    <input class="mi" id="m-newpass" type="password" placeholder="Придумайте новый пароль">
+    <div class="ml">Повторите новый пароль</div>
+    <input class="mi" id="m-newpass2" type="password" placeholder="Повторите пароль">
+  `},
+};
+
+function openModal(type){
+  modalType=type;
+  editingId=null;
+  const cfg=MODALS[type];
+  document.getElementById('mtit').textContent=cfg.title;
+  document.getElementById('mbody').innerHTML=cfg.html;
+  document.getElementById('msave').style.display='block';
+  document.getElementById('mbg').classList.add('open');
+  // Фокус на первом поле
+  setTimeout(()=>{const first=document.querySelector('.mbg.open .mi');if(first)first.focus();},100);
+}
+
+function closeModal(){document.getElementById('mbg').classList.remove('open');modalType=null;editingId=null;}
+
+async function saveModal(){
+  if(!modalType)return;
+  const id=Date.now().toString();
+
+  if(modalType==='password'){
+    const site=document.getElementById('m-site').value.trim();
+    const pass=document.getElementById('m-pass').value;
+    if(!site||!pass){showToast('Заполните все поля',true);return;}
+    AppData.passwords.push({id,site,pass});
+    await saveVault();renderPasswords();
+  }
+  else if(modalType==='note'){
+    const title=document.getElementById('m-title').value.trim();
+    const body=document.getElementById('m-body').value.trim();
+    const tag=document.getElementById('m-tag').value;
+    if(!title){showToast('Введите название',true);return;}
+    AppData.notes.push({id,title,body,tag,label:tag});
+    await saveVault();renderNotes();
+  }
+  else if(modalType==='reminder'){
+    const title=document.getElementById('m-rtitle').value.trim();
+    const when=document.getElementById('m-when').value.trim();
+    const sms=document.getElementById('m-sms').checked;
+    if(!title||!when){showToast('Заполните все поля',true);return;}
+    const colors=['#FF7070','#70DD80','#70B0FF','#FFD060','#FF9870'];
+    const color=colors[AppData.reminders.length%colors.length];
+    AppData.reminders.push({id,title,when,sms,color});
+    await saveVault();renderReminders();
+  }
+  else if(modalType==='contact'){
+    const name=document.getElementById('m-cname').value.trim();
+    const phone=document.getElementById('m-phone').value.trim();
+    if(!name||!phone){showToast('Заполните все поля',true);return;}
+    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    AppData.contacts.push({id,name,phone,initials});
+    await saveVault();renderContacts();
+  }
+  else if(modalType==='name'){
+    const name=document.getElementById('m-uname').value.trim();
+    if(!name){showToast('Введите имя',true);return;}
+    AppData.userName=name;
+    await saveVault();
+    const nd=document.getElementById('user-name-display');
+    if(nd)nd.innerHTML=`${name}<br><em style="font-size:22px;opacity:.75">всё хорошо</em>`;
+    const cd=document.getElementById('current-name-display');
+    if(cd)cd.textContent=name;
+  }
+  else if(modalType==='changepass'){
+    const oldp=document.getElementById('m-oldpass').value;
+    const newp=document.getElementById('m-newpass').value;
+    const newp2=document.getElementById('m-newpass2').value;
+    if(newp!==newp2){showToast('Новые пароли не совпадают',true);return;}
+    if(newp.length<3){showToast('Пароль слишком короткий',true);return;}
+    // Проверяем старый пароль
+    const saltB64=localStorage.getItem(SALT_KEY);
+    const salt=new Uint8Array(atob(saltB64).split('').map(c=>c.charCodeAt(0)));
+    const testKey=await deriveKey(oldp,salt);
+    const testData=await decrypt((await new Promise((res)=>{const tx=db.transaction('vault','readonly');const req=tx.objectStore('vault').get('main');req.onsuccess=()=>res(req.result?.data);})),testKey);
+    if(!testData){showToast('Неверный текущий пароль',true);return;}
+    // Создаём новый ключ
+    const newSalt=crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(SALT_KEY,btoa(String.fromCharCode(...newSalt)));
+    CryptoKey=await deriveKey(newp,newSalt);
+    await saveVault();
+    showToast('Пароль изменён!');
+  }
+
+  updateCounts();
+  closeModal();
+  showToast('Сохранено ✓');
+}
+
+// Подтверждение удаления всех данных
+function confirmReset(){
+  if(!confirm('Удалить ВСЕ данные? Это действие нельзя отменить!'))return;
+  if(!confirm('Вы уверены? Все пароли, заметки и контакты будут удалены навсегда.'))return;
+  localStorage.removeItem(SALT_KEY);
+  if(db){const tx=db.transaction('vault','readwrite');tx.objectStore('vault').delete('main');}
+  showToast('Все данные удалены');
+  setTimeout(()=>{CryptoKey=null;location.reload();},1500);
+}
+
+// ══ РАЗМЕР ШРИФТА ══
+function setFont(size){
+  document.documentElement.style.fontSize=size+'px';
+  localStorage.setItem('rz_font',size);
+  document.querySelectorAll('.font-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.length===size/5-1||parseInt(b.onclick.toString().match(/\d+/))===size);
+  });
+}
+(function(){const f=localStorage.getItem('rz_font');if(f)document.documentElement.style.fontSize=f+'px';})();
+
+// ══ API ══
+let apiKey='';
+async function loadApiKey(){
+  const stored=localStorage.getItem('rz_api_enc');
+  if(stored&&CryptoKey){
+    try{const dec=await decrypt(stored,CryptoKey);if(dec&&dec.key)apiKey=dec.key;}catch(e){}
+  }
+  if(apiKey)document.getElementById('setup').style.display='none';
+}
+
+async function saveApiKey(){
+  const k=document.getElementById('api-in').value.trim();
+  const e=document.getElementById('api-err');e.style.display='none';
+  if(!k){e.textContent='Введите ключ API.';e.style.display='block';return;}
+  if(!k.startsWith('sk-')){e.textContent='Ключ должен начинаться с "sk-".';e.style.display='block';return;}
+  apiKey=k;
+  if(CryptoKey){
+    const enc=await encrypt({key:k},CryptoKey);
+    localStorage.setItem('rz_api_enc',enc);
+  }
+  document.getElementById('setup').style.display='none';
+  addMsg('ai','Готово! Теперь я полностью активен. Спрашивайте что угодно — я рядом 🤝');
+}
+
+// ══ ЧАТ ══
+const SYS=`Ты — добрый, терпеливый помощник сервиса «Разберёмся». Помогаешь пожилым людям и тем кто плохо разбирается в технологиях. Правила: говори очень просто как добрый родственник без терминов; любой вопрос нормальный; отвечай коротко максимум 3-4 абзаца; если нужны шаги нумеруй их по одному; заканчивай ободряюще; только русский язык.`;
+const hist=[];
+function addMsg(role,text){
+  const box=document.getElementById('msgs');
+  const d=document.createElement('div');d.className='msg '+(role==='ai'?'ai':'u');
+  const a=document.createElement('div');a.className='mav';a.textContent=role==='ai'?'🤝':'👤';
+  const b=document.createElement('div');b.className='bub';b.textContent=text;
+  d.appendChild(a);d.appendChild(b);box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function showTyping(){const box=document.getElementById('msgs');const d=document.createElement('div');d.className='msg ai';d.id='tp';const a=document.createElement('div');a.className='mav';a.textContent='🤝';const t=document.createElement('div');t.className='typing';t.innerHTML='<span></span><span></span><span></span>';d.appendChild(a);d.appendChild(t);box.appendChild(d);box.scrollTop=box.scrollHeight;}
+function hideTyping(){const t=document.getElementById('tp');if(t)t.remove();}
+async function sendMsg(){
+  const inp=document.getElementById('cin');
+  const text=inp.value.trim();if(!text)return;
+  if(!apiKey){document.getElementById('setup').style.display='block';const e=document.getElementById('api-err');e.textContent='Сначала введите ключ API выше.';e.style.display='block';document.getElementById('setup').scrollIntoView({behavior:'smooth'});return;}
+  inp.value='';inp.style.height='auto';
+  addMsg('user',text);hist.push({role:'user',content:text});
+  const btn=document.getElementById('sbtn');btn.disabled=true;document.getElementById('chst').textContent='● Думаю...';
+  showTyping();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,system:SYS,messages:hist})});
+    const data=await res.json();hideTyping();
+    if(data.error){addMsg('ai',data.error.type==='authentication_error'?'Ключ API неверный. Проверьте его и сохраните снова.':data.error.type==='rate_limit_error'?'Слишком много запросов. Подождите минуту.':'Что-то пошло не так. Попробуйте снова.');}
+    else{const r=data.content[0].text;hist.push({role:'assistant',content:r});addMsg('ai',r);}
+  }catch(e){hideTyping();addMsg('ai','Нет соединения. Проверьте интернет и попробуйте снова.');}
+  btn.disabled=false;document.getElementById('chst').textContent='● Готов помочь';
+}
+function sq(q){go('ai');setTimeout(()=>{document.getElementById('cin').value=q;sendMsg();},100);}
+function askAI(q){go('ai');setTimeout(()=>{document.getElementById('cin').value=q;sendMsg();},200);}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function rsz(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+
+// ══ УТИЛИТЫ ══
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// Закрыть модалку по фону
+document.getElementById('mbg').addEventListener('click',e=>{if(e.target.id==='mbg')closeModal();});
+document.getElementById('mpanel').addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',e=>{if(!document.getElementById('mpanel').contains(e.target)&&!document.getElementById('mbtn').contains(e.target)){document.getElementById('mpanel').classList.remove('open');}});
+
+// ══ ЗАПУСК ══
+initLock();
+</script>
+</body>
+</html>
