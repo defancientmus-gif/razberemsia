@@ -693,12 +693,25 @@ auth.onAuthStateChanged(user => {
     currentUser = user;
     showApp();
     updateUserInfo(user);
+  } else {
+    // не залогинен — инициализируем recaptcha сразу
+    setTimeout(() => initRecaptcha(), 500);
   }
 });
 
 function showApp() {
   document.getElementById('auth-screen').classList.add('hidden');
   setTimeout(() => { document.getElementById('auth-screen').style.display='none'; }, 400);
+}
+
+function showAuthScreen() {
+  const as = document.getElementById('auth-screen');
+  as.style.display = 'flex';
+  setTimeout(() => {
+    as.classList.remove('hidden');
+    // инициализируем recaptcha заранее — без задержки при нажатии
+    setTimeout(() => initRecaptcha(), 300);
+  }, 10);
 }
 
 function formatPhoneDisplay(phone) {
@@ -775,21 +788,16 @@ function signOut() {
     currentUser = null;
     closeMenu();
 
-    // сбрасываем recaptcha полностью
+    // сбрасываем recaptcha
     if (recaptchaVerifier) {
       try { recaptchaVerifier.clear(); } catch(e) {}
       recaptchaVerifier = null;
+      confirmationResult = null;
     }
-    confirmationResult = null;
 
-    // сбрасываем форму
     backToPhone();
     go('home');
-
-    // показываем экран входа
-    const as = document.getElementById('auth-screen');
-    as.style.display = 'flex';
-    setTimeout(() => as.classList.remove('hidden'), 10);
+    showAuthScreen();
   });
 }
 
@@ -803,10 +811,17 @@ function formatPhone(el) {
 // ══ RECAPTCHA ══
 function initRecaptcha() {
   if (recaptchaVerifier) return;
+  // пересоздаём контейнер чисто
+  const old = document.getElementById('recaptcha-container');
+  const fresh = document.createElement('div');
+  fresh.id = 'recaptcha-container';
+  old.parentNode.replaceChild(fresh, old);
+
   recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
     size: 'invisible',
     callback: () => {}
   });
+  recaptchaVerifier.render();
 }
 
 // ══ SEND SMS ══
@@ -827,7 +842,7 @@ async function sendSms() {
   btn.textContent  = 'Отправляем...';
 
   try {
-    initRecaptcha();
+    if (!recaptchaVerifier) initRecaptcha();
     confirmationResult = await auth.signInWithPhoneNumber(phone, recaptchaVerifier);
     // показываем шаг с кодом
     document.getElementById('step-phone').classList.remove('active');
