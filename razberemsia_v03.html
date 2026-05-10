@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся</title>
+<title>Разберёмся v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -43,10 +43,52 @@ body{font-family:'Raleway',sans-serif;background:var(--cream);color:var(--text);
 header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--text);letter-spacing:.3px;}
 .logo em{color:var(--sage-d);font-style:italic;}
-.hbtn{width:44px;height:44px;border-radius:50%;background:rgba(122,158,126,0.12);border:1px solid rgba(122,158,126,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;-webkit-appearance:none;padding:0;}
+/* ── HOME BUTTON MENU ── */
+.hbtn{width:44px;height:44px;border-radius:50%;background:rgba(122,158,126,0.12);border:1px solid rgba(122,158,126,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;-webkit-appearance:none;padding:0;position:relative;}
 .hbtn:active{background:rgba(122,158,126,0.25);transform:scale(.92);}
 .hbtn svg{width:20px;height:20px;stroke:var(--sage-d);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.hbtn:active{background:rgba(122,158,126,0.25);transform:scale(.92);}
+.hbtn.open{background:rgba(122,158,126,0.25);}
+
+.hmenu{
+  position:fixed;top:66px;right:calc(50% - 222px);z-index:400;
+  background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);
+  border:1px solid rgba(196,184,168,0.5);border-radius:18px;
+  padding:8px;min-width:220px;
+  box-shadow:0 8px 32px rgba(45,59,46,0.14);
+  opacity:0;pointer-events:none;transform:translateY(-8px) scale(.97);
+  transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+@media(max-width:480px){.hmenu{right:12px;}}
+.hmenu.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+.hmenu-user{padding:12px 14px 10px;border-bottom:1px solid rgba(196,184,168,0.35);margin-bottom:6px;}
+.hmenu-phone{font-size:13px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.04em;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+.settings-item-phone{font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:600;color:var(--text);letter-spacing:.04em;font-variant-numeric:tabular-nums;}
+.hmenu-name{font-size:16px;font-weight:600;color:var(--text);margin-top:2px;}
+.hmenu-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;transition:background .12s;-webkit-appearance:none;background:none;border:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;}
+.hmenu-item:active{background:rgba(122,158,126,0.12);}
+.hmenu-item-ico{width:34px;height:34px;border-radius:10px;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.hmenu-item-t{font-size:15px;font-weight:600;color:var(--text);}
+.hmenu-item-s{font-size:12px;color:var(--text-l);margin-top:1px;}
+.hmenu-sep{height:1px;background:rgba(196,184,168,0.35);margin:6px 8px;}
+.hmenu-item.danger .hmenu-item-ico{background:rgba(192,80,74,0.08);}
+.hmenu-item.danger .hmenu-item-t{color:var(--rose);}
+
+/* ── SETTINGS SCREEN ── */
+.settings-section{margin-bottom:20px;}
+.settings-section-title{font-size:12px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding:0 4px;}
+.settings-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);padding:16px 18px;margin-bottom:6px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-appearance:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;transition:all .14s;}
+.settings-item:active{background:rgba(122,158,126,0.08);}
+.settings-item-ico{font-size:22px;width:40px;text-align:center;flex-shrink:0;}
+.settings-item-t{font-size:16px;font-weight:600;color:var(--text);}
+.settings-item-s{font-size:13px;color:var(--text-m);margin-top:2px;}
+.settings-item-arr{margin-left:auto;font-size:18px;color:var(--text-l);}
+.settings-item.danger .settings-item-t{color:var(--rose);}
+.name-edit-row{display:flex;gap:8px;margin-top:14px;}
+.name-in{flex:1;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:12px;padding:12px 14px;font-size:16px;font-family:'Raleway',sans-serif;color:var(--text);outline:none;min-height:48px;}
+.name-in:focus{border-color:rgba(122,158,126,0.6);}
+.name-save{background:var(--sage);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;white-space:nowrap;}
+.name-save:active{background:var(--sage-d);}
+.settings-info{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:var(--r);padding:16px 18px;font-size:14px;color:var(--text-m);line-height:1.7;}
 
 /* ── SCREENS ── */
 .screens{flex:1;overflow:hidden;position:relative;}
@@ -262,7 +304,8 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
 .auth-back{background:none;border:none;color:var(--text-l);font-size:14px;font-weight:600;cursor:pointer;font-family:'Raleway',sans-serif;padding:12px;width:100%;margin-top:4px;-webkit-appearance:none;}
 .auth-resend{background:none;border:none;color:var(--sage-d);font-size:14px;font-weight:600;cursor:pointer;font-family:'Raleway',sans-serif;padding:4px;-webkit-appearance:none;text-decoration:underline;}
 .auth-timer{font-size:14px;color:var(--text-l);}
-#recaptcha-container{margin-bottom:12px;}
+#recaptcha-container{position:fixed;bottom:-100px;right:-100px;z-index:-1;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;}
+.grecaptcha-badge{visibility:hidden !important;opacity:0 !important;}
 </style>
 </head>
 <body>
@@ -288,7 +331,6 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
           placeholder="900 000-00-00" maxlength="12"
           oninput="formatPhone(this)" onkeydown="if(event.key==='Enter')sendSms()">
       </div>
-      <div id="recaptcha-container"></div>
       <button class="auth-btn" id="sms-btn" onclick="sendSms()">Получить код</button>
       <div class="auth-err" id="phone-err">Проверьте номер и попробуйте снова</div>
       <div class="auth-note">Мы не передаём ваши данные третьим лицам</div>
@@ -319,10 +361,33 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
   </div>
 </div>
 
+<!-- ── DROPDOWN MENU ── -->
+<div class="hmenu" id="hmenu">
+  <div class="hmenu-user">
+    <div class="hmenu-phone" id="hmenu-phone">Загрузка...</div>
+    <div class="hmenu-name" id="hmenu-name">Добро пожаловать</div>
+  </div>
+  <button class="hmenu-item" onclick="openSettings();closeMenu()">
+    <div class="hmenu-item-ico">⚙️</div>
+    <div>
+      <div class="hmenu-item-t">Настройки</div>
+      <div class="hmenu-item-s">Имя, уведомления</div>
+    </div>
+  </button>
+  <div class="hmenu-sep"></div>
+  <button class="hmenu-item danger" onclick="signOut()">
+    <div class="hmenu-item-ico">🚪</div>
+    <div>
+      <div class="hmenu-item-t">Выйти</div>
+      <div class="hmenu-item-s">Сменить аккаунт</div>
+    </div>
+  </button>
+</div>
+
 <div class="app">
   <header>
     <div class="logo">Разберём<em>ся</em></div>
-    <button class="hbtn" onclick="go('home')" title="Главная">
+    <button class="hbtn" id="hbtn" onclick="toggleMenu(event)" title="Меню">
       <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
     </button>
   </header>
@@ -521,6 +586,58 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
       <button class="add-dashed" onclick="openSheet('password')">＋ Добавить пароль</button>
     </div>
 
+    <!-- ══ SETTINGS ══ -->
+    <div class="scr" id="s-settings">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Настройки</div>
+      <div class="sec-sub">Личные данные и параметры</div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Как вас называть</div>
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-ico">👤</div>
+          <div style="flex:1">
+            <div class="settings-item-t" id="settings-name-display">Михаил</div>
+            <div class="settings-item-s">Имя в приветствии</div>
+            <div class="name-edit-row">
+              <input class="name-in" id="name-input" type="text" placeholder="Введите ваше имя" maxlength="30">
+              <button class="name-save" onclick="saveName()">Сохранить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Аккаунт</div>
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-ico">📱</div>
+          <div>
+            <div class="settings-item-t settings-item-phone" id="settings-phone-display">Загрузка...</div>
+            <div class="settings-item-s">Номер телефона для входа</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Информация</div>
+        <div class="settings-info">
+          Ваши данные хранятся только на вашем устройстве и в защищённом хранилище Firebase. Мы не передаём их третьим лицам и не используем в рекламных целях.
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Выход</div>
+        <button class="settings-item danger" onclick="signOut()">
+          <div class="settings-item-ico">🚪</div>
+          <div>
+            <div class="settings-item-t">Выйти из аккаунта</div>
+            <div class="settings-item-s">Потребуется снова войти по СМС</div>
+          </div>
+          <span class="settings-item-arr">›</span>
+        </button>
+      </div>
+    </div>
+
   </div><!-- /screens -->
 </div><!-- /app -->
 
@@ -537,6 +654,9 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
 
 <!-- ══ TOAST ══ -->
 <div class="toast" id="toast"></div>
+
+<!-- reCAPTCHA (невидимая) -->
+<div id="recaptcha-container"></div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -567,20 +687,110 @@ let currentUser         = null;
   document.getElementById('greet-time').textContent = t;
 })();
 
-// ══ AUTH STATE — проверяем при загрузке ══
+// ══ AUTH STATE ══
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
     showApp();
+    updateUserInfo(user);
   }
-  // если не залогинен — auth-screen уже видно по умолчанию
 });
 
 function showApp() {
   document.getElementById('auth-screen').classList.add('hidden');
-  setTimeout(() => {
-    document.getElementById('auth-screen').style.display = 'none';
-  }, 400);
+  setTimeout(() => { document.getElementById('auth-screen').style.display='none'; }, 400);
+}
+
+function formatPhoneDisplay(phone) {
+  // из +79787587395 делаем +7 978 758-73-95
+  const d = phone.replace('+7','').replace(/\D/g,'');
+  if (d.length !== 10) return phone;
+  return '+7 ' + d.slice(0,3) + ' ' + d.slice(3,6) + '-' + d.slice(6,8) + '-' + d.slice(8,10);
+}
+
+function updateUserInfo(user) {
+  const phone   = user.phoneNumber || '';
+  const display = phone ? formatPhoneDisplay(phone) : '';
+  const name    = localStorage.getItem('rz_name') || 'Добро пожаловать';
+
+  // шапка меню
+  document.getElementById('hmenu-phone').textContent = display;
+  document.getElementById('hmenu-name').textContent  = name;
+
+  // приветствие на главной
+  const greetName = localStorage.getItem('rz_name') || 'Здравствуйте';
+  document.getElementById('greet-name').textContent  = greetName;
+
+  // настройки
+  document.getElementById('settings-phone-display').textContent = display || 'Не определён';
+  document.getElementById('settings-name-display').textContent  = name;
+  if (document.getElementById('name-input')) {
+    document.getElementById('name-input').value = localStorage.getItem('rz_name') || '';
+  }
+}
+
+// ══ MENU ══
+function toggleMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('hmenu');
+  const btn  = document.getElementById('hbtn');
+  const open = menu.classList.contains('open');
+  if (open) { closeMenu(); }
+  else { menu.classList.add('open'); btn.classList.add('open'); }
+}
+
+function closeMenu() {
+  document.getElementById('hmenu').classList.remove('open');
+  document.getElementById('hbtn').classList.remove('open');
+}
+
+// закрыть меню при клике вне
+document.addEventListener('click', e => {
+  const menu = document.getElementById('hmenu');
+  if (menu.classList.contains('open') && !menu.contains(e.target)) {
+    closeMenu();
+  }
+});
+
+// ══ SETTINGS ══
+function openSettings() {
+  if (currentUser) updateUserInfo(currentUser);
+  go('settings');
+}
+
+function saveName() {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) return;
+  localStorage.setItem('rz_name', val);
+  document.getElementById('settings-name-display').textContent = val;
+  document.getElementById('hmenu-name').textContent = val;
+  document.getElementById('greet-name').textContent = val;
+  showToast('Имя сохранено ✓');
+}
+
+// ══ SIGN OUT ══
+function signOut() {
+  if (!confirm('Выйти из аккаунта?')) return;
+  auth.signOut().then(() => {
+    currentUser = null;
+    closeMenu();
+
+    // сбрасываем recaptcha полностью
+    if (recaptchaVerifier) {
+      try { recaptchaVerifier.clear(); } catch(e) {}
+      recaptchaVerifier = null;
+    }
+    confirmationResult = null;
+
+    // сбрасываем форму
+    backToPhone();
+    go('home');
+
+    // показываем экран входа
+    const as = document.getElementById('auth-screen');
+    as.style.display = 'flex';
+    setTimeout(() => as.classList.remove('hidden'), 10);
+  });
 }
 
 // ══ PHONE FORMATTING ══
@@ -735,10 +945,11 @@ function friendlyAuthError(code) {
 }
 
 // ══ NAVIGATION ══
-const screens = ['home','emergency','chat','reminders','contacts','notes','passwords'];
+const screens = ['home','emergency','chat','reminders','contacts','notes','passwords','settings'];
 let currentScreen = 'home';
 
 function go(id) {
+  closeMenu();
   const prev = document.getElementById('s-'+currentScreen);
   const next = document.getElementById('s-'+id);
   if (prev===next) return;
