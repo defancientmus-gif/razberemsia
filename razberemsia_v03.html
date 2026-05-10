@@ -63,6 +63,8 @@ header{padding:16px 22px 10px;display:flex;align-items:center;justify-content:sp
 .greet-name{font-family:'Playfair Display',serif;font-size:32px;color:var(--text);line-height:1.2;margin-bottom:4px;}
 .greet-calm{font-size:17px;font-weight:500;color:var(--sage-d);margin-bottom:10px;}
 .greet-status{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-m);}
+.greet-datetime{font-size:15px;font-weight:600;color:var(--text-m);margin-bottom:8px;letter-spacing:.01em;}
+.beta-notice{margin-top:14px;background:rgba(184,136,58,0.09);border:1px solid rgba(184,136,58,0.22);border-radius:14px;padding:12px 16px;font-size:14px;color:var(--text-m);line-height:1.65;}
 .pulse{width:8px;height:8px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:pulse 2.5s ease-in-out infinite;}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(122,158,126,0.5)}50%{box-shadow:0 0 0 6px rgba(122,158,126,0)}}
 
@@ -261,7 +263,7 @@ header{padding:16px 22px 10px;display:flex;align-items:center;justify-content:sp
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.5</div>
+  <div class="auth-ver">v3.5 · ранняя бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -332,9 +334,11 @@ header{padding:16px 22px 10px;display:flex;align-items:center;justify-content:sp
     <div class="scr active" id="s-home">
       <div class="greet-block">
         <div class="greet-time" id="greet-time">Добрый день</div>
+        <div class="greet-datetime" id="greet-datetime"></div>
         <div class="greet-name" id="greet-name">Здравствуйте</div>
         <div class="greet-calm">всё в порядке</div>
         <div class="greet-status"><span class="pulse"></span>Я рядом — спрашивайте что угодно</div>
+        <div class="beta-notice">Приложение в стадии бета-тестирования — некоторые разделы ещё дорабатываются. Спасибо, что вы с нами с самого начала.</div>
       </div>
       <button class="emer-card" onclick="go('emergency')">
         <div class="emer-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
@@ -542,10 +546,24 @@ auth.languageCode = 'ru';
 
 let confirmationResult=null, recaptchaVerifier=null, countdownInterval=null, currentUser=null, sheetType=null;
 
-// GREETING
+// GREETING + DATETIME
 (function(){
-  const h=new Date().getHours();
-  document.getElementById('greet-time').textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
+  function updateDateTime(){
+    const now=new Date();
+    const h=now.getHours();
+    document.getElementById('greet-time').textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
+    const days=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+    const months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    const day=now.getDate();
+    const month=months[now.getMonth()];
+    const weekday=days[now.getDay()];
+    const hh=String(h).padStart(2,'0');
+    const mm=String(now.getMinutes()).padStart(2,'0');
+    const dtEl=document.getElementById('greet-datetime');
+    if(dtEl)dtEl.textContent=`${weekday}, ${day} ${month} · ${hh}:${mm}`;
+  }
+  updateDateTime();
+  setInterval(updateDateTime,30000);
 })();
 
 // AUTH STATE
