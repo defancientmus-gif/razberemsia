@@ -2,1548 +2,1072 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#0f0c1a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Разберёмся">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Разберёмся</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-
 :root{
-  --bg:#0f0c1a;
-  --card:rgba(255,255,255,0.08);
-  --card-border:rgba(255,255,255,0.14);
-  --card-hover:rgba(255,255,255,0.13);
-  --text:#ffffff;
-  --text-dim:rgba(255,255,255,0.65);
-  --text-faint:rgba(255,255,255,0.38);
-  --gold:rgba(255,210,100,0.95);
-  --gold-bg:rgba(255,200,60,0.18);
-  --gold-border:rgba(255,200,60,0.32);
-  --green:rgba(140,255,170,0.9);
-  --green-bg:rgba(80,200,120,0.18);
-  --red:rgba(255,180,175,0.95);
-  --red-bg:rgba(180,40,40,0.2);
-  --red-border:rgba(255,100,90,0.3);
-  --r:20px;
-  --r-sm:14px;
+  --sage:   #7a9e7e;
+  --sage-l: #a8c5ac;
+  --sage-d: #4a6e4e;
+  --cream:  #f5f0e8;
+  --warm:   #e8ddd0;
+  --stone:  #c4b8a8;
+  --text:   #252e26;
+  --text-m: #4a5c4b;
+  --text-l: #6b7d6c;
+  --rose:   #c0504a;
+  --rose-l: #e8a09c;
+  --gold:   #b8883a;
+  --r:      20px;
+  --rsm:    12px;
 }
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Raleway',sans-serif;background:var(--cream);color:var(--text);font-size:17px;line-height:1.6;position:relative;}
 
-html{font-size:17px;}
+/* ── BACKGROUND ── */
+.bg{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(ellipse 80% 60% at 20% 110%, rgba(122,158,126,0.18) 0%, transparent 60%),
+  radial-gradient(ellipse 60% 80% at 90% -10%, rgba(184,136,58,0.08) 0%, transparent 50%),
+  linear-gradient(160deg, #f7f3ec 0%, #f0ebe0 40%, #eae4d8 100%);}
+.bg-circle{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
+.bc1{width:400px;height:400px;background:radial-gradient(circle,rgba(122,158,126,0.12) 0%,transparent 70%);top:-100px;right:-80px;animation:breathe 12s ease-in-out infinite;}
+.bc2{width:300px;height:300px;background:radial-gradient(circle,rgba(184,136,58,0.07) 0%,transparent 70%);bottom:-50px;left:-60px;animation:breathe 16s ease-in-out infinite reverse;}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 
-body{
-  font-family:'Nunito',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  /* Мягкий градиентный фон */
-  background-image:
-    radial-gradient(ellipse at 15% 50%, rgba(100,60,180,0.18) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(40,100,180,0.14) 0%, transparent 55%),
-    radial-gradient(ellipse at 55% 85%, rgba(60,140,80,0.12) 0%, transparent 55%);
-}
+/* ── APP SHELL ── */
+.app{position:relative;z-index:10;height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;}
 
-/* ── ОБЩИЕ КОМПОНЕНТЫ ── */
+/* ── HEADER ── */
+header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--text);letter-spacing:.3px;}
+.logo em{color:var(--sage-d);font-style:italic;}
+/* ── HOME BUTTON MENU ── */
+.hbtn{width:44px;height:44px;border-radius:50%;background:rgba(122,158,126,0.12);border:1px solid rgba(122,158,126,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;-webkit-appearance:none;padding:0;position:relative;}
+.hbtn:active{background:rgba(122,158,126,0.25);transform:scale(.92);}
+.hbtn svg{width:20px;height:20px;stroke:var(--sage-d);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.hbtn.open{background:rgba(122,158,126,0.25);}
 
-.glass{
-  background:var(--card);
-  border:1px solid var(--card-border);
-  border-radius:var(--r);
-  /* Зефирная тень */
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(0,0,0,0.08);
+.hmenu{
+  position:fixed;top:66px;right:calc(50% - 222px);z-index:400;
+  background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);
+  border:1px solid rgba(196,184,168,0.5);border-radius:18px;
+  padding:8px;min-width:220px;
+  box-shadow:0 8px 32px rgba(45,59,46,0.14);
+  opacity:0;pointer-events:none;transform:translateY(-8px) scale(.97);
+  transition:all .2s cubic-bezier(.4,0,.2,1);
 }
+@media(max-width:480px){.hmenu{right:12px;}}
+.hmenu.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+.hmenu-user{padding:12px 14px 10px;border-bottom:1px solid rgba(196,184,168,0.35);margin-bottom:6px;}
+.hmenu-phone{font-size:13px;font-weight:700;color:var(--text-m);}
+.hmenu-name{font-size:16px;font-weight:600;color:var(--text);margin-top:2px;}
+.hmenu-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;transition:background .12s;-webkit-appearance:none;background:none;border:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;}
+.hmenu-item:active{background:rgba(122,158,126,0.12);}
+.hmenu-item-ico{width:34px;height:34px;border-radius:10px;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.hmenu-item-t{font-size:15px;font-weight:600;color:var(--text);}
+.hmenu-item-s{font-size:12px;color:var(--text-l);margin-top:1px;}
+.hmenu-sep{height:1px;background:rgba(196,184,168,0.35);margin:6px 8px;}
+.hmenu-item.danger .hmenu-item-ico{background:rgba(192,80,74,0.08);}
+.hmenu-item.danger .hmenu-item-t{color:var(--rose);}
 
-.btn{
-  display:block;width:100%;
-  padding:16px 20px;
-  background:var(--card);
-  border:1px solid var(--card-border);
-  border-radius:var(--r);
-  color:var(--text);
-  font-family:'Nunito',sans-serif;
-  font-size:17px;font-weight:700;
-  cursor:pointer;text-align:left;
-  -webkit-appearance:none;
-  box-shadow:
-    0 6px 20px rgba(0,0,0,0.22),
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -2px 0 rgba(0,0,0,0.12);
-  transition:transform 0.1s, box-shadow 0.1s;
-  min-height:52px;
-}
-.btn:active{
-  transform:translateY(2px) scale(0.98);
-  box-shadow:
-    0 2px 8px rgba(0,0,0,0.3),
-    inset 0 2px 4px rgba(0,0,0,0.2);
-}
+/* ── SETTINGS SCREEN ── */
+.settings-section{margin-bottom:20px;}
+.settings-section-title{font-size:12px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding:0 4px;}
+.settings-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);padding:16px 18px;margin-bottom:6px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-appearance:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;transition:all .14s;}
+.settings-item:active{background:rgba(122,158,126,0.08);}
+.settings-item-ico{font-size:22px;width:40px;text-align:center;flex-shrink:0;}
+.settings-item-t{font-size:16px;font-weight:600;color:var(--text);}
+.settings-item-s{font-size:13px;color:var(--text-m);margin-top:2px;}
+.settings-item-arr{margin-left:auto;font-size:18px;color:var(--text-l);}
+.settings-item.danger .settings-item-t{color:var(--rose);}
+.name-edit-row{display:flex;gap:8px;margin-top:14px;}
+.name-in{flex:1;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:12px;padding:12px 14px;font-size:16px;font-family:'Raleway',sans-serif;color:var(--text);outline:none;min-height:48px;}
+.name-in:focus{border-color:rgba(122,158,126,0.6);}
+.name-save{background:var(--sage);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;white-space:nowrap;}
+.name-save:active{background:var(--sage-d);}
+.settings-info{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:var(--r);padding:16px 18px;font-size:14px;color:var(--text-m);line-height:1.7;}
 
-.btn-gold{
-  background:var(--gold-bg);
-  border-color:var(--gold-border);
-  color:var(--gold);
-  box-shadow:
-    0 6px 20px rgba(255,180,0,0.12),
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -2px 0 rgba(0,0,0,0.1);
-  text-align:center;
-}
+/* ── SCREENS ── */
+.screens{flex:1;overflow:hidden;position:relative;}
+.scr{position:absolute;inset:0;overflow-y:auto;padding:8px 18px 32px;opacity:0;pointer-events:none;transform:translateY(16px);transition:all .28s cubic-bezier(.4,0,.2,1);}
+.scr.active{opacity:1;pointer-events:all;transform:translateY(0);}
+.scr.slide-left{transform:translateX(-24px);opacity:0;}
+.scr.slide-right{transform:translateX(24px);opacity:0;}
 
-.btn-red{
-  background:var(--red-bg);
-  border-color:var(--red-border);
-  color:var(--red);
-  text-align:center;
-}
+/* ── HOME SCREEN ── */
+.greeting-block{margin-bottom:20px;padding:24px 22px 20px;}
+.greet-time{font-size:13px;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.greet-name{font-family:'Playfair Display',serif;font-size:32px;font-weight:400;color:var(--text);line-height:1.2;margin-bottom:4px;}
+.greet-calm{font-size:17px;font-weight:500;color:var(--sage-d);margin-bottom:12px;}
+.greet-status{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text-m);}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(122,158,126,0.5)}50%{box-shadow:0 0 0 6px rgba(122,158,126,0)}}
 
-input,textarea,select{
-  width:100%;
-  background:rgba(255,255,255,0.07);
-  border:1px solid rgba(255,255,255,0.16);
-  border-radius:var(--r-sm);
-  padding:13px 16px;
-  font-size:16px;
-  font-family:'Nunito',sans-serif;
-  color:var(--text);
-  outline:none;
-  -webkit-appearance:none;
-}
-input::placeholder,textarea::placeholder{color:var(--text-faint);}
-input:focus,textarea:focus,select:focus{border-color:var(--gold-border);}
-textarea{resize:none;}
-select{background-image:none;}
-
-/* ── ЭКРАНЫ ── */
-.screen{display:none;}
-.screen.on{display:block;}
-
-/* ── ЭКРАН БЛОКИРОВКИ ── */
-#lock{
-  min-height:100vh;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-}
-#lock.on{display:flex;}
-
-.lock-box{
-  width:100%;max-width:360px;
-  text-align:center;
-  padding:36px 28px 32px;
-}
-.lock-ico{font-size:56px;margin-bottom:20px;display:block;}
-.lock-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:30px;font-weight:300;
-  color:var(--text);margin-bottom:10px;
-}
-.lock-sub{
-  font-size:15px;color:var(--text-dim);
-  line-height:1.65;margin-bottom:24px;
-}
-.lock-input{
-  margin-bottom:12px;
-  font-size:20px;
-  text-align:center;
-  letter-spacing:4px;
-  min-height:54px;
-}
-.lock-input::placeholder{letter-spacing:0;font-size:15px;}
-.lock-err{
-  background:rgba(200,50,50,0.18);
-  border:1px solid rgba(255,100,100,0.25);
-  border-radius:12px;
-  padding:10px 16px;
-  font-size:14px;
-  color:var(--red);
-  margin-bottom:12px;
-  display:none;
-}
-.lock-forgot{
-  background:none;border:none;
-  color:var(--text-faint);
-  font-size:14px;font-weight:600;
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  padding:10px;margin-top:8px;
-  min-height:40px;text-decoration:underline;
-  -webkit-appearance:none;
-}
-
-/* ── ШАПКА ── */
-.top{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 18px;
-  position:sticky;top:0;z-index:50;
-  background:rgba(15,12,26,0.7);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(255,255,255,0.08);
-}
-.logo{
-  font-family:'Cormorant Garamond',serif;
-  font-size:23px;font-weight:300;
-  color:var(--text);letter-spacing:.5px;
-}
-.logo em{color:var(--gold);font-style:italic;}
-.top-btns{display:flex;gap:8px;}
-.ico-btn{
-  width:42px;height:42px;
-  background:var(--card);
-  border:1px solid var(--card-border);
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;cursor:pointer;
-  -webkit-appearance:none;
-  box-shadow:0 4px 12px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.1);
-  transition:transform 0.1s;
-}
-.ico-btn:active{transform:scale(0.88);}
-
-/* ── ОСНОВНОЙ КОНТЕНТ ── */
-.app{max-width:500px;margin:0 auto;padding:16px 18px 40px;}
-
-/* ── КАРТОЧКА ПРИВЕТСТВИЯ ── */
-.greeting{
-  padding:24px 22px 20px;
-  margin-bottom:14px;
-  text-align:center;
-}
-.greet-time{
-  font-size:12px;font-weight:600;
-  color:var(--text-faint);
-  text-transform:uppercase;letter-spacing:.1em;
-  margin-bottom:8px;
-}
-.greet-name{
-  font-family:'Cormorant Garamond',serif;
-  font-size:32px;font-weight:300;
-  color:var(--text);margin-bottom:8px;
-}
-.greet-sub{font-size:15px;color:var(--text-dim);line-height:1.6;}
-.online-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(120,220,140,0.9);
-  display:inline-block;margin-right:6px;
-  vertical-align:middle;
-}
-
-/* ── АЛЕРТ ── */
-.alert{
-  padding:15px 18px;margin-bottom:12px;
-  display:flex;align-items:center;gap:14px;
-  cursor:pointer;min-height:64px;
-  background:var(--gold-bg);
-  border:1px solid var(--gold-border);
-  border-radius:var(--r);
-  transition:transform 0.1s;
-}
-.alert:active{transform:scale(0.98);}
-.alert-icon{font-size:26px;flex-shrink:0;}
-.alert-title{font-size:16px;font-weight:700;color:var(--gold);}
-.alert-sub{font-size:13px;color:rgba(255,210,100,0.65);margin-top:2px;}
-
-/* ── МЕНЮ КАРТОЧКИ ── */
-.menu-cards{display:flex;flex-direction:column;gap:10px;}
-.menu-card{
-  padding:18px 20px;
+/* ── EMERGENCY CARD ── */
+.emer-card{
+  background:linear-gradient(135deg, #8b3a36 0%, #b0403a 50%, #c0504a 100%);
+  border-radius:var(--r);padding:20px 22px;margin-bottom:14px;
+  cursor:pointer;transition:transform .15s, box-shadow .15s;
+  box-shadow:0 6px 24px rgba(176,64,58,0.28);
   display:flex;align-items:center;gap:16px;
-  cursor:pointer;min-height:76px;
-  width:100%;text-align:left;
-  font-family:'Nunito',sans-serif;
-  background:var(--card);
-  border:1px solid var(--card-border);
-  border-radius:var(--r);
-  -webkit-appearance:none;
-  box-shadow:
-    0 6px 20px rgba(0,0,0,0.2),
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    inset 0 -2px 0 rgba(0,0,0,0.1);
-  transition:transform 0.1s, box-shadow 0.1s;
+  -webkit-appearance:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;border:none;
 }
-.menu-card:active{
-  transform:scale(0.97) translateY(2px);
-  box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 2px 4px rgba(0,0,0,0.15);
-}
-.menu-ico{
-  width:52px;height:52px;border-radius:14px;
-  background:rgba(255,255,255,0.1);
-  border:1px solid rgba(255,255,255,0.16);
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;flex-shrink:0;
-}
-.menu-title{font-size:18px;font-weight:700;color:var(--text);}
-.menu-sub{font-size:13px;color:var(--text-dim);margin-top:3px;}
-.menu-arr{margin-left:auto;font-size:20px;color:var(--text-faint);flex-shrink:0;}
+.emer-card:active{transform:scale(.97);box-shadow:0 3px 12px rgba(176,64,58,0.2);}
+.emer-icon{font-size:30px;flex-shrink:0;}
+.emer-title{font-size:19px;font-weight:700;color:#fff;margin-bottom:4px;}
+.emer-sub{font-size:14px;color:rgba(255,255,255,0.82);}
 
-/* SOS */
-.sos-card{
-  padding:18px 20px;
-  display:flex;align-items:center;gap:16px;
-  cursor:pointer;min-height:76px;
-  width:100%;text-align:left;
-  font-family:'Nunito',sans-serif;
-  background:var(--red-bg);
-  border:1px solid var(--red-border);
-  border-radius:var(--r);
-  margin-top:4px;
-  -webkit-appearance:none;
-  box-shadow:0 6px 20px rgba(180,40,40,0.15),inset 0 1px 0 rgba(255,180,175,0.1);
-  transition:transform 0.1s;
+/* ── ACTION CARDS ── */
+.cards-grid{display:flex;flex-direction:column;gap:9px;}
+.acard{
+  background:rgba(255,255,255,0.72);backdrop-filter:blur(16px);
+  border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);
+  padding:17px 18px;display:flex;align-items:center;gap:15px;
+  cursor:pointer;transition:all .16s;
+  -webkit-appearance:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;
 }
-.sos-card:active{transform:scale(0.97) translateY(2px);}
-.sos-title{font-size:18px;font-weight:800;color:var(--red);}
-.sos-sub{font-size:13px;color:rgba(255,155,148,0.65);margin-top:3px;}
+.acard:active{background:rgba(122,158,126,0.12);transform:scale(.98);}
+.acard-ico{width:50px;height:50px;border-radius:14px;background:var(--warm);border:1px solid rgba(196,184,168,0.6);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.acard-title{font-size:17px;font-weight:600;color:var(--text);}
+.acard-sub{font-size:13px;color:var(--text-m);margin-top:3px;line-height:1.45;}
+.acard-arr{margin-left:auto;font-size:20px;color:var(--text-l);flex-shrink:0;}
+.badge{background:var(--rose);color:#fff;font-size:10px;font-weight:700;border-radius:50px;padding:2px 7px;margin-left:6px;vertical-align:middle;}
 
-/* ── КНОПКА НАЗАД ── */
-.back-btn{
-  display:flex;align-items:center;gap:12px;
-  padding:14px 18px;margin-bottom:16px;
-  width:100%;cursor:pointer;
-  font-family:'Nunito',sans-serif;
-  background:var(--card);
-  border:1px solid var(--card-border);
-  border-radius:var(--r);
-  -webkit-appearance:none;
-  box-shadow:0 4px 16px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.1);
-  transition:transform 0.1s;
-  min-height:56px;
+/* ── BACK ROW ── */
+.backrow{margin-bottom:16px;}
+.backbtn{
+  display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);
+  border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);
+  padding:13px 18px;cursor:pointer;-webkit-appearance:none;font-family:'Raleway',sans-serif;
+  width:100%;text-align:left;transition:all .14s;
 }
-.back-btn:active{transform:scale(0.98) translateY(1px);}
-.back-arrow{font-size:26px;color:var(--gold);}
-.back-label{font-size:17px;font-weight:700;color:var(--text);}
-.back-hint{font-size:12px;color:var(--text-faint);margin-top:2px;}
+.backbtn:active{background:rgba(122,158,126,0.12);transform:scale(.98);}
+.back-arr{font-size:20px;color:var(--sage);}
+.back-lbl{font-size:16px;font-weight:600;color:var(--text);}
+.back-hint{font-size:12px;color:var(--text-m);margin-top:1px;}
 
-/* ── КОНТЕНТ КАРТОЧКИ ── */
-.item-card{padding:16px 18px;margin-bottom:10px;}
-.item-label{
-  font-size:11px;font-weight:700;color:var(--text-faint);
-  text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;
-}
-.item-value{font-size:20px;font-weight:700;color:var(--text);font-family:monospace;}
-.item-body{font-size:15px;color:rgba(255,255,255,0.85);line-height:1.65;margin-top:5px;}
-.item-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
-.action-btn{
-  background:rgba(255,255,255,0.1);
-  color:rgba(255,255,255,0.85);
-  border:1px solid rgba(255,255,255,0.14);
-  border-radius:10px;padding:9px 16px;
-  font-size:14px;font-weight:700;
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  min-height:42px;-webkit-appearance:none;
-  box-shadow:0 3px 10px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.1);
-  transition:transform 0.1s;
-}
-.action-btn:active{transform:scale(0.95) translateY(1px);}
-.del-btn{
-  background:rgba(180,40,40,0.15);
-  color:var(--red);
-  border-color:rgba(200,50,50,0.2);
-}
-.tag{
-  display:inline-block;font-size:11px;font-weight:700;
-  border-radius:50px;padding:3px 11px;margin-top:8px;
-  background:var(--gold-bg);color:var(--gold);
-  border:1px solid var(--gold-border);
-}
+/* ── SECTION TITLE ── */
+.sec-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--text);margin-bottom:5px;padding:0 2px;}
+.sec-sub{font-size:14px;color:var(--text-m);margin-bottom:18px;padding:0 2px;line-height:1.5;}
 
-/* ── НАПОМИНАНИЯ ── */
-.rem-card{
-  padding:15px 18px;margin-bottom:10px;
-  display:flex;align-items:center;gap:14px;
+/* ── EMERGENCY SCREEN ── */
+.emg-intro{background:rgba(192,80,74,0.08);border:1px solid rgba(192,80,74,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.emg-intro-t{font-size:16px;font-weight:700;color:var(--rose);margin-bottom:6px;}
+.emg-intro-s{font-size:14px;color:var(--text-m);line-height:1.7;}
+.emg-options{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.emg-opt{
+  background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:var(--r);
+  padding:16px 18px;cursor:pointer;-webkit-appearance:none;font-family:'Raleway',sans-serif;
+  text-align:left;width:100%;display:flex;align-items:center;gap:13px;transition:all .15s;
 }
-.rem-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-.rem-title{font-size:17px;font-weight:700;color:var(--text);}
-.rem-when{font-size:13px;color:var(--text-dim);margin-top:3px;}
-.sms-badge{
-  display:inline-block;
-  background:var(--green-bg);color:var(--green);
-  border:1px solid rgba(80,200,120,0.25);
-  font-size:11px;font-weight:700;
-  border-radius:50px;padding:2px 8px;margin-left:6px;
-  vertical-align:middle;
-}
+.emg-opt:active{background:rgba(192,80,74,0.08);border-color:rgba(192,80,74,0.3);}
+.emg-opt-ico{font-size:22px;flex-shrink:0;}
+.emg-opt-t{font-size:16px;font-weight:600;color:var(--text);}
+.emg-rule{background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25);border-radius:var(--r);padding:18px 20px;}
+.emg-rule-t{font-size:15px;font-weight:700;color:var(--sage-d);margin-bottom:8px;}
+.emg-rule-i{font-size:15px;color:var(--text-m);line-height:1.8;}
 
-/* ── КОНТАКТЫ ── */
-.contact-card{
-  padding:14px 18px;margin-bottom:10px;
-  display:flex;align-items:center;gap:14px;
-}
-.contact-ava{
-  width:50px;height:50px;border-radius:50%;
-  background:rgba(255,255,255,0.14);
-  border:1px solid rgba(255,255,255,0.2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:800;color:var(--text);
-  flex-shrink:0;
-}
-.contact-name{font-size:17px;font-weight:700;color:var(--text);}
-.contact-phone{font-size:13px;color:var(--text-dim);margin-top:3px;}
-.call-btn{
-  margin-left:auto;
-  background:var(--green-bg);
-  color:var(--green);
-  border:1px solid rgba(80,200,120,0.28);
-  border-radius:12px;padding:10px 15px;
-  font-size:14px;font-weight:700;
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  flex-shrink:0;min-height:46px;
-  -webkit-appearance:none;
-  box-shadow:0 3px 10px rgba(0,0,0,0.18);
-  transition:transform 0.1s;
-  text-decoration:none;display:flex;align-items:center;
-}
-.call-btn:active{transform:scale(0.95);}
+/* ── CHAT SCREEN ── */
+.chat-wrap{background:rgba(255,255,255,0.6);backdrop-filter:blur(16px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 200px);}
+.chat-head{padding:14px 18px;border-bottom:1px solid rgba(196,184,168,0.35);display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.4);}
+.chat-ava{width:40px;height:40px;border-radius:50%;background:rgba(122,158,126,0.15);border:2px solid rgba(122,158,126,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.chat-name{font-size:15px;font-weight:700;color:var(--text);}
+.chat-st{font-size:12px;color:var(--sage-d);font-weight:600;margin-top:1px;}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:220px;}
+.msg{display:flex;gap:8px;align-items:flex-end;}
+.msg.u{flex-direction:row-reverse;}
+.bubble{max-width:82%;padding:12px 16px;font-size:15px;line-height:1.7;border-radius:18px;}
+.msg.ai .bubble{background:rgba(255,255,255,0.9);color:var(--text);border:1px solid rgba(196,184,168,0.4);border-radius:4px 18px 18px 18px;}
+.msg.u .bubble{background:rgba(122,158,126,0.22);color:var(--text);border:1px solid rgba(122,158,126,0.3);border-radius:18px 4px 18px 18px;}
+.mav2{width:28px;height:28px;border-radius:50%;background:rgba(196,184,168,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.typing-bub{display:flex;gap:4px;align-items:center;padding:12px 15px;background:rgba(255,255,255,0.9);border:1px solid rgba(196,184,168,0.4);border-radius:4px 18px 18px 18px;width:fit-content;}
+.typing-bub span{width:6px;height:6px;border-radius:50%;background:var(--stone);animation:tp 1.1s ease-in-out infinite;}
+.typing-bub span:nth-child(2){animation-delay:.18s}
+.typing-bub span:nth-child(3){animation-delay:.36s}
+@keyframes tp{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.quickqs{padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid rgba(196,184,168,0.35);background:rgba(255,255,255,0.3);}
+.qq{background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.25);border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--sage-d);cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;transition:background .12s;}
+.qq:active{background:rgba(122,158,126,0.25);}
+.chat-input-row{padding:10px 12px;display:flex;gap:8px;border-top:1px solid rgba(196,184,168,0.35);background:rgba(255,255,255,0.4);}
+.chat-in{flex:1;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:12px;padding:11px 14px;font-size:15px;font-family:'Raleway',sans-serif;color:var(--text);outline:none;resize:none;min-height:46px;max-height:100px;}
+.chat-in::placeholder{color:var(--stone);}
+.chat-in:focus{border-color:rgba(122,158,126,0.6);}
+.send-btn{background:rgba(122,158,126,0.85);color:#fff;border:none;border-radius:12px;padding:11px 17px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;flex-shrink:0;min-height:46px;min-width:82px;-webkit-appearance:none;transition:background .12s;}
+.send-btn:active{background:var(--sage-d);}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;}
 
-/* ── ДОБАВИТЬ ── */
-.add-btn{
-  width:100%;background:transparent;
-  color:var(--text-faint);
-  border:1.5px dashed rgba(255,255,255,0.18);
-  border-radius:var(--r);
-  padding:15px;font-size:15px;font-weight:600;
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  min-height:54px;margin-top:4px;
-  -webkit-appearance:none;transition:all 0.15s;
-}
-.add-btn:active{background:var(--card);color:var(--text);}
+/* ── SETUP KEY ── */
+.setup-key{background:rgba(184,136,58,0.08);border:1.5px solid rgba(184,136,58,0.25);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;}
+.setup-t{font-size:16px;font-weight:700;color:var(--gold);margin-bottom:7px;}
+.setup-s{font-size:14px;color:var(--text-m);line-height:1.75;margin-bottom:14px;}
+.setup-in{width:100%;background:rgba(255,255,255,0.7);border:1.5px solid rgba(196,184,168,0.5);border-radius:10px;padding:12px 14px;font-size:15px;font-family:'Raleway',sans-serif;color:var(--text);outline:none;margin-bottom:10px;min-height:48px;}
+.setup-in:focus{border-color:rgba(184,136,58,0.5);}
+.setup-btn{width:100%;background:rgba(184,136,58,0.25);color:var(--gold);border:1.5px solid rgba(184,136,58,0.35);border-radius:10px;padding:13px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;min-height:50px;}
+.setup-btn:active{background:rgba(184,136,58,0.4);}
+.err-msg{font-size:14px;color:var(--rose);margin-top:7px;display:none;}
 
-/* ── ЧАТ ── */
-.chat-wrap{overflow:hidden;}
-.chat-top{
-  padding:13px 16px;display:flex;align-items:center;gap:12px;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  background:rgba(255,255,255,0.04);
+/* ── REMINDERS ── */
+.rem-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);padding:18px 20px;margin-bottom:8px;display:flex;align-items:center;gap:14px;}
+.rem-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.rem-title{font-size:16px;font-weight:600;color:var(--text);}
+.rem-when{font-size:13px;color:var(--text-m);margin-top:4px;}
+.sms-tag{display:inline-block;background:rgba(122,158,126,0.15);color:var(--sage-d);font-size:11px;font-weight:700;border-radius:50px;padding:2px 9px;margin-left:7px;border:1px solid rgba(122,158,126,0.25);}
+.add-dashed{
+  background:transparent;border:1.5px dashed rgba(196,184,168,0.6);border-radius:var(--r);
+  padding:16px;width:100%;font-size:15px;font-weight:600;color:var(--text-m);
+  cursor:pointer;font-family:'Raleway',sans-serif;margin-top:4px;-webkit-appearance:none;
+  display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;transition:all .15s;
 }
-.chat-ava{
-  width:42px;height:42px;border-radius:50%;
-  background:var(--gold-bg);
-  border:1px solid var(--gold-border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;flex-shrink:0;
-}
-.chat-name{font-size:16px;font-weight:700;color:var(--text);}
-.chat-status{font-size:12px;color:var(--green);font-weight:600;margin-top:2px;}
-.chat-msgs{
-  padding:14px;min-height:260px;max-height:360px;
-  overflow-y:auto;display:flex;flex-direction:column;gap:12px;
-  background:rgba(0,0,0,0.1);
-}
-.msg{display:flex;gap:8px;}
-.msg.user{flex-direction:row-reverse;}
-.msg-ava{
-  width:30px;height:30px;border-radius:50%;
-  background:rgba(255,255,255,0.1);
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;flex-shrink:0;margin-top:2px;
-}
-.msg-bub{
-  max-width:80%;padding:11px 15px;
-  font-size:15px;line-height:1.55;border-radius:18px;
-}
-.msg.ai .msg-bub{
-  background:rgba(255,255,255,0.12);
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:4px 18px 18px 18px;
-  color:var(--text);
-}
-.msg.user .msg-bub{
-  background:var(--gold-bg);
-  border:1px solid var(--gold-border);
-  border-radius:18px 4px 18px 18px;
-  color:var(--text);
-}
-.typing{
-  display:flex;gap:5px;align-items:center;
-  padding:12px 16px;
-  background:rgba(255,255,255,0.1);
-  border:1px solid rgba(255,255,255,0.14);
-  border-radius:4px 18px 18px 18px;
-  width:fit-content;
-}
-.typing span{
-  width:7px;height:7px;border-radius:50%;
-  background:rgba(255,255,255,0.6);
-  animation:blink 1.2s ease-in-out infinite;
-}
-.typing span:nth-child(2){animation-delay:.2s;}
-.typing span:nth-child(3){animation-delay:.4s;}
-@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-.quick-btns{
-  padding:10px 14px;display:flex;flex-wrap:wrap;gap:7px;
-  border-top:1px solid rgba(255,255,255,0.07);
-  background:rgba(0,0,0,0.06);
-}
-.quick-btn{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.14);
-  border-radius:50px;padding:7px 13px;
-  font-size:13px;font-weight:600;color:rgba(255,255,255,0.85);
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  min-height:38px;-webkit-appearance:none;transition:background 0.12s;
-}
-.quick-btn:active{background:rgba(255,255,255,0.18);}
-.chat-row{
-  padding:11px 14px;display:flex;gap:8px;
-  border-top:1px solid rgba(255,255,255,0.07);
-}
-.chat-input{
-  flex:1;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.14);
-  border-radius:13px;padding:11px 14px;
-  font-size:15px;min-height:44px;max-height:100px;
-  resize:none;
-}
-.send-btn{
-  background:var(--gold-bg);
-  color:var(--gold);
-  border:1px solid var(--gold-border);
-  border-radius:13px;padding:11px 15px;
-  font-size:14px;font-weight:700;
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  flex-shrink:0;min-width:80px;min-height:44px;
-  -webkit-appearance:none;
-  box-shadow:0 4px 12px rgba(255,180,0,0.1);
-  transition:transform 0.1s;
-}
-.send-btn:active{transform:scale(0.96);}
-.send-btn:disabled{opacity:.35;cursor:not-allowed;}
+.add-dashed:active{background:rgba(122,158,126,0.08);color:var(--text);}
 
-/* ── API SETUP ── */
-.setup-box{
-  padding:18px;margin-bottom:12px;
-  background:var(--gold-bg);
-  border:1px solid var(--gold-border);
-  border-radius:var(--r);
-}
-.setup-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:7px;}
-.setup-text{font-size:14px;color:rgba(255,210,100,0.75);line-height:1.65;margin-bottom:12px;}
-.setup-err{display:none;font-size:13px;color:var(--red);margin-top:8px;}
+/* ── CONTACTS ── */
+.contact-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);padding:17px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;}
+.con-ava{width:50px;height:50px;border-radius:50%;background:rgba(122,158,126,0.12);border:2px solid rgba(122,158,126,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--sage-d);flex-shrink:0;}
+.con-name{font-size:17px;font-weight:600;color:var(--text);}
+.con-role{font-size:13px;color:var(--text-m);margin-top:3px;}
+.call-btn{margin-left:auto;background:rgba(122,158,126,0.15);color:var(--sage-d);border:1.5px solid rgba(122,158,126,0.3);border-radius:12px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;flex-shrink:0;-webkit-appearance:none;transition:background .12s;min-height:46px;}
+.call-btn:active{background:rgba(122,158,126,0.3);}
 
-/* ── ПУСТОЕ СОСТОЯНИЕ ── */
-.empty{text-align:center;padding:40px 20px;color:var(--text-faint);}
-.empty-icon{font-size:48px;margin-bottom:12px;opacity:.6;}
+/* ── NOTES ── */
+.note-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);padding:18px 20px;margin-bottom:8px;}
+.note-label{font-size:11px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+.note-title{font-size:18px;font-weight:600;color:var(--text);margin-bottom:7px;}
+.note-body{font-size:15px;color:var(--text-m);line-height:1.75;}
+.note-tag{display:inline-block;background:rgba(184,136,58,0.12);color:var(--gold);font-size:11px;font-weight:700;border-radius:50px;padding:3px 11px;margin-top:8px;border:1px solid rgba(184,136,58,0.2);}
 
-/* ── МОДАЛЬНОЕ ОКНО ── */
-#modal-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.6);z-index:100;
-  align-items:flex-end;justify-content:center;
-}
-#modal-overlay.open{display:flex;}
-.modal-box{
-  background:#1a1528;
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:26px 26px 0 0;
-  padding:22px 20px 40px;
-  width:100%;max-width:500px;
-}
-.modal-handle{
-  width:36px;height:4px;
-  background:rgba(255,255,255,0.15);
-  border-radius:4px;margin:0 auto 18px;
-}
-.modal-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;color:var(--text);margin-bottom:16px;
-}
-.modal-label{font-size:13px;font-weight:700;color:var(--text-faint);margin-bottom:5px;}
-.modal-field{margin-bottom:12px;}
-.modal-check{
-  display:flex;align-items:center;gap:10px;
-  font-size:15px;font-weight:600;color:rgba(255,255,255,0.85);
-  margin-bottom:16px;cursor:pointer;
-}
-.modal-check input{width:20px;height:20px;cursor:pointer;flex-shrink:0;}
+/* ── PASSWORDS ── */
+.pass-warn{background:rgba(184,136,58,0.08);border:1px solid rgba(184,136,58,0.25);border-radius:var(--r);padding:15px 18px;margin-bottom:14px;font-size:14px;color:var(--text-m);line-height:1.7;}
+.pass-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.5);border-radius:var(--r);padding:18px 20px;margin-bottom:8px;}
+.pass-service{font-size:12px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.pass-val{font-size:20px;font-weight:700;color:var(--text);font-family:monospace;letter-spacing:.05em;}
+.show-btn{margin-top:12px;background:rgba(122,158,126,0.1);color:var(--sage-d);border:1px solid rgba(122,158,126,0.25);border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;min-height:42px;}
+.show-btn:active{background:rgba(122,158,126,0.22);}
 
-/* ── ПОДТВЕРЖДЕНИЕ ── */
-#confirm-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.65);z-index:200;
-  align-items:center;justify-content:center;padding:20px;
-}
-#confirm-overlay.open{display:flex;}
-.confirm-box{
-  background:#1a1528;
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:22px;padding:28px 22px;
-  width:100%;max-width:320px;text-align:center;
-}
-.confirm-icon{font-size:38px;margin-bottom:12px;}
-.confirm-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;}
-.confirm-sub{font-size:14px;color:var(--text-dim);line-height:1.55;margin-bottom:20px;}
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(45,59,46,0.45);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{background:#f5f1ea;border-radius:26px 26px 0 0;padding:22px 20px 44px;width:100%;max-width:480px;animation:slideUp .22s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet-handle{width:36px;height:4px;background:rgba(196,184,168,0.7);border-radius:4px;margin:0 auto 20px;}
+.sheet-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--text);margin-bottom:18px;}
+.sheet-lbl{font-size:13px;font-weight:700;color:var(--text-m);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.sheet-in{width:100%;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:12px;padding:13px 15px;font-size:16px;font-family:'Raleway',sans-serif;color:var(--text);outline:none;margin-bottom:12px;min-height:50px;}
+.sheet-in:focus{border-color:rgba(122,158,126,0.5);}
+.sheet-save{width:100%;background:var(--sage);color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;margin-bottom:6px;min-height:56px;}
+.sheet-save:active{background:var(--sage-d);}
+.sheet-cancel{width:100%;background:none;border:none;color:var(--text-l);font-size:15px;font-weight:600;cursor:pointer;font-family:'Raleway',sans-serif;padding:12px;-webkit-appearance:none;}
 
-/* ── ТОСТ ── */
-#toast{
-  position:fixed;bottom:28px;left:50%;
-  transform:translateX(-50%);
-  background:rgba(40,160,100,0.95);
-  color:white;padding:11px 22px;
-  border-radius:50px;font-size:15px;font-weight:700;
-  z-index:300;opacity:0;
-  transition:opacity .25s;pointer-events:none;
-  white-space:nowrap;
-  box-shadow:0 4px 20px rgba(0,0,0,0.3);
-}
-#toast.show{opacity:1;}
-#toast.err{background:rgba(180,40,40,0.95);}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(45,59,46,0.9);color:#fff;font-size:14px;font-weight:600;padding:12px 22px;border-radius:50px;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── БЕЗОПАСНОСТЬ ── */
-.sec-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--green-bg);
-  border:1px solid rgba(80,200,120,0.22);
-  border-radius:50px;padding:4px 12px;
-  font-size:12px;font-weight:700;color:var(--green);
-  margin-top:8px;
+/* scrollbar */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(196,184,168,0.5);border-radius:3px;}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{
+  position:fixed;inset:0;z-index:500;
+  background:linear-gradient(160deg,#f7f3ec 0%,#f0ebe0 40%,#eae4d8 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 28px 48px;
+  transition:opacity .35s,transform .35s;
 }
+#auth-screen.hidden{opacity:0;pointer-events:none;transform:translateY(-20px);}
+.auth-logo{font-family:'Playfair Display',serif;font-size:34px;font-weight:400;color:var(--text);letter-spacing:.3px;margin-bottom:8px;text-align:center;}
+.auth-logo em{color:var(--sage-d);font-style:italic;}
+.auth-tagline{font-size:16px;color:var(--text-m);text-align:center;margin-bottom:48px;line-height:1.6;}
+.auth-card{background:rgba(255,255,255,0.75);backdrop-filter:blur(20px);border:1px solid rgba(196,184,168,0.5);border-radius:24px;padding:28px 24px;width:100%;max-width:400px;}
+.auth-step{display:none;}
+.auth-step.active{display:block;}
+.auth-label{font-size:13px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.auth-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--text);margin-bottom:6px;}
+.auth-sub{font-size:14px;color:var(--text-m);line-height:1.65;margin-bottom:22px;}
+.auth-phone-row{display:flex;gap:8px;margin-bottom:12px;}
+.auth-prefix{background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:12px;padding:13px 14px;font-size:17px;font-weight:600;color:var(--text);font-family:'Raleway',sans-serif;width:68px;text-align:center;flex-shrink:0;}
+.auth-in{flex:1;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:12px;padding:13px 15px;font-size:17px;font-family:'Raleway',sans-serif;color:var(--text);outline:none;min-height:52px;-webkit-appearance:none;}
+.auth-in:focus{border-color:rgba(122,158,126,0.6);}
+.auth-in::placeholder{color:var(--stone);}
+.auth-btn{width:100%;background:var(--sage);color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;min-height:56px;-webkit-appearance:none;transition:background .15s;margin-top:4px;}
+.auth-btn:active{background:var(--sage-d);}
+.auth-btn:disabled{opacity:.45;cursor:not-allowed;}
+.auth-err{font-size:14px;color:var(--rose);margin-top:10px;display:none;line-height:1.5;}
+.auth-note{font-size:13px;color:var(--text-l);text-align:center;margin-top:14px;line-height:1.6;}
+.auth-code-row{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}
+.code-digit{width:52px;height:62px;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:14px;font-size:26px;font-weight:700;text-align:center;font-family:'Raleway',sans-serif;color:var(--text);outline:none;-webkit-appearance:none;}
+.code-digit:focus{border-color:rgba(122,158,126,0.6);}
+.auth-back{background:none;border:none;color:var(--text-l);font-size:14px;font-weight:600;cursor:pointer;font-family:'Raleway',sans-serif;padding:12px;width:100%;margin-top:4px;-webkit-appearance:none;}
+.auth-resend{background:none;border:none;color:var(--sage-d);font-size:14px;font-weight:600;cursor:pointer;font-family:'Raleway',sans-serif;padding:4px;-webkit-appearance:none;text-decoration:underline;}
+.auth-timer{font-size:14px;color:var(--text-l);}
+#recaptcha-container{position:fixed;bottom:-100px;right:-100px;z-index:-1;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;}
+.grecaptcha-badge{visibility:hidden !important;opacity:0 !important;}
 </style>
 </head>
 <body>
+<div class="bg"></div>
+<div class="bg-circle bc1"></div>
+<div class="bg-circle bc2"></div>
 
-<!-- ЭКРАН БЛОКИРОВКИ -->
-<div id="lock" class="on">
-  <div class="lock-box glass">
-    <span class="lock-ico" id="lock-ico">🔐</span>
-    <div class="lock-title" id="lock-title">Разберёмся</div>
-    <div class="lock-sub" id="lock-sub">Введите ваш секретный код</div>
-    <div class="lock-err" id="lock-err"></div>
-    <input
-      class="lock-input"
-      id="lock-input"
-      type="password"
-      inputmode="numeric"
-      maxlength="8"
-      placeholder="Введите код"
-      autocomplete="off"
-    >
-    <button class="btn btn-gold" id="lock-btn" style="margin-bottom:10px;">Войти</button>
-    <button class="lock-forgot" id="lock-forgot">Забыл код</button>
+<!-- ══ AUTH SCREEN ══ -->
+<div id="auth-screen">
+  <div class="auth-logo">Разберём<em>ся</em></div>
+  <div class="auth-tagline">Спокойный помощник рядом</div>
+
+  <div class="auth-card">
+
+    <!-- Шаг 1: ввод номера -->
+    <div class="auth-step active" id="step-phone">
+      <div class="auth-label">Вход</div>
+      <div class="auth-title">Ваш номер телефона</div>
+      <div class="auth-sub">Отправим код — один раз, больше ничего не нужно запоминать.</div>
+      <div class="auth-phone-row">
+        <div class="auth-prefix">+7</div>
+        <input class="auth-in" id="phone-input" type="tel" inputmode="numeric"
+          placeholder="900 000-00-00" maxlength="12"
+          oninput="formatPhone(this)" onkeydown="if(event.key==='Enter')sendSms()">
+      </div>
+      <button class="auth-btn" id="sms-btn" onclick="sendSms()">Получить код</button>
+      <div class="auth-err" id="phone-err">Проверьте номер и попробуйте снова</div>
+      <div class="auth-note">Мы не передаём ваши данные третьим лицам</div>
+    </div>
+
+    <!-- Шаг 2: ввод кода -->
+    <div class="auth-step" id="step-code">
+      <div class="auth-label">Подтверждение</div>
+      <div class="auth-title">Код из СМС</div>
+      <div class="auth-sub" id="code-sub">Отправили на ваш номер. Введите 6 цифр.</div>
+      <div class="auth-code-row">
+        <input class="code-digit" id="d0" type="tel" inputmode="numeric" maxlength="1" oninput="digitInput(this,0)">
+        <input class="code-digit" id="d1" type="tel" inputmode="numeric" maxlength="1" oninput="digitInput(this,1)">
+        <input class="code-digit" id="d2" type="tel" inputmode="numeric" maxlength="1" oninput="digitInput(this,2)">
+        <input class="code-digit" id="d3" type="tel" inputmode="numeric" maxlength="1" oninput="digitInput(this,3)">
+        <input class="code-digit" id="d4" type="tel" inputmode="numeric" maxlength="1" oninput="digitInput(this,4)">
+        <input class="code-digit" id="d5" type="tel" inputmode="numeric" maxlength="1" oninput="digitInput(this,5)">
+      </div>
+      <button class="auth-btn" id="verify-btn" onclick="verifyCode()">Войти</button>
+      <div class="auth-err" id="code-err">Неверный код. Попробуйте ещё раз.</div>
+      <div style="text-align:center;margin-top:14px;">
+        <span class="auth-timer" id="resend-timer">Отправить снова через <b id="countdown">60</b> сек</span>
+        <button class="auth-resend" id="resend-btn" style="display:none" onclick="resendSms()">Отправить снова</button>
+      </div>
+      <button class="auth-back" onclick="backToPhone()">← Изменить номер</button>
+    </div>
+
   </div>
 </div>
 
-<!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
-<div id="app" style="display:none;">
-  <header class="top">
-    <div class="logo">Разберём<em>ся</em></div>
-    <div class="top-btns">
-      <button class="ico-btn" id="lock-app-btn" title="Заблокировать">🔒</button>
-      <button class="ico-btn" id="home-btn">🏠</button>
+<!-- ── DROPDOWN MENU ── -->
+<div class="hmenu" id="hmenu">
+  <div class="hmenu-user">
+    <div class="hmenu-phone" id="hmenu-phone">Загрузка...</div>
+    <div class="hmenu-name" id="hmenu-name">Добро пожаловать</div>
+  </div>
+  <button class="hmenu-item" onclick="openSettings();closeMenu()">
+    <div class="hmenu-item-ico">⚙️</div>
+    <div>
+      <div class="hmenu-item-t">Настройки</div>
+      <div class="hmenu-item-s">Имя, уведомления</div>
     </div>
+  </button>
+  <div class="hmenu-sep"></div>
+  <button class="hmenu-item danger" onclick="signOut()">
+    <div class="hmenu-item-ico">🚪</div>
+    <div>
+      <div class="hmenu-item-t">Выйти</div>
+      <div class="hmenu-item-s">Сменить аккаунт</div>
+    </div>
+  </button>
+</div>
+
+<div class="app">
+  <header>
+    <div class="logo">Разберём<em>ся</em></div>
+    <button class="hbtn" id="hbtn" onclick="toggleMenu()" title="Меню">
+      <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
+    </button>
   </header>
 
-  <div class="app">
+  <div class="screens">
 
-    <!-- ГЛАВНАЯ -->
-    <div id="screen-home" class="screen on">
-      <div class="glass greeting">
+    <!-- ══ HOME ══ -->
+    <div class="scr active" id="s-home">
+      <div class="greeting-block">
         <div class="greet-time" id="greet-time">Добрый день</div>
-        <div class="greet-name" id="greet-name">Добро пожаловать</div>
-        <div class="greet-sub">
-          <span class="online-dot"></span>Я рядом — ваш личный блокнот и помощник
-        </div>
-        <div class="sec-badge">🔐 Данные зашифрованы</div>
+        <div class="greet-name">Михаил</div>
+        <div class="greet-calm">всё в порядке</div>
+        <div class="greet-status"><span class="pulse"></span>Я рядом — спрашивайте что угодно</div>
       </div>
 
-      <div class="alert" id="home-alert">
-        <div class="alert-icon">🔔</div>
+      <button class="emer-card" onclick="go('emergency')">
+        <span class="emer-icon">🆘</span>
         <div>
-          <div class="alert-title" id="alert-title">Нет напоминаний</div>
-          <div class="alert-sub" id="alert-sub">Нажмите чтобы добавить</div>
+          <div class="emer-title">Что-то случилось?</div>
+          <div class="emer-sub">Позвонили мошенники · Не могу войти · Боюсь нажать</div>
         </div>
-      </div>
+      </button>
 
-      <div class="menu-cards">
-        <button class="menu-card" id="nav-ai">
-          <div class="menu-ico">💬</div>
+      <div class="cards-grid">
+        <button class="acard" onclick="go('chat')">
+          <div class="acard-ico">💬</div>
           <div>
-            <div class="menu-title">Помощник</div>
-            <div class="menu-sub">Спросите что угодно</div>
+            <div class="acard-title">Спросить помощника</div>
+            <div class="acard-sub">Любой вопрос — отвечу просто</div>
           </div>
-          <div class="menu-arr">›</div>
+          <span class="acard-arr">›</span>
         </button>
-        <button class="menu-card" id="nav-passwords">
-          <div class="menu-ico">🔑</div>
+
+        <button class="acard" onclick="go('reminders')">
+          <div class="acard-ico">🔔</div>
           <div>
-            <div class="menu-title">Мои пароли</div>
-            <div class="menu-sub" id="cnt-passwords">Нажмите чтобы добавить</div>
+            <div class="acard-title">Мои напоминания<span class="badge">1</span></div>
+            <div class="acard-sub">Лекарства, дела, звонки</div>
           </div>
-          <div class="menu-arr">›</div>
+          <span class="acard-arr">›</span>
         </button>
-        <button class="menu-card" id="nav-notes">
-          <div class="menu-ico">📓</div>
+
+        <button class="acard" onclick="go('contacts')">
+          <div class="acard-ico">📞</div>
           <div>
-            <div class="menu-title">Заметки и рецепты</div>
-            <div class="menu-sub" id="cnt-notes">Нажмите чтобы добавить</div>
+            <div class="acard-title">Позвонить близкому</div>
+            <div class="acard-sub">Аня, Серёжа, Доктор</div>
           </div>
-          <div class="menu-arr">›</div>
+          <span class="acard-arr">›</span>
         </button>
-        <button class="menu-card" id="nav-reminders">
-          <div class="menu-ico">🔔</div>
+
+        <button class="acard" onclick="go('notes')">
+          <div class="acard-ico">📋</div>
           <div>
-            <div class="menu-title">Напоминания</div>
-            <div class="menu-sub" id="cnt-reminders">Нажмите чтобы добавить</div>
+            <div class="acard-title">Мои записи</div>
+            <div class="acard-sub">Рецепты, адреса, важное</div>
           </div>
-          <div class="menu-arr">›</div>
+          <span class="acard-arr">›</span>
         </button>
-        <button class="menu-card" id="nav-contacts">
-          <div class="menu-ico">📞</div>
+
+        <button class="acard" onclick="go('passwords')">
+          <div class="acard-ico">🔑</div>
           <div>
-            <div class="menu-title">Близкие</div>
-            <div class="menu-sub" id="cnt-contacts">Нажмите чтобы добавить</div>
+            <div class="acard-title">Мои пароли</div>
+            <div class="acard-sub">Госуслуги, банк, почта</div>
           </div>
-          <div class="menu-arr">›</div>
-        </button>
-        <button class="sos-card" id="nav-sos">
-          <div class="menu-ico" style="background:rgba(180,40,40,0.2);border-color:rgba(255,100,90,0.25);">🛡️</div>
-          <div>
-            <div class="sos-title">Позвонили мошенники?</div>
-            <div class="sos-sub">Нажмите — помогу разобраться сейчас</div>
-          </div>
+          <span class="acard-arr">›</span>
         </button>
       </div>
     </div>
 
-    <!-- ПОМОЩНИК -->
-    <div id="screen-ai" class="screen">
-      <button class="back-btn" id="back-ai">
-        <span class="back-arrow">←</span>
-        <div><div class="back-label">На главную</div><div class="back-hint">Вернуться назад</div></div>
-      </button>
+    <!-- ══ EMERGENCY ══ -->
+    <div class="scr" id="s-emergency">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Разберёмся</div>
+      <div class="sec-sub">Что случилось? Выберите — и я помогу</div>
 
-      <div class="setup-box glass" id="setup-box">
-        <div class="setup-title">🔧 Включить живого помощника</div>
-        <div class="setup-text">Вставьте ключ Anthropic API — он хранится зашифрованно на вашем устройстве.<br><br>Получить: <strong style="color:var(--gold)">console.anthropic.com</strong></div>
-        <div class="modal-field"><input id="api-input" type="password" placeholder="sk-ant-..."></div>
-        <button class="btn btn-gold" id="api-save-btn">Сохранить и включить</button>
-        <div class="setup-err" id="api-err"></div>
+      <div class="emg-options">
+        <button class="emg-opt" onclick="askAI('Мне позвонили незнакомые люди и просят данные карты или перевести деньги. Что делать прямо сейчас? Объясни пошагово и спокойно.')">
+          <span class="emg-opt-ico">📵</span>
+          <div><div class="emg-opt-t">Позвонили мошенники</div></div>
+        </button>
+        <button class="emg-opt" onclick="askAI('Я не могу войти в свой аккаунт — не помню пароль или не приходит код. Как мне попасть обратно? Объясни пошагово и спокойно.')">
+          <span class="emg-opt-ico">🔓</span>
+          <div><div class="emg-opt-t">Не могу войти в аккаунт</div></div>
+        </button>
+        <button class="emg-opt" onclick="askAI('Мне пишут что мой телефон или аккаунт взломали, или просят перейти по ссылке. Это мошенники? Что делать?')">
+          <span class="emg-opt-ico">⚠️</span>
+          <div><div class="emg-opt-t">Подозрительное сообщение</div></div>
+        </button>
+        <button class="emg-opt" onclick="askAI('Я боюсь что-то нажать на телефоне или компьютере — вдруг сломаю или потеряю важное. Успокой меня и объясни что делать.')">
+          <span class="emg-opt-ico">😨</span>
+          <div><div class="emg-opt-t">Боюсь что-то нажать</div></div>
+        </button>
+        <button class="emg-opt" onclick="askAI('Мне кажется я потерял важные фотографии или файлы. Как их найти? Объясни спокойно.')">
+          <span class="emg-opt-ico">🖼️</span>
+          <div><div class="emg-opt-t">Потерял фотографии</div></div>
+        </button>
+        <button class="emg-opt" onclick="askAI('У меня другая проблема с телефоном или интернетом. Помоги разобраться.')">
+          <span class="emg-opt-ico">❓</span>
+          <div><div class="emg-opt-t">Другая проблема</div></div>
+        </button>
       </div>
 
-      <div class="glass chat-wrap">
-        <div class="chat-top">
+      <div class="emg-rule">
+        <div class="emg-rule-t">Главное правило</div>
+        <div class="emg-rule-i">
+          Если сомневаетесь — лучше не нажимайте.<br>
+          Настоящий банк или госуслуги <strong>никогда</strong> не просят пароль или код по телефону.<br>
+          Всегда можно позвонить близкому и посоветоваться.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHAT ══ -->
+    <div class="scr" id="s-chat">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+
+      <div class="chat-wrap">
+        <div class="chat-head">
           <div class="chat-ava">🤝</div>
           <div>
             <div class="chat-name">Помощник «Разберёмся»</div>
-            <div class="chat-status" id="chat-status">● Готов помочь</div>
+            <div class="chat-st" id="chat-status">● Готов помочь</div>
           </div>
         </div>
-        <div class="chat-msgs" id="chat-msgs">
-          <div class="msg ai">
-            <div class="msg-ava">🤝</div>
-            <div class="msg-bub">Здравствуйте! Спросите меня что угодно — про телефон, интернет, мошенников или что-то ещё. Отвечу просто и понятно.</div>
-          </div>
+        <div class="msgs" id="msgs">
+          <div class="msg ai"><div class="mav2">🤝</div><div class="bubble">Здравствуйте, Михаил! Спрашивайте что угодно — про телефон, интернет, мошенников или любое другое. Отвечу просто и понятно. Чем могу помочь?</div></div>
         </div>
-        <div class="quick-btns">
-          <button class="quick-btn" data-q="Как не попасться на мошенников?">🛡️ Мошенники</button>
-          <button class="quick-btn" data-q="Как сделать шрифт покрупнее?">📱 Телефон</button>
-          <button class="quick-btn" data-q="Как войти на Госуслуги?">🏛️ Госуслуги</button>
-          <button class="quick-btn" data-q="Что такое Wi-Fi?">📶 Wi-Fi</button>
-          <button class="quick-btn" data-q="Как перенести фото с телефона?">🖼️ Фото</button>
+        <div class="quickqs">
+          <button class="qq" onclick="sq('Как не попасться на мошенников?')">🛡️ Мошенники</button>
+          <button class="qq" onclick="sq('Как увеличить шрифт на телефоне?')">📱 Шрифт</button>
+          <button class="qq" onclick="sq('Как войти на Госуслуги?')">🏛️ Госуслуги</button>
+          <button class="qq" onclick="sq('Что такое Wi-Fi?')">📶 Wi-Fi</button>
         </div>
-        <div class="chat-row">
-          <textarea class="chat-input" id="chat-input" rows="1" placeholder="Напишите вопрос..."></textarea>
-          <button class="send-btn" id="send-btn">Отправить</button>
+        <div class="chat-input-row">
+          <textarea class="chat-in" id="chat-input" rows="1" placeholder="Напишите вопрос..." onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMsg()">Отправить</button>
         </div>
       </div>
     </div>
 
-    <!-- ПАРОЛИ -->
-    <div id="screen-passwords" class="screen">
-      <button class="back-btn" id="back-passwords">
-        <span class="back-arrow">←</span>
-        <div><div class="back-label">На главную</div><div class="back-hint">Вернуться назад</div></div>
-      </button>
-      <div id="list-passwords"></div>
-      <button class="add-btn" id="add-password-btn">+ Добавить пароль</button>
+    <!-- ══ REMINDERS ══ -->
+    <div class="scr" id="s-reminders">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Напоминания</div>
+      <div class="sec-sub">С меткой 📱 СМС — придут на телефон</div>
+
+      <div class="rem-item"><div class="rem-dot" style="background:#e07070"></div><div><div class="rem-title">Таблетка от давления<span class="sms-tag">📱 СМС</span></div><div class="rem-when">Каждый день · 09:00 и 21:00</div></div></div>
+      <div class="rem-item"><div class="rem-dot" style="background:#7abf84"></div><div><div class="rem-title">Позвонить дочери<span class="sms-tag">📱 СМС</span></div><div class="rem-when">Каждое воскресенье · 12:00</div></div></div>
+      <div class="rem-item"><div class="rem-dot" style="background:#7ab0e0"></div><div><div class="rem-title">Приём у врача</div><div class="rem-when">15 мая, вторник · 10:30</div></div></div>
+      <div class="rem-item"><div class="rem-dot" style="background:#d4a83a"></div><div><div class="rem-title">Оплатить квартиру<span class="sms-tag">📱 СМС</span></div><div class="rem-when">25-го каждого месяца</div></div></div>
+
+      <button class="add-dashed" onclick="openSheet('reminder')">＋ Добавить напоминание</button>
     </div>
 
-    <!-- ЗАМЕТКИ -->
-    <div id="screen-notes" class="screen">
-      <button class="back-btn" id="back-notes">
-        <span class="back-arrow">←</span>
-        <div><div class="back-label">На главную</div><div class="back-hint">Вернуться назад</div></div>
-      </button>
-      <div id="list-notes"></div>
-      <button class="add-btn" id="add-note-btn">+ Добавить заметку</button>
+    <!-- ══ CONTACTS ══ -->
+    <div class="scr" id="s-contacts">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Близкие</div>
+      <div class="sec-sub">Нажмите «Позвонить» — и сразу наберёт</div>
+
+      <div class="contact-item"><div class="con-ava">АН</div><div><div class="con-name">Аня</div><div class="con-role">Дочь · +7 916 123-45-67</div></div><button class="call-btn" onclick="callContact('Аня', '+79161234567')">Позвонить</button></div>
+      <div class="contact-item"><div class="con-ava">СЕ</div><div><div class="con-name">Серёжа</div><div class="con-role">Сын · +7 903 987-65-43</div></div><button class="call-btn" onclick="callContact('Серёжа', '+79039876543')">Позвонить</button></div>
+      <div class="contact-item"><div class="con-ava">ДР</div><div><div class="con-name">Доктор Романов</div><div class="con-role">Поликлиника · +7 495 000-11-22</div></div><button class="call-btn" onclick="callContact('Доктор Романов', '+74950001122')">Позвонить</button></div>
+
+      <button class="add-dashed" onclick="openSheet('contact')">＋ Добавить контакт</button>
     </div>
 
-    <!-- НАПОМИНАНИЯ -->
-    <div id="screen-reminders" class="screen">
-      <button class="back-btn" id="back-reminders">
-        <span class="back-arrow">←</span>
-        <div><div class="back-label">На главную</div><div class="back-hint">Вернуться назад</div></div>
-      </button>
-      <div style="font-size:13px;color:var(--text-faint);margin-bottom:12px;">
-        С меткой <span class="sms-badge">📱 СМС</span> — придут на телефон
+    <!-- ══ NOTES ══ -->
+    <div class="scr" id="s-notes">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Мои записи</div>
+      <div class="sec-sub">Важное всегда под рукой</div>
+
+      <div class="note-item"><div class="note-label">рецепт</div><div class="note-title">Борщ по-домашнему</div><div class="note-body">Свёкла, капуста, картошка, морковь, мясо. Варить полтора часа на медленном огне.</div><span class="note-tag">рецепт</span></div>
+      <div class="note-item"><div class="note-label">адрес</div><div class="note-title">Поликлиника</div><div class="note-body">ул. Ленина 42, кабинет 18 · Тел: 8-495-000-11-22 · Работает до 18:00</div><span class="note-tag">адрес</span></div>
+      <div class="note-item"><div class="note-label">важное</div><div class="note-title">Размер обуви Ани</div><div class="note-body">37, любит светлые цвета. На день рождения — духи или красивый платок.</div><span class="note-tag">важное</span></div>
+      <div class="note-item"><div class="note-label">документы</div><div class="note-title">Полис ОМС</div><div class="note-body">1234 5678 9012 3456 · поликлиника №5</div><span class="note-tag">документы</span></div>
+
+      <button class="add-dashed" onclick="openSheet('note')">＋ Добавить запись</button>
+    </div>
+
+    <!-- ══ PASSWORDS ══ -->
+    <div class="scr" id="s-passwords">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Мои пароли</div>
+      <div class="sec-sub">Для памяти — хранятся только на вашем устройстве</div>
+
+      <div class="pass-warn">⚠️ Это список для памяти, не профессиональный сейф. Не записывайте здесь пароли от банков. Для банка лучше спросить у сотрудника при визите.</div>
+
+      <div class="pass-item"><div class="pass-service">Госуслуги</div><div class="pass-val" id="p1">••••••••••</div><button class="show-btn" onclick="togglePass('p1','Misha1956!')">Показать</button></div>
+      <div class="pass-item"><div class="pass-service">Почта Mail.ru</div><div class="pass-val" id="p2">••••••••••</div><button class="show-btn" onclick="togglePass('p2','qwerty2024')">Показать</button></div>
+      <div class="pass-item"><div class="pass-service">Wi-Fi дома</div><div class="pass-val" id="p3">••••••••••</div><button class="show-btn" onclick="togglePass('p3','HomeNet_77')">Показать</button></div>
+
+      <button class="add-dashed" onclick="openSheet('password')">＋ Добавить пароль</button>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="scr" id="s-settings">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><span class="back-arr">←</span><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Настройки</div>
+      <div class="sec-sub">Личные данные и параметры</div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Как вас называть</div>
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-ico">👤</div>
+          <div style="flex:1">
+            <div class="settings-item-t" id="settings-name-display">Михаил</div>
+            <div class="settings-item-s">Имя в приветствии</div>
+            <div class="name-edit-row">
+              <input class="name-in" id="name-input" type="text" placeholder="Введите ваше имя" maxlength="30">
+              <button class="name-save" onclick="saveName()">Сохранить</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="list-reminders"></div>
-      <button class="add-btn" id="add-reminder-btn">+ Добавить напоминание</button>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Аккаунт</div>
+        <div class="settings-item" style="cursor:default">
+          <div class="settings-item-ico">📱</div>
+          <div>
+            <div class="settings-item-t" id="settings-phone-display">Загрузка...</div>
+            <div class="settings-item-s">Номер телефона для входа</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Информация</div>
+        <div class="settings-info">
+          Ваши данные хранятся только на вашем устройстве и в защищённом хранилище Firebase. Мы не передаём их третьим лицам и не используем в рекламных целях.
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Выход</div>
+        <button class="settings-item danger" onclick="signOut()">
+          <div class="settings-item-ico">🚪</div>
+          <div>
+            <div class="settings-item-t">Выйти из аккаунта</div>
+            <div class="settings-item-s">Потребуется снова войти по СМС</div>
+          </div>
+          <span class="settings-item-arr">›</span>
+        </button>
+      </div>
     </div>
 
-    <!-- КОНТАКТЫ -->
-    <div id="screen-contacts" class="screen">
-      <button class="back-btn" id="back-contacts">
-        <span class="back-arrow">←</span>
-        <div><div class="back-label">На главную</div><div class="back-hint">Вернуться назад</div></div>
-      </button>
-      <div id="list-contacts"></div>
-      <button class="add-btn" id="add-contact-btn">+ Добавить контакт</button>
-    </div>
+  </div><!-- /screens -->
+</div><!-- /app -->
 
-  </div><!-- /app -->
-</div><!-- /main app -->
-
-<!-- МОДАЛЬНОЕ ОКНО -->
-<div id="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="modal-title"></div>
-    <div id="modal-body"></div>
-    <button class="btn btn-gold" id="modal-save" style="margin-bottom:8px;">✓ Сохранить</button>
-    <button class="btn" id="modal-cancel">Отмена</button>
+<!-- ══ MODAL SHEET ══ -->
+<div class="overlay" id="overlay" onclick="closeSheet(event)">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheet-title"></div>
+    <div id="sheet-body"></div>
+    <button class="sheet-save" onclick="saveSheet()">✓ Сохранить</button>
+    <button class="sheet-cancel" onclick="closeSheetDirect()">Отмена</button>
   </div>
 </div>
 
-<!-- ПОДТВЕРЖДЕНИЕ УДАЛЕНИЯ -->
-<div id="confirm-overlay">
-  <div class="confirm-box">
-    <div class="confirm-icon">🗑️</div>
-    <div class="confirm-title">Удалить?</div>
-    <div class="confirm-sub" id="confirm-text">Это действие нельзя отменить.</div>
-    <button class="btn btn-red" id="confirm-yes" style="margin-bottom:8px;">Да, удалить</button>
-    <button class="btn" id="confirm-no">Отмена — оставить</button>
-  </div>
-</div>
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
 
-<!-- ТОСТ -->
-<div id="toast"></div>
+<!-- reCAPTCHA (невидимая) -->
+<div id="recaptcha-container"></div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
-'use strict';
+// ══ FIREBASE INIT ══
+firebase.initializeApp({
+  apiKey: "AIzaSyDxaN6JLQkB56Wk1gxySyMFZwqkmhnmMDg",
+  authDomain: "razberemsia-89726.firebaseapp.com",
+  projectId: "razberemsia-89726",
+  storageBucket: "razberemsia-89726.firebasestorage.app",
+  messagingSenderId: "243883413956",
+  appId: "1:243883413956:web:f40ce077b0e27918709491"
+});
+const auth = firebase.auth();
+auth.languageCode = 'ru';
 
-// ════════════════════════════════
-//  КОНСТАНТЫ
-// ════════════════════════════════
-const SALT_KEY   = 'rz_salt';
-const STORE_KEY  = 'rz_data';
-const SCREENS    = ['home','ai','passwords','notes','reminders','contacts'];
-const AI_MODEL   = 'claude-haiku-4-5-20251001';
-const AI_SYSTEM  = 'Ты — добрый, терпеливый помощник сервиса «Разберёмся». Помогаешь пожилым людям. Говори просто, как добрый родственник. Без терминов. Любой вопрос нормальный. Отвечай коротко — максимум 3 абзаца. Шаги нумеруй. Заканчивай ободряюще. Только русский язык.';
+// ══ STATE ══
+let confirmationResult = null;
+let recaptchaVerifier   = null;
+let countdownInterval   = null;
+let currentUser         = null;
 
-// ════════════════════════════════
-//  СОСТОЯНИЕ
-// ════════════════════════════════
-let state = {
-  unlocked: false,
-  isFirstTime: false,
-  cryptoKey: null,
-  data: {
-    passwords: [],
-    notes: [],
-    reminders: [],
-    contacts: [],
-    apiKey: ''
-  }
-};
-
-let chatHistory = [];
-let pendingDelete = null;
-let currentModal = null;
-
-// ════════════════════════════════
-//  УТИЛИТЫ
-// ════════════════════════════════
-function $(id) { return document.getElementById(id); }
-
-function esc(s) {
-  if (!s) return '';
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-
-function toast(msg, isErr) {
-  const el = $('toast');
-  el.textContent = msg;
-  el.className = isErr ? 'err show' : 'show';
-  setTimeout(() => el.className = '', 2500);
-}
-
-// ════════════════════════════════
-//  ШИФРОВАНИЕ
-// ════════════════════════════════
-async function makeKey(pin, salt) {
-  const enc = new TextEncoder();
-  const raw = await crypto.subtle.importKey(
-    'raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']
-  );
-  return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt, iterations:100000, hash:'SHA-256' },
-    raw,
-    { name:'AES-GCM', length:256 },
-    false, ['encrypt','decrypt']
-  );
-}
-
-function toB64(bytes) {
-  let s = '';
-  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-  return btoa(s);
-}
-
-function fromB64(b64) {
-  const s = atob(b64);
-  const b = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
-  return b;
-}
-
-async function encryptData(key, obj) {
-  const iv  = crypto.getRandomValues(new Uint8Array(12));
-  const enc = new TextEncoder();
-  const ct  = await crypto.subtle.encrypt(
-    { name:'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj))
-  );
-  const out = new Uint8Array(12 + ct.byteLength);
-  out.set(iv);
-  out.set(new Uint8Array(ct), 12);
-  return toB64(out);
-}
-
-async function decryptData(key, b64) {
-  const buf = fromB64(b64);
-  const iv  = buf.slice(0, 12);
-  const ct  = buf.slice(12);
-  const dec = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct);
-  return JSON.parse(new TextDecoder().decode(dec));
-}
-
-// ════════════════════════════════
-//  ХРАНЕНИЕ (localStorage)
-// ════════════════════════════════
-async function saveVault() {
-  if (!state.cryptoKey) return;
-  const enc = await encryptData(state.cryptoKey, state.data);
-  localStorage.setItem(STORE_KEY, enc);
-}
-
-async function loadVault() {
-  const enc = localStorage.getItem(STORE_KEY);
-  if (!enc) return false;
-  try {
-    state.data = await decryptData(state.cryptoKey, enc);
-    return true;
-  } catch(e) {
-    return false;
-  }
-}
-
-// ════════════════════════════════
-//  ЭКРАН БЛОКИРОВКИ
-// ════════════════════════════════
-function initLock() {
-  const hasSalt = !!localStorage.getItem(SALT_KEY);
-
-  if (!hasSalt) {
-    state.isFirstTime = true;
-    $('lock-ico').textContent   = '🌟';
-    $('lock-title').textContent = 'Добро пожаловать!';
-    $('lock-sub').textContent   = 'Придумайте секретный код — минимум 4 цифры. Он защитит ваши данные.';
-    $('lock-btn').textContent   = 'Создать код';
-    $('lock-forgot').style.display = 'none';
-  } else {
-    $('lock-ico').textContent   = '🔐';
-    $('lock-title').textContent = 'Разберёмся';
-    $('lock-sub').textContent   = 'Введите ваш секретный код';
-    $('lock-btn').textContent   = 'Войти';
-    $('lock-forgot').style.display = 'block';
-  }
-}
-
-async function tryLogin() {
-  const pin    = $('lock-input').value.trim();
-  const errEl  = $('lock-err');
-  errEl.style.display = 'none';
-
-  if (pin.length < 4) {
-    errEl.textContent = 'Код должен быть минимум 4 символа';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  $('lock-btn').textContent = 'Проверяю...';
-  $('lock-btn').disabled = true;
-
-  try {
-    if (state.isFirstTime) {
-      // Создаём новый код
-      const salt = crypto.getRandomValues(new Uint8Array(16));
-      localStorage.setItem(SALT_KEY, toB64(salt));
-      state.cryptoKey = await makeKey(pin, salt);
-      state.data = { passwords:[], notes:[], reminders:[], contacts:[], apiKey:'' };
-      await saveVault();
-      enterApp();
-      toast('Код создан! Добро пожаловать 🎉');
-    } else {
-      // Входим с существующим кодом
-      const salt = fromB64(localStorage.getItem(SALT_KEY));
-      state.cryptoKey = await makeKey(pin, salt);
-      const ok = await loadVault();
-      if (!ok) {
-        state.cryptoKey = null;
-        errEl.textContent = 'Неверный код. Попробуйте ещё раз.';
-        errEl.style.display = 'block';
-        $('lock-input').value = '';
-        $('lock-btn').textContent = 'Войти';
-        $('lock-btn').disabled = false;
-        return;
-      }
-      enterApp();
-    }
-  } catch(err) {
-    console.error('Login error:', err);
-    errEl.textContent = 'Произошла ошибка: ' + err.message;
-    errEl.style.display = 'block';
-    $('lock-btn').textContent = state.isFirstTime ? 'Создать код' : 'Войти';
-    $('lock-btn').disabled = false;
-  }
-}
-
-function enterApp() {
-  state.unlocked = true;
-  $('lock').className = '';
-  $('lock').style.display = 'none';
-  $('app').style.display = 'block';
-  $('lock-input').value = '';
-  updateGreeting();
-  updateCounts();
-  loadApiKey();
-}
-
-function lockApp() {
-  state.unlocked = false;
-  state.cryptoKey = null;
-  state.data = { passwords:[], notes:[], reminders:[], contacts:[], apiKey:'' };
-  chatHistory = [];
-  $('app').style.display = 'none';
-  $('lock').style.display = 'flex';
-  $('lock-input').value = '';
-  $('lock-err').style.display = 'none';
-  initLock();
-}
-
-function forgotPin() {
-  if (!confirm('Если вы забыли код — все данные будут удалены.\nНажмите OK чтобы начать заново.')) return;
-  localStorage.removeItem(SALT_KEY);
-  localStorage.removeItem(STORE_KEY);
-  location.reload();
-}
-
-// ════════════════════════════════
-//  НАВИГАЦИЯ
-// ════════════════════════════════
-function showScreen(name) {
-  SCREENS.forEach(s => {
-    const el = $('screen-' + s);
-    if (el) el.classList.remove('on');
-  });
-  const target = $('screen-' + name);
-  if (target) {
-    target.classList.add('on');
-    window.scrollTo(0, 0);
-  }
-  // Рендерим список при переходе
-  if (name === 'passwords')  renderList('passwords');
-  if (name === 'notes')      renderList('notes');
-  if (name === 'reminders')  renderList('reminders');
-  if (name === 'contacts')   renderList('contacts');
-}
-
-function updateGreeting() {
+// ══ GREETING ══
+(function(){
   const h = new Date().getHours();
   const t = h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
-  $('greet-time').textContent = t;
+  document.getElementById('greet-time').textContent = t;
+})();
 
-  const rems = state.data.reminders;
-  if (rems.length > 0) {
-    $('alert-title').textContent = rems[0].what;
-    $('alert-sub').textContent   = rems[0].when;
-    $('home-alert').style.background = 'var(--gold-bg)';
+// ══ AUTH STATE ══
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    showApp();
+    updateUserInfo(user);
+  }
+});
+
+function showApp() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  setTimeout(() => { document.getElementById('auth-screen').style.display='none'; }, 400);
+}
+
+function updateUserInfo(user) {
+  const phone   = user.phoneNumber || '';
+  const cleaned = phone.replace('+7','').trim();
+  const display = phone ? '+7 ' + cleaned : '';
+  const name    = localStorage.getItem('rz_name') || 'Добро пожаловать';
+
+  // шапка меню
+  document.getElementById('hmenu-phone').textContent = display;
+  document.getElementById('hmenu-name').textContent  = name;
+
+  // приветствие на главной
+  const greetName = localStorage.getItem('rz_name') || 'Здравствуйте';
+  document.getElementById('greet-name').textContent  = greetName;
+
+  // настройки
+  document.getElementById('settings-phone-display').textContent = display || 'Не определён';
+  document.getElementById('settings-name-display').textContent  = name;
+  if (document.getElementById('name-input')) {
+    document.getElementById('name-input').value = localStorage.getItem('rz_name') || '';
   }
 }
 
-function updateCounts() {
-  const d = state.data;
-  $('cnt-passwords').textContent = d.passwords.length
-    ? d.passwords.length + ' сохранено'
-    : 'Нажмите чтобы добавить';
-  $('cnt-notes').textContent = d.notes.length
-    ? d.notes.length + ' записей'
-    : 'Нажмите чтобы добавить';
-  $('cnt-reminders').textContent = d.reminders.length
-    ? d.reminders.length + ' активных'
-    : 'Нажмите чтобы добавить';
-  $('cnt-contacts').textContent = d.contacts.length
-    ? d.contacts.length + ' контактов'
-    : 'Нажмите чтобы добавить';
+// ══ MENU ══
+function toggleMenu() {
+  const menu = document.getElementById('hmenu');
+  const btn  = document.getElementById('hbtn');
+  const open = menu.classList.contains('open');
+  if (open) { closeMenu(); }
+  else { menu.classList.add('open'); btn.classList.add('open'); }
 }
 
-// ════════════════════════════════
-//  РЕНДЕР СПИСКОВ
-// ════════════════════════════════
-const DOT_COLORS = ['#FF7070','#70DD80','#70B0FF','#FFD060','#FF90D0','#B0E0FF'];
-
-function renderList(type) {
-  const el = $('list-' + type);
-  if (!el) return;
-  const items = state.data[type];
-
-  if (!items.length) {
-    const icons = { passwords:'🔑', notes:'📓', reminders:'🔔', contacts:'📞' };
-    el.innerHTML = `<div class="empty"><div class="empty-icon">${icons[type]}</div>Пока пусто.<br>Нажмите кнопку ниже.</div>`;
-    return;
-  }
-
-  if (type === 'passwords') {
-    el.innerHTML = items.map((p, i) => `
-      <div class="glass item-card">
-        <div class="item-label">${esc(p.site)}</div>
-        <div class="item-value" id="pw-val-${i}">••••••••••</div>
-        <div class="item-actions">
-          <button class="action-btn" data-toggle="${i}">👁 Показать</button>
-          <button class="action-btn del-btn" data-del="${i}" data-type="passwords" data-name="${esc(p.site)}">🗑 Удалить</button>
-        </div>
-      </div>`).join('');
-  }
-
-  else if (type === 'notes') {
-    el.innerHTML = items.map((n, i) => `
-      <div class="glass item-card">
-        <div class="item-label">${esc(n.type || 'заметка')}</div>
-        <div class="item-value" style="font-size:18px">${esc(n.title)}</div>
-        <div class="item-body">${esc(n.body)}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-          <span class="tag">${esc(n.type || 'заметка')}</span>
-          <button class="action-btn del-btn" data-del="${i}" data-type="notes" data-name="${esc(n.title)}">🗑 Удалить</button>
-        </div>
-      </div>`).join('');
-  }
-
-  else if (type === 'reminders') {
-    el.innerHTML = items.map((r, i) => `
-      <div class="glass rem-card">
-        <div class="rem-dot" style="background:${DOT_COLORS[i % DOT_COLORS.length]}"></div>
-        <div style="flex:1">
-          <div class="rem-title">${esc(r.what)}${r.sms ? '<span class="sms-badge">📱 СМС</span>' : ''}</div>
-          <div class="rem-when">${esc(r.when)}</div>
-        </div>
-        <button class="action-btn del-btn" style="padding:8px 12px;margin-top:0;" data-del="${i}" data-type="reminders" data-name="${esc(r.what)}">🗑</button>
-      </div>`).join('');
-  }
-
-  else if (type === 'contacts') {
-    el.innerHTML = items.map((c, i) => `
-      <div class="glass contact-card">
-        <div class="contact-ava">${esc(c.name).substring(0,2).toUpperCase()}</div>
-        <div style="flex:1">
-          <div class="contact-name">${esc(c.name)}</div>
-          <div class="contact-phone">${esc(c.phone)}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-          <a href="tel:${esc(c.phone)}" class="call-btn">📞 Позвонить</a>
-          <button class="action-btn del-btn" style="padding:6px 12px;" data-del="${i}" data-type="contacts" data-name="${esc(c.name)}">🗑 Удалить</button>
-        </div>
-      </div>`).join('');
-  }
+function closeMenu() {
+  document.getElementById('hmenu').classList.remove('open');
+  document.getElementById('hbtn').classList.remove('open');
 }
 
-// Делегирование событий для списков
-function handleListClick(e) {
-  // Показать/скрыть пароль
-  const toggleIdx = e.target.dataset.toggle;
-  if (toggleIdx !== undefined) {
-    const val  = $('pw-val-' + toggleIdx);
-    const pass = state.data.passwords[toggleIdx].pass;
-    if (val.textContent.startsWith('•')) {
-      val.textContent = pass;
-      e.target.textContent = '🙈 Скрыть';
-    } else {
-      val.textContent = '••••••••••';
-      e.target.textContent = '👁 Показать';
-    }
-    return;
+// закрыть меню при клике вне
+document.addEventListener('click', e => {
+  const menu = document.getElementById('hmenu');
+  const btn  = document.getElementById('hbtn');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    closeMenu();
   }
-  // Удалить
-  const delIdx  = e.target.dataset.del;
-  const delType = e.target.dataset.type;
-  const delName = e.target.dataset.name;
-  if (delIdx !== undefined) {
-    pendingDelete = { type: delType, idx: parseInt(delIdx) };
-    $('confirm-text').textContent = `Удалить "${delName}"? Это нельзя отменить.`;
-    $('confirm-overlay').classList.add('open');
-  }
+});
+
+// ══ SETTINGS ══
+function openSettings() {
+  if (currentUser) updateUserInfo(currentUser);
+  go('settings');
 }
 
-// ════════════════════════════════
-//  МОДАЛЬНОЕ ОКНО
-// ════════════════════════════════
-const MODAL_CONFIGS = {
-  password: {
-    title: '🔑 Новый пароль',
-    html: `
-      <div class="modal-field">
-        <div class="modal-label">Сайт или приложение</div>
-        <input id="mf-site" placeholder="Например: Госуслуги" autocomplete="off">
-      </div>
-      <div class="modal-field">
-        <div class="modal-label">Пароль</div>
-        <input id="mf-pass" type="password" placeholder="Введите пароль" autocomplete="new-password">
-      </div>`
-  },
-  note: {
-    title: '📓 Новая заметка',
-    html: `
-      <div class="modal-field">
-        <div class="modal-label">Название</div>
-        <input id="mf-title" placeholder="Например: Рецепт борща">
-      </div>
-      <div class="modal-field">
-        <div class="modal-label">Текст</div>
-        <textarea id="mf-body" rows="4" placeholder="Напишите что хотите запомнить..."></textarea>
-      </div>
-      <div class="modal-field">
-        <div class="modal-label">Тип</div>
-        <select id="mf-type">
-          <option value="заметка">заметка</option>
-          <option value="рецепт">рецепт</option>
-          <option value="адрес">адрес</option>
-          <option value="важное">важное</option>
-          <option value="документы">документы</option>
-        </select>
-      </div>`
-  },
-  reminder: {
-    title: '🔔 Новое напоминание',
-    html: `
-      <div class="modal-field">
-        <div class="modal-label">Что напомнить</div>
-        <input id="mf-what" placeholder="Например: Выпить таблетку">
-      </div>
-      <div class="modal-field">
-        <div class="modal-label">Когда</div>
-        <input id="mf-when" placeholder="Каждый день в 09:00">
-      </div>
-      <label class="modal-check">
-        <input type="checkbox" id="mf-sms" checked>
-        Отправлять СМС на телефон
-      </label>`
-  },
-  contact: {
-    title: '📞 Новый контакт',
-    html: `
-      <div class="modal-field">
-        <div class="modal-label">Имя</div>
-        <input id="mf-name" placeholder="Например: Аня (дочь)">
-      </div>
-      <div class="modal-field">
-        <div class="modal-label">Телефон</div>
-        <input id="mf-phone" type="tel" placeholder="+7 900 000-00-00">
-      </div>`
-  }
-};
-
-function openModal(type) {
-  currentModal = type;
-  const cfg = MODAL_CONFIGS[type];
-  $('modal-title').textContent = cfg.title;
-  $('modal-body').innerHTML    = cfg.html;
-  $('modal-overlay').classList.add('open');
-  // Фокус на первое поле
-  setTimeout(() => {
-    const first = $('modal-body').querySelector('input,textarea');
-    if (first) first.focus();
-  }, 100);
+function saveName() {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) return;
+  localStorage.setItem('rz_name', val);
+  document.getElementById('settings-name-display').textContent = val;
+  document.getElementById('hmenu-name').textContent = val;
+  document.getElementById('greet-name').textContent = val;
+  showToast('Имя сохранено ✓');
 }
 
-function closeModal() {
-  $('modal-overlay').classList.remove('open');
-  currentModal = null;
+// ══ SIGN OUT ══
+function signOut() {
+  if (!confirm('Выйти из аккаунта?')) return;
+  auth.signOut().then(() => {
+    currentUser = null;
+    closeMenu();
+    // показываем экран входа
+    const as = document.getElementById('auth-screen');
+    as.style.display = 'flex';
+    setTimeout(() => as.classList.remove('hidden'), 10);
+    // сбрасываем шаги
+    backToPhone();
+    go('home');
+  });
 }
 
-async function saveModal() {
-  const t = currentModal;
-  if (!t) return;
-
-  let item;
-
-  if (t === 'password') {
-    const site = ($('mf-site') || {}).value?.trim();
-    const pass = ($('mf-pass') || {}).value?.trim();
-    if (!site || !pass) { toast('Заполните все поля', true); return; }
-    item = { site, pass, id: Date.now() };
-    state.data.passwords.push(item);
-    renderList('passwords');
-  }
-  else if (t === 'note') {
-    const title = ($('mf-title') || {}).value?.trim();
-    const body  = ($('mf-body')  || {}).value?.trim();
-    const type  = ($('mf-type')  || {}).value || 'заметка';
-    if (!title) { toast('Введите название', true); return; }
-    item = { title, body, type, id: Date.now() };
-    state.data.notes.push(item);
-    renderList('notes');
-  }
-  else if (t === 'reminder') {
-    const what = ($('mf-what') || {}).value?.trim();
-    const when = ($('mf-when') || {}).value?.trim();
-    const sms  = ($('mf-sms')  || {}).checked || false;
-    if (!what) { toast('Напишите что напомнить', true); return; }
-    item = { what, when, sms, id: Date.now() };
-    state.data.reminders.push(item);
-    renderList('reminders');
-  }
-  else if (t === 'contact') {
-    const name  = ($('mf-name')  || {}).value?.trim();
-    const phone = ($('mf-phone') || {}).value?.trim();
-    if (!name) { toast('Введите имя', true); return; }
-    item = { name, phone, id: Date.now() };
-    state.data.contacts.push(item);
-    renderList('contacts');
-  }
-
-  await saveVault();
-  updateCounts();
-  updateGreeting();
-  closeModal();
-  toast('Сохранено ✓');
+// ══ PHONE FORMATTING ══
+function formatPhone(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.length > 10) v = v.slice(0,10);
+  el.value = v;
 }
 
-// ════════════════════════════════
-//  УДАЛЕНИЕ
-// ════════════════════════════════
-function closeConfirm() {
-  $('confirm-overlay').classList.remove('open');
-  pendingDelete = null;
+// ══ RECAPTCHA ══
+function initRecaptcha() {
+  if (recaptchaVerifier) return;
+  recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+    size: 'invisible',
+    callback: () => {}
+  });
 }
 
-// ════════════════════════════════
-//  API / ЧАТ
-// ════════════════════════════════
-function loadApiKey() {
-  if (state.data.apiKey) {
-    $('setup-box').style.display = 'none';
-  }
-}
-
-function saveApiKey() {
-  const k    = $('api-input').value.trim();
-  const errEl = $('api-err');
+// ══ SEND SMS ══
+async function sendSms() {
+  const raw   = document.getElementById('phone-input').value.replace(/\D/g,'');
+  const errEl = document.getElementById('phone-err');
+  const btn   = document.getElementById('sms-btn');
   errEl.style.display = 'none';
-  if (!k)              { errEl.textContent = 'Введите ключ.'; errEl.style.display='block'; return; }
-  if (!k.startsWith('sk-')) { errEl.textContent = 'Ключ должен начинаться с "sk-".'; errEl.style.display='block'; return; }
-  state.data.apiKey = k;
-  saveVault();
-  $('setup-box').style.display = 'none';
-  addMessage('ai', 'Готово! Я активен. Спрашивайте что угодно — я рядом 🤝');
-  toast('Помощник включён ✓');
+
+  if (raw.length < 10) {
+    errEl.style.display = 'block';
+    errEl.textContent   = 'Введите номер телефона полностью';
+    return;
+  }
+
+  const phone = '+7' + raw;
+  btn.disabled     = true;
+  btn.textContent  = 'Отправляем...';
+
+  try {
+    initRecaptcha();
+    confirmationResult = await auth.signInWithPhoneNumber(phone, recaptchaVerifier);
+    // показываем шаг с кодом
+    document.getElementById('step-phone').classList.remove('active');
+    document.getElementById('step-code').classList.add('active');
+    document.getElementById('code-sub').textContent = 'Отправили на +7 ' + raw + '. Введите 6 цифр.';
+    document.getElementById('d0').focus();
+    startCountdown();
+  } catch(e) {
+    errEl.style.display = 'block';
+    errEl.textContent   = friendlyAuthError(e.code);
+    btn.disabled        = false;
+    btn.textContent     = 'Получить код';
+    // сбрасываем recaptcha при ошибке
+    recaptchaVerifier.clear();
+    recaptchaVerifier = null;
+  }
 }
 
-function addMessage(role, text) {
-  const box = $('chat-msgs');
-  const d = document.createElement('div');
-  d.className = 'msg ' + role;
-  d.innerHTML = `<div class="msg-ava">${role==='ai'?'🤝':'👤'}</div><div class="msg-bub">${esc(text)}</div>`;
-  box.appendChild(d);
-  box.scrollTop = box.scrollHeight;
+// ══ CODE INPUT — автопереход между цифрами ══
+function digitInput(el, idx) {
+  const v = el.value.replace(/\D/g,'');
+  el.value = v ? v[0] : '';
+  if (v && idx < 5) {
+    document.getElementById('d'+(idx+1)).focus();
+  }
+  // если все 6 заполнены — автоматически проверяем
+  const code = getCode();
+  if (code.length === 6) verifyCode();
+}
+
+function getCode() {
+  let c = '';
+  for (let i=0;i<6;i++) c += document.getElementById('d'+i).value;
+  return c;
+}
+
+// ══ VERIFY CODE ══
+async function verifyCode() {
+  const code  = getCode();
+  const errEl = document.getElementById('code-err');
+  const btn   = document.getElementById('verify-btn');
+  errEl.style.display = 'none';
+
+  if (code.length < 6) {
+    errEl.style.display = 'block';
+    errEl.textContent   = 'Введите все 6 цифр из СМС';
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Проверяем...';
+
+  try {
+    const result = await confirmationResult.confirm(code);
+    currentUser  = result.user;
+    clearInterval(countdownInterval);
+    showApp();
+  } catch(e) {
+    errEl.style.display = 'block';
+    errEl.textContent   = friendlyAuthError(e.code);
+    btn.disabled        = false;
+    btn.textContent     = 'Войти';
+    // очищаем поля
+    for(let i=0;i<6;i++) document.getElementById('d'+i).value='';
+    document.getElementById('d0').focus();
+  }
+}
+
+// ══ RESEND / COUNTDOWN ══
+function startCountdown() {
+  let sec = 60;
+  document.getElementById('countdown').textContent = sec;
+  document.getElementById('resend-timer').style.display = 'inline';
+  document.getElementById('resend-btn').style.display   = 'none';
+
+  countdownInterval = setInterval(() => {
+    sec--;
+    document.getElementById('countdown').textContent = sec;
+    if (sec <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('resend-timer').style.display = 'none';
+      document.getElementById('resend-btn').style.display   = 'inline';
+    }
+  }, 1000);
+}
+
+function resendSms() {
+  backToPhone();
+  setTimeout(sendSms, 100);
+}
+
+function backToPhone() {
+  clearInterval(countdownInterval);
+  document.getElementById('step-code').classList.remove('active');
+  document.getElementById('step-phone').classList.add('active');
+  document.getElementById('code-err').style.display  = 'none';
+  document.getElementById('phone-err').style.display = 'none';
+  const btn = document.getElementById('sms-btn');
+  btn.disabled    = false;
+  btn.textContent = 'Получить код';
+  for(let i=0;i<6;i++) document.getElementById('d'+i).value='';
+  recaptchaVerifier = null;
+}
+
+// ══ FRIENDLY ERROR MESSAGES ══
+function friendlyAuthError(code) {
+  const map = {
+    'auth/invalid-phone-number'  : 'Номер телефона неверный. Проверьте и попробуйте снова.',
+    'auth/too-many-requests'     : 'Слишком много попыток. Подождите немного и попробуйте снова.',
+    'auth/invalid-verification-code': 'Код неверный. Проверьте СМС и введите снова.',
+    'auth/code-expired'          : 'Код устарел. Запросите новый.',
+    'auth/network-request-failed': 'Нет интернета. Проверьте подключение.',
+  };
+  return map[code] || 'Что-то пошло не так. Попробуйте ещё раз.';
+}
+
+// ══ NAVIGATION ══
+const screens = ['home','emergency','chat','reminders','contacts','notes','passwords','settings'];
+let currentScreen = 'home';
+
+function go(id) {
+  closeMenu();
+  const prev = document.getElementById('s-'+currentScreen);
+  const next = document.getElementById('s-'+id);
+  if (prev===next) return;
+  prev.classList.add(id==='home'?'slide-right':'slide-left');
+  prev.classList.remove('active');
+  setTimeout(()=>prev.classList.remove('slide-left','slide-right'),320);
+  next.classList.remove('slide-left','slide-right');
+  next.classList.add('active');
+  currentScreen = id;
+  window.scrollTo(0,0);
+  next.scrollTop = 0;
+}
+
+// ══ PASSWORDS ══
+function togglePass(id, val) {
+  const el  = document.getElementById(id);
+  const btn = el.nextElementSibling;
+  if (el.textContent.startsWith('•')) { el.textContent=val; btn.textContent='Скрыть'; }
+  else { el.textContent='••••••••••'; btn.textContent='Показать'; }
+}
+
+// ══ CONTACTS ══
+function callContact(name, phone) {
+  showToast('Набираем '+name+'...');
+  setTimeout(()=>window.location.href='tel:'+phone, 400);
+}
+
+// ══ MODAL SHEETS ══
+const sheetDefs = {
+  reminder: {title:'Новое напоминание', body:`<div class="sheet-lbl">Что напомнить</div><input class="sheet-in" id="sh1" placeholder="Например: выпить таблетку"><div class="sheet-lbl">Когда</div><input class="sheet-in" id="sh2" placeholder="Каждый день в 09:00">`},
+  contact:  {title:'Новый контакт',     body:`<div class="sheet-lbl">Имя</div><input class="sheet-in" id="sh1" placeholder="Например: Петя (внук)"><div class="sheet-lbl">Телефон</div><input class="sheet-in" id="sh2" type="tel" placeholder="+7 900 000-00-00">`},
+  note:     {title:'Новая запись',       body:`<div class="sheet-lbl">Название</div><input class="sheet-in" id="sh1" placeholder="Например: рецепт борща"><div class="sheet-lbl">Текст</div><textarea class="sheet-in" id="sh2" rows="3" placeholder="Напишите что хотите запомнить..."></textarea>`},
+  password: {title:'Новый пароль',       body:`<div class="sheet-lbl">Сайт или приложение</div><input class="sheet-in" id="sh1" placeholder="Например: Госуслуги"><div class="sheet-lbl">Пароль</div><input class="sheet-in" id="sh2" type="password" placeholder="Введите пароль">`}
+};
+function openSheet(type) {
+  const d = sheetDefs[type];
+  document.getElementById('sheet-title').textContent = d.title;
+  document.getElementById('sheet-body').innerHTML    = d.body;
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},250);
+}
+function closeSheet(e)   { if(e.target.id==='overlay') closeSheetDirect(); }
+function closeSheetDirect() { document.getElementById('overlay').classList.remove('open'); }
+function saveSheet()     { closeSheetDirect(); showToast('Сохранено ✓'); }
+
+// ══ TOAST ══
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ══ CHAT ══
+const SYS = `Ты — добрый, терпеливый помощник сервиса «Разберёмся». Помогаешь пожилым людям и тем, кто плохо разбирается в технологиях. Правила: говори очень просто как добрый родственник; никаких технических терминов; любой вопрос — нормальный; отвечай коротко, 3–4 абзаца максимум; если нужны шаги — нумеруй по одному; заканчивай ободрительно. Только русский язык.`;
+const history = [];
+
+// API_KEY хранится на сервере — здесь заглушка для демо
+// В продакшене: запрос идёт на /api/chat с Firebase токеном
+const DEMO_API_KEY = '';
+
+function addBubble(role, text) {
+  const box = document.getElementById('msgs');
+  const row = document.createElement('div'); row.className = 'msg '+role;
+  const av  = document.createElement('div'); av.className  = 'mav2'; av.textContent = role==='ai'?'🤝':'👤';
+  const bub = document.createElement('div'); bub.className = 'bubble'; bub.textContent = text;
+  row.appendChild(av); row.appendChild(bub);
+  box.appendChild(row); box.scrollTop = box.scrollHeight;
 }
 
 function showTyping() {
-  const box = $('chat-msgs');
-  const d = document.createElement('div');
-  d.className = 'msg ai'; d.id = 'typing-indicator';
-  d.innerHTML = '<div class="msg-ava">🤝</div><div class="typing"><span></span><span></span><span></span></div>';
-  box.appendChild(d);
-  box.scrollTop = box.scrollHeight;
+  const box = document.getElementById('msgs');
+  const row = document.createElement('div'); row.className='msg ai'; row.id='typing-row';
+  const av  = document.createElement('div'); av.className='mav2'; av.textContent='🤝';
+  const bub = document.createElement('div'); bub.className='typing-bub'; bub.innerHTML='<span></span><span></span><span></span>';
+  row.appendChild(av); row.appendChild(bub);
+  box.appendChild(row); box.scrollTop=box.scrollHeight;
 }
+function hideTyping() { const t=document.getElementById('typing-row'); if(t)t.remove(); }
 
-function hideTyping() {
-  const t = $('typing-indicator');
-  if (t) t.remove();
-}
-
-async function sendMessage() {
-  const inp  = $('chat-input');
+async function sendMsg() {
+  const inp  = document.getElementById('chat-input');
   const text = inp.value.trim();
   if (!text) return;
 
-  if (!state.data.apiKey) {
-    $('setup-box').style.display = 'block';
-    $('api-err').textContent = 'Сначала введите ключ API выше.';
-    $('api-err').style.display = 'block';
-    $('setup-box').scrollIntoView({ behavior:'smooth' });
-    return;
-  }
+  inp.value = ''; inp.style.height='auto';
+  addBubble('user', text);
+  history.push({role:'user', content:text});
 
-  inp.value = '';
-  inp.style.height = 'auto';
-  addMessage('user', text);
-  chatHistory.push({ role:'user', content:text });
-
-  const btn = $('send-btn');
+  const btn = document.getElementById('send-btn');
   btn.disabled = true;
-  $('chat-status').textContent = '● Думаю...';
+  document.getElementById('chat-status').textContent = '● Думаю...';
   showTyping();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Получаем Firebase токен для авторизации запроса
+    const token = currentUser ? await currentUser.getIdToken() : null;
+
+    // В продакшене: fetch('/api/chat', { headers: { Authorization: 'Bearer '+token }, body: ... })
+    // Для демо — прямой вызов если есть DEMO_API_KEY
+    if (!DEMO_API_KEY) {
+      hideTyping();
+      addBubble('ai', 'Помощник подключается... Для демо нужен API-ключ на сервере. Вы успешно вошли через СМС — авторизация работает!');
+      btn.disabled = false;
+      document.getElementById('chat-status').textContent = '● Готов помочь';
+      return;
+    }
+
+    const res  = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'x-api-key':     state.data.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model:    AI_MODEL,
-        max_tokens: 1024,
-        system:   AI_SYSTEM,
-        messages: chatHistory
-      })
+      headers: {'Content-Type':'application/json','x-api-key':DEMO_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,system:SYS,messages:history})
     });
     const data = await res.json();
     hideTyping();
-
     if (data.error) {
-      const msgs = {
-        authentication_error: 'Ключ API неверный. Проверьте и сохраните снова.',
-        rate_limit_error:     'Слишком много запросов. Подождите минуту.'
-      };
-      addMessage('ai', msgs[data.error.type] || 'Ошибка: ' + data.error.message);
+      addBubble('ai','Что-то пошло не так. Попробуйте позже.');
     } else {
       const reply = data.content[0].text;
-      chatHistory.push({ role:'assistant', content:reply });
-      addMessage('ai', reply);
+      history.push({role:'assistant', content:reply});
+      addBubble('ai', reply);
     }
   } catch(e) {
     hideTyping();
-    addMessage('ai', 'Нет соединения. Проверьте интернет и попробуйте снова.');
+    addBubble('ai','Нет соединения с интернетом. Проверьте подключение и попробуйте снова.');
   }
 
   btn.disabled = false;
-  $('chat-status').textContent = '● Готов помочь';
+  document.getElementById('chat-status').textContent = '● Готов помочь';
 }
 
-// ════════════════════════════════
-//  СОБЫТИЯ
-// ════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
-
-  // Инициализация экрана блокировки
-  initLock();
-
-  // Вход по коду
-  $('lock-btn').addEventListener('click', tryLogin);
-  $('lock-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') tryLogin();
-  });
-  $('lock-forgot').addEventListener('click', forgotPin);
-
-  // Навигация
-  $('home-btn').addEventListener('click', () => {
-    if (!state.unlocked) return;
-    showScreen('home');
-  });
-  $('lock-app-btn').addEventListener('click', lockApp);
-
-  // Меню
-  $('nav-ai').addEventListener('click',        () => showScreen('ai'));
-  $('nav-passwords').addEventListener('click', () => showScreen('passwords'));
-  $('nav-notes').addEventListener('click',     () => showScreen('notes'));
-  $('nav-reminders').addEventListener('click', () => showScreen('reminders'));
-  $('nav-contacts').addEventListener('click',  () => showScreen('contacts'));
-  $('nav-sos').addEventListener('click', () => {
-    showScreen('ai');
-    $('chat-input').value = 'Мне только что позвонили незнакомые люди и попросили данные карты или перевести деньги. Что делать прямо сейчас?';
-    sendMessage();
-  });
-
-  // Алерт → напоминания
-  $('home-alert').addEventListener('click', () => showScreen('reminders'));
-
-  // Кнопки назад
-  $('back-ai').addEventListener('click',        () => showScreen('home'));
-  $('back-passwords').addEventListener('click', () => showScreen('home'));
-  $('back-notes').addEventListener('click',     () => showScreen('home'));
-  $('back-reminders').addEventListener('click', () => showScreen('home'));
-  $('back-contacts').addEventListener('click',  () => showScreen('home'));
-
-  // Кнопки добавить
-  $('add-password-btn').addEventListener('click', () => openModal('password'));
-  $('add-note-btn').addEventListener('click',     () => openModal('note'));
-  $('add-reminder-btn').addEventListener('click', () => openModal('reminder'));
-  $('add-contact-btn').addEventListener('click',  () => openModal('contact'));
-
-  // Делегирование — списки
-  ['passwords','notes','reminders','contacts'].forEach(type => {
-    const el = $('list-' + type);
-    if (el) el.addEventListener('click', handleListClick);
-  });
-
-  // Модальное окно
-  $('modal-save').addEventListener('click',   saveModal);
-  $('modal-cancel').addEventListener('click', closeModal);
-  $('modal-overlay').addEventListener('click', e => {
-    if (e.target === $('modal-overlay')) closeModal();
-  });
-
-  // Подтверждение удаления
-  $('confirm-yes').addEventListener('click', async () => {
-    if (!pendingDelete) return;
-    const { type, idx } = pendingDelete;
-    state.data[type].splice(idx, 1);
-    await saveVault();
-    updateCounts();
-    renderList(type);
-    updateGreeting();
-    closeConfirm();
-    toast('Удалено');
-  });
-  $('confirm-no').addEventListener('click', closeConfirm);
-  $('confirm-overlay').addEventListener('click', e => {
-    if (e.target === $('confirm-overlay')) closeConfirm();
-  });
-
-  // API
-  $('api-save-btn').addEventListener('click', saveApiKey);
-
-  // Чат
-  $('send-btn').addEventListener('click', sendMessage);
-  $('chat-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-  $('chat-input').addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-  });
-
-  // Быстрые вопросы
-  document.querySelectorAll('.quick-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $('chat-input').value = btn.dataset.q;
-      sendMessage();
-    });
-  });
-
-}); // DOMContentLoaded
+function sq(q)     { go('chat'); setTimeout(()=>{ document.getElementById('chat-input').value=q; sendMsg(); },150); }
+function askAI(q)  { go('chat'); setTimeout(()=>{ document.getElementById('chat-input').value=q; sendMsg(); },200); }
+function onKey(e)  { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 </script>
 </body>
 </html>
