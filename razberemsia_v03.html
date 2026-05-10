@@ -297,7 +297,8 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
 .auth-btn:active{background:var(--sage-d);}
 .auth-btn:disabled{opacity:.45;cursor:not-allowed;}
 .auth-err{font-size:14px;color:var(--rose);margin-top:10px;display:none;line-height:1.5;}
-.auth-note{font-size:13px;color:var(--text-l);text-align:center;margin-top:14px;line-height:1.6;}
+.version-badge{font-size:11px;font-weight:700;color:var(--text-l);background:rgba(196,184,168,0.3);border-radius:50px;padding:2px 9px;margin-left:8px;vertical-align:middle;letter-spacing:.03em;}
+.auth-version{font-size:12px;color:var(--text-l);text-align:center;margin-top:10px;}
 .auth-code-row{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}
 .code-digit{width:52px;height:62px;background:rgba(255,255,255,0.8);border:1.5px solid rgba(196,184,168,0.5);border-radius:14px;font-size:26px;font-weight:700;text-align:center;font-family:'Raleway',sans-serif;color:var(--text);outline:none;-webkit-appearance:none;}
 .code-digit:focus{border-color:rgba(122,158,126,0.6);}
@@ -317,6 +318,7 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tagline">Спокойный помощник рядом</div>
+  <div class="auth-version">v3.4</div>
 
   <div class="auth-card">
 
@@ -386,7 +388,7 @@ header{padding:16px 22px 12px;display:flex;align-items:center;justify-content:sp
 
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em></div>
+    <div class="logo">Разберём<em>ся</em><span class="version-badge">v3.4</span></div>
     <button class="hbtn" id="hbtn" onclick="toggleMenu(event)" title="Меню">
       <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
     </button>
@@ -801,11 +803,17 @@ function signOut() {
   });
 }
 
-// ══ PHONE FORMATTING ══
+// ══ PHONE FORMATTING (при вводе) ══
 function formatPhone(el) {
   let v = el.value.replace(/\D/g,'');
   if (v.length > 10) v = v.slice(0,10);
-  el.value = v;
+  // форматируем: 999 000-00-01
+  let out = '';
+  if (v.length > 0) out += v.slice(0,3);
+  if (v.length > 3) out += ' ' + v.slice(3,6);
+  if (v.length > 6) out += '-' + v.slice(6,8);
+  if (v.length > 8) out += '-' + v.slice(8,10);
+  el.value = out;
 }
 
 // ══ RECAPTCHA ══
@@ -830,7 +838,6 @@ async function sendSms() {
   const errEl = document.getElementById('phone-err');
   const btn   = document.getElementById('sms-btn');
   errEl.style.display = 'none';
-
   if (raw.length < 10) {
     errEl.style.display = 'block';
     errEl.textContent   = 'Введите номер телефона полностью';
