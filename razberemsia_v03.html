@@ -297,7 +297,7 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.73 · бета</div>
+  <div class="auth-ver">v3.74 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -363,7 +363,7 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.73</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.74</span></div>
     <div class="header-center">
       <div class="header-date" id="header-date"></div>
       <div class="header-clock" id="header-clock"></div>
@@ -1132,14 +1132,21 @@ function saveSheet(){
 
   // Перезапускаем все уведомления после каждого сохранения
   if(sheetType==='note'){
-    if(newItem&&newItem.reminder&&notifSupported()&&Notification.permission==='granted'){
-      const parts=newItem.reminder.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-      if(parts){
-        const target=new Date(parseInt(parts[1]),parseInt(parts[2])-1,parseInt(parts[3]),parseInt(parts[4]),parseInt(parts[5]),0);
-        const delay=target-Date.now();
-        if(delay>0){
-          const mins=Math.round(delay/60000);
-          showToast(`Напомним через ${mins} мин ✓`);
+    if(newItem&&newItem.reminder){
+      const perm=notifSupported()?Notification.permission:'не поддерживается';
+      if(perm!=='granted'){
+        showToast('Уведомления: '+perm);
+      } else {
+        const parts=newItem.reminder.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+        if(parts){
+          const target=new Date(parseInt(parts[1]),parseInt(parts[2])-1,parseInt(parts[3]),parseInt(parts[4]),parseInt(parts[5]),0);
+          const delay=target-Date.now();
+          if(delay>0){
+            const mins=Math.round(delay/60000);
+            showToast(`Напомним через ${mins} мин ✓`);
+          } else {
+            showToast('Время уже прошло');
+          }
         }
       }
     }
