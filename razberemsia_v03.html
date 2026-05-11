@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.80</title>
+<title>Разберёмся v3.81</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -299,7 +299,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.80 · бета</div>
+  <div class="auth-ver">v3.81 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -365,7 +365,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.80</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.81</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
@@ -1084,7 +1084,16 @@ function loadNotes(){
     let reminderHtml='';
     if(n.reminder){
       const disp=fmtReminderDisplay(n.reminder);
-      reminderHtml=`<button class="note-reminder-tag" onclick="editItem('note',${realIdx})" style="cursor:pointer;-webkit-appearance:none;border:none;font-family:'Raleway',sans-serif;"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(disp)}</button>`;
+      reminderHtml=`
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <button class="note-reminder-tag" onclick="editItem('note',${realIdx})" style="cursor:pointer;-webkit-appearance:none;border:none;font-family:'Raleway',sans-serif;">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(disp)}
+          </button>
+          <button onclick="addToCalendar('${esc(n.title)}','${esc(n.reminder)}')" style="background:rgba(122,158,126,0.12);color:var(--sage-d);border:1px solid rgba(122,158,126,0.28);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;-webkit-appearance:none;display:flex;align-items:center;gap:4px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--sage-d)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            В календарь
+          </button>
+        </div>`;
     }
 
     d.innerHTML=`
@@ -1286,7 +1295,47 @@ function askAI(q){go('chat');setTimeout(()=>{document.getElementById('chat-input
 function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 
-// ── SWIPE GESTURES ──
+// ── ДОБАВИТЬ В КАЛЕНДАРЬ ──
+function addToCalendar(title, reminder){
+  const dt=parseLocalDate(reminder);
+  if(!dt){showToast('Не удалось определить время');return;}
+
+  // Конец события — через 30 минут
+  const dtEnd=new Date(dt.getTime()+30*60*1000);
+
+  function pad(n){return String(n).padStart(2,'0');}
+  function fmtICS(d){
+    return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+
+           pad(d.getHours())+pad(d.getMinutes())+'00';
+  }
+
+  const ics=[
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Разберёмся//RU',
+    'BEGIN:VEVENT',
+    'DTSTART:'+fmtICS(dt),
+    'DTEND:'+fmtICS(dtEnd),
+    'SUMMARY:'+title,
+    'DESCRIPTION:Напоминание из приложения Разберёмся',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT0M',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:'+title,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='reminder.ics';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast('Открываем календарь...');
+}
 (function(){
   let startX=0,startY=0,startTime=0;
   const THRESHOLD=80;  // минимальная длина свайпа
