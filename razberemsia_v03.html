@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.84</title>
+<title>Разберёмся v3.85</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -192,22 +192,34 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 .notepad-input:focus{border-color:rgba(122,158,126,0.55);}
 .notepad-send{width:42px;height:42px;border-radius:50%;background:var(--sage);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;flex-shrink:0;transition:background .14s;}
 .notepad-send:active{background:var(--sage-d);}
-.cal-wrap{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.48);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.cal-month{font-size:17px;font-weight:600;color:var(--text);}
-.cal-nav{width:34px;height:34px;border-radius:50%;background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.22);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;transition:background .12s;}
+.cal-overlay{position:fixed;inset:0;background:rgba(35,43,36,0.4);z-index:300;display:none;align-items:flex-end;justify-content:center;}
+.cal-overlay.open{display:flex;animation:fIn .18s ease;}
+.cal-popup{background:#f5f1ea;border-radius:26px 26px 0 0;padding:20px 20px 44px;width:100%;max-width:480px;animation:sUp .22s cubic-bezier(.4,0,.2,1);}
+.cal-handle{width:36px;height:4px;background:rgba(196,184,168,0.6);border-radius:4px;margin:0 auto 18px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-month{font-size:18px;font-weight:700;color:var(--text);}
+.cal-nav{width:38px;height:38px;border-radius:50%;background:rgba(122,158,126,0.1);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;transition:background .12s;}
 .cal-nav:active{background:rgba(122,158,126,0.22);}
-.cal-nav svg{width:16px;height:16px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
-.cal-day-name{text-align:center;font-size:11px;font-weight:700;color:var(--text-l);padding:2px 0;text-transform:uppercase;}
-.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-day{height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:15px;font-weight:500;color:var(--text-m);cursor:pointer;position:relative;transition:background .12s;-webkit-appearance:none;background:none;border:none;font-family:'Raleway',sans-serif;width:100%;}
+.cal-nav svg{width:18px;height:18px;stroke:var(--sage-d);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
+.cal-day-name{text-align:center;font-size:12px;font-weight:700;color:var(--text-l);padding:4px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-day{height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:16px;font-weight:500;color:var(--text);cursor:pointer;position:relative;transition:all .12s;-webkit-appearance:none;background:none;border:none;font-family:'Raleway',sans-serif;width:100%;flex-direction:column;gap:2px;}
 .cal-day:active{background:rgba(122,158,126,0.15);}
-.cal-day.today{font-weight:700;color:var(--sage-d);background:rgba(122,158,126,0.1);}
-.cal-day.selected{background:var(--sage);color:#fff;font-weight:700;}
-.cal-day.other-month{color:rgba(196,184,168,0.8);}
-.cal-day.has-items::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold);}
-.cal-day.selected.has-items::after{background:rgba(255,255,255,0.9);}
+.cal-day.today{font-weight:800;color:var(--sage-d);}
+.cal-day.today::before{content:'';position:absolute;inset:2px;border-radius:10px;border:2px solid var(--sage-d);}
+.cal-day.selected{background:var(--sage)!important;color:#fff;font-weight:700;border-radius:12px;}
+.cal-day.selected::before{display:none;}
+.cal-day.other-month{color:rgba(196,184,168,0.7);}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.cal-day.selected .cal-dot{background:rgba(255,255,255,0.85);}
+.cal-close{width:100%;background:rgba(122,158,126,0.1);border:none;border-radius:14px;padding:14px;font-size:16px;font-weight:700;color:var(--sage-d);cursor:pointer;font-family:'Raleway',sans-serif;margin-top:18px;-webkit-appearance:none;}
+.cal-close:active{background:rgba(122,158,126,0.2);}
+.cal-trigger{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.48);border-radius:var(--r);padding:12px 16px;margin-bottom:10px;cursor:pointer;-webkit-appearance:none;width:100%;font-family:'Raleway',sans-serif;transition:background .13s;}
+.cal-trigger:active{background:rgba(122,158,126,0.08);}
+.cal-trigger svg{width:18px;height:18px;stroke:var(--sage-d);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.cal-trigger-month{font-size:15px;font-weight:600;color:var(--text);}
+.cal-trigger-sel{font-size:13px;color:var(--text-m);margin-top:1px;}
 .cal-selected-label{font-size:14px;font-weight:600;color:var(--text-m);margin-bottom:8px;padding:0 2px;}
 
 /* SETTINGS */
@@ -229,7 +241,10 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 .set-danger .set-t{color:var(--rose);}
 .set-arr{margin-left:auto;color:var(--text-l);font-size:18px;}
 
-/* TRASH */
+/* NOTE LABELS — левая полоска вместо точек */
+.note-stripe{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.item-card{position:relative;overflow:hidden;}
+.note-cat{display:inline-block;font-size:11px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
 .trash-empty{text-align:center;padding:36px 20px;color:var(--text-l);}
 .trash-empty svg{width:40px;height:40px;stroke:var(--stone);stroke-width:1.4;fill:none;margin-bottom:12px;stroke-linecap:round;stroke-linejoin:round;}
 .trash-empty-t{font-size:17px;font-weight:600;color:var(--text-m);margin-bottom:6px;}
@@ -308,7 +323,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.84 · бета</div>
+  <div class="auth-ver">v3.85 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -370,7 +385,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.84</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.85</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
@@ -459,17 +474,14 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
         Уведомления разрешены ✓<br>
         <button onclick="testNotif()" style="margin-top:8px;background:var(--sage);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;">Тест — уведомление через 5 сек</button>
       </div>
-      <div class="cal-wrap">
-        <div class="cal-header">
-          <button class="cal-nav" onclick="calPrev()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <div class="cal-month" id="cal-month-label">Май 2025</div>
-          <button class="cal-nav" onclick="calNext()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button class="cal-trigger" onclick="openCal()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div>
+          <div class="cal-trigger-month" id="cal-trigger-month">Май 2026</div>
+          <div class="cal-trigger-sel" id="cal-trigger-sel">Все заметки</div>
         </div>
-        <div class="cal-days-head">
-          <div class="cal-day-name">Пн</div><div class="cal-day-name">Вт</div><div class="cal-day-name">Ср</div><div class="cal-day-name">Чт</div><div class="cal-day-name">Пт</div><div class="cal-day-name">Сб</div><div class="cal-day-name">Вс</div>
-        </div>
-        <div class="cal-days" id="cal-days"></div>
-      </div>
+        <svg viewBox="0 0 24 24" style="margin-left:auto;opacity:.4" width="16" height="16" stroke="var(--text-m)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
       <div class="cal-selected-label" id="cal-selected-label"></div>
       <div id="note-list"></div>
       <button class="add-dashed" onclick="openSheet('note')">＋ Добавить заметку или дело</button>
@@ -543,6 +555,23 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- CALENDAR POPUP -->
+<div class="cal-overlay" id="cal-overlay" onclick="closeCal(event)">
+  <div class="cal-popup">
+    <div class="cal-handle"></div>
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calPrev()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="cal-month" id="cal-month-label">Май 2026</div>
+      <button class="cal-nav" onclick="calNext()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="cal-days-head">
+      <div class="cal-day-name">Пн</div><div class="cal-day-name">Вт</div><div class="cal-day-name">Ср</div><div class="cal-day-name">Чт</div><div class="cal-day-name">Пт</div><div class="cal-day-name">Сб</div><div class="cal-day-name">Вс</div>
+    </div>
+    <div class="cal-days" id="cal-days"></div>
+    <button class="cal-close" onclick="closeCal()">Готово</button>
   </div>
 </div>
 
@@ -961,9 +990,76 @@ function callCon(name,phone){showToast('Набираем '+name+'...');setTimeou
 // ── CALENDAR ──
 let calYear=new Date().getFullYear();
 let calMonth=new Date().getMonth();
-let calSelected=null; // 'YYYY-MM-DD' или null = все
-
+let calSelected=null;
 const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTHS_GEN2=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+function openCal(){
+  calRender();
+  document.getElementById('cal-overlay').classList.add('open');
+}
+function closeCal(e){
+  if(e&&e.target.id!=='cal-overlay'&&!e.target.classList.contains('cal-close'))return;
+  document.getElementById('cal-overlay').classList.remove('open');
+  updateCalTrigger();
+  loadNotes();
+}
+
+function updateCalTrigger(){
+  const tm=document.getElementById('cal-trigger-month');
+  const ts=document.getElementById('cal-trigger-sel');
+  if(tm)tm.textContent=MONTHS_RU[calMonth]+' '+calYear;
+  if(ts){
+    if(calSelected){
+      const[y,m,d]=calSelected.split('-').map(Number);
+      ts.textContent=d+' '+MONTHS_GEN2[m-1];
+    } else {
+      ts.textContent='Все заметки';
+    }
+  }
+}
+
+function calRender(){
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const daysWithItems=new Set();
+  notes.forEach(n=>{
+    if(n.reminder){
+      const p=n.reminder.slice(0,10).split('-').map(Number);
+      if(p[0]===calYear&&p[1]-1===calMonth)daysWithItems.add(p[2]);
+    }
+  });
+  document.getElementById('cal-month-label').textContent=MONTHS_RU[calMonth]+' '+calYear;
+  const grid=document.getElementById('cal-days');
+  grid.innerHTML='';
+  const today=new Date();
+  let startDow=new Date(calYear,calMonth,1).getDay();
+  if(startDow===0)startDow=7;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+  for(let i=startDow-1;i>0;i--){
+    const btn=document.createElement('button');
+    btn.className='cal-day other-month';
+    btn.innerHTML=`<span>${daysInPrev-i+1}</span>`;
+    btn.disabled=true;
+    grid.appendChild(btn);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const btn=document.createElement('button');
+    btn.className='cal-day';
+    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    const dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    if(isToday)btn.classList.add('today');
+    if(calSelected===dateStr)btn.classList.add('selected');
+    const hasDot=daysWithItems.has(d);
+    btn.innerHTML=`<span>${d}</span>${hasDot?'<span class="cal-dot"></span>':''}`;
+    btn.onclick=()=>{
+      calSelected=calSelected===dateStr?null:dateStr;
+      calRender();
+    };
+    grid.appendChild(btn);
+  }
+  updateCalTrigger();
+}
 
 function calRender(){
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
@@ -1015,27 +1111,8 @@ function calRender(){
   updateCalLabel();
 }
 
-function calSelectDay(dateStr,d){
-  if(calSelected===dateStr){calSelected=null;}
-  else{calSelected=dateStr;}
-  calRender();
-  loadNotes();
-}
-
-function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;calRender();loadNotes();}
-function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}calSelected=null;calRender();loadNotes();}
-
-function updateCalLabel(){
-  const el=document.getElementById('cal-selected-label');
-  if(!el)return;
-  if(calSelected){
-    const [y,m,d]=calSelected.split('-').map(Number);
-    const months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-    el.textContent='Заметки на '+d+' '+months[m-1]+':';
-  } else {
-    el.textContent='Все заметки:';
-  }
-}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;calRender();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}calSelected=null;calRender();}
 
 // ── NOTES ──
 function parseLocalDate(str){
@@ -1076,11 +1153,17 @@ function loadNotes(){
     return;
   }
 
-  const DOTS_C=['#e07070','#7abf84','#7ab0e0','#d4a83a','#a07abf','#7abfb8'];
+  const STRIPE_COLORS={
+    'здоровье':'#e07070','покупки':'#7ab0e0','контакт':'#7abf84',
+    'событие':'#d4a83a','идея':'#a07abf','рецепт':'#e0a070',
+    'адрес':'#7abfb8','заметка':'#c4b8a8'
+  };
+
   filtered.forEach((n,fi)=>{
     const realIdx=allNotes.indexOf(n);
-    const d=document.createElement('div');d.className='item-card';
-
+    const d=document.createElement('div');
+    d.className='item-card';
+    const stripe=STRIPE_COLORS[n.label||'заметка']||'#c4b8a8';
     let reminderHtml='';
     if(n.reminder){
       const disp=fmtReminderDisplay(n.reminder);
@@ -1095,19 +1178,16 @@ function loadNotes(){
           </button>
         </div>`;
     }
-
     d.innerHTML=`
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <div class="rem-dot" style="background:${DOTS_C[fi%DOTS_C.length]};margin-top:6px;flex-shrink:0;"></div>
-        <div style="flex:1;min-width:0;">
-          <div class="note-label">${esc(n.label||'заметка')}</div>
-          <div class="item-title">${esc(n.title)}</div>
-          ${reminderHtml}
+      <div class="note-stripe" style="background:${stripe};"></div>
+      <div style="padding-left:10px;">
+        <div class="note-cat">${esc(n.label||'заметка')}</div>
+        <div class="item-title">${esc(n.title)}</div>
+        ${reminderHtml}
+        <div class="item-actions">
+          <button class="act-btn act-edit" onclick="editItem('note',${realIdx})">Изменить</button>
+          <button class="act-btn act-del" onclick="moveToTrash('rz_notes',${realIdx},loadNotes)">Удалить</button>
         </div>
-      </div>
-      <div class="item-actions">
-        <button class="act-btn act-edit" onclick="editItem('note',${realIdx})">Изменить</button>
-        <button class="act-btn act-del" onclick="moveToTrash('rz_notes',${realIdx},loadNotes)">Удалить</button>
       </div>`;
     el.appendChild(d);
   });
