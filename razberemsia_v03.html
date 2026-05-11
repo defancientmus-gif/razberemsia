@@ -13,7 +13,9 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
+/* Разрешаем выделение только в полях ввода */
+input,textarea{-webkit-user-select:text;user-select:text;}
 :root{
   --sage:#7a9e7e;--sage-d:#4a6e4e;
   --cream:#f5f0e8;--warm:#ede5d8;--stone:#c4b8a8;
@@ -35,8 +37,8 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 .logo em{color:var(--text);font-style:normal;}
 .logo-ver{font-size:9px;color:rgba(106,124,111,0.5);font-family:'Raleway',sans-serif;font-weight:600;margin-left:6px;letter-spacing:.03em;vertical-align:middle;}
 .header-center{display:flex;flex-direction:row;align-items:center;gap:14px;margin:0 auto;}
-.header-date{font-size:17px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.04em;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.header-clock{font-size:17px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.06em;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.header-date{font-size:16px;font-weight:700;color:var(--text);font-family:'Raleway',sans-serif;white-space:nowrap;letter-spacing:.01em;}
+.header-clock{font-size:16px;font-weight:700;color:var(--text);font-family:'Raleway',sans-serif;white-space:nowrap;letter-spacing:.02em;font-variant-numeric:tabular-nums;}
 .hbtn{width:40px;height:40px;border-radius:50%;background:rgba(122,158,126,0.11);border:1px solid rgba(122,158,126,0.26);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .16s;-webkit-appearance:none;padding:0;flex-shrink:0;}
 .hbtn:active,.hbtn.open{background:rgba(122,158,126,0.22);}
 .hbtn svg{width:19px;height:19px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -297,7 +299,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.75 · бета</div>
+  <div class="auth-ver">v3.76 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -363,7 +365,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.75</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.76</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
