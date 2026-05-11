@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.82</title>
+<title>Разберёмся v3.83</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -299,7 +299,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.82 · бета</div>
+  <div class="auth-ver">v3.83 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -361,7 +361,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.82</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.83</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
@@ -1296,7 +1296,7 @@ function loadNotepad(){
   if(!el)return;
   el.innerHTML='';
   if(!list.length){
-    el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:24px 0;">Записей пока нет<br><span style="font-size:13px;display:block;margin-top:4px;">Напишите или надиктуйте выше</span></div>';
+    el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:24px 0;">История пуста<br><span style="font-size:13px;display:block;margin-top:4px;">Записи появятся здесь после сохранения</span></div>';
     return;
   }
   list.slice().reverse().forEach((n,ri)=>{
@@ -1304,8 +1304,12 @@ function loadNotepad(){
     const d=document.createElement('div');
     d.className='item-card';
     d.innerHTML=`
-      <div style="font-size:11px;color:var(--text-l);margin-bottom:5px;">${esc(n.date)}</div>
-      <div style="font-size:16px;color:var(--text);line-height:1.65;">${esc(n.text)}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="note-tag" style="margin-top:0;">${esc(n.label||'заметка')}</span>
+        <span style="font-size:11px;color:var(--text-l);">${esc(n.date)}</span>
+      </div>
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">${esc(n.title||'')}</div>
+      <div style="font-size:14px;color:var(--text-m);line-height:1.6;">${esc(n.text)}</div>
       <div class="item-actions">
         <button class="act-btn act-edit" onclick="copyNotepad(${i})">Копировать</button>
         <button class="act-btn act-del" onclick="delNotepad(${i})">Удалить</button>
@@ -1314,19 +1318,53 @@ function loadNotepad(){
   });
 }
 
+function analyzeText(text){
+  const t=text.toLowerCase();
+  // Категория по ключевым словам
+  let label='заметка';
+  if(/таблетк|лекарств|врач|аптек|давлени|болит|здоровь/.test(t))label='здоровье';
+  else if(/купить|магазин|заказать|продукт|список/.test(t))label='покупки';
+  else if(/позвонить|написать|связаться|перезвонить/.test(t))label='контакт';
+  else if(/встреча|собрание|в \d|встретиться|поехать/.test(t))label='событие';
+  else if(/идея|думаю|можно|а что если|мысль/.test(t))label='идея';
+  else if(/рецепт|приготовить|варить|печь/.test(t))label='рецепт';
+  else if(/адрес|улица|дом|город/.test(t))label='адрес';
+  // Название = первые 6 слов
+  const words=text.trim().split(/\s+/);
+  const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
+  return{title,label};
+}
+
 function saveNotepad(){
   const inp=document.getElementById('notepad-input');
   const text=inp.value.trim();
   if(!text){showToast('Напишите что-нибудь');return;}
-  const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
+
+  // Анализируем текст
+  const{title,label}=analyzeText(text);
+
+  // Сохраняем в раздел Заметки
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  notes.push({
+    title,
+    body:text,
+    label,
+    reminder:null,
+    fromNotepad:true
+  });
+  localStorage.setItem('rz_notes',JSON.stringify(notes));
+
+  // Также сохраняем в блокнот как историю
+  const pad=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
   const now=new Date();
   const date=`${now.getDate()} ${['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]} в ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  list.push({text,date});
-  localStorage.setItem('rz_notepad',JSON.stringify(list));
+  pad.push({text,date,label,title});
+  localStorage.setItem('rz_notepad',JSON.stringify(pad));
+
   inp.value='';
   inp.style.height='auto';
-  loadNotepad();
-  showToast('Сохранено ✓');
+  loadAll();
+  showToast(`Сохранено в «${label}» ✓`);
 }
 
 function delNotepad(i){
