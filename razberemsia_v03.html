@@ -31,10 +31,12 @@ body{font-family:'Raleway',sans-serif;background:var(--cream);color:var(--text);
 
 /* HEADER */
 header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);white-space:nowrap;}
-.logo em{color:var(--sage-d);font-style:italic;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);white-space:nowrap;font-style:normal;}
+.logo em{color:var(--text);font-style:normal;}
 .logo-ver{font-size:9px;color:rgba(106,124,111,0.5);font-family:'Raleway',sans-serif;font-weight:600;margin-left:6px;letter-spacing:.03em;vertical-align:middle;}
-.header-clock{font-size:15px;font-weight:600;color:var(--text-m);font-family:'Raleway',sans-serif;letter-spacing:.03em;margin:0 auto 0 14px;}
+.header-center{display:flex;flex-direction:column;align-items:center;margin:0 auto;}
+.header-date{font-size:11px;font-weight:600;color:var(--text-l);letter-spacing:.03em;text-align:center;}
+.header-clock{font-size:17px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.06em;font-variant-numeric:tabular-nums;text-align:center;}
 .hbtn{width:40px;height:40px;border-radius:50%;background:rgba(122,158,126,0.11);border:1px solid rgba(122,158,126,0.26);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .16s;-webkit-appearance:none;padding:0;flex-shrink:0;}
 .hbtn:active,.hbtn.open{background:rgba(122,158,126,0.22);}
 .hbtn svg{width:19px;height:19px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -65,15 +67,10 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 .scr.sr{transform:translateX(22px);opacity:0;}
 
 /* HOME */
-.greet-block{padding:12px 16px 10px;}
-.greet-time{font-size:11px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.12em;margin-bottom:2px;}
-.greet-datetime{font-size:14px;font-weight:500;color:var(--text-m);margin-bottom:6px;}
-.greet-name{font-family:'Playfair Display',serif;font-size:26px;color:var(--text);line-height:1.2;margin-bottom:2px;}
-.greet-calm{font-size:15px;font-weight:500;color:var(--sage-d);margin-bottom:8px;}
-.greet-status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-m);}
-.pulse{width:7px;height:7px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:pulse 2.5s ease-in-out infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(122,158,126,0.45)}50%{box-shadow:0 0 0 5px rgba(122,158,126,0)}}
-.beta-notice{margin-top:10px;background:rgba(184,136,58,0.07);border:1px solid rgba(184,136,58,0.2);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--text-m);line-height:1.6;}
+.greet-block{padding:10px 16px 10px;}
+.greet-time{font-size:11px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+.greet-name{font-family:'Playfair Display',serif;font-size:28px;color:var(--text);line-height:1.2;margin-bottom:8px;}
+.beta-notice{display:inline-block;background:rgba(184,136,58,0.07);border:1px solid rgba(184,136,58,0.18);border-radius:50px;padding:4px 12px;font-size:11px;color:var(--text-l);margin-bottom:10px;}
 
 /* EMERGENCY */
 .emer-card{background:linear-gradient(135deg,#8b3a36 0%,#b0403a 55%,#c0504a 100%);border-radius:var(--r);padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:transform .14s,box-shadow .14s;box-shadow:0 4px 16px rgba(176,64,58,0.22);display:flex;align-items:center;gap:14px;-webkit-appearance:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;border:none;}
@@ -259,7 +256,7 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 #auth-screen{position:fixed;inset:0;z-index:600;background:linear-gradient(160deg,#f8f4ed 0%,#f1ebe1 45%,#ebe4d9 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 52px;transition:opacity .32s,transform .32s;}
 #auth-screen.hidden{opacity:0;pointer-events:none;transform:translateY(-18px);}
 .auth-logo{font-family:'Playfair Display',serif;font-size:38px;color:var(--text);text-align:center;margin-bottom:6px;white-space:nowrap;}
-.auth-logo em{color:var(--sage-d);font-style:italic;}
+.auth-logo em{color:var(--text);font-style:normal;}
 .auth-tag{font-size:16px;color:var(--text-m);text-align:center;margin-bottom:4px;}
 .auth-ver{font-size:11px;color:rgba(106,124,111,0.5);text-align:center;margin-bottom:32px;}
 .auth-card{background:rgba(255,255,255,0.76);backdrop-filter:blur(20px);border:1px solid rgba(196,184,168,0.48);border-radius:24px;padding:28px 24px;width:100%;max-width:400px;}
@@ -300,7 +297,7 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.7 · бета</div>
+  <div class="auth-ver">v3.71 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -366,8 +363,11 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.7</span></div>
-    <div class="header-clock" id="header-clock"></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.72</span></div>
+    <div class="header-center">
+      <div class="header-date" id="header-date"></div>
+      <div class="header-clock" id="header-clock"></div>
+    </div>
     <button class="hbtn" id="hbtn" onclick="toggleMenu(event)" title="Меню">
       <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
     </button>
@@ -378,11 +378,8 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
     <div class="scr active" id="s-home">
       <div class="greet-block">
         <div class="greet-time" id="greet-time">Добрый день</div>
-        <div class="greet-datetime" id="greet-datetime"></div>
         <div class="greet-name" id="greet-name">Здравствуйте</div>
-        <div class="greet-calm">всё в порядке</div>
-        <div class="greet-status"><span class="pulse"></span>Я рядом — спрашивайте что угодно</div>
-        <div class="beta-notice">Приложение в стадии тестирования — некоторые функции ещё дорабатываются. Спасибо, что вы с нами с самого начала.</div>
+        <div class="beta-notice">Приложение в стадии тестирования</div>
       </div>
       <button class="emer-card" onclick="go('emergency')">
         <div class="emer-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
@@ -575,14 +572,15 @@ let confirmationResult=null,recaptchaVerifier=null,countdownInterval=null,curren
 
 // DATETIME + HEADER CLOCK
 (function(){
+  const DAYS=['вс','пн','вт','ср','чт','пт','сб'];
+  const MONTHS=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
   function upd(){
-    const now=new Date();
-    const h=now.getHours();
-    const days=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
-    const months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-    document.getElementById('greet-time').textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
-    const dt=document.getElementById('greet-datetime');
-    if(dt)dt.textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+    const now=new Date(),h=now.getHours();
+    const greetTime=document.getElementById('greet-time');
+    if(greetTime)greetTime.textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
+    const hd=document.getElementById('header-date');
+    if(hd)hd.textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]}`;
   }
 
   function updClock(){
