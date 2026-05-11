@@ -30,13 +30,13 @@ body{font-family:'Raleway',sans-serif;background:var(--cream);color:var(--text);
 .app{position:relative;z-index:10;height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;}
 
 /* HEADER */
-header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);white-space:nowrap;font-style:normal;}
 .logo em{color:var(--text);font-style:normal;}
 .logo-ver{font-size:9px;color:rgba(106,124,111,0.5);font-family:'Raleway',sans-serif;font-weight:600;margin-left:6px;letter-spacing:.03em;vertical-align:middle;}
-.header-center{display:flex;flex-direction:column;align-items:center;margin:0 auto;}
-.header-date{font-size:11px;font-weight:600;color:var(--text-l);letter-spacing:.03em;text-align:center;}
-.header-clock{font-size:17px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.06em;font-variant-numeric:tabular-nums;text-align:center;}
+.header-center{display:flex;flex-direction:row;align-items:center;gap:14px;margin:0 auto;}
+.header-date{font-size:17px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.04em;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.header-clock{font-size:17px;font-weight:600;color:var(--text-m);font-family:'Courier New',Courier,monospace;letter-spacing:.06em;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .hbtn{width:40px;height:40px;border-radius:50%;background:rgba(122,158,126,0.11);border:1px solid rgba(122,158,126,0.26);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .16s;-webkit-appearance:none;padding:0;flex-shrink:0;}
 .hbtn:active,.hbtn.open{background:rgba(122,158,126,0.22);}
 .hbtn svg{width:19px;height:19px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -68,7 +68,7 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 
 /* HOME */
 .greet-block{padding:10px 16px 10px;}
-.greet-time{font-size:11px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+.greet-time{font-size:12px;font-weight:600;color:var(--text-l);margin-bottom:3px;}
 .greet-name{font-family:'Playfair Display',serif;font-size:28px;color:var(--text);line-height:1.2;margin-bottom:8px;}
 .beta-notice{display:inline-block;background:rgba(184,136,58,0.07);border:1px solid rgba(184,136,58,0.18);border-radius:50px;padding:4px 12px;font-size:11px;color:var(--text-l);margin-bottom:10px;}
 
@@ -297,7 +297,7 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.74 · бета</div>
+  <div class="auth-ver">v3.75 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -363,10 +363,10 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.74</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.75</span></div>
     <div class="header-center">
-      <div class="header-date" id="header-date"></div>
-      <div class="header-clock" id="header-clock"></div>
+      <span class="header-date" id="header-date"></span>
+      <span class="header-clock" id="header-clock"></span>
     </div>
     <button class="hbtn" id="hbtn" onclick="toggleMenu(event)" title="Меню">
       <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
@@ -458,6 +458,10 @@ header{padding:12px 18px 8px;display:flex;align-items:center;justify-content:spa
       <div class="sec-title">Заметки и дела</div>
       <div class="sec-sub">Записывайте важное и ставьте напоминания</div>
       <div id="notif-banner"></div>
+      <div id="notif-test-block" style="display:none;background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:14px;padding:12px 16px;margin-bottom:12px;font-size:14px;color:var(--text-m);">
+        Уведомления разрешены ✓<br>
+        <button onclick="testNotif()" style="margin-top:8px;background:var(--sage);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;">Тест — уведомление через 5 сек</button>
+      </div>
       <div class="cal-wrap">
         <div class="cal-header">
           <button class="cal-nav" onclick="calPrev()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -573,14 +577,17 @@ let confirmationResult=null,recaptchaVerifier=null,countdownInterval=null,curren
 // DATETIME + HEADER CLOCK
 (function(){
   const DAYS=['вс','пн','вт','ср','чт','пт','сб'];
-  const MONTHS=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  // Родительный падеж для даты
+  const MONTHS_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const GREET=['Доброй ночи','Доброе утро','Добрый день','Добрый вечер','Доброй ночи'];
 
   function upd(){
     const now=new Date(),h=now.getHours();
-    const greetTime=document.getElementById('greet-time');
-    if(greetTime)greetTime.textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
+    const gi=h<6?0:h<12?1:h<17?2:h<22?3:4;
+    const greetEl=document.getElementById('greet-time');
+    if(greetEl)greetEl.textContent=GREET[gi];
     const hd=document.getElementById('header-date');
-    if(hd)hd.textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]}`;
+    if(hd)hd.textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS_GEN[now.getMonth()]}`;
   }
 
   function updClock(){
@@ -840,17 +847,30 @@ function restoreTrash(i){
 function notifSupported(){try{return'Notification'in window;}catch(e){return false;}}
 function renderNotifBanner(){
   const el=document.getElementById('notif-banner');
+  const tb=document.getElementById('notif-test-block');
   if(!el)return;
-  if(!notifSupported()){el.innerHTML='';return;}
-  if(Notification.permission==='granted'){el.innerHTML='';return;}
+  if(!notifSupported()){el.innerHTML='';if(tb)tb.style.display='none';return;}
+  if(Notification.permission==='granted'){
+    el.innerHTML='';
+    if(tb)tb.style.display='block';
+    return;
+  }
+  if(tb)tb.style.display='none';
   if(Notification.permission==='denied'){el.innerHTML='';return;}
   el.innerHTML=`<div class="notif-banner"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-text">Разрешите уведомления — напоминания будут приходить вовремя.</div><button class="notif-btn" onclick="requestNotif()">Разрешить</button></div>`;
 }
+function testNotif(){
+  if(!notifSupported()||Notification.permission!=='granted'){showToast('Уведомления не разрешены');return;}
+  showToast('Уведомление придёт через 5 сек...');
+  setTimeout(()=>{
+    new Notification('Разберёмся — тест',{body:'Уведомления работают! ✓',icon:'icon-192.png'});
+  },5000);
+}
 function requestNotif(){
-  if(!notifSupported()){showToast('Уведомления не поддерживаются в этом браузере');return;}
+  if(!notifSupported()){showToast('Уведомления не поддерживаются');return;}
   Notification.requestPermission().then(p=>{
     if(p==='granted'){showToast('Уведомления включены ✓');renderNotifBanner();scheduleAll();}
-    else{showToast('Уведомления не разрешены');}
+    else{showToast('Уведомления: '+p);}
   });
 }
 function scheduleAll(){
