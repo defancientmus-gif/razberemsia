@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.79</title>
+<title>Разберёмся v3.80</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -183,23 +183,23 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 .add-dashed:active{background:rgba(122,158,126,0.07);}
 
 /* CALENDAR */
-.cal-wrap{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.48);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.cal-month{font-family:'Playfair Display',serif;font-size:19px;color:var(--text);}
-.cal-nav{width:38px;height:38px;border-radius:50%;background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.22);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;transition:background .12s;}
+.cal-wrap{background:rgba(255,255,255,0.72);backdrop-filter:blur(12px);border:1px solid rgba(196,184,168,0.48);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-month{font-size:17px;font-weight:600;color:var(--text);}
+.cal-nav{width:34px;height:34px;border-radius:50%;background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.22);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;transition:background .12s;}
 .cal-nav:active{background:rgba(122,158,126,0.22);}
-.cal-nav svg{width:17px;height:17px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
-.cal-day-name{text-align:center;font-size:12px;font-weight:700;color:var(--text-l);padding:3px 0;text-transform:uppercase;letter-spacing:.03em;}
-.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-day{height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:15px;font-weight:500;color:var(--text-m);cursor:pointer;position:relative;transition:background .12s;-webkit-appearance:none;background:none;border:none;font-family:'Raleway',sans-serif;width:100%;}
+.cal-nav svg{width:16px;height:16px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+.cal-day-name{text-align:center;font-size:11px;font-weight:700;color:var(--text-l);padding:2px 0;text-transform:uppercase;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:15px;font-weight:500;color:var(--text-m);cursor:pointer;position:relative;transition:background .12s;-webkit-appearance:none;background:none;border:none;font-family:'Raleway',sans-serif;width:100%;}
 .cal-day:active{background:rgba(122,158,126,0.15);}
-.cal-day.today{font-weight:700;color:var(--sage-d);background:rgba(122,158,126,0.12);}
+.cal-day.today{font-weight:700;color:var(--sage-d);background:rgba(122,158,126,0.1);}
 .cal-day.selected{background:var(--sage);color:#fff;font-weight:700;}
-.cal-day.other-month{color:var(--stone);}
-.cal-day.has-items::after{content:'';position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--gold);}
-.cal-day.selected.has-items::after{background:rgba(255,255,255,0.8);}
-.cal-selected-label{font-size:15px;font-weight:600;color:var(--text-m);margin-bottom:10px;padding:0 2px;margin-top:4px;}
+.cal-day.other-month{color:rgba(196,184,168,0.8);}
+.cal-day.has-items::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold);}
+.cal-day.selected.has-items::after{background:rgba(255,255,255,0.9);}
+.cal-selected-label{font-size:14px;font-weight:600;color:var(--text-m);margin-bottom:8px;padding:0 2px;}
 
 /* SETTINGS */
 .set-section{margin-bottom:20px;}
@@ -299,7 +299,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.79 · бета</div>
+  <div class="auth-ver">v3.80 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -365,7 +365,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.79</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.80</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
@@ -913,25 +913,10 @@ function scheduleAll(){
 
   notes.forEach(n=>{
     if(!n.reminder||!n.title)return;
-
-    // Парсим как локальное время — без UTC
-    const parts=n.reminder.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-    if(!parts)return;
-
-    const target=new Date(
-      parseInt(parts[1]),
-      parseInt(parts[2])-1,
-      parseInt(parts[3]),
-      parseInt(parts[4]),
-      parseInt(parts[5]),
-      0,0
-    );
-
+    const target=parseLocalDate(n.reminder);
+    if(!target)return;
     const delay=target.getTime()-Date.now();
-
-    // Только будущие, не дальше 7 дней
     if(delay<=0||delay>7*24*60*60*1000)return;
-
     const tid=setTimeout(()=>{
       try{
         new Notification('Разберёмся',{
@@ -941,7 +926,6 @@ function scheduleAll(){
         });
       }catch(e){}
     },delay);
-
     _timers.push(tid);
     scheduled++;
   });
@@ -1053,17 +1037,32 @@ function updateCalLabel(){
   }
 }
 
-// ── NOTES (объединённый раздел) ──
+// ── NOTES ──
+function parseLocalDate(str){
+  // Парсим 2026-05-11T14:30 как локальное время
+  const p=str.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if(!p)return null;
+  return new Date(+p[1],+p[2]-1,+p[3],+p[4],+p[5],0);
+}
+
+function fmtReminderDisplay(str){
+  const dt=parseLocalDate(str);
+  if(!dt)return str;
+  const months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const hh=String(dt.getHours()).padStart(2,'0');
+  const mm=String(dt.getMinutes()).padStart(2,'0');
+  return `${dt.getDate()} ${months[dt.getMonth()]} в ${hh}:${mm}`;
+}
+
 function loadNotes(){
   const allNotes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
   const el=document.getElementById('note-list');
   if(!el)return;
   el.innerHTML='';
 
-  // Фильтрация по выбранной дате
   let filtered=allNotes;
   if(calSelected){
-    filtered=allNotes.filter((n,i)=>{
+    filtered=allNotes.filter(n=>{
       if(!n.reminder)return false;
       return n.reminder.slice(0,10)===calSelected;
     });
@@ -1079,22 +1078,19 @@ function loadNotes(){
 
   const DOTS_C=['#e07070','#7abf84','#7ab0e0','#d4a83a','#a07abf','#7abfb8'];
   filtered.forEach((n,fi)=>{
-    // Находим реальный индекс в полном массиве
     const realIdx=allNotes.indexOf(n);
     const d=document.createElement('div');d.className='item-card';
 
     let reminderHtml='';
     if(n.reminder){
-      const dt=new Date(n.reminder);
-      const opts={day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'};
-      const fmtDt=dt.toLocaleDateString('ru-RU',opts);
-      reminderHtml=`<div class="note-reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt)}</div>`;
+      const disp=fmtReminderDisplay(n.reminder);
+      reminderHtml=`<button class="note-reminder-tag" onclick="editItem('note',${realIdx})" style="cursor:pointer;-webkit-appearance:none;border:none;font-family:'Raleway',sans-serif;"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(disp)}</button>`;
     }
 
     d.innerHTML=`
       <div style="display:flex;align-items:flex-start;gap:10px;">
-        <div class="rem-dot" style="background:${DOTS_C[fi%DOTS_C.length]};margin-top:6px;"></div>
-        <div style="flex:1">
+        <div class="rem-dot" style="background:${DOTS_C[fi%DOTS_C.length]};margin-top:6px;flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
           <div class="note-label">${esc(n.label||'заметка')}</div>
           <div class="item-title">${esc(n.title)}</div>
           ${reminderHtml}
@@ -1136,9 +1132,28 @@ function updateRemBadge(n){
 
 // ── SHEETS ──
 const SHEETS={
-  note:{title:'Новая заметка или дело',body:`<div class="sheet-lbl">Текст заметки или дела</div><textarea class="sheet-in" id="sh1" rows="3" placeholder="Например: выпить таблетку, позвонить врачу, рецепт борща..."></textarea><div class="sheet-lbl">Категория</div><input class="sheet-in" id="sh3" placeholder="лекарство, дело, адрес, рецепт..."><div class="sheet-lbl">Напоминание (необязательно)</div><input class="sheet-in" id="sh2" type="datetime-local" id="sh2"><div style="font-size:13px;color:var(--text-l);margin-top:-8px;margin-bottom:12px;">Оставьте пустым если напоминание не нужно</div>`},
-  contact:{title:'Контакт',body:`<div class="sheet-lbl">Имя</div><input class="sheet-in" id="sh1" placeholder="Например: Аня"><div class="sheet-lbl">Роль</div><input class="sheet-in" id="sh3" placeholder="Дочь, сын, врач..."><div class="sheet-lbl">Телефон</div><input class="sheet-in" id="sh2" type="tel" placeholder="+7 900 000-00-00">`},
-  password:{title:'Пароль',body:`<div class="sheet-lbl">Сайт или приложение</div><input class="sheet-in" id="sh1" placeholder="Например: Госуслуги"><div class="sheet-lbl">Пароль</div><input class="sheet-in" id="sh2" placeholder="Введите пароль">`}
+  note:{title:'Новая заметка',body:`
+    <div class="sheet-lbl">Текст заметки или дела</div>
+    <textarea class="sheet-in" id="sh1" rows="3" placeholder="Например: купить учебник, выпить таблетку..."></textarea>
+    <div class="sheet-lbl">Категория (необязательно)</div>
+    <input class="sheet-in" id="sh3" placeholder="лекарство, дело, идея...">
+    <div class="sheet-lbl">Напоминание (необязательно)</div>
+    <input class="sheet-in" id="sh2" type="datetime-local">
+  `},
+  contact:{title:'Контакт',body:`
+    <div class="sheet-lbl">Имя</div>
+    <input class="sheet-in" id="sh1" placeholder="Например: Аня">
+    <div class="sheet-lbl">Роль</div>
+    <input class="sheet-in" id="sh3" placeholder="Дочь, сын, врач...">
+    <div class="sheet-lbl">Телефон</div>
+    <input class="sheet-in" id="sh2" type="tel" placeholder="+7 900 000-00-00">
+  `},
+  password:{title:'Пароль',body:`
+    <div class="sheet-lbl">Сайт или приложение</div>
+    <input class="sheet-in" id="sh1" placeholder="Например: Госуслуги">
+    <div class="sheet-lbl">Пароль</div>
+    <input class="sheet-in" id="sh2" placeholder="Введите пароль">
+  `}
 };
 
 function openSheet(type){
