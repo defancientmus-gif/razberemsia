@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся</title>
+<title>Разберёмся v3.79</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -299,7 +299,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.77 · бета</div>
+  <div class="auth-ver">v3.79 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -365,7 +365,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.77</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.79</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
@@ -608,7 +608,7 @@ let confirmationResult=null,recaptchaVerifier=null,countdownInterval=null,curren
 
 // AUTH
 auth.onAuthStateChanged(user=>{
-  if(user){currentUser=user;showApp();updateUserInfo(user);loadAll();}
+  if(user){currentUser=user;showApp();updateUserInfo(user);loadAll();scheduleAll();}
   else{setTimeout(()=>initRecaptcha(),600);}
 });
 
@@ -846,58 +846,117 @@ function restoreTrash(i){
 }
 
 // ── NOTIFICATIONS ──
-function notifSupported(){try{return'Notification'in window;}catch(e){return false;}}
+function notifSupported(){
+  try{return'Notification'in window;}catch(e){return false;}
+}
+
 function renderNotifBanner(){
   const el=document.getElementById('notif-banner');
   const tb=document.getElementById('notif-test-block');
   if(!el)return;
-  if(!notifSupported()){el.innerHTML='';if(tb)tb.style.display='none';return;}
+  if(!notifSupported()){
+    el.innerHTML='';
+    if(tb)tb.style.display='none';
+    return;
+  }
   if(Notification.permission==='granted'){
     el.innerHTML='';
     if(tb)tb.style.display='block';
     return;
   }
   if(tb)tb.style.display='none';
-  if(Notification.permission==='denied'){el.innerHTML='';return;}
+  if(Notification.permission==='denied'){
+    el.innerHTML='<div class="notif-banner" style="background:rgba(192,80,74,0.07);border-color:rgba(192,80,74,0.2);"><div class="notif-text">Уведомления заблокированы. Разрешите их в настройках телефона → Разберёмся → Уведомления.</div></div>';
+    return;
+  }
   el.innerHTML=`<div class="notif-banner"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-text">Разрешите уведомления — напоминания будут приходить вовремя.</div><button class="notif-btn" onclick="requestNotif()">Разрешить</button></div>`;
 }
+
+function requestNotif(){
+  if(!notifSupported()){showToast('Уведомления не поддерживаются в этом браузере');return;}
+  Notification.requestPermission().then(p=>{
+    showToast('Статус: '+p);
+    renderNotifBanner();
+    if(p==='granted')scheduleAll();
+  });
+}
+
+// Тест — немедленное уведомление через 5 сек
 function testNotif(){
-  if(!notifSupported()||Notification.permission!=='granted'){showToast('Уведомления не разрешены');return;}
-  showToast('Уведомление придёт через 5 сек...');
+  if(!notifSupported()||Notification.permission!=='granted'){
+    showToast('Разрешение: '+Notification.permission);
+    return;
+  }
+  showToast('Уведомление через 5 сек...');
   setTimeout(()=>{
-    new Notification('Разберёмся — тест',{body:'Уведомления работают! ✓',icon:'icon-192.png'});
+    try{
+      new Notification('Разберёмся — тест',{
+        body:'Уведомления работают ✓',
+        icon:'icon-192.png'
+      });
+    }catch(e){showToast('Ошибка: '+e.message);}
   },5000);
 }
-function requestNotif(){
-  if(!notifSupported()){showToast('Уведомления не поддерживаются');return;}
-  Notification.requestPermission().then(p=>{
-    if(p==='granted'){showToast('Уведомления включены ✓');renderNotifBanner();scheduleAll();}
-    else{showToast('Уведомления: '+p);}
-  });
-}
+
+// Таймеры уведомлений — хранится глобально чтобы не дублировались
+const _timers=[];
+
 function scheduleAll(){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){
-    navigator.serviceWorker.controller.postMessage({type:'SCHEDULE',notes:notes.filter(n=>n.reminder)});
-  }
+  // Очищаем старые таймеры
+  _timers.forEach(t=>clearTimeout(t));
+  _timers.length=0;
+
   if(!notifSupported()||Notification.permission!=='granted')return;
+
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  let scheduled=0;
+
   notes.forEach(n=>{
-    if(!n.reminder)return;
-    // Берём время как локальное (без смещения часового пояса)
+    if(!n.reminder||!n.title)return;
+
+    // Парсим как локальное время — без UTC
     const parts=n.reminder.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
     if(!parts)return;
+
     const target=new Date(
-      parseInt(parts[1]),parseInt(parts[2])-1,parseInt(parts[3]),
-      parseInt(parts[4]),parseInt(parts[5]),0
+      parseInt(parts[1]),
+      parseInt(parts[2])-1,
+      parseInt(parts[3]),
+      parseInt(parts[4]),
+      parseInt(parts[5]),
+      0,0
     );
-    const delay=target-Date.now();
-    if(delay>0&&delay<7*24*60*60*1000){
-      setTimeout(()=>{
-        if(notifSupported()&&Notification.permission==='granted')
-          new Notification('Разберёмся',{body:n.title,icon:'icon-192.png'});
-      },delay);
-    }
+
+    const delay=target.getTime()-Date.now();
+
+    // Только будущие, не дальше 7 дней
+    if(delay<=0||delay>7*24*60*60*1000)return;
+
+    const tid=setTimeout(()=>{
+      try{
+        new Notification('Разберёмся',{
+          body:n.title,
+          icon:'icon-192.png',
+          vibrate:[300,100,300]
+        });
+      }catch(e){}
+    },delay);
+
+    _timers.push(tid);
+    scheduled++;
   });
+
+  // Также отправляем в SW для фонового режима
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(reg=>{
+      if(reg.active){
+        reg.active.postMessage({
+          type:'SCHEDULE',
+          notes:notes.filter(n=>n.reminder&&n.title)
+        });
+      }
+    }).catch(()=>{});
+  }
 }
 
 // ── CONTACTS ──
