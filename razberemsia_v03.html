@@ -299,7 +299,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберём<em>ся</em></div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.76 · бета</div>
+  <div class="auth-ver">v3.77 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -365,7 +365,7 @@ header{padding:10px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.76</span></div>
+    <div class="logo">Разберём<em>ся</em><span class="logo-ver">v3.77</span></div>
     <div class="header-center">
       <span class="header-date" id="header-date"></span>
       <span class="header-clock" id="header-clock"></span>
@@ -1212,8 +1212,31 @@ function askAI(q){go('chat');setTimeout(()=>{document.getElementById('chat-input
 function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 
-// INIT
-loadAll();
+// ── SWIPE GESTURES ──
+(function(){
+  let startX=0,startY=0,startTime=0;
+  const THRESHOLD=80;  // минимальная длина свайпа
+  const RESTRAINT=60;  // максимальное отклонение по вертикали
+  const MAX_TIME=300;  // максимальное время свайпа мс
+
+  document.addEventListener('touchstart',e=>{
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    startTime=Date.now();
+  },{passive:true});
+
+  document.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=e.changedTouches[0].clientY-startY;
+    const dt=Date.now()-startTime;
+    if(dt>MAX_TIME)return;
+    if(Math.abs(dy)>RESTRAINT)return;
+    // Свайп вправо — назад
+    if(dx>THRESHOLD&&startX<60){
+      if(cur!=='home')go('home');
+    }
+  },{passive:true});
+})();
 calRender();
 if(notifSupported()&&Notification.permission==='granted')scheduleAll();
 
