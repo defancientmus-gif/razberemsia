@@ -1,0 +1,49 @@
+{
+  "name": "Разберёмся",
+  "short_name": "Разберёмся",
+  "description": "Спокойный цифровой помощник рядом",
+  "start_url": "/razberemsia/razberemsia_v03.html",
+  "scope": "/razberemsia/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f0e8",
+  "theme_color": "#7a9e7e",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Добавить заметку",
+      "short_name": "Заметка",
+      "description": "Быстро добавить заметку или дело",
+      "url": "/razberemsia/razberemsia_v03.html?action=note",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Что-то случилось",
+      "short_name": "Помощь",
+      "description": "Мошенники, не могу войти, боюсь нажать",
+      "url": "/razberemsia/razberemsia_v03.html?action=emergency",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Позвонить близкому",
+      "short_name": "Звонок",
+      "description": "Быстрый звонок одним касанием",
+      "url": "/razberemsia/razberemsia_v03.html?action=contacts",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
