@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся Demo 9%</title>
+<title>Разберёмся v3.85</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -134,13 +134,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .reminder-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(122,158,126,0.1);color:var(--sage-d);font-size:12px;font-weight:600;border-radius:50px;padding:4px 11px;border:1px solid rgba(122,158,126,0.2);margin-top:7px;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);}
 .reminder-tag svg{width:12px;height:12px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-
-/* NOTE QUICK DELETE */
-.note-del-x{position:absolute;top:8px;right:8px;width:28px;height:28px;border:none;border-radius:8px;background:rgba(192,80,74,0.08);color:var(--rose);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);z-index:3;}
-.note-del-x:active{background:rgba(192,80,74,0.16);transform:scale(.94);}
-.item-card{padding-right:42px;}
-.note-list.grid .item-card{padding-right:34px;}
-.note-list.grid .note-del-x{width:25px;height:25px;top:7px;right:7px;font-size:18px;}
 /* NOTIF BANNER */
 .notif-banner{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:var(--r);padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
 .notif-banner svg{width:20px;height:20px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
@@ -372,7 +365,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберёмся</div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">Demo 9% · бета</div>
+  <div class="auth-ver">v3.85 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -431,7 +424,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберёмся<span class="logo-ver">Demo 9%</span></div>
+    <div class="logo">Разберёмся<span class="logo-ver">v3.85</span></div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
       <div class="hclock" id="hclock"></div>
@@ -1322,7 +1315,7 @@ function loadNotes(){
   el.className='note-list '+(noteView==='grid'?'grid':'list');const vl=document.getElementById('view-list'),vg=document.getElementById('view-grid');if(vl)vl.classList.toggle('active',noteView==='list');if(vg)vg.classList.toggle('active',noteView==='grid');el.innerHTML='';
   let filtered=sortedNotePairs(all);if(CS)filtered=filtered.filter(x=>x.n.reminder&&x.n.reminder.slice(0,10)===CS);if(noteFilter)filtered=filtered.filter(x=>(x.n.label||'заметка')===noteFilter);
   if(!filtered.length){el.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «Новая» снизу</span></div>';return;}
-  filtered.forEach(({n,i})=>{const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';const d=document.createElement('div');d.className='item-card'+(n.pinned?' pinned':'');d.onclick=()=>editNote(i);let rHtml='';if(n.reminder)rHtml='<button class="reminder-tag" onclick="event.stopPropagation();editNote('+i+')">'+noteSvg('<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>')+esc(fmtDt(n.reminder))+'</button>';const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'" onclick="event.stopPropagation()"></audio>':'';const file=n.fileName?'<div class="file-chip">'+(n.fileType&&n.fileType.startsWith('image/')?'Изображение':'Файл')+' · '+esc(n.fileName)+'</div>':'';const sub=n.body&&n.body!==n.title?'<div class="item-sub">'+esc(n.body)+'</div>':'';d.innerHTML='<div class="note-stripe" style="background:'+stripe+';"></div><div class="note-head"><div class="note-cat">'+esc(n.label||'заметка')+'</div><div class="note-badges">'+(n.pinned?'<span class="note-badge">⌖</span>':'')+(n.favorite?'<span class="note-badge fav">♡</span>':'')+'</div></div><button class="note-del-x" onclick="event.stopPropagation();delNote('+i+')" aria-label="Удалить заметку">×</button><div class="item-title">'+esc(n.title||'Без названия')+'</div>'+sub+audio+file+rHtml+'<div class="item-meta">'+esc(fmtMeta(n.updatedAt||n.createdAt))+'</div>';el.appendChild(d);});
+  filtered.forEach(({n,i})=>{const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';const d=document.createElement('div');d.className='item-card'+(n.pinned?' pinned':'');d.onclick=()=>editNote(i);let rHtml='';if(n.reminder)rHtml='<button class="reminder-tag" onclick="event.stopPropagation();editNote('+i+')">'+noteSvg('<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>')+esc(fmtDt(n.reminder))+'</button>';const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'" onclick="event.stopPropagation()"></audio>':'';const file=n.fileName?'<div class="file-chip">'+(n.fileType&&n.fileType.startsWith('image/')?'Изображение':'Файл')+' · '+esc(n.fileName)+'</div>':'';const sub=n.body&&n.body!==n.title?'<div class="item-sub">'+esc(n.body)+'</div>':'';d.innerHTML='<div class="note-stripe" style="background:'+stripe+';"></div><div class="note-head"><div class="note-cat">'+esc(n.label||'заметка')+'</div><div class="note-badges">'+(n.pinned?'<span class="note-badge">⌖</span>':'')+(n.favorite?'<span class="note-badge fav">♡</span>':'')+'</div></div><div class="item-title">'+esc(n.title||'Без названия')+'</div>'+sub+audio+file+rHtml+'<div class="item-meta">'+esc(fmtMeta(n.updatedAt||n.createdAt))+'</div><div class="item-actions"><button class="act-btn act-edit" onclick="event.stopPropagation();editNote('+i+')">Открыть</button><button class="act-btn act-del" onclick="event.stopPropagation();delNote('+i+')">Удалить</button></div>';el.appendChild(d);});
 }
 function renderStatChips(all){const el=document.getElementById('notes-stat');if(!el)return;const counts={};all.forEach(n=>{const l=n.label||'заметка';counts[l]=(counts[l]||0)+1;});let html='<button class="stat-chip'+(!noteFilter?' active':'')+'" onclick="setFilter(null)">Все <span class="stat-count">'+all.length+'</span></button>';Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([l,c])=>{const col=STRIPES[l]||'#c4b8a8';html+='<button class="stat-chip'+(noteFilter===l?' active':'')+'" onclick="setFilter(\''+esc(l)+'\')"><span class="stat-dot" style="background:'+col+';"></span>'+esc(l)+'<span class="stat-count">'+c+'</span></button>';});el.innerHTML=html;}
 function pushEditState(){const v=editorState();if(!editHistory.length||JSON.stringify(editHistory[editPos])!==JSON.stringify(v)){editHistory=editHistory.slice(0,editPos+1);editHistory.push(v);editPos=editHistory.length-1;updEditCounts();}}
