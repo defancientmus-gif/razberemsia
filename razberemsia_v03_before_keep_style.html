@@ -216,43 +216,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .pad-text{font-size:14px;color:var(--text-m);line-height:1.6;}
 .pad-meta{font-size:11px;color:var(--text-l);margin-top:7px;}
 
-
-/* KEEP-STYLE NOTES UPGRADE */
-.notes-topbar{display:flex;align-items:center;gap:8px;margin:4px 0 8px;}
-.view-toggle{margin-left:auto;display:flex;gap:4px;background:rgba(255,255,255,0.58);border:1px solid rgba(200,195,188,0.42);border-radius:12px;padding:3px;}
-.view-btn{width:34px;height:32px;border:none;border-radius:9px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;color:var(--text-l);font-family:var(--sys);}
-.view-btn.active{background:rgba(122,158,126,0.14);color:var(--sage-d);}
-.view-btn svg,.notes-action svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.note-list{padding-bottom:84px;}
-.note-list.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start;}
-.note-list.grid .item-card{margin-bottom:0;min-height:128px;}
-.note-list.grid .item-actions{display:none;}
-.item-card{background:rgba(255,255,255,0.62);border:1px solid rgba(142,135,124,0.34);border-radius:10px;padding:12px 13px 12px 16px;cursor:pointer;}
-.item-card.pinned{border-color:rgba(122,158,126,0.34);box-shadow:0 3px 14px rgba(122,158,126,0.08);}
-.note-stripe{width:3px;border-radius:0;opacity:.82;}
-.note-head{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
-.note-cat{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.04em;background:rgba(245,240,232,0.72);border:1px solid rgba(200,195,188,0.38);border-radius:7px;padding:2px 6px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.note-badges{display:flex;gap:4px;margin-left:auto;flex-shrink:0;}
-.note-badge{width:24px;height:24px;border-radius:8px;background:rgba(122,158,126,0.1);display:flex;align-items:center;justify-content:center;color:var(--sage-d);font-size:13px;}
-.note-badge.fav{background:rgba(192,80,74,0.08);color:var(--rose);}
-.item-sub{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
-.audio-note{width:100%;margin-top:8px;height:34px;}
-.file-chip{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;font-weight:650;color:var(--text-m);background:rgba(245,240,232,.78);border:1px solid rgba(200,195,188,.42);border-radius:8px;padding:5px 8px;}
-.stat-chip{padding:5px 9px;font-size:12px;border-radius:9px;gap:5px;}
-.stat-dot{width:7px;height:7px;}.stat-count{font-size:10px;}
-.notes-dock{position:sticky;bottom:0;z-index:60;margin:0 -2px;padding:8px 0 0;background:linear-gradient(180deg,rgba(245,240,232,0),rgba(245,240,232,.96) 28%);}
-.notes-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:rgba(255,255,255,.78);border:1px solid rgba(200,195,188,.48);border-radius:16px;padding:7px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
-.notes-action{border:none;border-radius:12px;background:rgba(122,158,126,.08);color:var(--sage-d);min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:700;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}
-.notes-action.primary{background:var(--sage);color:#fff;}.notes-action input{display:none;}
-.voice-panel{display:flex;align-items:center;gap:14px;padding:12px 14px 10px;background:rgba(248,244,237,0.96);border-top:1px solid rgba(200,195,188,0.32);}
-.voice-orb{width:68px;height:68px;border:none;border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.96),rgba(122,158,126,.24) 42%,rgba(122,158,126,.12));box-shadow:0 14px 32px rgba(74,110,78,.18),inset 0 0 0 1px rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;-webkit-appearance:none;transition:transform .14s,box-shadow .14s;}
-.voice-orb span{width:22px;height:22px;border-radius:50%;background:rgba(122,158,126,.72);box-shadow:0 0 0 8px rgba(122,158,126,.12);}
-.voice-orb.rec{background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.98),rgba(192,80,74,.26) 42%,rgba(192,80,74,.14));box-shadow:0 16px 34px rgba(192,80,74,.18),0 0 0 8px rgba(192,80,74,.06);animation:pulse-mic 1.2s ease-in-out infinite;}
-.voice-orb.rec span{background:var(--rose);box-shadow:0 0 0 8px rgba(192,80,74,.12);}
-.voice-copy{flex:1;min-width:0;}.voice-title{font-size:16px;font-weight:750;color:var(--text);letter-spacing:-.1px;}.voice-sub{font-size:13px;color:var(--text-m);line-height:1.45;margin-top:2px;}
-.quiet-input{display:flex;align-items:flex-end;gap:8px;padding:0 14px 12px;background:rgba(248,244,237,0.96);}
-.note-editor-tools{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;}.editor-icon{border:1px solid rgba(200,195,188,.45);background:rgba(255,255,255,.75);border-radius:10px;min-width:42px;height:38px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text-m);font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}.editor-icon.active{background:rgba(122,158,126,.12);color:var(--sage-d);border-color:rgba(122,158,126,.26);}.editor-icon.danger{color:var(--rose);background:rgba(192,80,74,.06);}.editor-count{font-size:10px;margin-left:3px;color:var(--text-l);font-weight:800;}
-.audio-sheet{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0 14px;}.audio-rec-btn{width:92px;height:92px;border:none;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(122,158,126,.24));box-shadow:0 18px 44px rgba(74,110,78,.2);font-size:15px;font-weight:800;color:var(--sage-d);font-family:var(--sys);}.audio-rec-btn.rec{color:var(--rose);background:radial-gradient(circle at 32% 28%,#fff,rgba(192,80,74,.25));animation:pulse-mic 1.2s infinite;}
 /* SETTINGS */
 .set-group{background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.46);border-radius:var(--r);margin-bottom:16px;overflow:hidden;}
 .set-group-title{font-size:12px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px 4px;}
@@ -463,7 +426,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
     <!-- EMERGENCY -->
     <div class="scr" id="s-emergency">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
       <div class="sec-title">Разберёмся</div>
       <div class="sec-sub">Что случилось? Выберите — и я помогу</div>
       <div class="emg-opts">
@@ -481,23 +444,55 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
     <!-- GUIDE -->
     <div class="scr" id="s-guide">
-      <div class="backrow"><button class="backbtn" onclick="go('emergency')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
+      <div class="backrow"><button class="backbtn" onclick="go('emergency')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div><div class="back-hint">Выбрать другую ситуацию</div></div></button></div>
       <div id="guide-body"></div>
     </div>
     <!-- NOTES -->
     <div class="scr" id="s-notes">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
-      <div class="notes-topbar"><div class="sec-title" style="margin-bottom:0;">Заметки</div><div class="view-toggle"><button class="view-btn" id="view-list" onclick="setNoteView('list')"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button><button class="view-btn" id="view-grid" onclick="setNoteView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button></div></div>
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="sec-title">Заметки</div>
       <div id="notif-banner-el"></div>
-      <button class="cal-trigger" onclick="openCal()"><div class="cal-trigger-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="cal-trigger-label">Календарь</div><div class="cal-trigger-val" id="cal-trigger-val">Все заметки</div></div><div class="cal-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></button>
-      <div class="notes-stat" id="notes-stat"></div><div id="note-list" class="note-list"></div>
-      <div class="notes-dock"><div class="notes-actions"><button class="notes-action" onclick="openSheet('checklist')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Список</span></button><button class="notes-action" onclick="openDrawing()"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><span>Эскиз</span></button><button class="notes-action" onclick="openAudioNote()"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4"/></svg><span>Аудио</span></button><label class="notes-action"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Файл</span><input type="file" accept="image/*,.pdf,.txt" onchange="attachQuickFile(this)"></label><button class="notes-action primary" onclick="openSheet('note')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Новая</span></button></div></div>
+      <!-- Календарь-триггер -->
+      <button class="cal-trigger" onclick="openCal()">
+        <div class="cal-trigger-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div>
+          <div class="cal-trigger-label">Календарь</div>
+          <div class="cal-trigger-val" id="cal-trigger-val">Все заметки</div>
+        </div>
+        <div class="cal-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+      <!-- Фильтры по категориям -->
+      <div class="notes-stat" id="notes-stat"></div>
+      <div id="note-list"></div>
+      <button class="add-dashed" onclick="openSheet('note')">＋ Добавить заметку</button>
     </div>
+
     <!-- NOTEPAD -->
-    <div class="scr" id="s-notepad" style="padding:0;overflow:hidden;"><div style="height:100%;display:flex;flex-direction:column;"><div style="padding:8px 14px 6px;flex-shrink:0;"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div><div id="notepad-list" style="flex:1;overflow-y:auto;padding:6px 14px 8px;"></div><div class="voice-panel" id="voice-panel"><button id="mic-btn" class="voice-orb" onclick="toggleVoice()" aria-label="Начать или остановить диктовку"><span></span></button><div class="voice-copy"><div class="voice-title" id="voice-title">Нажмите облако и говорите</div><div class="voice-sub" id="voice-sub">Повторное нажатие остановит запись</div></div></div><div class="quiet-input"><textarea id="notepad-input" class="notepad-field" rows="1" placeholder="Короткая запись текстом..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNotepad();}"></textarea><button class="notepad-send" onclick="saveNotepad()"><svg viewBox="0 0 24 24" width="19" height="19" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div></div>
+    <div class="scr" id="s-notepad" style="padding:0;overflow:hidden;">
+      <div style="height:100%;display:flex;flex-direction:column;">
+        <div style="padding:8px 14px 6px;flex-shrink:0;">
+          <button class="backbtn" onclick="go('home')">
+            <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div><div class="back-lbl">Блокнот</div><div class="back-hint">Быстрые записи</div></div>
+          </button>
+        </div>
+        <div id="notepad-list" style="flex:1;overflow-y:auto;padding:6px 14px 8px;"></div>
+        <div class="voice-status" id="voice-status">🎙 Слушаю...</div>
+        <div class="notepad-bar">
+          <button id="mic-btn" class="notepad-mic" onclick="toggleVoice()">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+          </button>
+          <textarea id="notepad-input" class="notepad-field" rows="1" placeholder="Написать или надиктовать..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNotepad();}"></textarea>
+          <button class="notepad-send" onclick="saveNotepad()">
+            <svg viewBox="0 0 24 24" width="19" height="19" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="scr" id="s-settings">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
       <div class="sec-title">Настройки</div>
       <div class="set-group-title">Как вас называть</div>
       <div class="set-group">
@@ -1303,41 +1298,6 @@ function saveSheet(){
   }
 }
 
-
-// ── KEEP-STYLE NOTES UPGRADE OVERRIDES ──
-let noteView=localStorage.getItem('rz_note_view')||'list';
-let editHistory=[],editPos=0,audioRec=null,audioChunks=[],pendingAudio=null;
-function setNoteView(v){noteView=v;localStorage.setItem('rz_note_view',v);loadNotes();}
-function noteSvg(path){return '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';}
-function sortedNotePairs(all){return all.map((n,i)=>({n,i})).sort((a,b)=>((b.n.pinned?1:0)-(a.n.pinned?1:0))||((b.n.favorite?1:0)-(a.n.favorite?1:0))||((b.n.updatedAt||b.n.createdAt||0)-(a.n.updatedAt||a.n.createdAt||0)));}
-function loadNotes(){
-  const all=JSON.parse(localStorage.getItem('rz_notes')||'[]');renderStatChips(all);const el=document.getElementById('note-list');if(!el)return;
-  el.className='note-list '+(noteView==='grid'?'grid':'list');const vl=document.getElementById('view-list'),vg=document.getElementById('view-grid');if(vl)vl.classList.toggle('active',noteView==='list');if(vg)vg.classList.toggle('active',noteView==='grid');el.innerHTML='';
-  let filtered=sortedNotePairs(all);if(CS)filtered=filtered.filter(x=>x.n.reminder&&x.n.reminder.slice(0,10)===CS);if(noteFilter)filtered=filtered.filter(x=>(x.n.label||'заметка')===noteFilter);
-  if(!filtered.length){el.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «Новая» снизу</span></div>';return;}
-  filtered.forEach(({n,i})=>{const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';const d=document.createElement('div');d.className='item-card'+(n.pinned?' pinned':'');d.onclick=()=>editNote(i);let rHtml='';if(n.reminder)rHtml='<button class="reminder-tag" onclick="event.stopPropagation();editNote('+i+')">'+noteSvg('<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>')+esc(fmtDt(n.reminder))+'</button>';const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'" onclick="event.stopPropagation()"></audio>':'';const file=n.fileName?'<div class="file-chip">'+(n.fileType&&n.fileType.startsWith('image/')?'Изображение':'Файл')+' · '+esc(n.fileName)+'</div>':'';const sub=n.body&&n.body!==n.title?'<div class="item-sub">'+esc(n.body)+'</div>':'';d.innerHTML='<div class="note-stripe" style="background:'+stripe+';"></div><div class="note-head"><div class="note-cat">'+esc(n.label||'заметка')+'</div><div class="note-badges">'+(n.pinned?'<span class="note-badge">⌖</span>':'')+(n.favorite?'<span class="note-badge fav">♡</span>':'')+'</div></div><div class="item-title">'+esc(n.title||'Без названия')+'</div>'+sub+audio+file+rHtml+'<div class="item-meta">'+esc(fmtMeta(n.updatedAt||n.createdAt))+'</div><div class="item-actions"><button class="act-btn act-edit" onclick="event.stopPropagation();editNote('+i+')">Открыть</button><button class="act-btn act-del" onclick="event.stopPropagation();delNote('+i+')">Удалить</button></div>';el.appendChild(d);});
-}
-function renderStatChips(all){const el=document.getElementById('notes-stat');if(!el)return;const counts={};all.forEach(n=>{const l=n.label||'заметка';counts[l]=(counts[l]||0)+1;});let html='<button class="stat-chip'+(!noteFilter?' active':'')+'" onclick="setFilter(null)">Все <span class="stat-count">'+all.length+'</span></button>';Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([l,c])=>{const col=STRIPES[l]||'#c4b8a8';html+='<button class="stat-chip'+(noteFilter===l?' active':'')+'" onclick="setFilter(\''+esc(l)+'\')"><span class="stat-dot" style="background:'+col+';"></span>'+esc(l)+'<span class="stat-count">'+c+'</span></button>';});el.innerHTML=html;}
-function pushEditState(){const v=editorState();if(!editHistory.length||JSON.stringify(editHistory[editPos])!==JSON.stringify(v)){editHistory=editHistory.slice(0,editPos+1);editHistory.push(v);editPos=editHistory.length-1;updEditCounts();}}
-function editorState(){return{title:(document.getElementById('sh1')||{}).value||'',body:(document.getElementById('shbody')||{}).value||'',label:(document.getElementById('sh3')||{}).value||'',reminder:(document.getElementById('sh2')||{}).value||''};}
-function applyEditorState(v){if(!v)return;['sh1','shbody','sh3','sh2'].forEach((id,idx)=>{const el=document.getElementById(id);if(el)el.value=[v.title,v.body,v.label,v.reminder][idx]||'';});updEditCounts();}
-function undoEdit(){if(editPos>0){editPos--;applyEditorState(editHistory[editPos]);showToast('Назад: '+editPos);}}
-function redoEdit(){if(editPos<editHistory.length-1){editPos++;applyEditorState(editHistory[editPos]);showToast('Вперёд: '+(editHistory.length-1-editPos));}}
-function updEditCounts(){const u=document.getElementById('undo-count'),r=document.getElementById('redo-count');if(u)u.textContent=editPos;if(r)r.textContent=Math.max(0,editHistory.length-1-editPos);}
-function togglePin(){document.getElementById('pin-toggle').classList.toggle('active');}
-function toggleFav(){document.getElementById('fav-toggle').classList.toggle('active');}
-function noteForm(n={}){const file=n.fileName?'<div class="file-chip">Прикреплено: '+esc(n.fileName)+'</div>':'';const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'"></audio>':'';return '<div class="note-editor-tools"><button class="editor-icon" onclick="undoEdit()">↶<span class="editor-count" id="undo-count">0</span></button><button class="editor-icon" onclick="redoEdit()">↷<span class="editor-count" id="redo-count">0</span></button><button class="editor-icon '+(n.pinned?'active':'')+'" id="pin-toggle" onclick="togglePin()">⌖</button><button class="editor-icon '+(n.favorite?'active':'')+'" id="fav-toggle" onclick="toggleFav()">♡</button><label class="editor-icon">＋<input id="file-input" type="file" style="display:none" onchange="readEditorFile(this)"></label><button class="editor-icon danger" onclick="if(EI!==null){delNote(EI);closeSheet();}">×</button></div><div class="sheet-lbl">Название</div><textarea class="sheet-in" id="sh1" rows="2" placeholder="Что важно запомнить..." oninput="pushEditState()">'+esc(n.title||'')+'</textarea><div class="sheet-lbl">Подробности</div><textarea class="sheet-in" id="shbody" rows="4" placeholder="Можно дописать детали..." oninput="pushEditState()">'+esc(n.body||'')+'</textarea>'+audio+file+'<div id="file-preview"></div><div class="sheet-lbl">Категория</div><input class="sheet-in" id="sh3" placeholder="здоровье, покупки, дело..." value="'+esc(n.label||'')+'" oninput="pushEditState()"><div class="sheet-lbl">Напоминание</div><input class="sheet-in" id="sh2" type="datetime-local" value="'+esc(n.reminder||'')+'" onchange="pushEditState()">';}
-function readEditorFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{inp.dataset.name=f.name;inp.dataset.type=f.type;inp.dataset.data=r.result;document.getElementById('file-preview').innerHTML='<div class="file-chip">Прикреплено: '+esc(f.name)+'</div>';};r.readAsDataURL(f);}
-function editNote(i){const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');const n=notes[i];if(!n)return;ST='note';EI=i;pendingAudio=null;document.getElementById('sheet-title').textContent='Заметка';document.getElementById('sheet-body').innerHTML=noteForm(n);document.getElementById('overlay').classList.add('open');editHistory=[{title:n.title||'',body:n.body||'',label:n.label||'',reminder:n.reminder||''}];editPos=0;updEditCounts();setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},220);}
-function openSheet(type){ST=type;EI=null;pendingAudio=null;document.getElementById('sheet-title').textContent=type==='checklist'?'Новый список':'Новая заметка';const base=type==='checklist'?{title:'Новый список',body:'☐ '}:{title:'',body:''};document.getElementById('sheet-body').innerHTML=noteForm(base);document.getElementById('overlay').classList.add('open');editHistory=[editorState()];editPos=0;updEditCounts();setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},260);}
-function closeSheet(){document.getElementById('overlay').classList.remove('open');ST=null;EI=null;pendingAudio=null;}
-function saveSheet(){const v1=(document.getElementById('sh1')||{}).value||'';const body=(document.getElementById('shbody')||{}).value||'';const v2=(document.getElementById('sh2')||{}).value||'';const v3=(document.getElementById('sh3')||{}).value||'';if(!v1.trim()&&!body.trim()&&!pendingAudio){showToast('Добавьте текст или аудио');return;}const ts=Date.now();if(ST==='note'||ST==='checklist'||ST===null){const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');const old=EI!==null?list[EI]:{};const fi=document.getElementById('file-input');const item={...old,title:v1.trim()||'Без названия',body:body.trim(),label:v3.trim()||old.label||'заметка',reminder:v2||null,pinned:document.getElementById('pin-toggle')?.classList.contains('active')||false,favorite:document.getElementById('fav-toggle')?.classList.contains('active')||false,audio:pendingAudio||old.audio||null,updatedAt:ts};if(fi&&fi.dataset.data){item.fileData=fi.dataset.data;item.fileName=fi.dataset.name;item.fileType=fi.dataset.type;}if(EI!==null){item.createdAt=old.createdAt||ts;list[EI]=item;}else{item.createdAt=ts;list.unshift(item);}localStorage.setItem('rz_notes',JSON.stringify(list));loadNotes();closeSheet();showToast(EI!==null?'Изменено ✓':'Сохранено ✓');if(v2&&notifGranted())scheduleAll();}else if(ST==='notepad'){const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');if(EI!==null){list[EI].text=v1.trim();list[EI].updatedAt=ts;}localStorage.setItem('rz_notepad',JSON.stringify(list));loadNotepad();closeSheet();showToast('Изменено ✓');}}
-function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showToast('Голос не поддерживается');return;}recog=new SR();recog.lang='ru-RU';recog.continuous=true;recog.interimResults=true;recog.onstart=()=>{isRec=true;document.getElementById('mic-btn').classList.add('rec');document.getElementById('voice-title').textContent='Говорите, я слушаю';document.getElementById('voice-sub').textContent='Чтобы остановить, нажмите облако ещё раз';};recog.onresult=e=>{let fin='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript;if(fin){const inp=document.getElementById('notepad-input');inp.value+=(inp.value?' ':'')+fin;npResize(inp);}};recog.onerror=e=>{showToast('Ошибка: '+e.error);stopVoice();};recog.onend=()=>{if(isRec)stopVoice();};recog.start();}
-function stopVoice(){if(recog)try{recog.stop();}catch(e){}recog=null;isRec=false;const b=document.getElementById('mic-btn');if(b)b.classList.remove('rec');const t=document.getElementById('voice-title'),u=document.getElementById('voice-sub');if(t)t.textContent='Нажмите облако и говорите';if(u)u.textContent='Повторное нажатие остановит запись';}
-function openAudioNote(){ST='note';EI=null;pendingAudio=null;document.getElementById('sheet-title').textContent='Аудио-заметка';document.getElementById('sheet-body').innerHTML='<div class="audio-sheet"><button class="audio-rec-btn" id="audio-rec-btn" onclick="toggleAudioRecord()">Записать</button><div class="voice-sub" id="audio-hint">Нажмите, скажите заметку, нажмите ещё раз</div><div id="audio-preview"></div></div>'+noteForm({title:'Аудио-заметка',label:'аудио'});document.getElementById('overlay').classList.add('open');}
-async function toggleAudioRecord(){if(audioRec&&audioRec.state==='recording'){audioRec.stop();return;}if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showToast('Аудиозапись не поддерживается');return;}const stream=await navigator.mediaDevices.getUserMedia({audio:true});audioChunks=[];audioRec=new MediaRecorder(stream);audioRec.ondataavailable=e=>audioChunks.push(e.data);audioRec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(audioChunks,{type:'audio/webm'});const r=new FileReader();r.onload=()=>{pendingAudio=r.result;document.getElementById('audio-preview').innerHTML='<audio class="audio-note" controls src="'+pendingAudio+'"></audio>';document.getElementById('audio-hint').textContent='Аудио готово. Можно сохранить.';};r.readAsDataURL(blob);document.getElementById('audio-rec-btn').classList.remove('rec');document.getElementById('audio-rec-btn').textContent='Ещё раз';};audioRec.start();document.getElementById('audio-rec-btn').classList.add('rec');document.getElementById('audio-rec-btn').textContent='Стоп';document.getElementById('audio-hint').textContent='Говорите. Чтобы закончить, нажмите Стоп.';}
-function attachQuickFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const ts=Date.now();const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');list.unshift({title:f.name,body:'',label:f.type&&f.type.startsWith('image/')?'изображение':'файл',fileName:f.name,fileType:f.type,fileData:r.result,createdAt:ts,updatedAt:ts});localStorage.setItem('rz_notes',JSON.stringify(list));inp.value='';loadNotes();showToast('Файл добавлен');};r.readAsDataURL(f);}
-function openDrawing(){openSheet('note');document.getElementById('sheet-title').textContent='Эскиз';document.getElementById('sh1').value='Эскиз';document.getElementById('shbody').value='Зарисовка добавлена как заметка. Полотно подключим следующим шагом.';document.getElementById('sh3').value='эскиз';pushEditState();}
 // ── LOAD ALL ──
 function loadAll(){
   loadNotes();
