@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.85</title>
+<title>Разберёмся Demo 9.7%</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Разберёмся">
 <meta name="theme-color" content="#7a9e7e">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
@@ -134,6 +135,13 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .reminder-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(122,158,126,0.1);color:var(--sage-d);font-size:12px;font-weight:600;border-radius:50px;padding:4px 11px;border:1px solid rgba(122,158,126,0.2);margin-top:7px;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);}
 .reminder-tag svg{width:12px;height:12px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
+
+/* NOTE QUICK DELETE */
+.note-del-x{position:absolute;top:8px;right:8px;width:28px;height:28px;border:none;border-radius:8px;background:rgba(192,80,74,0.08);color:var(--rose);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);z-index:3;}
+.note-del-x:active{background:rgba(192,80,74,0.16);transform:scale(.94);}
+.item-card{padding-right:42px;}
+.note-list.grid .item-card{padding-right:34px;}
+.note-list.grid .note-del-x{width:25px;height:25px;top:7px;right:7px;font-size:18px;}
 /* NOTIF BANNER */
 .notif-banner{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:var(--r);padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
 .notif-banner svg{width:20px;height:20px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
@@ -198,35 +206,17 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .add-dashed:active{background:rgba(122,158,126,0.07);}
 
 /* NOTEPAD */
-.notepad-voice-wrap{flex-shrink:0;background:rgba(248,244,237,0.95);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid rgba(200,195,188,0.35);padding:12px 0 env(safe-area-inset-bottom);}
-.voice-panel{position:relative;margin:0 12px 10px;padding:12px 14px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.58));border:1px solid rgba(200,195,188,0.45);border-radius:24px;box-shadow:0 18px 46px rgba(70,58,44,0.10);overflow:hidden;touch-action:none;transition:background .22s,border-color .22s,box-shadow .22s,transform .18s;}
-.voice-panel::before{content:'';position:absolute;inset:auto 18% -54px;height:96px;background:radial-gradient(circle,rgba(122,158,126,0.22),rgba(122,158,126,0));pointer-events:none;transition:opacity .22s;}
-.voice-panel.recording{border-color:rgba(192,80,74,0.28);box-shadow:0 20px 54px rgba(192,80,74,0.14);}
-.voice-panel.locked{border-color:rgba(122,158,126,0.42);box-shadow:0 20px 54px rgba(122,158,126,0.18);}
-.voice-lock{height:30px;display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,0.76);border:1px solid rgba(200,195,188,0.42);color:var(--text-l);font-size:12px;font-weight:700;opacity:0;transform:translateY(10px) scale(.96);transition:opacity .2s,transform .2s,background .2s,color .2s,border-color .2s;}
-.voice-lock svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.voice-panel.recording .voice-lock{opacity:1;transform:translateY(0) scale(1);}
-.voice-panel.locked .voice-lock{background:rgba(122,158,126,0.14);border-color:rgba(122,158,126,0.34);color:var(--sage-d);}
-.voice-orb{position:relative;width:96px;height:96px;border-radius:50%;border:none;background:radial-gradient(circle at 35% 30%,#fff 0,#e7efe4 36%,var(--sage) 100%);box-shadow:0 18px 38px rgba(88,112,82,0.24),inset 0 1px 0 rgba(255,255,255,0.82);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;touch-action:none;color:#fff;transition:transform .16s,box-shadow .22s,background .22s;}
-.voice-orb:active{transform:scale(.97);}
-.voice-orb::before{content:'';position:absolute;inset:10px;border-radius:50%;background:rgba(255,255,255,0.18);}
-.voice-orb span{position:relative;width:28px;height:38px;border-radius:18px;background:#fff;box-shadow:0 0 0 7px rgba(255,255,255,0.18);}
-.voice-orb span::before{content:'';position:absolute;left:50%;bottom:-14px;width:24px;height:18px;border:3px solid #fff;border-top:none;border-radius:0 0 16px 16px;transform:translateX(-50%);}
-.voice-orb span::after{content:'';position:absolute;left:50%;bottom:-22px;width:3px;height:11px;background:#fff;border-radius:4px;transform:translateX(-50%);}
-.voice-orb.rec{background:radial-gradient(circle at 35% 30%,#fff 0,#f4d6d2 35%,var(--rose) 100%);box-shadow:0 20px 48px rgba(192,80,74,0.28);animation:voice-breathe 1.45s ease-in-out infinite;}
-.voice-orb.locked{background:radial-gradient(circle at 35% 30%,#fff 0,#dceadc 36%,var(--sage-d) 100%);animation:voice-breathe 1.8s ease-in-out infinite;}
-.voice-copy{text-align:center;position:relative;z-index:1;}
-.voice-title{font-size:18px;font-weight:750;color:var(--text);line-height:1.22;}
-.voice-sub{font-size:14px;color:var(--text-l);line-height:1.35;margin-top:3px;}
-.voice-panel.recording .voice-sub{color:var(--rose);}
-.voice-panel.locked .voice-sub{color:var(--sage-d);}
-.quiet-input{display:flex;align-items:flex-end;gap:8px;padding:0 12px;}
-.notepad-field{flex:1;background:rgba(255,255,255,0.9);border:1.5px solid rgba(200,195,188,0.48);border-radius:20px;padding:10px 16px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;resize:none;min-height:42px;max-height:120px;line-height:1.5;-webkit-user-select:text;user-select:text;transition:border-color .15s,box-shadow .15s;}
+.notepad-bar{display:flex;align-items:flex-end;gap:8px;padding:8px 12px 10px;background:rgba(248,244,237,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(200,195,188,0.35);flex-shrink:0;}
+.notepad-mic{width:40px;height:40px;border-radius:50%;background:rgba(122,158,126,0.12);border:1.5px solid rgba(122,158,126,0.26);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;color:var(--sage-d);flex-shrink:0;transition:all .14s;}
+.notepad-mic:active{transform:scale(.92);}
+.notepad-mic.rec{background:rgba(192,80,74,0.12);border-color:rgba(192,80,74,0.32);color:var(--rose);animation:pulse-mic 1.2s ease-in-out infinite;}
+@keyframes pulse-mic{0%,100%{box-shadow:0 0 0 0 rgba(192,80,74,0.3)}50%{box-shadow:0 0 0 6px rgba(192,80,74,0)}}
+.notepad-field{flex:1;background:rgba(255,255,255,0.9);border:1.5px solid rgba(200,195,188,0.48);border-radius:20px;padding:10px 16px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;resize:none;min-height:40px;max-height:120px;line-height:1.5;-webkit-user-select:text;user-select:text;transition:border-color .15s;}
 .notepad-field::placeholder{color:var(--stone);}
-.notepad-field:focus{border-color:rgba(122,158,126,0.5);box-shadow:0 0 0 4px rgba(122,158,126,0.08);}
-.notepad-send{width:42px;height:42px;border-radius:50%;background:var(--sage);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;flex-shrink:0;transition:background .12s,transform .1s;}
+.notepad-field:focus{border-color:rgba(122,158,126,0.5);}
+.notepad-send{width:40px;height:40px;border-radius:50%;background:var(--sage);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;flex-shrink:0;transition:background .12s,transform .1s;}
 .notepad-send:active{background:var(--sage-d);transform:scale(.92);}
-@keyframes voice-breathe{0%,100%{transform:scale(1);box-shadow:0 18px 38px rgba(192,80,74,0.18)}50%{transform:scale(1.035);box-shadow:0 24px 58px rgba(192,80,74,0.30)}}
+.voice-status{display:none;text-align:center;padding:7px;font-size:13px;color:var(--rose);font-weight:600;flex-shrink:0;letter-spacing:.01em;}
 .pad-item{background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.46);border-radius:var(--r);padding:12px 16px 12px 20px;margin-bottom:8px;position:relative;overflow:hidden;word-break:break-word;}
 .pad-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
 .pad-cat{font-size:10px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
@@ -234,6 +224,43 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .pad-text{font-size:14px;color:var(--text-m);line-height:1.6;}
 .pad-meta{font-size:11px;color:var(--text-l);margin-top:7px;}
 
+
+/* KEEP-STYLE NOTES UPGRADE */
+.notes-topbar{display:flex;align-items:center;gap:8px;margin:4px 0 8px;}
+.view-toggle{margin-left:auto;display:flex;gap:4px;background:rgba(255,255,255,0.58);border:1px solid rgba(200,195,188,0.42);border-radius:12px;padding:3px;}
+.view-btn{width:34px;height:32px;border:none;border-radius:9px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;color:var(--text-l);font-family:var(--sys);}
+.view-btn.active{background:rgba(122,158,126,0.14);color:var(--sage-d);}
+.view-btn svg,.notes-action svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.note-list{padding-bottom:84px;}
+.note-list.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start;}
+.note-list.grid .item-card{margin-bottom:0;min-height:128px;}
+.note-list.grid .item-actions{display:none;}
+.item-card{background:rgba(255,255,255,0.62);border:1px solid rgba(142,135,124,0.34);border-radius:10px;padding:12px 13px 12px 16px;cursor:pointer;}
+.item-card.pinned{border-color:rgba(122,158,126,0.34);box-shadow:0 3px 14px rgba(122,158,126,0.08);}
+.note-stripe{width:3px;border-radius:0;opacity:.82;}
+.note-head{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.note-cat{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.04em;background:rgba(245,240,232,0.72);border:1px solid rgba(200,195,188,0.38);border-radius:7px;padding:2px 6px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.note-badges{display:flex;gap:4px;margin-left:auto;flex-shrink:0;}
+.note-badge{width:24px;height:24px;border-radius:8px;background:rgba(122,158,126,0.1);display:flex;align-items:center;justify-content:center;color:var(--sage-d);font-size:13px;}
+.note-badge.fav{background:rgba(192,80,74,0.08);color:var(--rose);}
+.item-sub{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
+.audio-note{width:100%;margin-top:8px;height:34px;}
+.file-chip{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;font-weight:650;color:var(--text-m);background:rgba(245,240,232,.78);border:1px solid rgba(200,195,188,.42);border-radius:8px;padding:5px 8px;}
+.stat-chip{padding:5px 9px;font-size:12px;border-radius:9px;gap:5px;}
+.stat-dot{width:7px;height:7px;}.stat-count{font-size:10px;}
+.notes-dock{position:sticky;bottom:0;z-index:60;margin:0 -2px;padding:8px 0 0;background:linear-gradient(180deg,rgba(245,240,232,0),rgba(245,240,232,.96) 28%);}
+.notes-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:rgba(255,255,255,.78);border:1px solid rgba(200,195,188,.48);border-radius:16px;padding:7px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}
+.notes-action{border:none;border-radius:12px;background:rgba(122,158,126,.08);color:var(--sage-d);min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:700;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}
+.notes-action.primary{background:var(--sage);color:#fff;}.notes-action input{display:none;}
+.voice-panel{display:flex;align-items:center;gap:14px;padding:12px 14px 10px;background:rgba(248,244,237,0.96);border-top:1px solid rgba(200,195,188,0.32);}
+.voice-orb{width:68px;height:68px;border:none;border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.96),rgba(122,158,126,.24) 42%,rgba(122,158,126,.12));box-shadow:0 14px 32px rgba(74,110,78,.18),inset 0 0 0 1px rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;-webkit-appearance:none;transition:transform .14s,box-shadow .14s;}
+.voice-orb span{width:22px;height:22px;border-radius:50%;background:rgba(122,158,126,.72);box-shadow:0 0 0 8px rgba(122,158,126,.12);}
+.voice-orb.rec{background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.98),rgba(192,80,74,.26) 42%,rgba(192,80,74,.14));box-shadow:0 16px 34px rgba(192,80,74,.18),0 0 0 8px rgba(192,80,74,.06);animation:pulse-mic 1.2s ease-in-out infinite;}
+.voice-orb.rec span{background:var(--rose);box-shadow:0 0 0 8px rgba(192,80,74,.12);}
+.voice-copy{flex:1;min-width:0;}.voice-title{font-size:16px;font-weight:750;color:var(--text);letter-spacing:-.1px;}.voice-sub{font-size:13px;color:var(--text-m);line-height:1.45;margin-top:2px;}
+.quiet-input{display:flex;align-items:flex-end;gap:8px;padding:0 14px 12px;background:rgba(248,244,237,0.96);}
+.note-editor-tools{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;}.editor-icon{border:1px solid rgba(200,195,188,.45);background:rgba(255,255,255,.75);border-radius:10px;min-width:42px;height:38px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text-m);font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}.editor-icon.active{background:rgba(122,158,126,.12);color:var(--sage-d);border-color:rgba(122,158,126,.26);}.editor-icon.danger{color:var(--rose);background:rgba(192,80,74,.06);}.editor-count{font-size:10px;margin-left:3px;color:var(--text-l);font-weight:800;}
+.audio-sheet{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0 14px;}.audio-rec-btn{width:92px;height:92px;border:none;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff,rgba(122,158,126,.24));box-shadow:0 18px 44px rgba(74,110,78,.2);font-size:15px;font-weight:800;color:var(--sage-d);font-family:var(--sys);}.audio-rec-btn.rec{color:var(--rose);background:radial-gradient(circle at 32% 28%,#fff,rgba(192,80,74,.25));animation:pulse-mic 1.2s infinite;}
 /* SETTINGS */
 .set-group{background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.46);border-radius:var(--r);margin-bottom:16px;overflow:hidden;}
 .set-group-title{font-size:12px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px 4px;}
@@ -253,6 +280,35 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .btn-danger:active{background:rgba(192,80,74,0.06);}
 .btn-danger .set-label{color:var(--rose);}
 
+
+/* HELP SCENARIOS */
+.help-hero{background:rgba(255,255,255,0.76);border:1px solid rgba(200,195,188,0.48);border-radius:var(--r);padding:16px 18px;margin-bottom:10px;}
+.help-kicker{font-size:11px;font-weight:700;color:var(--sage-d);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.help-title{font-family:'Playfair Display',serif;font-size:27px;color:var(--text);line-height:1.18;letter-spacing:-.35px;margin-bottom:7px;}
+.help-sub{font-size:15px;color:var(--text-m);line-height:1.65;}
+.help-card{background:rgba(255,255,255,0.76);border:1px solid rgba(200,195,188,0.48);border-radius:var(--r);padding:14px 16px;margin-bottom:9px;}
+.help-card.safe{background:rgba(122,158,126,0.08);border-color:rgba(122,158,126,0.2);}
+.help-card.warn{background:rgba(192,80,74,0.07);border-color:rgba(192,80,74,0.16);}
+.help-card-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:-.1px;}
+.help-list{display:flex;flex-direction:column;gap:8px;}
+.help-step{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--text-m);line-height:1.55;}
+.help-num{width:24px;height:24px;border-radius:50%;background:rgba(122,158,126,0.13);color:var(--sage-d);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;}
+.help-phrase{background:rgba(245,240,232,0.82);border:1px solid rgba(200,195,188,0.45);border-radius:13px;padding:11px 13px;font-size:15px;color:var(--text);line-height:1.5;margin-bottom:7px;}
+.help-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;}
+.help-action{border:none;border-radius:12px;padding:11px 14px;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;background:rgba(122,158,126,0.13);color:var(--sage-d);}
+.help-action.main{background:var(--sage);color:#fff;}
+.help-action.warn{background:rgba(192,80,74,0.1);color:var(--rose);}
+.check-area{width:100%;min-height:116px;background:rgba(255,255,255,0.9);border:1.5px solid rgba(200,195,188,0.48);border-radius:14px;padding:13px 14px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;resize:vertical;-webkit-user-select:text;user-select:text;line-height:1.5;margin-bottom:9px;}
+.check-area:focus{border-color:rgba(122,158,126,0.55);}
+.check-result{display:none;border-radius:14px;padding:13px 14px;font-size:15px;line-height:1.6;margin-top:9px;}
+.check-result.show{display:block;}
+.check-result.danger{background:rgba(192,80,74,0.08);border:1px solid rgba(192,80,74,0.18);color:var(--text-m);}
+.check-result.calm{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);color:var(--text-m);}
+.check-flags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;}
+.check-flag{font-size:12px;font-weight:700;border-radius:50px;padding:5px 9px;background:rgba(192,80,74,0.09);color:var(--rose);border:1px solid rgba(192,80,74,0.16);}
+.service-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.service-btn{background:rgba(255,255,255,0.82);border:1px solid rgba(200,195,188,0.48);border-radius:13px;padding:12px 10px;font-size:15px;font-weight:700;color:var(--text);font-family:var(--sys);cursor:pointer;-webkit-appearance:none;text-align:center;}
+.service-btn:active,.service-btn.active{background:rgba(122,158,126,0.12);border-color:rgba(122,158,126,0.28);color:var(--sage-d);}
 /* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:300;display:none;align-items:flex-end;justify-content:center;}
 .overlay.open{display:flex;animation:fIn .16s ease;}
@@ -308,6 +364,79 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 ::-webkit-scrollbar{display:none;}
 #recaptcha-container{position:fixed;bottom:-300px;right:-300px;z-index:-1;opacity:0;width:0;height:0;}
 .grecaptcha-badge{visibility:hidden!important;}
+
+/* VISUAL REFINEMENT Demo 9.7% */
+.logo-ver{font-size:9px;color:rgba(110,110,115,0.42);font-weight:600;}
+.note-list{padding-bottom:96px;}
+.item-card{background:linear-gradient(180deg,rgba(255,255,255,0.76),rgba(255,255,255,0.58));border:1px solid rgba(196,184,168,0.46);border-radius:14px;padding:14px 46px 13px 18px;box-shadow:0 4px 18px rgba(45,38,28,0.035);}
+.item-card:active{background:rgba(255,255,255,0.82);transform:scale(.985);}
+.note-list.grid{gap:9px;}.note-list.grid .item-card{min-height:132px;padding:13px 36px 13px 16px;}
+.note-stripe{width:3px;opacity:.55;}
+.note-head{margin-bottom:6px;}
+.note-cat{background:rgba(122,158,126,0.075);border-color:rgba(122,158,126,0.15);color:var(--sage-d);border-radius:8px;padding:3px 7px;font-size:9px;letter-spacing:.055em;}
+.note-badge{width:22px;height:22px;border-radius:50%;background:rgba(122,158,126,0.09);font-size:12px;color:var(--sage-d);}
+.note-badge.fav{background:rgba(192,80,74,0.07);color:var(--rose);}
+.note-del-x{top:9px;right:9px;width:27px;height:27px;border-radius:50%;background:rgba(255,255,255,0.72);border:1px solid rgba(192,80,74,0.12);color:rgba(192,80,74,0.78);font-size:17px;font-weight:500;box-shadow:0 2px 9px rgba(45,38,28,0.045);}
+.note-del-x:active{background:rgba(192,80,74,0.1);}
+.item-title{font-size:17px;font-weight:650;line-height:1.35;letter-spacing:-.15px;}
+.item-sub{font-size:13px;color:rgba(58,58,60,0.86);line-height:1.55;margin-top:5px;}
+.item-meta{font-size:10.5px;color:rgba(110,110,115,0.72);margin-top:9px;}
+.file-chip,.reminder-tag{border-radius:9px;background:rgba(245,240,232,0.72);border-color:rgba(196,184,168,0.36);font-size:11.5px;}
+.notes-topbar{margin-top:2px;margin-bottom:9px;}
+.view-toggle{border-radius:14px;background:rgba(255,255,255,0.68);border-color:rgba(196,184,168,0.42);box-shadow:0 3px 14px rgba(45,38,28,0.035);}
+.view-btn{border-radius:11px;}.view-btn.active{background:rgba(122,158,126,0.13);}
+.stat-chip{border-radius:10px;background:rgba(255,255,255,0.64);border-color:rgba(196,184,168,0.4);padding:5px 8px;font-size:11.5px;font-weight:650;}
+.stat-chip:active,.stat-chip.active{background:rgba(122,158,126,0.88);border-color:rgba(122,158,126,0.5);}
+.notes-dock{padding:12px 0 2px;background:linear-gradient(180deg,rgba(245,240,232,0),rgba(245,240,232,.88) 26%,rgba(245,240,232,.98));}
+.notes-actions{border-radius:22px;padding:7px;gap:5px;background:rgba(255,255,255,0.74);border-color:rgba(196,184,168,0.48);box-shadow:0 10px 32px rgba(45,38,28,0.09);}
+.notes-action{min-height:50px;border-radius:16px;background:transparent;color:var(--text-m);font-size:9.5px;font-weight:650;gap:4px;}
+.notes-action svg{width:18px;height:18px;stroke-width:1.75;}
+.notes-action:active{background:rgba(122,158,126,0.09);}
+.notes-action.primary{background:rgba(122,158,126,0.92);color:#fff;box-shadow:0 5px 15px rgba(74,110,78,0.16);}
+.voice-panel{margin:0 12px 8px;padding:14px 15px;border:1px solid rgba(196,184,168,0.42);border-radius:20px;background:rgba(255,255,255,0.7);box-shadow:0 8px 28px rgba(45,38,28,0.055);}
+.voice-orb{width:70px;height:70px;background:radial-gradient(circle at 35% 28%,#fff 0%,rgba(255,255,255,.92) 28%,rgba(122,158,126,.2) 58%,rgba(122,158,126,.1) 100%);box-shadow:0 16px 34px rgba(74,110,78,.15),inset 0 0 0 1px rgba(255,255,255,.82);}
+.voice-orb span{width:20px;height:20px;background:rgba(122,158,126,.62);box-shadow:0 0 0 8px rgba(122,158,126,.11),0 0 22px rgba(122,158,126,.24);}
+.voice-title{font-size:17px;font-weight:650;}.voice-sub{font-size:13px;color:rgba(58,58,60,0.78);}
+.quiet-input{padding:0 14px 14px;background:transparent;}
+.quiet-input .notepad-field{border-radius:16px;background:rgba(255,255,255,0.74);border-color:rgba(196,184,168,0.44);box-shadow:0 3px 14px rgba(45,38,28,0.035);}
+.quiet-input .notepad-send{border-radius:16px;}
+.note-editor-tools{gap:7px;margin-bottom:14px;padding:6px;background:rgba(255,255,255,0.54);border:1px solid rgba(196,184,168,0.34);border-radius:16px;}
+.editor-icon{height:38px;min-width:40px;border-radius:12px;background:transparent;border:none;color:var(--text-m);font-weight:650;}
+.editor-icon.active{background:rgba(122,158,126,0.12);}.editor-icon.danger{margin-left:auto;background:rgba(192,80,74,0.07);}
+.editor-count{font-size:9px;opacity:.72;}
+.audio-rec-btn{background:radial-gradient(circle at 35% 28%,#fff,rgba(122,158,126,.18));box-shadow:0 16px 36px rgba(74,110,78,.14);}
+
+/* CLOUD NOTE Demo 9.7% */
+.overlay.open{align-items:flex-end;background:rgba(28,28,30,0.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.sheet{background:linear-gradient(165deg,rgba(252,249,243,0.98),rgba(238,231,220,0.98));border:1px solid rgba(255,255,255,0.54);border-radius:30px 30px 0 0;padding:16px 16px 42px;box-shadow:0 -18px 60px rgba(45,38,28,0.16);max-height:92vh;overflow-y:auto;}
+.sheet-handle{background:rgba(122,158,126,0.22);margin-bottom:12px;}
+.sheet-title{font-family:'Playfair Display',serif;font-size:25px;text-align:center;margin-bottom:12px;color:rgba(28,28,30,0.9);}
+.cloud-note{position:relative;background:rgba(255,255,255,0.62);border:1px solid rgba(196,184,168,0.38);border-radius:28px;padding:18px 16px 16px;box-shadow:0 12px 38px rgba(74,65,52,0.08),inset 0 1px 0 rgba(255,255,255,0.6);overflow:hidden;}
+.cloud-note:before{content:'';position:absolute;right:-38px;top:-45px;width:145px;height:145px;border-radius:50%;background:rgba(122,158,126,0.075);pointer-events:none;}
+.cloud-note:after{content:'';position:absolute;left:-35px;bottom:-55px;width:130px;height:130px;border-radius:50%;background:rgba(184,136,58,0.07);pointer-events:none;}
+.cloud-kicker{position:relative;z-index:1;font-size:11px;font-weight:700;color:var(--sage-d);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
+.cloud-prompt{position:relative;z-index:1;font-family:'Playfair Display',serif;font-size:24px;line-height:1.22;color:var(--text);letter-spacing:-.25px;margin-bottom:12px;}
+.cloud-text{position:relative;z-index:1;width:100%;min-height:210px;background:transparent;border:none;outline:none;resize:none;font-family:var(--sys);font-size:20px;line-height:1.55;color:var(--text);-webkit-user-select:text;user-select:text;padding:2px 0;}
+.cloud-text::placeholder{color:rgba(110,110,115,0.54);}
+.cloud-moods{position:relative;z-index:1;display:flex;gap:6px;overflow-x:auto;padding:6px 0 2px;margin-top:6px;}
+.cloud-chip{flex-shrink:0;border:1px solid rgba(196,184,168,0.38);background:rgba(245,240,232,0.64);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:650;color:var(--text-m);font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}
+.cloud-chip.active{background:rgba(122,158,126,0.14);border-color:rgba(122,158,126,0.27);color:var(--sage-d);}
+.cloud-care{position:relative;z-index:1;margin-top:13px;background:rgba(245,240,232,0.58);border:1px solid rgba(196,184,168,0.34);border-radius:20px;padding:13px 13px 12px;}
+.cloud-care-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.1px;margin-bottom:4px;}
+.cloud-care-sub{font-size:13px;color:var(--text-m);line-height:1.45;margin-bottom:9px;}
+.cloud-reminder-row{display:flex;gap:8px;align-items:center;}
+.cloud-date{flex:1;min-width:0;background:rgba(255,255,255,0.72);border:1px solid rgba(196,184,168,0.38);border-radius:14px;padding:11px 12px;font-family:var(--sys);font-size:14px;color:var(--text);outline:none;-webkit-user-select:text;user-select:text;}
+.cloud-clear{width:40px;height:40px;border:none;border-radius:14px;background:rgba(192,80,74,0.07);color:var(--rose);font-size:18px;font-family:var(--sys);}
+.cloud-tools{display:flex;align-items:center;gap:7px;margin:12px 1px 0;}
+.cloud-tool{height:38px;min-width:38px;border:none;border-radius:14px;background:rgba(255,255,255,0.62);color:var(--text-m);font-size:15px;font-weight:700;font-family:var(--sys);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;border:1px solid rgba(196,184,168,0.32);}
+.cloud-tool.active{background:rgba(122,158,126,0.13);color:var(--sage-d);border-color:rgba(122,158,126,0.24);}
+.cloud-tool.danger{margin-left:auto;color:var(--rose);background:rgba(192,80,74,0.06);}
+.cloud-file-preview{margin-top:9px;}
+.sheet-save{margin-top:14px;border-radius:18px;background:linear-gradient(135deg,var(--sage),var(--sage-d));box-shadow:0 8px 22px rgba(74,110,78,0.18);}
+.sheet-save:before{content:'Сохранить облачко';}
+.sheet-save{font-size:0;}.sheet-save:before{font-size:17px;}
+.sheet-cancel{color:rgba(110,110,115,0.78);}
+.audio-sheet{background:rgba(255,255,255,0.56);border:1px solid rgba(196,184,168,0.36);border-radius:24px;margin-bottom:12px;}
 </style>
 </head>
 <body>
@@ -317,7 +446,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберёмся</div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.85 · бета</div>
+  <div class="auth-ver">Demo 9.7% · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -376,7 +505,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберёмся<span class="logo-ver">v3.85</span></div>
+    <div class="logo">Разберёмся<span class="logo-ver">Demo 9.7%</span></div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
       <div class="hclock" id="hclock"></div>
@@ -415,14 +544,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
     <!-- EMERGENCY -->
     <div class="scr" id="s-emergency">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
       <div class="sec-title">Разберёмся</div>
       <div class="sec-sub">Что случилось? Выберите — и я помогу</div>
       <div class="emg-opts">
-        <button class="emg-opt" onclick="showToast('Раздел скоро заработает')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55M5 5a10.94 10.94 0 0114.54 1.46M10.71 5.05A11 11 0 0122.56 9M1.42 9a9.91 9.91 0 014.7-2.88M15.5 15.5a3 3 0 01-4.24 4.24M9 9a3 3 0 014.24 4.24"/></svg></div><div class="emg-opt-t">Позвонили мошенники</div></button>
-        <button class="emg-opt" onclick="showToast('Раздел скоро заработает')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><div class="emg-opt-t">Не могу войти в аккаунт</div></button>
-        <button class="emg-opt" onclick="showToast('Раздел скоро заработает')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="emg-opt-t">Подозрительное сообщение</div></button>
-        <button class="emg-opt" onclick="showToast('Раздел скоро заработает')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="emg-opt-t">Боюсь что-то нажать</div></button>
+        <button class="emg-opt" onclick="openGuide('scam')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55M5 5a10.94 10.94 0 0114.54 1.46M10.71 5.05A11 11 0 0122.56 9M1.42 9a9.91 9.91 0 014.7-2.88M15.5 15.5a3 3 0 01-4.24 4.24M9 9a3 3 0 014.24 4.24"/></svg></div><div class="emg-opt-t">Позвонили мошенники</div></button>
+        <button class="emg-opt" onclick="openGuide('login')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><div class="emg-opt-t">Не могу войти в аккаунт</div></button>
+        <button class="emg-opt" onclick="openGuide('message')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="emg-opt-t">Подозрительное сообщение</div></button>
+        <button class="emg-opt" onclick="openGuide('tap')"><div class="emg-opt-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="emg-opt-t">Боюсь что-то нажать</div></button>
       </div>
       <div class="emg-rule">
         <div class="emg-rule-t">Главное правило</div>
@@ -430,61 +559,26 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
     </div>
 
+
+    <!-- GUIDE -->
+    <div class="scr" id="s-guide">
+      <div class="backrow"><button class="backbtn" onclick="go('emergency')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
+      <div id="guide-body"></div>
+    </div>
     <!-- NOTES -->
     <div class="scr" id="s-notes">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
-      <div class="sec-title">Заметки</div>
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
+      <div class="notes-topbar"><div class="sec-title" style="margin-bottom:0;">Заметки</div><div class="view-toggle"><button class="view-btn" id="view-list" onclick="setNoteView('list')"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button><button class="view-btn" id="view-grid" onclick="setNoteView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button></div></div>
       <div id="notif-banner-el"></div>
-      <!-- Календарь-триггер -->
-      <button class="cal-trigger" onclick="openCal()">
-        <div class="cal-trigger-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-        <div>
-          <div class="cal-trigger-label">Календарь</div>
-          <div class="cal-trigger-val" id="cal-trigger-val">Все заметки</div>
-        </div>
-        <div class="cal-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </button>
-      <!-- Фильтры по категориям -->
-      <div class="notes-stat" id="notes-stat"></div>
-      <div id="note-list"></div>
-      <button class="add-dashed" onclick="openSheet('note')">＋ Добавить заметку</button>
+      <button class="cal-trigger" onclick="openCal()"><div class="cal-trigger-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="cal-trigger-label">Календарь</div><div class="cal-trigger-val" id="cal-trigger-val">Все заметки</div></div><div class="cal-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></button>
+      <div class="notes-stat" id="notes-stat"></div><div id="note-list" class="note-list"></div>
+      <div class="notes-dock"><div class="notes-actions"><button class="notes-action" onclick="openSheet('checklist')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Список</span></button><button class="notes-action" onclick="openDrawing()"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><span>Эскиз</span></button><button class="notes-action" onclick="openAudioNote()"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4"/></svg><span>Аудио</span></button><label class="notes-action"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Файл</span><input type="file" accept="image/*,.pdf,.txt" onchange="attachQuickFile(this)"></label><button class="notes-action primary" onclick="openSheet('note')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Новая</span></button></div></div>
     </div>
-
     <!-- NOTEPAD -->
-    <div class="scr" id="s-notepad" style="padding:0;overflow:hidden;">
-      <div style="height:100%;display:flex;flex-direction:column;">
-        <div style="padding:8px 14px 6px;flex-shrink:0;">
-          <button class="backbtn" onclick="go('home')">
-            <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div><div class="back-lbl">Блокнот</div><div class="back-hint">Быстрые записи</div></div>
-          </button>
-        </div>
-        <div id="notepad-list" style="flex:1;overflow-y:auto;padding:6px 14px 8px;"></div>
-        <div class="notepad-voice-wrap">
-          <div class="voice-panel" id="voice-panel">
-            <div class="voice-lock" id="voice-lock">
-              <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
-              <span id="voice-lock-text">Свайп вверх — замок</span>
-            </div>
-            <button id="mic-btn" class="voice-orb" type="button" aria-label="Начать голосовую запись"><span></span></button>
-            <div class="voice-copy">
-              <div class="voice-title" id="voice-title">Нажмите и говорите</div>
-              <div class="voice-sub" id="voice-sub">Удерживайте для быстрой записи</div>
-            </div>
-          </div>
-          <div class="quiet-input">
-            <textarea id="notepad-input" class="notepad-field" rows="1" placeholder="Написать или надиктовать..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNotepad();}"></textarea>
-            <button class="notepad-send" type="button" onpointerdown="event.preventDefault();saveNotepad()" aria-label="Сохранить запись">
-              <svg viewBox="0 0 24 24" width="19" height="19" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <div class="scr" id="s-notepad" style="padding:0;overflow:hidden;"><div style="height:100%;display:flex;flex-direction:column;"><div style="padding:8px 14px 6px;flex-shrink:0;"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div><div id="notepad-list" style="flex:1;overflow-y:auto;padding:6px 14px 8px;"></div><div class="voice-panel" id="voice-panel"><button id="mic-btn" class="voice-orb" onclick="toggleVoice()" aria-label="Начать или остановить диктовку"><span></span></button><div class="voice-copy"><div class="voice-title" id="voice-title">Нажмите облако и говорите</div><div class="voice-sub" id="voice-sub">Повторное нажатие остановит запись</div></div></div><div class="quiet-input"><textarea id="notepad-input" class="notepad-field" rows="1" placeholder="Короткая запись текстом..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNotepad();}"></textarea><button class="notepad-send" onclick="saveNotepad()"><svg viewBox="0 0 24 24" width="19" height="19" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div></div>
     <!-- SETTINGS -->
     <div class="scr" id="s-settings">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">Назад</div></div></button></div>
       <div class="sec-title">Настройки</div>
       <div class="set-group-title">Как вас называть</div>
       <div class="set-group">
@@ -691,6 +785,115 @@ function go(id){
   },{passive:true});
 })();
 
+
+// ── HELP SCENARIOS ──
+const GUIDES={
+  scam:{
+    kicker:'Спокойно. Главное уже понятно',
+    title:'Похоже, вам звонят мошенники',
+    sub:'Сейчас не нужно спорить, доказывать или что-то объяснять. Ваша задача — остановить разговор и ничего не сообщать.',
+    mode:'warn',
+    steps:['Положите трубку. Это не грубо — это безопасно.','Не называйте код из СМС, пароль, номер карты и срок действия карты.','Не нажимайте ссылки, которые прислали во время звонка.','Если переживаете за банк — позвоните сами по номеру с карты или из приложения.'],
+    phrases:['Я сейчас сам(а) позвоню в банк. До свидания.','Я не сообщаю коды по телефону.','Мне нужно посоветоваться с близким человеком.'],
+    note:'Настоящий банк не просит код из СМС, пароль или “перевести деньги на безопасный счёт”.'
+  },
+  tap:{
+    kicker:'Можно не спешить',
+    title:'Боитесь что-то нажать?',
+    sub:'Это нормальная осторожность. Если вас торопят, пугают или обещают срочную выгоду — лучше остановиться и проверить.',
+    mode:'safe',
+    steps:['Не нажимайте сразу. Просто отложите телефон на минуту.','Посмотрите, кто просит нажать: знакомый человек, банк, доставка или неизвестный номер?','Если просят код, пароль, деньги или установить приложение — остановитесь.','Сделайте скриншот и покажите близкому человеку, если сомневаетесь.'],
+    phrases:['Я сначала проверю.','Я не нажимаю ссылки от незнакомых людей.','Давайте без спешки, я уточню.'],
+    note:'Главное правило простое: если сомневаетесь — не нажимайте. Ничего страшного не случится за пару минут проверки.'
+  },
+  login:{
+    kicker:'Разберём вход шаг за шагом',
+    title:'Не получается войти в аккаунт',
+    sub:'Выберите сервис. Я покажу самый спокойный путь восстановления без лишних слов.',
+    mode:'safe',
+    services:['Госуслуги','Банк','Telegram','WhatsApp','Почта','Другое'],
+    steps:['Откройте только официальное приложение или сайт. Не переходите по ссылке из СМС.','Нажмите “Забыли пароль?” или “Восстановить доступ”.','Введите телефон или почту, которые были привязаны раньше.','Код из СМС вводите только внутри приложения, которое открыли сами. Никому его не диктуйте.'],
+    phrases:['Мне нужен официальный вход, не ссылка из сообщения.','Код я никому не сообщаю, только ввожу сам(а) в приложении.'],
+    note:'Если вам звонят и “помогают войти”, лучше завершить разговор. Поддержка не просит код по телефону.'
+  },
+  message:{
+    kicker:'Проверим без паники',
+    title:'Подозрительное сообщение',
+    sub:'Вставьте текст сообщения. Я отмечу опасные признаки простыми словами. Это черновая проверка, но она уже помогает остановиться.',
+    mode:'warn',
+    steps:['Не переходите по ссылке, пока не проверили сообщение.','Не отправляйте код, пароль, фото карты или паспорта.','Если сообщение про банк, доставку или штраф — откройте сервис сами, без ссылки из сообщения.'],
+    phrases:['Я проверю это через официальное приложение.','Я не отправляю коды и пароли в чат.'],
+    note:'Особенно опасны сообщения, где вас торопят, пугают блокировкой или просят подтвердить деньги.'
+  }
+};
+let guideKind='scam';
+function openGuide(kind){guideKind=kind;renderGuide();go('guide');}
+function renderGuide(){
+  const g=GUIDES[guideKind]||GUIDES.scam;
+  const el=document.getElementById('guide-body');if(!el)return;
+  const steps=g.steps.map((x,i)=>`<div class="help-step"><div class="help-num">${i+1}</div><div>${esc(x)}</div></div>`).join('');
+  const phrases=(g.phrases||[]).map(x=>`<div class="help-phrase">${esc(x)}</div>`).join('');
+  const services=g.services?`<div class="help-card"><div class="help-card-title">Что именно не открывается?</div><div class="service-grid">${g.services.map((x,i)=>`<button class="service-btn${i===0?' active':''}" onclick="pickService(this,'${esc(x)}')">${esc(x)}</button>`).join('')}</div><div class="check-result calm show" id="service-tip">Для Госуслуг лучше открывать приложение или gosuslugi.ru вручную. Не используйте ссылку из СМС.</div></div>`:'';
+  const checker=guideKind==='message'?`<div class="help-card"><div class="help-card-title">Вставьте сообщение сюда</div><textarea class="check-area" id="msg-check" placeholder="Например: Ваша карта заблокирована, срочно перейдите по ссылке..."></textarea><button class="help-action main" onclick="checkMessage()">Проверить спокойно</button><div class="check-result" id="check-result"></div></div>`:'';
+  el.innerHTML=`
+    <div class="help-hero">
+      <div class="help-kicker">${esc(g.kicker)}</div>
+      <div class="help-title">${esc(g.title)}</div>
+      <div class="help-sub">${esc(g.sub)}</div>
+    </div>
+    <div class="help-card ${g.mode==='warn'?'warn':'safe'}"><div class="help-card-title">Что сделать сейчас</div><div class="help-list">${steps}</div></div>
+    ${services}
+    ${checker}
+    <div class="help-card"><div class="help-card-title">Можно сказать так</div>${phrases}</div>
+    <div class="help-card safe"><div class="help-card-title">Запомнить</div><div class="help-sub">${esc(g.note)}</div><div class="help-actions"><button class="help-action main" onclick="go('emergency')">Понятно</button><button class="help-action" onclick="saveGuideNote()">Сохранить в заметки</button></div></div>`;
+}
+function pickService(btn,name){
+  Array.from(document.querySelectorAll('.service-btn')).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const tips={
+    'Госуслуги':'Откройте приложение Госуслуги или вручную наберите gosuslugi.ru. Не входите по ссылке из сообщения.',
+    'Банк':'Откройте приложение банка сами. Если сомневаетесь, звоните по номеру на карте, а не по номеру из СМС.',
+    'Telegram':'Откройте Telegram сами. Код входа никому не пересылайте, даже “поддержке” или знакомому.',
+    'WhatsApp':'Откройте WhatsApp сами. Не называйте код регистрации, если кто-то просит его по телефону.',
+    'Почта':'Откройте сайт почты вручную. Используйте “Забыли пароль?”, если пароль не подходит.',
+    'Другое':'Лучше открыть сервис вручную через приложение или официальный сайт, без ссылок из сообщений.'
+  };
+  const el=document.getElementById('service-tip');if(el)el.textContent=tips[name]||tips['Другое'];
+}
+function checkMessage(){
+  const txt=(document.getElementById('msg-check')||{}).value||'';
+  const res=document.getElementById('check-result');if(!res)return;
+  const flags=[];
+  const rules=[
+    [/код|смс|sms|парол|pin|пин/i,'просят код или пароль'],
+    [/сроч|немедленно|сегодня|прямо сейчас|истекает/i,'торопят'],
+    [/ссылк|http|www|перейдите|нажмите/i,'есть ссылка'],
+    [/карта|счет|счёт|банк|деньг|перевод/i,'про деньги или банк'],
+    [/заблок|штраф|угроз|суд|безопасн/i,'пугают последствиями'],
+    [/установите|приложение|доступ|экран/i,'просят установить или дать доступ']
+  ];
+  rules.forEach(r=>{if(r[0].test(txt))flags.push(r[1]);});
+  if(!txt.trim()){
+    res.className='check-result calm show';
+    res.innerHTML='Вставьте текст сообщения, и я отмечу опасные признаки.';
+    return;
+  }
+  if(flags.length){
+    res.className='check-result danger show';
+    res.innerHTML='<strong>Лучше не нажимать и ничего не отправлять.</strong><br>В сообщении есть признаки риска:<div class="check-flags">'+flags.map(f=>`<span class="check-flag">${esc(f)}</span>`).join('')+'</div><br>Откройте нужный сервис сами: банк, почту, доставку или Госуслуги — без этой ссылки.';
+  }else{
+    res.className='check-result calm show';
+    res.innerHTML='<strong>Явных красных флагов не видно.</strong><br>Но если сообщение от незнакомого номера или просит личные данные, всё равно лучше проверить через официальный сервис.';
+  }
+}
+function saveGuideNote(){
+  const g=GUIDES[guideKind]||GUIDES.scam;
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const ts=Date.now();
+  notes.push({title:g.title,body:g.note,label:'безопасность',reminder:null,createdAt:ts,updatedAt:ts,fromGuide:true});
+  localStorage.setItem('rz_notes',JSON.stringify(notes));
+  showToast('Сохранил в заметки');
+}
 // ── RECAPTCHA ──
 function initRC(){
   if(RV)return;
@@ -1108,90 +1311,28 @@ function delPad(i){
 
 function npResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 
-let voiceLocked=false,voicePointerId=null,voiceStartY=0,voiceHoldTimer=null,voiceHoldActive=false,voiceIgnoreClick=false,voiceShouldSave=false,voiceHadError=false,voiceSessionText='',voiceDraftBefore='';
-
-function voiceEls(){
-  return{panel:document.getElementById('voice-panel'),btn:document.getElementById('mic-btn'),title:document.getElementById('voice-title'),sub:document.getElementById('voice-sub'),lock:document.getElementById('voice-lock-text')};
-}
-function setVoiceState(state){
-  const v=voiceEls();if(!v.btn)return;
-  v.panel.classList.toggle('recording',state==='recording'||state==='locked');
-  v.panel.classList.toggle('locked',state==='locked');
-  v.btn.classList.toggle('rec',state==='recording'||state==='locked');
-  v.btn.classList.toggle('locked',state==='locked');
-  if(state==='locked'){
-    v.title.textContent='Запись закреплена';v.sub.textContent='Можно отпустить. Нажмите ещё раз, чтобы сохранить.';v.lock.textContent='Замок включён';
-  }else if(state==='recording'){
-    v.title.textContent='Говорите, я записываю';v.sub.textContent='Отпустите — сохраню. Свайп вверх — зафиксировать.';v.lock.textContent='Свайп вверх — замок';
-  }else{
-    v.title.textContent='Нажмите и говорите';v.sub.textContent='Удерживайте для быстрой записи';v.lock.textContent='Свайп вверх — замок';
-  }
-}
-function cleanSpeech(s){return(s||'').replace(/\s+/g,' ').trim();}
-function appendVoiceText(text){
-  const add=cleanSpeech(text);if(!add)return;
-  const inp=document.getElementById('notepad-input');if(!inp)return;
-  const cur=cleanSpeech(inp.value);
-  if(cur&&cur.toLowerCase().endsWith(add.toLowerCase()))return;
-  inp.value=cur?cur+' '+add:add;
-  voiceSessionText=cleanSpeech((voiceSessionText+' '+add));
-  npResize(inp);
-}
-function initVoiceControl(){
-  const btn=document.getElementById('mic-btn');if(!btn||btn.dataset.ready)return;btn.dataset.ready='1';
-  btn.addEventListener('pointerdown',e=>{
-    voicePointerId=e.pointerId;voiceStartY=e.clientY;voiceHoldActive=false;voiceIgnoreClick=false;
-    try{btn.setPointerCapture(e.pointerId);}catch(err){}
-    clearTimeout(voiceHoldTimer);
-    voiceHoldTimer=setTimeout(()=>{voiceHoldActive=true;if(!isRec)startVoice();},190);
-  });
-  btn.addEventListener('pointermove',e=>{
-    if(voicePointerId!==e.pointerId)return;
-    if((voiceHoldActive||isRec)&&voiceStartY-e.clientY>72){voiceLocked=true;setVoiceState('locked');}
-  });
-  function endPointer(e){
-    if(voicePointerId!==e.pointerId)return;
-    clearTimeout(voiceHoldTimer);voicePointerId=null;
-    try{btn.releasePointerCapture(e.pointerId);}catch(err){}
-    if(voiceHoldActive){
-      voiceIgnoreClick=true;setTimeout(()=>voiceIgnoreClick=false,260);
-      if(isRec&&!voiceLocked)stopVoice(true);
-    }
-    voiceHoldActive=false;
-  }
-  btn.addEventListener('pointerup',endPointer);
-  btn.addEventListener('pointercancel',endPointer);
-  btn.addEventListener('click',e=>{e.preventDefault();if(voiceIgnoreClick)return;toggleVoice();});
-}
-function toggleVoice(){isRec?stopVoice(true):startVoice();}
+function toggleVoice(){isRec?stopVoice():startVoice();}
 function startVoice(){
-  if(isRec)return;
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голос не поддерживается');return;}
-  const inp=document.getElementById('notepad-input');
-  voiceDraftBefore=inp?cleanSpeech(inp.value):'';voiceSessionText='';voiceShouldSave=false;voiceHadError=false;voiceLocked=false;
   recog=new SR();recog.lang='ru-RU';recog.continuous=true;recog.interimResults=true;
-  recog.onstart=()=>{isRec=true;setVoiceState('recording');};
-  recog.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)appendVoiceText(e.results[i][0].transcript);};
-  recog.onerror=e=>{voiceHadError=true;showToast('Ошибка: '+e.error);stopVoice(false);};
-  recog.onend=()=>finishVoice(voiceShouldSave&&!voiceHadError);
-  try{recog.start();}catch(e){voiceHadError=true;finishVoice(false);showToast('Не удалось начать запись');}
+  recog.onstart=()=>{isRec=true;document.getElementById('mic-btn').classList.add('rec');document.getElementById('voice-status').style.display='block';};
+  recog.onresult=e=>{
+    let fin='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
+    if(fin){const inp=document.getElementById('notepad-input');inp.value+=(inp.value?' ':'')+fin;npResize(inp);}
+  };
+  recog.onerror=e=>{showToast('Ошибка: '+e.error);stopVoice();};
+  recog.onend=()=>stopVoice();
+  recog.start();
 }
-function stopVoice(autoSave=true){
-  voiceShouldSave=autoSave;
-  if(recog){try{recog.stop();return;}catch(e){}}
-  finishVoice(autoSave&&!voiceHadError);
+function stopVoice(){
+  if(recog)try{recog.stop();}catch(e){}
+  recog=null;isRec=false;
+  document.getElementById('mic-btn').classList.remove('rec');
+  document.getElementById('voice-status').style.display='none';
 }
-function finishVoice(autoSave){
-  const wasRec=isRec;recog=null;isRec=false;voiceLocked=false;voiceHoldActive=false;clearTimeout(voiceHoldTimer);setVoiceState('idle');
-  if(wasRec&&autoSave)saveVoiceDraft();
-}
-function saveVoiceDraft(){
-  const inp=document.getElementById('notepad-input');if(!inp)return;
-  const current=cleanSpeech(inp.value);
-  if(!current||(!voiceSessionText&&current===voiceDraftBefore)){showToast('Не расслышал. Попробуйте ещё раз.');return;}
-  saveNotepad();
-}// ── MODAL ──
+
+// ── MODAL ──
 function noteForm(title='',label='',reminder=''){
   return`<div class="sheet-lbl">Текст</div>
   <textarea class="sheet-in" id="sh1" rows="3" placeholder="Что важно запомнить...">${esc(title)}</textarea>
@@ -1243,11 +1384,67 @@ function saveSheet(){
   }
 }
 
+
+// ── KEEP-STYLE NOTES UPGRADE OVERRIDES ──
+let noteView=localStorage.getItem('rz_note_view')||'list';
+let editHistory=[],editPos=0,audioRec=null,audioChunks=[],pendingAudio=null;
+function setNoteView(v){noteView=v;localStorage.setItem('rz_note_view',v);loadNotes();}
+function noteSvg(path){return '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';}
+function sortedNotePairs(all){return all.map((n,i)=>({n,i})).sort((a,b)=>((b.n.pinned?1:0)-(a.n.pinned?1:0))||((b.n.favorite?1:0)-(a.n.favorite?1:0))||((b.n.updatedAt||b.n.createdAt||0)-(a.n.updatedAt||a.n.createdAt||0)));}
+function loadNotes(){
+  const all=JSON.parse(localStorage.getItem('rz_notes')||'[]');renderStatChips(all);const el=document.getElementById('note-list');if(!el)return;
+  el.className='note-list '+(noteView==='grid'?'grid':'list');const vl=document.getElementById('view-list'),vg=document.getElementById('view-grid');if(vl)vl.classList.toggle('active',noteView==='list');if(vg)vg.classList.toggle('active',noteView==='grid');el.innerHTML='';
+  let filtered=sortedNotePairs(all);if(CS)filtered=filtered.filter(x=>x.n.reminder&&x.n.reminder.slice(0,10)===CS);if(noteFilter)filtered=filtered.filter(x=>(x.n.label||'заметка')===noteFilter);
+  if(!filtered.length){el.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «Новая» снизу</span></div>';return;}
+  filtered.forEach(({n,i})=>{const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';const d=document.createElement('div');d.className='item-card'+(n.pinned?' pinned':'');d.onclick=()=>editNote(i);let rHtml='';if(n.reminder)rHtml='<button class="reminder-tag" onclick="event.stopPropagation();editNote('+i+')">'+noteSvg('<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>')+esc(fmtDt(n.reminder))+'</button>';const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'" onclick="event.stopPropagation()"></audio>':'';const file=n.fileName?'<div class="file-chip">'+(n.fileType&&n.fileType.startsWith('image/')?'Изображение':'Файл')+' · '+esc(n.fileName)+'</div>':'';const sub=n.body&&n.body!==n.title?'<div class="item-sub">'+esc(n.body)+'</div>':'';d.innerHTML='<div class="note-stripe" style="background:'+stripe+';"></div><div class="note-head"><div class="note-cat">'+esc(n.label||'заметка')+'</div><div class="note-badges">'+(n.pinned?'<span class="note-badge">⌖</span>':'')+(n.favorite?'<span class="note-badge fav">♡</span>':'')+'</div></div><button class="note-del-x" onclick="event.stopPropagation();delNote('+i+')" aria-label="Удалить заметку">×</button><div class="item-title">'+esc(n.title||'Без названия')+'</div>'+sub+audio+file+rHtml+'<div class="item-meta">'+esc(fmtMeta(n.updatedAt||n.createdAt))+'</div>';el.appendChild(d);});
+}
+function renderStatChips(all){const el=document.getElementById('notes-stat');if(!el)return;const counts={};all.forEach(n=>{const l=n.label||'заметка';counts[l]=(counts[l]||0)+1;});let html='<button class="stat-chip'+(!noteFilter?' active':'')+'" onclick="setFilter(null)">Все <span class="stat-count">'+all.length+'</span></button>';Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([l,c])=>{const col=STRIPES[l]||'#c4b8a8';html+='<button class="stat-chip'+(noteFilter===l?' active':'')+'" onclick="setFilter(\''+esc(l)+'\')"><span class="stat-dot" style="background:'+col+';"></span>'+esc(l)+'<span class="stat-count">'+c+'</span></button>';});el.innerHTML=html;}
+function pushEditState(){const v=editorState();if(!editHistory.length||JSON.stringify(editHistory[editPos])!==JSON.stringify(v)){editHistory=editHistory.slice(0,editPos+1);editHistory.push(v);editPos=editHistory.length-1;updEditCounts();}}
+function editorState(){return{title:(document.getElementById('sh1')||{}).value||'',body:(document.getElementById('shbody')||{}).value||'',label:(document.getElementById('sh3')||{}).value||'',reminder:(document.getElementById('sh2')||{}).value||''};}
+function applyEditorState(v){if(!v)return;['sh1','shbody','sh3','sh2'].forEach((id,idx)=>{const el=document.getElementById(id);if(el)el.value=[v.title,v.body,v.label,v.reminder][idx]||'';});updEditCounts();}
+function undoEdit(){if(editPos>0){editPos--;applyEditorState(editHistory[editPos]);showToast('Назад: '+editPos);}}
+function redoEdit(){if(editPos<editHistory.length-1){editPos++;applyEditorState(editHistory[editPos]);showToast('Вперёд: '+(editHistory.length-1-editPos));}}
+function updEditCounts(){const u=document.getElementById('undo-count'),r=document.getElementById('redo-count');if(u)u.textContent=editPos;if(r)r.textContent=Math.max(0,editHistory.length-1-editPos);}
+function togglePin(){document.getElementById('pin-toggle').classList.toggle('active');}
+function toggleFav(){document.getElementById('fav-toggle').classList.toggle('active');}
+function noteForm(n={}){const file=n.fileName?'<div class="file-chip">Прикреплено: '+esc(n.fileName)+'</div>':'';const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'"></audio>':'';return '<div class="note-editor-tools"><button class="editor-icon" onclick="undoEdit()">↶<span class="editor-count" id="undo-count">0</span></button><button class="editor-icon" onclick="redoEdit()">↷<span class="editor-count" id="redo-count">0</span></button><button class="editor-icon '+(n.pinned?'active':'')+'" id="pin-toggle" onclick="togglePin()">⌖</button><button class="editor-icon '+(n.favorite?'active':'')+'" id="fav-toggle" onclick="toggleFav()">♡</button><label class="editor-icon">＋<input id="file-input" type="file" style="display:none" onchange="readEditorFile(this)"></label><button class="editor-icon danger" onclick="if(EI!==null){delNote(EI);closeSheet();}">×</button></div><div class="sheet-lbl">Название</div><textarea class="sheet-in" id="sh1" rows="2" placeholder="Что важно запомнить..." oninput="pushEditState()">'+esc(n.title||'')+'</textarea><div class="sheet-lbl">Подробности</div><textarea class="sheet-in" id="shbody" rows="4" placeholder="Можно дописать детали..." oninput="pushEditState()">'+esc(n.body||'')+'</textarea>'+audio+file+'<div id="file-preview"></div><div class="sheet-lbl">Категория</div><input class="sheet-in" id="sh3" placeholder="здоровье, покупки, дело..." value="'+esc(n.label||'')+'" oninput="pushEditState()"><div class="sheet-lbl">Напоминание</div><input class="sheet-in" id="sh2" type="datetime-local" value="'+esc(n.reminder||'')+'" onchange="pushEditState()">';}
+function readEditorFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{inp.dataset.name=f.name;inp.dataset.type=f.type;inp.dataset.data=r.result;document.getElementById('file-preview').innerHTML='<div class="file-chip">Прикреплено: '+esc(f.name)+'</div>';};r.readAsDataURL(f);}
+function editNote(i){const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');const n=notes[i];if(!n)return;ST='note';EI=i;pendingAudio=null;document.getElementById('sheet-title').textContent='Заметка';document.getElementById('sheet-body').innerHTML=noteForm(n);document.getElementById('overlay').classList.add('open');editHistory=[{title:n.title||'',body:n.body||'',label:n.label||'',reminder:n.reminder||''}];editPos=0;updEditCounts();setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},220);}
+function openSheet(type){ST=type;EI=null;pendingAudio=null;document.getElementById('sheet-title').textContent=type==='checklist'?'Новый список':'Новая заметка';const base=type==='checklist'?{title:'Новый список',body:'☐ '}:{title:'',body:''};document.getElementById('sheet-body').innerHTML=noteForm(base);document.getElementById('overlay').classList.add('open');editHistory=[editorState()];editPos=0;updEditCounts();setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},260);}
+function closeSheet(){document.getElementById('overlay').classList.remove('open');ST=null;EI=null;pendingAudio=null;}
+function saveSheet(){const v1=(document.getElementById('sh1')||{}).value||'';const body=(document.getElementById('shbody')||{}).value||'';const v2=(document.getElementById('sh2')||{}).value||'';const v3=(document.getElementById('sh3')||{}).value||'';if(!v1.trim()&&!body.trim()&&!pendingAudio){showToast('Добавьте текст или аудио');return;}const ts=Date.now();if(ST==='note'||ST==='checklist'||ST===null){const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');const old=EI!==null?list[EI]:{};const fi=document.getElementById('file-input');const item={...old,title:v1.trim()||'Без названия',body:body.trim(),label:v3.trim()||old.label||'заметка',reminder:v2||null,pinned:document.getElementById('pin-toggle')?.classList.contains('active')||false,favorite:document.getElementById('fav-toggle')?.classList.contains('active')||false,audio:pendingAudio||old.audio||null,updatedAt:ts};if(fi&&fi.dataset.data){item.fileData=fi.dataset.data;item.fileName=fi.dataset.name;item.fileType=fi.dataset.type;}if(EI!==null){item.createdAt=old.createdAt||ts;list[EI]=item;}else{item.createdAt=ts;list.unshift(item);}localStorage.setItem('rz_notes',JSON.stringify(list));loadNotes();closeSheet();showToast(EI!==null?'Изменено ✓':'Сохранено ✓');if(v2&&notifGranted())scheduleAll();}else if(ST==='notepad'){const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');if(EI!==null){list[EI].text=v1.trim();list[EI].updatedAt=ts;}localStorage.setItem('rz_notepad',JSON.stringify(list));loadNotepad();closeSheet();showToast('Изменено ✓');}}
+function startVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showToast('Голос не поддерживается');return;}recog=new SR();recog.lang='ru-RU';recog.continuous=true;recog.interimResults=true;recog.onstart=()=>{isRec=true;document.getElementById('mic-btn').classList.add('rec');document.getElementById('voice-title').textContent='Говорите, я слушаю';document.getElementById('voice-sub').textContent='Чтобы остановить, нажмите облако ещё раз';};recog.onresult=e=>{let fin='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript;if(fin){const inp=document.getElementById('notepad-input');inp.value+=(inp.value?' ':'')+fin;npResize(inp);}};recog.onerror=e=>{showToast('Ошибка: '+e.error);stopVoice();};recog.onend=()=>{if(isRec)stopVoice();};recog.start();}
+function stopVoice(){if(recog)try{recog.stop();}catch(e){}recog=null;isRec=false;const b=document.getElementById('mic-btn');if(b)b.classList.remove('rec');const t=document.getElementById('voice-title'),u=document.getElementById('voice-sub');if(t)t.textContent='Нажмите облако и говорите';if(u)u.textContent='Повторное нажатие остановит запись';}
+function openAudioNote(){ST='note';EI=null;pendingAudio=null;document.getElementById('sheet-title').textContent='Аудио-заметка';document.getElementById('sheet-body').innerHTML='<div class="audio-sheet"><button class="audio-rec-btn" id="audio-rec-btn" onclick="toggleAudioRecord()">Записать</button><div class="voice-sub" id="audio-hint">Нажмите, скажите заметку, нажмите ещё раз</div><div id="audio-preview"></div></div>'+noteForm({title:'Аудио-заметка',label:'аудио'});document.getElementById('overlay').classList.add('open');}
+async function toggleAudioRecord(){if(audioRec&&audioRec.state==='recording'){audioRec.stop();return;}if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showToast('Аудиозапись не поддерживается');return;}const stream=await navigator.mediaDevices.getUserMedia({audio:true});audioChunks=[];audioRec=new MediaRecorder(stream);audioRec.ondataavailable=e=>audioChunks.push(e.data);audioRec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(audioChunks,{type:'audio/webm'});const r=new FileReader();r.onload=()=>{pendingAudio=r.result;document.getElementById('audio-preview').innerHTML='<audio class="audio-note" controls src="'+pendingAudio+'"></audio>';document.getElementById('audio-hint').textContent='Аудио готово. Можно сохранить.';};r.readAsDataURL(blob);document.getElementById('audio-rec-btn').classList.remove('rec');document.getElementById('audio-rec-btn').textContent='Ещё раз';};audioRec.start();document.getElementById('audio-rec-btn').classList.add('rec');document.getElementById('audio-rec-btn').textContent='Стоп';document.getElementById('audio-hint').textContent='Говорите. Чтобы закончить, нажмите Стоп.';}
+function attachQuickFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const ts=Date.now();const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');list.unshift({title:f.name,body:'',label:f.type&&f.type.startsWith('image/')?'изображение':'файл',fileName:f.name,fileType:f.type,fileData:r.result,createdAt:ts,updatedAt:ts});localStorage.setItem('rz_notes',JSON.stringify(list));inp.value='';loadNotes();showToast('Файл добавлен');};r.readAsDataURL(f);}
+function openDrawing(){openSheet('note');document.getElementById('sheet-title').textContent='Эскиз';document.getElementById('sh1').value='Эскиз';document.getElementById('shbody').value='Зарисовка добавлена как заметка. Полотно подключим следующим шагом.';document.getElementById('sh3').value='эскиз';pushEditState();}
+
+// ── CLOUD NOTE OVERRIDES ──
+function cloudMoodFromNote(n){return n.mood||n.label||'мысль';}
+function setCloudMood(v){const el=document.getElementById('cloud-mood');if(el)el.value=v;document.querySelectorAll('.cloud-chip').forEach(b=>b.classList.toggle('active',b.dataset.mood===v));pushEditState();}
+function cloudTitle(text){const t=(text||'').trim().replace(/\s+/g,' ');if(!t)return 'Моё облачко';return t.split(' ').slice(0,7).join(' ')+(t.split(' ').length>7?'...':'');}
+function noteForm(n={}){
+  const text=(n.body&&n.body.trim())?n.body:(n.title||'');
+  const mood=cloudMoodFromNote(n);
+  const file=n.fileName?'<div class="cloud-file-preview"><div class="file-chip">Прикреплено: '+esc(n.fileName)+'</div></div>':'<div class="cloud-file-preview" id="file-preview"></div>';
+  const audio=n.audio?'<audio class="audio-note" controls src="'+esc(n.audio)+'"></audio>':'';
+  const moods=['мысль','желание','стих','песня','дело','забота'];
+  return '<div class="cloud-note"><div class="cloud-kicker">личное облачко</div><div class="cloud-prompt">Положите сюда то, что важно сегодня</div><textarea class="cloud-text" id="cloud-text" placeholder="Желание, стих, песня, мысль, напоминание...\nМожно коротко. Можно как есть." oninput="pushEditState()">'+esc(text)+'</textarea><input type="hidden" id="cloud-mood" value="'+esc(mood)+'"><div class="cloud-moods">'+moods.map(m=>'<button class="cloud-chip '+(m===mood?'active':'')+'" data-mood="'+m+'" onclick="setCloudMood(\''+m+'\')">'+m+'</button>').join('')+'</div>'+audio+file+'<div class="cloud-care"><div class="cloud-care-title">Напомнить мягко</div><div class="cloud-care-sub">Не как упрёк. Как маленький знак, что вы живёте этот день.</div><div class="cloud-reminder-row"><input class="cloud-date" id="sh2" type="datetime-local" value="'+esc(n.reminder||'')+'" onchange="pushEditState()"><button class="cloud-clear" onclick="document.getElementById(\'sh2\').value=\'\';pushEditState()">×</button></div></div><div class="cloud-tools"><button class="cloud-tool '+(n.pinned?'active':'')+'" id="pin-toggle" onclick="togglePin()">⌖</button><button class="cloud-tool '+(n.favorite?'active':'')+'" id="fav-toggle" onclick="toggleFav()">♡</button><label class="cloud-tool">＋<input id="file-input" type="file" style="display:none" onchange="readEditorFile(this)"></label><button class="cloud-tool" onclick="undoEdit()">↶<span class="editor-count" id="undo-count">0</span></button><button class="cloud-tool" onclick="redoEdit()">↷<span class="editor-count" id="redo-count">0</span></button><button class="cloud-tool danger" onclick="if(EI!==null){delNote(EI);closeSheet();}">×</button></div></div>';
+}
+function editorState(){return{text:(document.getElementById('cloud-text')||{}).value||'',mood:(document.getElementById('cloud-mood')||{}).value||'',reminder:(document.getElementById('sh2')||{}).value||''};}
+function applyEditorState(v){if(!v)return;const t=document.getElementById('cloud-text'),m=document.getElementById('cloud-mood'),r=document.getElementById('sh2');if(t)t.value=v.text||'';if(m)m.value=v.mood||'мысль';if(r)r.value=v.reminder||'';document.querySelectorAll('.cloud-chip').forEach(b=>b.classList.toggle('active',b.dataset.mood===(v.mood||'мысль')));updEditCounts();}
+function editNote(i){const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');const n=notes[i];if(!n)return;ST='note';EI=i;pendingAudio=null;document.getElementById('sheet-title').textContent='Моё облачко';document.getElementById('sheet-body').innerHTML=noteForm(n);document.getElementById('overlay').classList.add('open');editHistory=[editorState()];editPos=0;updEditCounts();setTimeout(()=>{const f=document.getElementById('cloud-text');if(f)f.focus();},220);}
+function openSheet(type){ST=type;EI=null;pendingAudio=null;document.getElementById('sheet-title').textContent=type==='checklist'?'Список на сегодня':'Моё облачко';const base=type==='checklist'?{body:'☐ ',mood:'дело'}:{body:'',mood:'мысль'};document.getElementById('sheet-body').innerHTML=noteForm(base);document.getElementById('overlay').classList.add('open');editHistory=[editorState()];editPos=0;updEditCounts();setTimeout(()=>{const f=document.getElementById('cloud-text');if(f)f.focus();},260);}
+function readEditorFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{inp.dataset.name=f.name;inp.dataset.type=f.type;inp.dataset.data=r.result;const pv=document.getElementById('file-preview')||document.querySelector('.cloud-file-preview');if(pv)pv.innerHTML='<div class="file-chip">Прикреплено: '+esc(f.name)+'</div>';};r.readAsDataURL(f);}
+function saveSheet(){const text=(document.getElementById('cloud-text')||{}).value||'';const reminder=(document.getElementById('sh2')||{}).value||'';const mood=(document.getElementById('cloud-mood')||{}).value||'мысль';if(!text.trim()&&!pendingAudio){showToast('Напишите пару слов или добавьте аудио');return;}const ts=Date.now();if(ST==='note'||ST==='checklist'||ST===null){const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');const old=EI!==null?list[EI]:{};const fi=document.getElementById('file-input');const item={...old,title:cloudTitle(text),body:text.trim(),label:mood,mood,reminder:reminder||null,notifyText:reminder?makeGentleReminder(text,mood):'',pinned:document.getElementById('pin-toggle')?.classList.contains('active')||false,favorite:document.getElementById('fav-toggle')?.classList.contains('active')||false,audio:pendingAudio||old.audio||null,updatedAt:ts};if(fi&&fi.dataset.data){item.fileData=fi.dataset.data;item.fileName=fi.dataset.name;item.fileType=fi.dataset.type;}if(EI!==null){item.createdAt=old.createdAt||ts;list[EI]=item;}else{item.createdAt=ts;list.unshift(item);}localStorage.setItem('rz_notes',JSON.stringify(list));loadNotes();closeSheet();showToast(reminder?'Сохранил и мягко напомню':'Сохранил в облачко');if(reminder&&notifGranted())scheduleAll();}else if(ST==='notepad'){const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');if(EI!==null){list[EI].text=text.trim();list[EI].updatedAt=ts;}localStorage.setItem('rz_notepad',JSON.stringify(list));loadNotepad();closeSheet();showToast('Изменено ✓');}}
+function makeGentleReminder(text,mood){const t=cloudTitle(text);const variants=['Вы сегодня живёте этот день. '+t,'Маленькое облачко зовёт: '+t,'Не упрёк, а тёплый знак: '+t,'Ваше важное на сегодня: '+t];return variants[Math.abs((text||mood||'').length)%variants.length];}
+function scheduleAll(){_NT.forEach(t=>clearTimeout(t));_NT=[];if(!notifGranted())return;const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');notes.forEach(n=>{if(!n.reminder||!n.title)return;const dt=parseDt(n.reminder);if(!dt)return;const delay=dt.getTime()-Date.now();if(delay<=0||delay>7*24*3600*1000)return;const tid=setTimeout(()=>{try{new Notification('Разберёмся',{body:n.notifyText||makeGentleReminder(n.body||n.title,n.mood||n.label),icon:'icon-192.png'});}catch(e){}},delay);_NT.push(tid);});if('serviceWorker'in navigator){navigator.serviceWorker.ready.then(reg=>{if(reg.active)reg.active.postMessage({type:'SCHEDULE',notes:notes.filter(n=>n.reminder&&n.title).map(n=>({...n,title:n.notifyText||n.title}))});}).catch(()=>{});}}
+function openAudioNote(){ST='note';EI=null;pendingAudio=null;document.getElementById('sheet-title').textContent='Голосовое облачко';document.getElementById('sheet-body').innerHTML='<div class="audio-sheet"><button class="audio-rec-btn" id="audio-rec-btn" onclick="toggleAudioRecord()">Записать</button><div class="voice-sub" id="audio-hint">Нажмите, скажите важное, нажмите ещё раз</div><div id="audio-preview"></div></div>'+noteForm({body:'',mood:'забота',title:'Голосовое облачко'});document.getElementById('overlay').classList.add('open');editHistory=[editorState()];editPos=0;updEditCounts();}
 // ── LOAD ALL ──
 function loadAll(){
   loadNotes();
   loadNotepad();
-  initVoiceControl();
   scheduleAll();
   calRender();
   updCalTrigger();
