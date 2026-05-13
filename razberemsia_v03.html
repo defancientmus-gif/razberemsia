@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.85</title>
+<title>Разберёмся v3.90</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,13 +12,15 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
 <style>
+/* ── RESET ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
 input,textarea{-webkit-user-select:text;user-select:text;}
 :root{
   --sage:#7a9e7e;--sage-d:#4a6e4e;
   --cream:#f5f0e8;--warm:#ede5d8;--stone:#c4b8a8;
   --text:#1c1c1e;--text-m:#3a3a3c;--text-l:#6e6e73;
-  --rose:#c0504a;--gold:#b8883a;--r:16px;
+  --rose:#c0504a;--gold:#b8883a;
+  --r:14px;
   --sys:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
 }
 html,body{height:100%;overflow:hidden;}
@@ -44,7 +46,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .hbtn.open{background:rgba(122,158,126,0.18);}
 .hbtn svg{width:18px;height:18px;stroke:var(--sage-d);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-/* MENU */
+/* MENU dropdown */
 .hmenu{position:fixed;top:64px;right:12px;z-index:500;background:rgba(255,255,255,0.95);backdrop-filter:blur(30px) saturate(1.8);-webkit-backdrop-filter:blur(30px) saturate(1.8);border:1px solid rgba(200,195,188,0.5);border-radius:20px;padding:6px;min-width:220px;box-shadow:0 8px 40px rgba(0,0,0,0.12);opacity:0;pointer-events:none;transform:translateY(-8px) scale(.96);transition:opacity .18s,transform .18s cubic-bezier(.4,0,.2,1);}
 @media(min-width:480px){.hmenu{right:calc(50% - 228px);}}
 .hmenu.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
@@ -84,7 +86,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .emer-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:2px;letter-spacing:-.2px;}
 .emer-sub{font-size:12px;color:rgba(255,255,255,0.75);font-weight:400;}
 
-/* CARDS */
+/* CARDS HOME */
 .cards-grid{display:flex;flex-direction:column;gap:8px;}
 .acard{background:rgba(255,255,255,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(200,195,188,0.5);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;-webkit-appearance:none;width:100%;text-align:left;font-family:var(--sys);transition:transform .12s,background .12s;}
 .acard:active{background:rgba(122,158,126,0.1);transform:scale(.98);}
@@ -95,13 +97,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .acard-right{margin-left:auto;flex-shrink:0;}
 .acard-right svg{width:16px;height:16px;stroke:var(--text-l);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-/* BACK */
+/* ── BACK BUTTON ── */
 .backrow{margin-bottom:12px;}
-.backbtn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.65);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.48);border-radius:var(--r);padding:11px 16px;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);width:100%;text-align:left;transition:background .12s;}
-.backbtn:active{background:rgba(122,158,126,0.1);}
-.back-ico svg{width:18px;height:18px;stroke:var(--sage-d);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.back-lbl{font-size:17px;font-weight:600;color:var(--text);}
-.back-hint{font-size:12px;color:var(--text-l);margin-top:1px;}
+.backbtn{display:inline-flex;align-items:center;gap:7px;background:none;border:none;padding:8px 4px 8px 0;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:opacity .12s;}
+.backbtn:active{opacity:.6;}
+.back-ico svg{width:20px;height:20px;stroke:var(--sage-d);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.back-lbl{font-size:17px;font-weight:600;color:var(--sage-d);}
 
 /* SECTION */
 .sec-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--text);margin-bottom:4px;letter-spacing:-.4px;}
@@ -118,21 +119,68 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .emg-rule-t{font-size:15px;font-weight:700;color:var(--sage-d);margin-bottom:7px;}
 .emg-rule-i{font-size:14px;color:var(--text-m);line-height:1.8;}
 
-/* ITEM CARDS */
-.item-card{background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.48);border-radius:var(--r);padding:13px 16px 13px 20px;margin-bottom:8px;position:relative;overflow:hidden;word-break:break-word;transition:transform .12s;}
-.note-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
-.note-cat{font-size:10px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
-.item-title{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.1px;}
-.item-sub{font-size:13px;color:var(--text-m);margin-top:3px;line-height:1.5;}
-.item-meta{font-size:11px;color:var(--text-l);margin-top:8px;font-weight:400;}
-.item-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.act-btn{border-radius:10px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;min-height:36px;border:1px solid transparent;transition:background .12s;}
-.act-edit{background:rgba(122,158,126,0.12);color:var(--sage-d);border-color:rgba(122,158,126,0.25);}
-.act-edit:active{background:rgba(122,158,126,0.22);}
-.act-del{background:rgba(192,80,74,0.07);color:var(--rose);border-color:rgba(192,80,74,0.16);}
-.act-del:active{background:rgba(192,80,74,0.14);}
-.reminder-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(122,158,126,0.1);color:var(--sage-d);font-size:12px;font-weight:600;border-radius:50px;padding:4px 11px;border:1px solid rgba(122,158,126,0.2);margin-top:7px;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);}
-.reminder-tag svg{width:12px;height:12px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* ── NOTES SCREEN ── */
+
+/* Переключатель вида */
+.view-toggle{display:flex;gap:0;background:rgba(200,195,188,0.22);border-radius:10px;padding:3px;margin-bottom:10px;width:fit-content;}
+.view-btn{border:none;background:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--text-l);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:background .12s,color .12s;display:flex;align-items:center;gap:5px;}
+.view-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.view-btn.active{background:rgba(255,255,255,0.9);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.09);}
+
+/* Категории — компактная горизонтальная лента */
+.notes-cats{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.notes-cats::-webkit-scrollbar{display:none;}
+.cat-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.7);border:1px solid rgba(200,195,188,0.42);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:600;color:var(--text-m);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:background .12s;}
+.cat-chip:active,.cat-chip.active{background:var(--sage);color:#fff;border-color:var(--sage);}
+.cat-chip.active .cat-dot{background:rgba(255,255,255,0.8);}
+.cat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.cat-count{font-size:10px;font-weight:700;opacity:.65;}
+
+/* СПИСОК заметок */
+.note-list-view{display:flex;flex-direction:column;gap:7px;}
+
+/* СЕТКА заметок */
+.note-grid-view{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+
+/* КАРТОЧКА заметки — список */
+.note-card{background:rgba(255,255,255,0.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(200,195,188,0.42);border-radius:var(--r);
+  padding:12px 14px 12px 18px;position:relative;overflow:hidden;word-break:break-word;
+  transition:transform .12s,background .12s;cursor:pointer;}
+.note-card:active{transform:scale(.985);background:rgba(255,255,255,0.9);}
+.note-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;}
+
+/* КАРТОЧКА заметки — сетка */
+.note-grid-view .note-card{padding:10px 12px 10px 16px;min-height:90px;display:flex;flex-direction:column;}
+
+/* Шапка карточки */
+.note-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:3px;}
+.note-cat-label{font-size:9px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;}
+.note-card-acts{display:flex;gap:4px;flex-shrink:0;}
+
+/* Кнопки в карточке — иконочные */
+.nact{width:26px;height:26px;border-radius:7px;border:none;background:none;cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;transition:background .1s,transform .1s;flex-shrink:0;}
+.nact:active{transform:scale(.88);}
+.nact svg{width:15px;height:15px;stroke:var(--text-l);stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.nact.liked svg{stroke:var(--rose);fill:rgba(192,80,74,0.12);}
+.nact.pinned svg{stroke:var(--gold);fill:rgba(184,136,58,0.12);}
+
+.note-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.1px;line-height:1.35;margin-bottom:2px;}
+.note-grid-view .note-title{font-size:14px;}
+.note-body-preview{font-size:13px;color:var(--text-m);line-height:1.5;margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* Аудио в заметке */
+.note-audio-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.22);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--sage-d);margin-bottom:5px;cursor:pointer;}
+.note-audio-badge svg{width:11px;height:11px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+.note-meta{font-size:10px;color:var(--text-l);margin-top:auto;padding-top:4px;}
+.reminder-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(122,158,126,0.09);color:var(--sage-d);font-size:11px;font-weight:600;border-radius:6px;padding:3px 8px;border:1px solid rgba(122,158,126,0.18);margin-bottom:5px;}
+.reminder-tag svg{width:10px;height:10px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Кнопка добавить */
+.add-dashed{background:transparent;border:1.5px dashed rgba(200,195,188,0.55);border-radius:var(--r);padding:14px;width:100%;font-size:16px;font-weight:600;color:var(--text-l);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;transition:background .12s;margin-top:8px;}
+.add-dashed:active{background:rgba(122,158,126,0.07);}
 
 /* NOTIF BANNER */
 .notif-banner{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:var(--r);padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
@@ -141,14 +189,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .notif-allow-btn{background:var(--sage);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sys);flex-shrink:0;-webkit-appearance:none;}
 
 /* CALENDAR TRIGGER */
-.cal-trigger{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.48);border-radius:var(--r);padding:12px 16px;margin-bottom:10px;cursor:pointer;-webkit-appearance:none;width:100%;font-family:var(--sys);transition:background .12s;}
+.cal-trigger{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.42);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;cursor:pointer;-webkit-appearance:none;width:100%;font-family:var(--sys);transition:background .12s;}
 .cal-trigger:active{background:rgba(0,0,0,0.05);}
-.cal-trigger-ico{width:36px;height:36px;border-radius:10px;background:rgba(122,158,126,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.cal-trigger-ico svg{width:18px;height:18px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.cal-trigger-label{font-size:11px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px;}
-.cal-trigger-val{font-size:16px;font-weight:600;color:var(--text);}
+.cal-trigger-ico{width:32px;height:32px;border-radius:9px;background:rgba(122,158,126,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cal-trigger-ico svg{width:16px;height:16px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.cal-trigger-label{font-size:10px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px;}
+.cal-trigger-val{font-size:14px;font-weight:600;color:var(--text);}
 .cal-arr{margin-left:auto;opacity:.35;}
-.cal-arr svg{width:15px;height:15px;stroke:var(--text);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.cal-arr svg{width:14px;height:14px;stroke:var(--text);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
 /* CALENDAR POPUP */
 .cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:400;display:none;align-items:flex-end;justify-content:center;}
@@ -177,62 +225,164 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .cal-day.sel .cal-dot{background:rgba(255,255,255,0.8);}
 .cal-done-btn{display:block;margin:16px 20px 0;width:calc(100% - 40px);background:var(--sage);color:#fff;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;}
 .cal-done-btn:active{background:var(--sage-d);}
-
-/* YEAR PICKER */
 .year-picker{padding:12px 20px 0;max-height:240px;overflow-y:auto;display:none;flex-wrap:wrap;gap:6px;}
 .year-picker.open{display:flex;}
 .year-btn{flex:0 0 calc(25% - 5px);background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.18);border-radius:10px;padding:8px 4px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);text-align:center;transition:background .1s;}
 .year-btn:active,.year-btn.cur{background:var(--sage);color:#fff;border-color:var(--sage);}
 
-/* NOTES STAT */
-.notes-stat{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.notes-stat::-webkit-scrollbar{display:none;}
-.stat-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.75);border:1px solid rgba(200,195,188,0.46);border-radius:50px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--text-m);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:background .12s;}
-.stat-chip:active,.stat-chip.active{background:var(--sage);color:#fff;border-color:var(--sage);}
-.stat-chip.active .stat-dot{background:rgba(255,255,255,0.8);}
-.stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.stat-count{font-size:11px;font-weight:700;opacity:.7;}
+/* ── NOTEPAD (БЛОКНОТ) ── */
+/* Голосовой блок — полностью переделан */
+.notepad-wrap{flex-shrink:0;background:rgba(248,244,237,0.95);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid rgba(200,195,188,0.35);padding:10px 14px env(safe-area-inset-bottom);}
 
-/* ADD */
-.add-dashed{background:transparent;border:1.5px dashed rgba(200,195,188,0.55);border-radius:var(--r);padding:14px;width:100%;font-size:16px;font-weight:600;color:var(--text-l);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;transition:background .12s;margin-top:2px;}
-.add-dashed:active{background:rgba(122,158,126,0.07);}
-
-/* NOTEPAD */
-.notepad-voice-wrap{flex-shrink:0;background:rgba(248,244,237,0.95);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid rgba(200,195,188,0.35);padding:12px 0 env(safe-area-inset-bottom);}
-.voice-panel{position:relative;margin:0 12px 10px;padding:12px 14px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.58));border:1px solid rgba(200,195,188,0.45);border-radius:24px;box-shadow:0 18px 46px rgba(70,58,44,0.10);overflow:hidden;touch-action:none;transition:background .22s,border-color .22s,box-shadow .22s,transform .18s;}
-.voice-panel::before{content:'';position:absolute;inset:auto 18% -54px;height:96px;background:radial-gradient(circle,rgba(122,158,126,0.22),rgba(122,158,126,0));pointer-events:none;transition:opacity .22s;}
-.voice-panel.recording{border-color:rgba(192,80,74,0.28);box-shadow:0 20px 54px rgba(192,80,74,0.14);}
-.voice-panel.locked{border-color:rgba(122,158,126,0.42);box-shadow:0 20px 54px rgba(122,158,126,0.18);}
-.voice-lock{height:30px;display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,0.76);border:1px solid rgba(200,195,188,0.42);color:var(--text-l);font-size:12px;font-weight:700;opacity:0;transform:translateY(10px) scale(.96);transition:opacity .2s,transform .2s,background .2s,color .2s,border-color .2s;}
-.voice-lock svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.voice-panel.recording .voice-lock{opacity:1;transform:translateY(0) scale(1);}
-.voice-panel.locked .voice-lock{background:rgba(122,158,126,0.14);border-color:rgba(122,158,126,0.34);color:var(--sage-d);}
-.voice-orb{position:relative;width:96px;height:96px;border-radius:50%;border:none;background:radial-gradient(circle at 35% 30%,#fff 0,#e7efe4 36%,var(--sage) 100%);box-shadow:0 18px 38px rgba(88,112,82,0.24),inset 0 1px 0 rgba(255,255,255,0.82);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;touch-action:none;color:#fff;transition:transform .16s,box-shadow .22s,background .22s;}
-.voice-orb:active{transform:scale(.97);}
-.voice-orb::before{content:'';position:absolute;inset:10px;border-radius:50%;background:rgba(255,255,255,0.18);}
-.voice-orb span{position:relative;width:28px;height:38px;border-radius:18px;background:#fff;box-shadow:0 0 0 7px rgba(255,255,255,0.18);}
-.voice-orb span::before{content:'';position:absolute;left:50%;bottom:-14px;width:24px;height:18px;border:3px solid #fff;border-top:none;border-radius:0 0 16px 16px;transform:translateX(-50%);}
-.voice-orb span::after{content:'';position:absolute;left:50%;bottom:-22px;width:3px;height:11px;background:#fff;border-radius:4px;transform:translateX(-50%);}
-.voice-orb.rec{background:radial-gradient(circle at 35% 30%,#fff 0,#f4d6d2 35%,var(--rose) 100%);box-shadow:0 20px 48px rgba(192,80,74,0.28);animation:voice-breathe 1.45s ease-in-out infinite;}
-.voice-orb.locked{background:radial-gradient(circle at 35% 30%,#fff 0,#dceadc 36%,var(--sage-d) 100%);animation:voice-breathe 1.8s ease-in-out infinite;}
-.voice-copy{text-align:center;position:relative;z-index:1;}
-.voice-title{font-size:18px;font-weight:750;color:var(--text);line-height:1.22;}
-.voice-sub{font-size:14px;color:var(--text-l);line-height:1.35;margin-top:3px;}
-.voice-panel.recording .voice-sub{color:var(--rose);}
-.voice-panel.locked .voice-sub{color:var(--sage-d);}
-.quiet-input{display:flex;align-items:flex-end;gap:8px;padding:0 12px;}
-.notepad-field{flex:1;background:rgba(255,255,255,0.9);border:1.5px solid rgba(200,195,188,0.48);border-radius:20px;padding:10px 16px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;resize:none;min-height:42px;max-height:120px;line-height:1.5;-webkit-user-select:text;user-select:text;transition:border-color .15s,box-shadow .15s;}
+/* Строка ввода + кнопка голоса */
+.input-row{display:flex;align-items:flex-end;gap:10px;}
+.notepad-field{flex:1;background:rgba(255,255,255,0.88);border:1.5px solid rgba(200,195,188,0.48);border-radius:18px;padding:10px 14px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;resize:none;min-height:44px;max-height:120px;line-height:1.5;-webkit-user-select:text;user-select:text;transition:border-color .15s;}
 .notepad-field::placeholder{color:var(--stone);}
-.notepad-field:focus{border-color:rgba(122,158,126,0.5);box-shadow:0 0 0 4px rgba(122,158,126,0.08);}
-.notepad-send{width:42px;height:42px;border-radius:50%;background:var(--sage);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;flex-shrink:0;transition:background .12s,transform .1s;}
+.notepad-field:focus{border-color:rgba(122,158,126,0.5);}
+.notepad-send{width:44px;height:44px;border-radius:50%;background:var(--sage);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;flex-shrink:0;transition:background .12s,transform .1s;}
 .notepad-send:active{background:var(--sage-d);transform:scale(.92);}
-@keyframes voice-breathe{0%,100%{transform:scale(1);box-shadow:0 18px 38px rgba(192,80,74,0.18)}50%{transform:scale(1.035);box-shadow:0 24px 58px rgba(192,80,74,0.30)}}
-.pad-item{background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.46);border-radius:var(--r);padding:12px 16px 12px 20px;margin-bottom:8px;position:relative;overflow:hidden;word-break:break-word;}
-.pad-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
-.pad-cat{font-size:10px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
-.pad-title{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-.1px;margin-bottom:2px;}
-.pad-text{font-size:14px;color:var(--text-m);line-height:1.6;}
-.pad-meta{font-size:11px;color:var(--text-l);margin-top:7px;}
+
+/* ── ГОЛОСОВАЯ КНОПКА — Apple Intelligence стиль ── */
+.voice-cloud-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:8px;}
+.voice-cloud{
+  width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;-webkit-appearance:none;
+  position:relative;display:flex;align-items:center;justify-content:center;
+  /* Парящее облако: градиент + размытая тень */
+  background:radial-gradient(circle at 38% 28%, rgba(255,255,255,0.95) 0%, rgba(230,240,232,0.9) 40%, rgba(180,210,185,0.85) 100%);
+  box-shadow:
+    0 12px 32px rgba(70,100,70,0.18),
+    0 3px 8px rgba(70,100,70,0.12),
+    inset 0 1.5px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(100,140,100,0.1);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;
+  touch-action:none;
+}
+.voice-cloud::before{
+  content:'';position:absolute;inset:4px;border-radius:50%;
+  background:radial-gradient(circle at 38% 28%,rgba(255,255,255,0.7) 0%,transparent 70%);
+  pointer-events:none;
+}
+/* Анимация "живого" свечения в покое */
+@keyframes cloud-float{
+  0%,100%{transform:translateY(0) scale(1);box-shadow:0 12px 32px rgba(70,100,70,0.18),0 3px 8px rgba(70,100,70,0.12),inset 0 1.5px 0 rgba(255,255,255,0.9);}
+  50%{transform:translateY(-3px) scale(1.02);box-shadow:0 18px 42px rgba(70,100,70,0.22),0 5px 12px rgba(70,100,70,0.14),inset 0 1.5px 0 rgba(255,255,255,0.9);}
+}
+.voice-cloud.idle{animation:cloud-float 3.2s ease-in-out infinite;}
+
+/* Запись — красный пульс */
+@keyframes cloud-rec{
+  0%,100%{box-shadow:0 0 0 0 rgba(192,80,74,0.35),0 12px 32px rgba(192,80,74,0.22),inset 0 1.5px 0 rgba(255,255,255,0.9);}
+  50%{box-shadow:0 0 0 12px rgba(192,80,74,0.0),0 18px 40px rgba(192,80,74,0.32),inset 0 1.5px 0 rgba(255,255,255,0.9);}
+}
+.voice-cloud.recording{
+  background:radial-gradient(circle at 38% 28%,rgba(255,255,255,0.92) 0%,rgba(248,210,208,0.9) 40%,rgba(192,80,74,0.82) 100%);
+  animation:cloud-rec 1.3s ease-in-out infinite;
+}
+
+/* Иконка внутри облака */
+.voice-cloud-icon{width:20px;height:20px;position:relative;z-index:1;}
+.voice-cloud.idle .voice-cloud-icon{stroke:rgba(74,110,78,0.8);}
+.voice-cloud.recording .voice-cloud-icon{stroke:rgba(192,80,74,0.9);}
+
+/* Подпись к кнопке голоса */
+.voice-hint{font-size:11px;font-weight:600;color:var(--text-l);margin-top:5px;text-align:center;letter-spacing:.01em;transition:color .2s;}
+.voice-hint.rec{color:var(--rose);}
+
+/* Статус-строка голоса (над полем ввода) */
+.voice-status{display:none;align-items:center;gap:8px;background:rgba(192,80,74,0.07);border:1px solid rgba(192,80,74,0.18);border-radius:10px;padding:8px 12px;margin-bottom:6px;}
+.voice-status.show{display:flex;}
+.voice-status-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;animation:dot-blink 1s ease-in-out infinite;}
+@keyframes dot-blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.voice-status-text{font-size:13px;font-weight:600;color:var(--rose);flex:1;}
+.voice-stop-btn{background:var(--rose);color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;flex-shrink:0;}
+
+/* ── BOTTOM FAB MENU (Google Keep стиль) ── */
+.fab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:200;display:none;/* показывается на экране заметок */}
+.fab-bar.show{display:block;}
+.fab-inner{margin:0 14px 12px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(200,195,188,0.5);border-radius:18px;
+  padding:8px 12px;box-shadow:0 6px 28px rgba(0,0,0,0.10);}
+.fab-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);padding:6px 10px;border-radius:12px;transition:background .12s;}
+.fab-btn:active{background:rgba(122,158,126,0.12);}
+.fab-btn svg{width:22px;height:22px;stroke:var(--text-m);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.fab-btn span{font-size:10px;font-weight:600;color:var(--text-l);}
+.fab-plus{width:48px;height:48px;border-radius:50%;background:var(--sage);border:none;cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(122,158,126,0.38);transition:transform .14s,box-shadow .14s;}
+.fab-plus:active{transform:scale(.92);box-shadow:0 2px 8px rgba(122,158,126,0.25);}
+.fab-plus svg{width:22px;height:22px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── ЗАМЕТКИ ЭКРАН — отступ под FAB ── */
+#s-notes{padding-bottom:80px;}
+
+/* ── РЕДАКТОР ЗАМЕТКИ (fullscreen sheet) ── */
+.note-editor-overlay{position:fixed;inset:0;z-index:350;background:rgba(0,0,0,0.38);display:none;align-items:flex-end;justify-content:center;}
+.note-editor-overlay.open{display:flex;animation:fIn .16s ease;}
+.note-editor-sheet{background:#f4f0e9;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;animation:sUp .22s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.ned-handle{width:36px;height:4px;background:rgba(200,195,188,0.6);border-radius:4px;margin:14px auto 0;}
+.ned-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;}
+.ned-title-label{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);}
+.ned-close{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.07);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;}
+.ned-close svg{width:16px;height:16px;stroke:var(--text-m);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.ned-body{flex:1;overflow-y:auto;padding:0 16px 12px;}
+.ned-body::-webkit-scrollbar{display:none;}
+.ned-lbl{font-size:11px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 5px;}
+.ned-in{width:100%;background:rgba(255,255,255,0.88);border:1.5px solid rgba(200,195,188,0.46);border-radius:10px;padding:11px 13px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;margin-bottom:2px;-webkit-user-select:text;user-select:text;transition:border-color .15s;}
+.ned-in:focus{border-color:rgba(122,158,126,0.5);}
+.ned-in[rows]{resize:none;min-height:80px;}
+/* Категория — выбор чипами */
+.ned-cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.ned-cat-btn{border:1px solid rgba(200,195,188,0.46);background:rgba(255,255,255,0.75);border-radius:8px;padding:5px 11px;font-size:13px;font-weight:600;color:var(--text-m);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:background .12s;}
+.ned-cat-btn.sel{background:var(--sage);color:#fff;border-color:var(--sage);}
+/* Тулбар редактора */
+.ned-toolbar{display:flex;gap:8px;padding:8px 16px;border-top:1px solid rgba(200,195,188,0.3);border-bottom:1px solid rgba(200,195,188,0.3);background:rgba(248,244,237,0.8);overflow-x:auto;flex-shrink:0;}
+.ned-toolbar::-webkit-scrollbar{display:none;}
+.ned-tool{display:flex;align-items:center;gap:5px;border:none;background:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;color:var(--text-m);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);flex-shrink:0;transition:background .12s;}
+.ned-tool:active{background:rgba(122,158,126,0.12);}
+.ned-tool svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.ned-tool.disabled{opacity:.35;pointer-events:none;}
+/* Счётчик шагов отмены */
+.undo-count{font-size:10px;background:rgba(122,158,126,0.15);border-radius:4px;padding:1px 4px;color:var(--sage-d);}
+/* Аудио запись в редакторе */
+.ned-audio-row{display:flex;align-items:center;gap:10px;background:rgba(122,158,126,0.07);border:1px solid rgba(122,158,126,0.2);border-radius:10px;padding:10px 13px;margin-bottom:8px;}
+.ned-audio-play{width:36px;height:36px;border-radius:50%;background:var(--sage);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;flex-shrink:0;transition:background .12s;}
+.ned-audio-play:active{background:var(--sage-d);}
+.ned-audio-play svg{width:14px;height:14px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.ned-audio-info{flex:1;}
+.ned-audio-label{font-size:13px;font-weight:600;color:var(--text);}
+.ned-audio-dur{font-size:11px;color:var(--text-l);}
+.ned-audio-del{border:none;background:none;color:var(--rose);font-size:18px;cursor:pointer;-webkit-appearance:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;}
+/* Кнопка записи аудио в редакторе */
+.ned-rec-audio{display:flex;align-items:center;gap:8px;border:1.5px dashed rgba(122,158,126,0.4);background:rgba(122,158,126,0.04);border-radius:10px;padding:10px 14px;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);width:100%;text-align:left;margin-bottom:10px;transition:background .12s;}
+.ned-rec-audio:active{background:rgba(122,158,126,0.1);}
+.ned-rec-audio svg{width:18px;height:18px;stroke:var(--sage-d);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.ned-rec-audio span{font-size:14px;font-weight:600;color:var(--sage-d);}
+/* Кнопка записи в активном состоянии */
+.ned-rec-audio.active-rec{border-color:rgba(192,80,74,0.4);background:rgba(192,80,74,0.06);}
+.ned-rec-audio.active-rec svg{stroke:var(--rose);}
+.ned-rec-audio.active-rec span{color:var(--rose);}
+
+/* Нижние кнопки редактора */
+.ned-footer{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));flex-shrink:0;}
+.ned-save{flex:1;background:var(--sage);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;transition:background .12s;}
+.ned-save:active{background:var(--sage-d);}
+.ned-cancel{background:none;border:1.5px solid rgba(200,195,188,0.5);border-radius:12px;padding:14px 20px;font-size:16px;font-weight:600;color:var(--text-l);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;}
+.ned-cancel:active{background:rgba(0,0,0,0.05);}
+
+/* ── PAD ITEMS (блокнот) ── */
+.pad-item{background:rgba(255,255,255,0.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.44);border-radius:var(--r);padding:11px 14px 11px 18px;margin-bottom:7px;position:relative;overflow:hidden;word-break:break-word;}
+.pad-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;}
+.pad-cat{font-size:9px;font-weight:700;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;}
+.pad-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.1px;margin-bottom:2px;}
+.pad-text{font-size:13px;color:var(--text-m);line-height:1.5;}
+.pad-meta{font-size:10px;color:var(--text-l);margin-top:6px;}
+.pad-acts{display:flex;gap:6px;margin-top:8px;}
+.act-btn{border-radius:8px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;min-height:32px;border:1px solid transparent;transition:background .12s;}
+.act-edit{background:rgba(122,158,126,0.1);color:var(--sage-d);border-color:rgba(122,158,126,0.22);}
+.act-edit:active{background:rgba(122,158,126,0.2);}
+.act-del{background:rgba(192,80,74,0.06);color:var(--rose);border-color:rgba(192,80,74,0.14);}
+.act-del:active{background:rgba(192,80,74,0.12);}
 
 /* SETTINGS */
 .set-group{background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(200,195,188,0.46);border-radius:var(--r);margin-bottom:16px;overflow:hidden;}
@@ -242,30 +392,15 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .set-ico{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
 .set-label{font-size:16px;font-weight:600;color:var(--text);}
 .set-value{font-size:14px;color:var(--text-m);margin-top:2px;}
-.set-arr{margin-left:auto;color:var(--text-l);font-size:20px;line-height:1;}
 .name-row{display:flex;gap:8px;margin-top:10px;width:100%;}
 .name-in{flex:1;background:rgba(248,244,237,0.9);border:1.5px solid rgba(200,195,188,0.46);border-radius:12px;padding:11px 14px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;min-height:44px;-webkit-user-select:text;user-select:text;}
 .name-in:focus{border-color:rgba(122,158,126,0.5);}
 .name-save{background:var(--sage);color:#fff;border:none;border-radius:12px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;white-space:nowrap;}
 .name-save:active{background:var(--sage-d);}
 .set-info{font-size:14px;color:var(--text-m);line-height:1.75;padding:0 4px;}
-.btn-danger{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;-webkit-appearance:none;background:none;border:none;width:100%;font-family:var(--sys);transition:background .1s;}
+.btn-danger{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;-webkit-appearance:none;background:none;border:none;width:100%;font-family:var(--sys);}
 .btn-danger:active{background:rgba(192,80,74,0.06);}
 .btn-danger .set-label{color:var(--rose);}
-
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:300;display:none;align-items:flex-end;justify-content:center;}
-.overlay.open{display:flex;animation:fIn .16s ease;}
-.sheet{background:#f4f0e9;border-radius:24px 24px 0 0;padding:20px 20px 52px;width:100%;max-width:480px;animation:sUp .22s cubic-bezier(.4,0,.2,1);}
-.sheet-handle{width:36px;height:4px;background:rgba(200,195,188,0.6);border-radius:4px;margin:0 auto 18px;}
-.sheet-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--text);margin-bottom:18px;letter-spacing:-.3px;}
-.sheet-lbl{font-size:12px;font-weight:600;color:var(--text-l);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
-.sheet-in{width:100%;background:rgba(255,255,255,0.9);border:1.5px solid rgba(200,195,188,0.46);border-radius:12px;padding:13px 15px;font-size:16px;font-family:var(--sys);color:var(--text);outline:none;margin-bottom:14px;min-height:50px;-webkit-user-select:text;user-select:text;}
-.sheet-in:focus{border-color:rgba(122,158,126,0.5);}
-.sheet-in[rows]{resize:none;min-height:80px;}
-.sheet-save{width:100%;background:var(--sage);color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:700;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;margin-bottom:8px;}
-.sheet-save:active{background:var(--sage-d);}
-.sheet-cancel{width:100%;background:none;border:none;color:var(--text-l);font-size:16px;font-weight:500;cursor:pointer;font-family:var(--sys);padding:10px;-webkit-appearance:none;}
 
 /* TOAST */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(28,28,30,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:#fff;font-size:14px;font-weight:600;padding:12px 22px;border-radius:50px;z-index:600;opacity:0;transition:opacity .24s,transform .24s;pointer-events:none;white-space:nowrap;font-family:var(--sys);}
@@ -317,7 +452,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберёмся</div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.85 · бета</div>
+  <div class="auth-ver">v3.90 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -356,7 +491,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   </div>
 </div>
 
-<!-- MENU -->
+<!-- MENU dropdown -->
 <div class="hmenu" id="hmenu">
   <div class="hmenu-user">
     <div class="hmenu-phone" id="hmenu-phone">—</div>
@@ -376,7 +511,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберёмся<span class="logo-ver">v3.85</span></div>
+    <div class="logo">Разберёмся<span class="logo-ver">v3.90</span></div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
       <div class="hclock" id="hclock"></div>
@@ -415,7 +550,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
     <!-- EMERGENCY -->
     <div class="scr" id="s-emergency">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="backrow">
+        <button class="backbtn" onclick="go('home')">
+          <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="back-lbl">Назад</div>
+        </button>
+      </div>
       <div class="sec-title">Разберёмся</div>
       <div class="sec-sub">Что случилось? Выберите — и я помогу</div>
       <div class="emg-opts">
@@ -432,10 +572,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
     <!-- NOTES -->
     <div class="scr" id="s-notes">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="backrow">
+        <button class="backbtn" onclick="go('home')">
+          <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="back-lbl">Назад</div>
+        </button>
+      </div>
       <div class="sec-title">Заметки</div>
       <div id="notif-banner-el"></div>
-      <!-- Календарь-триггер -->
       <button class="cal-trigger" onclick="openCal()">
         <div class="cal-trigger-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
         <div>
@@ -444,10 +588,22 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         </div>
         <div class="cal-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
-      <!-- Фильтры по категориям -->
-      <div class="notes-stat" id="notes-stat"></div>
+      <!-- Категории компактно -->
+      <div class="notes-cats" id="notes-cats"></div>
+      <!-- Переключатель вид -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="view-toggle">
+          <button class="view-btn active" id="vb-list" onclick="setView('list')">
+            <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Список
+          </button>
+          <button class="view-btn" id="vb-grid" onclick="setView('grid')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Сетка
+          </button>
+        </div>
+      </div>
       <div id="note-list"></div>
-      <button class="add-dashed" onclick="openSheet('note')">＋ Добавить заметку</button>
     </div>
 
     <!-- NOTEPAD -->
@@ -456,27 +612,36 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         <div style="padding:8px 14px 6px;flex-shrink:0;">
           <button class="backbtn" onclick="go('home')">
             <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div><div class="back-lbl">Блокнот</div><div class="back-hint">Быстрые записи</div></div>
+            <div class="back-lbl">Назад</div>
           </button>
         </div>
         <div id="notepad-list" style="flex:1;overflow-y:auto;padding:6px 14px 8px;"></div>
-        <div class="notepad-voice-wrap">
-          <div class="voice-panel" id="voice-panel">
-            <div class="voice-lock" id="voice-lock">
-              <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
-              <span id="voice-lock-text">Свайп вверх — замок</span>
-            </div>
-            <button id="mic-btn" class="voice-orb" type="button" aria-label="Начать голосовую запись"><span></span></button>
-            <div class="voice-copy">
-              <div class="voice-title" id="voice-title">Нажмите и говорите</div>
-              <div class="voice-sub" id="voice-sub">Удерживайте для быстрой записи</div>
-            </div>
+        <!-- Голосовой и текстовый ввод -->
+        <div class="notepad-wrap">
+          <!-- Статус записи голоса -->
+          <div class="voice-status" id="voice-status">
+            <div class="voice-status-dot"></div>
+            <div class="voice-status-text" id="voice-status-text">Говорите...</div>
+            <button class="voice-stop-btn" onclick="stopVoice(true)">Стоп и сохранить</button>
           </div>
-          <div class="quiet-input">
-            <textarea id="notepad-input" class="notepad-field" rows="1" placeholder="Написать или надиктовать..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNotepad();}"></textarea>
-            <button class="notepad-send" type="button" onpointerdown="event.preventDefault();saveNotepad()" aria-label="Сохранить запись">
+          <div class="input-row">
+            <textarea id="notepad-input" class="notepad-field" rows="1" placeholder="Написать..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNotepad();}"></textarea>
+            <button class="notepad-send" onclick="saveNotepad()" aria-label="Сохранить">
               <svg viewBox="0 0 24 24" width="19" height="19" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
+          </div>
+          <!-- Облако-микрофон -->
+          <div class="voice-cloud-wrap" style="margin-top:10px;">
+            <button class="voice-cloud idle" id="mic-btn" type="button" aria-label="Голосовая запись" onclick="toggleVoice()">
+              <!-- Иконка микрофона -->
+              <svg class="voice-cloud-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="2" width="6" height="11" rx="3"/>
+                <path d="M5 10c0 3.87 3.13 7 7 7s7-3.13 7-7"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+                <line x1="8" y1="22" x2="16" y2="22"/>
+              </svg>
+            </button>
+            <div class="voice-hint" id="voice-hint">Нажмите, чтобы надиктовать</div>
           </div>
         </div>
       </div>
@@ -484,7 +649,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
     <!-- SETTINGS -->
     <div class="scr" id="s-settings">
-      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div><div class="back-lbl">На главную</div><div class="back-hint">Вернуться назад</div></div></button></div>
+      <div class="backrow">
+        <button class="backbtn" onclick="go('home')">
+          <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="back-lbl">Назад</div>
+        </button>
+      </div>
       <div class="sec-title">Настройки</div>
       <div class="set-group-title">Как вас называть</div>
       <div class="set-group">
@@ -500,27 +670,97 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <div class="set-group">
         <div class="set-row">
           <div class="set-ico">📱</div>
-          <div><div class="set-label" id="set-phone-disp">—</div><div class="set-value">Номер для входа</div></div>
+          <div><div class="set-label" id="set-phone-disp">—</div><div class="set-value">Номер телефона</div></div>
         </div>
-      </div>
-      <div class="set-group-title">О данных</div>
-      <div class="set-group">
-        <div class="set-row"><div class="set-info">Авторизация через Firebase (Google). Записи хранятся на вашем устройстве. Мы не продаём ваши данные и не используем их для рекламы.</div></div>
-      </div>
-      <div class="set-group-title">Выход</div>
-      <div class="set-group">
         <button class="btn-danger" onclick="doSignOut()">
           <div class="set-ico">🚪</div>
-          <div><div class="set-label">Выйти из аккаунта</div><div class="set-value">Потребуется войти снова по СМС</div></div>
-          <div class="set-arr">›</div>
+          <div><div class="set-label">Выйти из аккаунта</div><div class="set-value">Данные сохранятся</div></div>
         </button>
+      </div>
+      <div class="set-group-title">О приложении</div>
+      <div class="set-group">
+        <div class="set-row"><div class="set-ico">ℹ️</div><div class="set-info">«Разберёмся» v3.90 — спокойный помощник для всех, кто иногда теряется в технологиях.</div></div>
       </div>
     </div>
 
+  </div><!-- /screens -->
+</div><!-- /app -->
+
+<!-- ── BOTTOM FAB BAR (Notes screen) ── -->
+<div class="fab-bar" id="fab-bar">
+  <div class="fab-inner">
+    <button class="fab-btn" onclick="openNoteEditor(null,'text')">
+      <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Список</span>
+    </button>
+    <button class="fab-btn" onclick="openNoteEditor(null,'audio')">
+      <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+      <span>Аудио</span>
+    </button>
+    <button class="fab-plus" onclick="openNoteEditor(null,'text')" aria-label="Новая заметка">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="fab-btn" onclick="showToast('Скоро: поиск по фото')">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Поиск</span>
+    </button>
+    <button class="fab-btn" onclick="openCal()">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Дата</span>
+    </button>
   </div>
 </div>
 
-<!-- CALENDAR POPUP -->
+<!-- ── РЕДАКТОР ЗАМЕТКИ ── -->
+<div class="note-editor-overlay" id="note-editor-overlay">
+  <div class="note-editor-sheet">
+    <div class="ned-handle"></div>
+    <div class="ned-header">
+      <div class="ned-title-label" id="ned-title-label">Новая заметка</div>
+      <button class="ned-close" onclick="closeNoteEditor()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <!-- Тулбар: undo/redo/pin/like -->
+    <div class="ned-toolbar">
+      <button class="ned-tool" id="ned-undo" onclick="nedUndo()" title="Отменить">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        Отменить<span class="undo-count" id="undo-count-el" style="display:none"></span>
+      </button>
+      <button class="ned-tool" id="ned-redo" onclick="nedRedo()" title="Вернуть">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Вернуть<span class="redo-count" id="redo-count-el" style="display:none"></span>
+      </button>
+      <button class="ned-tool" id="ned-pin-btn" onclick="nedTogglePin()">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="ned-pin-label">Закрепить</span>
+      </button>
+      <button class="ned-tool" id="ned-like-btn" onclick="nedToggleLike()">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span id="ned-like-label">Избранное</span>
+      </button>
+    </div>
+    <div class="ned-body" id="ned-body">
+      <div class="ned-lbl">Текст заметки</div>
+      <textarea class="ned-in" id="ned-text" rows="4" placeholder="Напишите что важно..."></textarea>
+      <!-- Аудио секция -->
+      <div class="ned-lbl">Аудио</div>
+      <button class="ned-rec-audio" id="ned-rec-btn" onclick="nedToggleAudio()">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+        <span id="ned-rec-label">Записать аудио</span>
+      </button>
+      <div id="ned-audio-list"></div>
+      <div class="ned-lbl">Категория</div>
+      <div class="ned-cats" id="ned-cats"></div>
+      <div class="ned-lbl">Напоминание</div>
+      <input class="ned-in" id="ned-reminder" type="datetime-local" style="margin-bottom:10px;">
+    </div>
+    <div class="ned-footer">
+      <button class="ned-cancel" onclick="closeNoteEditor()">Отмена</button>
+      <button class="ned-save" onclick="saveNoteEditor()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
 <div class="cal-overlay" id="cal-overlay" onclick="if(event.target===this)closeCal()">
   <div class="cal-popup" id="cal-popup">
     <div class="cal-popup-head">
@@ -529,7 +769,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     </div>
     <div class="cal-month-row">
       <button class="cal-nav" onclick="calPrev()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cal-month-label" id="cal-month-label" onclick="toggleYearPicker()">Май 2026</div>
+      <div class="cal-month-label" id="cal-month-label" onclick="toggleYearPicker()"></div>
       <button class="cal-nav" onclick="calNext()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
     <div class="year-picker" id="year-picker"></div>
@@ -539,17 +779,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     </div>
     <div class="cal-days" id="cal-days"></div>
     <button class="cal-done-btn" onclick="closeCal()">Готово</button>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="overlay" id="overlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheet-title"></div>
-    <div id="sheet-body"></div>
-    <button class="sheet-save" onclick="saveSheet()">✓ Сохранить</button>
-    <button class="sheet-cancel" onclick="closeSheet()">Отмена</button>
   </div>
 </div>
 
@@ -569,7 +798,7 @@ firebase.initializeApp({
 });
 const auth=firebase.auth();auth.languageCode='ru';
 
-let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
+let CU=null,CR=null,RV=null,CDI=null;
 
 // ── CLOCK ──
 (function(){
@@ -585,9 +814,8 @@ let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
   function updC(){
     const n=new Date();
     const el=document.getElementById('hclock');
-    if(el)el.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+    if(el)el.textContent=pad2(n.getHours())+':'+pad2(n.getMinutes())+':'+pad2(n.getSeconds());
   }
-  function pad(x){return String(x).padStart(2,'0');}
   upd();updC();setInterval(upd,60000);setInterval(updC,1000);
 })();
 
@@ -596,26 +824,16 @@ auth.onAuthStateChanged(u=>{
   if(u){CU=u;showApp();updUI(u);loadAll();}
   else{setTimeout(initRC,600);}
 });
-
-function showApp(){
-  const a=document.getElementById('auth-screen');
-  a.classList.add('hidden');setTimeout(()=>a.style.display='none',340);
-}
-function showAuthScr(){
-  const a=document.getElementById('auth-screen');
-  a.style.display='flex';
-  setTimeout(()=>{a.classList.remove('hidden');setTimeout(initRC,400);},10);
-}
+function showApp(){const a=document.getElementById('auth-screen');a.classList.add('hidden');setTimeout(()=>a.style.display='none',340);}
+function showAuthScr(){const a=document.getElementById('auth-screen');a.style.display='flex';setTimeout(()=>{a.classList.remove('hidden');setTimeout(initRC,400);},10);}
 
 function fmtNum(p){
-  if(!p)return'—';
-  const d=p.replace(/\D/g,'').slice(-10);
+  if(!p)return'—';const d=p.replace(/\D/g,'').slice(-10);
   if(d.length!==10)return p;
   return'+7 '+d.slice(0,3)+' '+d.slice(3,6)+'-'+d.slice(6,8)+'-'+d.slice(8,10);
 }
 function updUI(u){
-  const ph=u.phoneNumber||'';
-  const disp=ph?fmtNum(ph):'dev режим';
+  const ph=u.phoneNumber||'';const disp=ph?fmtNum(ph):'dev режим';
   const name=localStorage.getItem('rz_name')||'';
   document.getElementById('hmenu-phone').textContent=disp;
   document.getElementById('hmenu-name').textContent=name||'Добро пожаловать';
@@ -624,46 +842,16 @@ function updUI(u){
   document.getElementById('set-name-disp').textContent=name||'—';
   const ni=document.getElementById('name-input');if(ni)ni.value=name;
 }
-
-function devLogin(){
-  CU={phoneNumber:'+70000000000',getIdToken:()=>Promise.resolve('dev')};
-  updUI(CU);showApp();loadAll();
-}
+function devLogin(){CU={phoneNumber:'+70000000000',getIdToken:()=>Promise.resolve('dev')};updUI(CU);showApp();loadAll();}
 
 // ── MENU ──
-function toggleMenu(e){
-  e.stopPropagation();
-  const m=document.getElementById('hmenu'),b=document.getElementById('hbtn');
-  m.classList.contains('open')?closeMenu():(m.classList.add('open'),b.classList.add('open'));
-}
-function closeMenu(){
-  document.getElementById('hmenu').classList.remove('open');
-  document.getElementById('hbtn').classList.remove('open');
-}
-document.addEventListener('click',e=>{
-  const m=document.getElementById('hmenu');
-  if(m.classList.contains('open')&&!m.contains(e.target))closeMenu();
-});
+function toggleMenu(e){e.stopPropagation();const m=document.getElementById('hmenu'),b=document.getElementById('hbtn');m.classList.contains('open')?closeMenu():(m.classList.add('open'),b.classList.add('open'));}
+function closeMenu(){document.getElementById('hmenu').classList.remove('open');document.getElementById('hbtn').classList.remove('open');}
+document.addEventListener('click',e=>{const m=document.getElementById('hmenu');if(m.classList.contains('open')&&!m.contains(e.target))closeMenu();});
 
 // ── SETTINGS ──
-function saveName(){
-  const v=document.getElementById('name-input').value.trim();if(!v)return;
-  localStorage.setItem('rz_name',v);
-  document.getElementById('set-name-disp').textContent=v;
-  document.getElementById('hmenu-name').textContent=v;
-  document.getElementById('greet-name').textContent=v;
-  showToast('Имя сохранено ✓');
-}
-
-// ── SIGN OUT ──
-function doSignOut(){
-  if(!confirm('Выйти из аккаунта?'))return;
-  auth.signOut().then(()=>{
-    CU=null;closeMenu();
-    if(RV){try{RV.clear();}catch(e){}RV=null;}
-    CR=null;backToPhone();go('home');showAuthScr();
-  });
-}
+function saveName(){const v=document.getElementById('name-input').value.trim();if(!v)return;localStorage.setItem('rz_name',v);document.getElementById('set-name-disp').textContent=v;document.getElementById('hmenu-name').textContent=v;document.getElementById('greet-name').textContent=v;showToast('Имя сохранено ✓');}
+function doSignOut(){if(!confirm('Выйти из аккаунта?'))return;auth.signOut().then(()=>{CU=null;closeMenu();if(RV){try{RV.clear();}catch(e){}RV=null;}CR=null;backToPhone();go('home');showAuthScr();});}
 
 // ── NAVIGATION ──
 let cur='home';
@@ -675,6 +863,9 @@ function go(id){
   setTimeout(()=>p.classList.remove('sl','sr'),280);
   n.classList.remove('sl','sr');n.classList.add('active');
   cur=id;n.scrollTop=0;
+  // FAB bar
+  const fab=document.getElementById('fab-bar');
+  if(fab)fab.classList.toggle('show',id==='notes');
   if(id==='notes'){renderNotifBanner();loadNotes();}
   if(id==='notepad'){loadNotepad();}
 }
@@ -692,25 +883,10 @@ function go(id){
 })();
 
 // ── RECAPTCHA ──
-function initRC(){
-  if(RV)return;
-  const old=document.getElementById('recaptcha-container');
-  const f=document.createElement('div');f.id='recaptcha-container';
-  old.parentNode.replaceChild(f,old);
-  RV=new firebase.auth.RecaptchaVerifier('recaptcha-container',{size:'invisible',callback:()=>{}});
-  RV.render().catch(()=>{});
-}
+function initRC(){if(RV)return;const old=document.getElementById('recaptcha-container');const f=document.createElement('div');f.id='recaptcha-container';old.parentNode.replaceChild(f,old);RV=new firebase.auth.RecaptchaVerifier('recaptcha-container',{size:'invisible',callback:()=>{}});RV.render().catch(()=>{});}
 
 // ── PHONE FORMAT ──
-function fmtPhoneInput(el){
-  let v=el.value.replace(/\D/g,'');if(v.length>10)v=v.slice(0,10);
-  let o='';
-  if(v.length>0)o+=v.slice(0,3);
-  if(v.length>3)o+=' '+v.slice(3,6);
-  if(v.length>6)o+='-'+v.slice(6,8);
-  if(v.length>8)o+='-'+v.slice(8,10);
-  el.value=o;
-}
+function fmtPhoneInput(el){let v=el.value.replace(/\D/g,'');if(v.length>10)v=v.slice(0,10);let o='';if(v.length>0)o+=v.slice(0,3);if(v.length>3)o+=' '+v.slice(3,6);if(v.length>6)o+='-'+v.slice(6,8);if(v.length>8)o+='-'+v.slice(8,10);el.value=o;}
 
 // ── SMS ──
 async function sendSms(){
@@ -727,212 +903,89 @@ async function sendSms(){
     document.getElementById('code-sub').textContent='Отправили на +7 '+raw.slice(0,3)+' '+raw.slice(3,6)+'-'+raw.slice(6,8)+'-'+raw.slice(8,10);
     document.getElementById('d0').focus();startCD();
   }catch(e){
-    eEl.textContent=aErr(e.code);eEl.style.display='block';
+    document.getElementById('phone-err').textContent=aErr(e.code);document.getElementById('phone-err').style.display='block';
     btn.disabled=false;btn.textContent='Получить код';
     try{RV.clear();}catch(_){}RV=null;
   }
 }
-
-// ── CODE INPUT ──
-function digitIn(el,i){
-  const v=el.value.replace(/\D/g,'');el.value=v?v[0]:'';
-  if(v&&i<5)document.getElementById('d'+(i+1)).focus();
-  if(getCode().length===6)verifyCode();
-}
-function digitBack(e,i){
-  if(e.key==='Backspace'&&!document.getElementById('d'+i).value&&i>0){
-    e.preventDefault();const p=document.getElementById('d'+(i-1));p.value='';p.focus();
-  }
-}
+function digitIn(el,i){const v=el.value.replace(/\D/g,'');el.value=v?v[0]:'';if(v&&i<5)document.getElementById('d'+(i+1)).focus();if(getCode().length===6)verifyCode();}
+function digitBack(e,i){if(e.key==='Backspace'&&!document.getElementById('d'+i).value&&i>0){e.preventDefault();const p=document.getElementById('d'+(i-1));p.value='';p.focus();}}
 function getCode(){let c='';for(let i=0;i<6;i++)c+=document.getElementById('d'+i).value;return c;}
-
 async function verifyCode(){
   const code=getCode(),eEl=document.getElementById('code-err'),btn=document.getElementById('verify-btn');
   eEl.style.display='none';
   if(code.length<6){eEl.textContent='Введите все 6 цифр';eEl.style.display='block';return;}
   btn.disabled=true;btn.textContent='Проверяем...';
-  try{
-    const r=await CR.confirm(code);
-    CU=r.user;clearInterval(CDI);showApp();updUI(CU);loadAll();
-  }catch(e){
-    eEl.textContent=aErr(e.code);eEl.style.display='block';
-    btn.disabled=false;btn.textContent='Войти';
-    for(let i=0;i<6;i++)document.getElementById('d'+i).value='';
-    document.getElementById('d0').focus();
-  }
+  try{const r=await CR.confirm(code);CU=r.user;clearInterval(CDI);showApp();updUI(CU);loadAll();}
+  catch(e){eEl.textContent=aErr(e.code);eEl.style.display='block';btn.disabled=false;btn.textContent='Войти';for(let i=0;i<6;i++)document.getElementById('d'+i).value='';document.getElementById('d0').focus();}
 }
-
-function startCD(){
-  let s=60;document.getElementById('cd').textContent=s;
-  document.getElementById('resend-timer').style.display='inline';
-  document.getElementById('resend-btn').style.display='none';
-  clearInterval(CDI);
-  CDI=setInterval(()=>{
-    s--;document.getElementById('cd').textContent=s;
-    if(s<=0){clearInterval(CDI);document.getElementById('resend-timer').style.display='none';document.getElementById('resend-btn').style.display='inline';}
-  },1000);
-}
+function startCD(){let s=60;document.getElementById('cd').textContent=s;document.getElementById('resend-timer').style.display='inline';document.getElementById('resend-btn').style.display='none';clearInterval(CDI);CDI=setInterval(()=>{s--;document.getElementById('cd').textContent=s;if(s<=0){clearInterval(CDI);document.getElementById('resend-timer').style.display='none';document.getElementById('resend-btn').style.display='inline';}},1000);}
 function resendSms(){backToPhone();setTimeout(sendSms,100);}
-function backToPhone(){
-  clearInterval(CDI);
-  document.getElementById('step-code').classList.remove('active');
-  document.getElementById('step-phone').classList.add('active');
-  document.getElementById('code-err').style.display='none';
-  document.getElementById('phone-err').style.display='none';
-  const b=document.getElementById('sms-btn');b.disabled=false;b.textContent='Получить код';
-  for(let i=0;i<6;i++)document.getElementById('d'+i).value='';
-}
-function aErr(c){
-  const m={'auth/invalid-phone-number':'Неверный номер.','auth/too-many-requests':'Слишком много попыток.','auth/invalid-verification-code':'Неверный код.','auth/code-expired':'Код устарел.','auth/network-request-failed':'Нет интернета.'};
-  return m[c]||'Что-то пошло не так.';
-}
+function backToPhone(){clearInterval(CDI);document.getElementById('step-code').classList.remove('active');document.getElementById('step-phone').classList.add('active');document.getElementById('code-err').style.display='none';document.getElementById('phone-err').style.display='none';const b=document.getElementById('sms-btn');b.disabled=false;b.textContent='Получить код';for(let i=0;i<6;i++)document.getElementById('d'+i).value='';}
+function aErr(c){const m={'auth/invalid-phone-number':'Неверный номер.','auth/too-many-requests':'Слишком много попыток.','auth/invalid-verification-code':'Неверный код.','auth/code-expired':'Код устарел.','auth/network-request-failed':'Нет интернета.'};return m[c]||'Что-то пошло не так.';}
 
 // ── TOAST ──
-function showToast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2600);
-}
-
-// ── ESC ──
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ── NOTIFICATIONS ──
 function notifGranted(){try{return'Notification'in window&&Notification.permission==='granted';}catch(e){return false;}}
 function notifSupp(){try{return'Notification'in window;}catch(e){return false;}}
-
 function renderNotifBanner(){
   const el=document.getElementById('notif-banner-el');if(!el)return;
   if(!notifSupp()||Notification.permission==='granted'){el.innerHTML='';return;}
-  if(Notification.permission==='denied'){
-    el.innerHTML='<div class="notif-banner"><div class="notif-text">Уведомления заблокированы. Разрешите в настройках телефона.</div></div>';return;
-  }
+  if(Notification.permission==='denied'){el.innerHTML='<div class="notif-banner"><div class="notif-text">Уведомления заблокированы. Разрешите в настройках телефона.</div></div>';return;}
   el.innerHTML=`<div class="notif-banner"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-text">Разрешите уведомления — напоминания будут приходить вовремя.</div><button class="notif-allow-btn" onclick="reqNotif()">Разрешить</button></div>`;
 }
-function reqNotif(){
-  if(!notifSupp())return;
-  Notification.requestPermission().then(p=>{showToast('Статус: '+p);renderNotifBanner();if(p==='granted')scheduleAll();});
-}
-
-// Глобальный массив таймеров — НЕ сбрасывается при loadAll
+function reqNotif(){if(!notifSupp())return;Notification.requestPermission().then(p=>{showToast('Статус: '+p);renderNotifBanner();if(p==='granted')scheduleAll();});}
 let _NT=[];
 function scheduleAll(){
-  // Очищаем старые таймеры
-  _NT.forEach(t=>clearTimeout(t));_NT=[];
-  if(!notifGranted())return;
+  _NT.forEach(t=>clearTimeout(t));_NT=[];if(!notifGranted())return;
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
   notes.forEach(n=>{
-    if(!n.reminder||!n.title)return;
-    const dt=parseDt(n.reminder);if(!dt)return;
-    const delay=dt.getTime()-Date.now();
-    if(delay<=0||delay>7*24*3600*1000)return;
-    const tid=setTimeout(()=>{
-      try{new Notification('Разберёмся',{body:n.title,icon:'icon-192.png'});}catch(e){}
-    },delay);
+    if(!n.reminder||!n.title)return;const dt=parseDt(n.reminder);if(!dt)return;
+    const delay=dt.getTime()-Date.now();if(delay<=0||delay>7*24*3600*1000)return;
+    const tid=setTimeout(()=>{try{new Notification('Разберёмся',{body:n.title,icon:'icon-192.png'});}catch(e){}},delay);
     _NT.push(tid);
   });
-  // Отправляем в SW
-  if('serviceWorker'in navigator){
-    navigator.serviceWorker.ready.then(reg=>{
-      if(reg.active)reg.active.postMessage({type:'SCHEDULE',notes:notes.filter(n=>n.reminder&&n.title)});
-    }).catch(()=>{});
-  }
+  if('serviceWorker'in navigator){navigator.serviceWorker.ready.then(reg=>{if(reg.active)reg.active.postMessage({type:'SCHEDULE',notes:notes.filter(n=>n.reminder&&n.title)});}).catch(()=>{});}
 }
 
 // ── DATE UTILS ──
-function parseDt(s){
-  const p=s.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-  if(!p)return null;
-  return new Date(+p[1],+p[2]-1,+p[3],+p[4],+p[5],0);
-}
-function fmtDt(s){
-  const dt=parseDt(s);if(!dt)return s;
-  const M=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  return dt.getDate()+' '+M[dt.getMonth()]+' в '+pad(dt.getHours())+':'+pad(dt.getMinutes());
-}
-function fmtMeta(ts){
-  if(!ts)return'';
-  const d=new Date(ts);
-  const M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-  return d.getDate()+' '+M[d.getMonth()]+', '+pad(d.getHours())+':'+pad(d.getMinutes());
-}
-function pad(x){return String(x).padStart(2,'0');}
+function parseDt(s){const p=s.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);if(!p)return null;return new Date(+p[1],+p[2]-1,+p[3],+p[4],+p[5],0);}
+function fmtDt(s){const dt=parseDt(s);if(!dt)return s;const M=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];return dt.getDate()+' '+M[dt.getMonth()]+' в '+pad2(dt.getHours())+':'+pad2(dt.getMinutes());}
+function fmtMeta(ts){if(!ts)return'';const d=new Date(ts);const M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];return d.getDate()+' '+M[d.getMonth()]+', '+pad2(d.getHours())+':'+pad2(d.getMinutes());}
+function pad2(x){return String(x).padStart(2,'0');}
 
 // ── CALENDAR ──
 let CY=new Date().getFullYear(),CM=new Date().getMonth(),CS=null,YP=false;
 let calSwipeX=0;
 const MRU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MGN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-
-function openCal(){
-  YP=false;
-  document.getElementById('year-picker').classList.remove('open');
-  calRender();
-  document.getElementById('cal-overlay').classList.add('open');
-}
-function closeCal(){
-  document.getElementById('cal-overlay').classList.remove('open');
-  updCalTrigger();loadNotes();
-}
+function openCal(){YP=false;document.getElementById('year-picker').classList.remove('open');calRender();document.getElementById('cal-overlay').classList.add('open');}
+function closeCal(){document.getElementById('cal-overlay').classList.remove('open');updCalTrigger();loadNotes();}
 function calPrev(){CM--;if(CM<0){CM=11;CY--;}CS=null;calRender();}
 function calNext(){CM++;if(CM>11){CM=0;CY++;}CS=null;calRender();}
-
 function toggleYearPicker(){
-  YP=!YP;
-  const yp=document.getElementById('year-picker');
-  if(YP){
-    yp.innerHTML='';
-    const cur=new Date().getFullYear();
-    for(let y=cur-2;y<=cur+5;y++){
-      const b=document.createElement('button');b.className='year-btn'+(y===CY?' cur':'');
-      b.textContent=y;b.onclick=()=>{CY=y;CS=null;YP=false;yp.classList.remove('open');calRender();};
-      yp.appendChild(b);
-    }
-    yp.classList.add('open');
-  } else {
-    yp.classList.remove('open');
-  }
+  YP=!YP;const yp=document.getElementById('year-picker');
+  if(YP){yp.innerHTML='';const cur=new Date().getFullYear();for(let y=cur-2;y<=cur+5;y++){const b=document.createElement('button');b.className='year-btn'+(y===CY?' cur':'');b.textContent=y;b.onclick=()=>{CY=y;CS=null;YP=false;yp.classList.remove('open');calRender();};yp.appendChild(b);}yp.classList.add('open');}
+  else{yp.classList.remove('open');}
 }
-
-function updCalTrigger(){
-  const tv=document.getElementById('cal-trigger-val');
-  if(tv)tv.textContent=CS?CS.split('-')[2]+' '+MGN[CM]:MRU[CM]+' '+CY;
-}
-
-// Свайп по календарю
-(function(){
-  const popup=document.getElementById('cal-popup');
-  if(!popup)return;
-  popup.addEventListener('touchstart',e=>{calSwipeX=e.touches[0].clientX;},{passive:true});
-  popup.addEventListener('touchend',e=>{
-    const dx=e.changedTouches[0].clientX-calSwipeX;
-    if(Math.abs(dx)>60){dx<0?calNext():calPrev();}
-  },{passive:true});
-})();
-
+function updCalTrigger(){const tv=document.getElementById('cal-trigger-val');if(tv)tv.textContent=CS?CS.split('-')[2]+' '+MGN[CM]:MRU[CM]+' '+CY;}
+(function(){const popup=document.getElementById('cal-popup');if(!popup)return;popup.addEventListener('touchstart',e=>{calSwipeX=e.touches[0].clientX;},{passive:true});popup.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-calSwipeX;if(Math.abs(dx)>60){dx<0?calNext():calPrev();}},{passive:true});})();
 function calRender(){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  const dots=new Set();
-  notes.forEach(n=>{
-    if(n.reminder){
-      const p=n.reminder.slice(0,10).split('-').map(Number);
-      if(p[0]===CY&&p[1]-1===CM)dots.add(p[2]);
-    }
-  });
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');const dots=new Set();
+  notes.forEach(n=>{if(n.reminder){const p=n.reminder.slice(0,10).split('-').map(Number);if(p[0]===CY&&p[1]-1===CM)dots.add(p[2]);}});
   document.getElementById('cal-month-label').textContent=MRU[CM]+' '+CY;
   const grid=document.getElementById('cal-days');grid.innerHTML='';
-  const today=new Date();
-  let dow=new Date(CY,CM,1).getDay();if(dow===0)dow=7;
-  const dim=new Date(CY,CM+1,0).getDate();
-  const dip=new Date(CY,CM,0).getDate();
-  for(let i=dow-1;i>0;i--){
-    const b=mkDay(dip-i+1,null,true);b.disabled=true;grid.appendChild(b);
-  }
+  const today=new Date();let dow=new Date(CY,CM,1).getDay();if(dow===0)dow=7;
+  const dim=new Date(CY,CM+1,0).getDate(),dip=new Date(CY,CM,0).getDate();
+  for(let i=dow-1;i>0;i--){const b=mkDay(dip-i+1,null,true);b.disabled=true;grid.appendChild(b);}
   for(let d=1;d<=dim;d++){
-    const ds=CY+'-'+pad(CM+1)+'-'+pad(d);
+    const ds=CY+'-'+pad2(CM+1)+'-'+pad2(d);
     const isT=d===today.getDate()&&CM===today.getMonth()&&CY===today.getFullYear();
     const b=mkDay(d,ds,false,isT,CS===ds,dots.has(d));
-    b.onclick=()=>{CS=CS===ds?null:ds;calRender();};
-    grid.appendChild(b);
+    b.onclick=()=>{CS=CS===ds?null:ds;calRender();};grid.appendChild(b);
   }
   updCalTrigger();
 }
@@ -943,107 +996,330 @@ function mkDay(num,ds,other,isT,isSel,hasDot){
   return b;
 }
 
-// ── STRIPES ──
+// ── STRIPES / CATEGORIES ──
 const STRIPES={здоровье:'#e07070',покупки:'#7ab0e0',контакт:'#7abf84',событие:'#d4a83a',идея:'#a07abf',рецепт:'#e0a070',адрес:'#7abfb8',заметка:'#c4b8a8'};
 const CATS=Object.keys(STRIPES);
 
-// ── NOTES ──
-let noteFilter=null;
+// ── NOTES VIEW ──
+let noteFilter=null,noteView=localStorage.getItem('rz_view')||'list';
+
+function setView(v){
+  noteView=v;localStorage.setItem('rz_view',v);
+  document.getElementById('vb-list').classList.toggle('active',v==='list');
+  document.getElementById('vb-grid').classList.toggle('active',v==='grid');
+  loadNotes();
+}
 
 function loadNotes(){
   const all=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  renderStatChips(all);
-  const el=document.getElementById('note-list');if(!el)return;
-  el.innerHTML='';
-  let filtered=all;
-  if(CS)filtered=all.filter(n=>n.reminder&&n.reminder.slice(0,10)===CS);
+  renderCatChips(all);
+  const el=document.getElementById('note-list');if(!el)return;el.innerHTML='';
+  // Сортировка: сначала закреплённые
+  let filtered=[...all];
+  if(CS)filtered=filtered.filter(n=>n.reminder&&n.reminder.slice(0,10)===CS);
   if(noteFilter)filtered=filtered.filter(n=>(n.label||'заметка')===noteFilter);
+  // Закреплённые сверху
+  filtered.sort((a,b)=>{
+    if(a.pinned&&!b.pinned)return -1;if(!a.pinned&&b.pinned)return 1;
+    return(b.createdAt||0)-(a.createdAt||0);
+  });
   if(!filtered.length){
-    el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «＋» чтобы добавить</span></div>';
+    el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «+» чтобы добавить</span></div>';
     return;
   }
+  const wrap=document.createElement('div');
+  wrap.className=noteView==='grid'?'note-grid-view':'note-list-view';
   filtered.forEach(n=>{
-    const i=all.indexOf(n);
-    const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';
-    const d=document.createElement('div');d.className='item-card';
-    let rHtml='';
-    if(n.reminder){
-      rHtml=`<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;">
-        <button class="reminder-tag" onclick="editNote(${i})">
-          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-          ${esc(fmtDt(n.reminder))}
-        </button>
-      </div>`;
-    }
-    d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
-      <div class="note-cat">${esc(n.label||'заметка')}</div>
-      <div class="item-title">${esc(n.title)}</div>
-      ${rHtml}
-      <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>
-      <div class="item-actions">
-        <button class="act-btn act-edit" onclick="editNote(${i})">Изменить</button>
-        <button class="act-btn act-del" onclick="delNote(${i})">Удалить</button>
-      </div>`;
-    el.appendChild(d);
+    const origIdx=all.indexOf(n);
+    wrap.appendChild(buildNoteCard(n,origIdx));
   });
+  el.appendChild(wrap);
 }
 
-function renderStatChips(all){
-  const el=document.getElementById('notes-stat');if(!el)return;
-  const counts={};
-  all.forEach(n=>{const l=n.label||'заметка';counts[l]=(counts[l]||0)+1;});
-  let html=`<button class="stat-chip${!noteFilter?' active':''}" onclick="setFilter(null)"><span style="font-size:13px;">Все</span><span class="stat-count">${all.length}</span></button>`;
+function buildNoteCard(n,i){
+  const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';
+  const d=document.createElement('div');d.className='note-card';
+  // Аудио бейдж
+  let audioBadge='';
+  if(n.audio&&n.audio.length){audioBadge=`<div class="note-audio-badge" onclick="event.stopPropagation();playNoteAudio(${i})"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Аудио</div>`;}
+  // Reminder
+  let remHtml='';if(n.reminder){remHtml=`<div class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</div>`;}
+  d.innerHTML=`
+    <div class="note-stripe" style="background:${stripe};border-radius:4px 0 0 4px;"></div>
+    <div class="note-card-head">
+      <div class="note-cat-label">${esc(n.label||'заметка')}</div>
+      <div class="note-card-acts">
+        <button class="nact${n.pinned?' pinned':''}" onclick="event.stopPropagation();togglePin(${i})" title="${n.pinned?'Открепить':'Закрепить'}">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </button>
+        <button class="nact${n.liked?' liked':''}" onclick="event.stopPropagation();toggleLike(${i})" title="${n.liked?'Убрать из избранного':'В избранное'}">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </button>
+        <button class="nact" onclick="event.stopPropagation();deleteNote(${i})" title="Удалить" style="color:var(--rose);">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="note-title">${esc(n.title)}</div>
+    ${n.body?`<div class="note-body-preview">${esc(n.body)}</div>`:''}
+    ${audioBadge}
+    ${remHtml}
+    <div class="note-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>
+  `;
+  d.addEventListener('click',()=>openNoteEditor(i,'text'));
+  return d;
+}
+
+function renderCatChips(all){
+  const el=document.getElementById('notes-cats');if(!el)return;
+  const counts={};all.forEach(n=>{const l=n.label||'заметка';counts[l]=(counts[l]||0)+1;});
+  let html=`<button class="cat-chip${!noteFilter?' active':''}" onclick="setFilter(null)">Все<span class="cat-count">${all.length}</span></button>`;
   Object.entries(counts).forEach(([l,c])=>{
     const col=STRIPES[l]||'#c4b8a8';
-    html+=`<button class="stat-chip${noteFilter===l?' active':''}" onclick="setFilter('${l}')"><span class="stat-dot" style="background:${col};"></span>${esc(l)}<span class="stat-count">${c}</span></button>`;
+    html+=`<button class="cat-chip${noteFilter===l?' active':''}" onclick="setFilter('${l}')"><span class="cat-dot" style="background:${col};"></span>${esc(l)}<span class="cat-count">${c}</span></button>`;
   });
   el.innerHTML=html;
 }
 function setFilter(f){noteFilter=f;loadNotes();}
 
-function editNote(i){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  const n=notes[i];if(!n)return;
-  ST='note';EI=i;
-  document.getElementById('sheet-title').textContent='Изменить заметку';
-  document.getElementById('sheet-body').innerHTML=noteForm(n.title,n.label,n.reminder);
-  document.getElementById('overlay').classList.add('open');
-  setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},260);
+function togglePin(i){
+  const l=JSON.parse(localStorage.getItem('rz_notes')||'[]');if(!l[i])return;
+  l[i].pinned=!l[i].pinned;localStorage.setItem('rz_notes',JSON.stringify(l));
+  loadNotes();showToast(l[i].pinned?'Закреплено 📌':'Откреплено');
 }
-function delNote(i){
+function toggleLike(i){
+  const l=JSON.parse(localStorage.getItem('rz_notes')||'[]');if(!l[i])return;
+  l[i].liked=!l[i].liked;localStorage.setItem('rz_notes',JSON.stringify(l));
+  loadNotes();showToast(l[i].liked?'В избранном ❤️':'Убрано из избранного');
+}
+function deleteNote(i){
+  if(!confirm('Удалить заметку?'))return;
   const l=JSON.parse(localStorage.getItem('rz_notes')||'[]');l.splice(i,1);
   localStorage.setItem('rz_notes',JSON.stringify(l));loadNotes();showToast('Удалено');
 }
 
+// ── PLAY NOTE AUDIO ──
+let _audioEl=null;
+function playNoteAudio(noteIdx){
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const n=notes[noteIdx];if(!n||!n.audio||!n.audio.length)return;
+  const b64=n.audio[0].data;
+  if(!b64)return;
+  if(_audioEl){_audioEl.pause();_audioEl=null;}
+  _audioEl=new Audio(b64);_audioEl.play().catch(()=>showToast('Не удалось воспроизвести'));
+  showToast('Воспроизведение...');
+}
+
+// ── NOTE EDITOR ──
+let nedIdx=null,nedAudioClips=[],nedRecording=false,nedMediaRec=null,nedPinned=false,nedLiked=false;
+// Undo/redo стек
+let nedHistory=[],nedFuture=[];
+
+function openNoteEditor(idx,mode){
+  nedIdx=idx;nedAudioClips=[];nedPinned=false;nedLiked=false;nedHistory=[];nedFuture=[];
+  const label=document.getElementById('ned-title-label');
+  const textEl=document.getElementById('ned-text');
+  const remEl=document.getElementById('ned-reminder');
+  // Сбрасываем аудио секцию
+  document.getElementById('ned-audio-list').innerHTML='';
+  document.getElementById('ned-rec-btn').classList.remove('active-rec');
+  document.getElementById('ned-rec-label').textContent='Записать аудио';
+  // Кат чипы
+  buildNedCats('заметка');
+
+  if(idx!==null){
+    const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+    const n=notes[idx];if(!n)return;
+    label.textContent='Изменить заметку';
+    textEl.value=n.title+(n.body?'\n'+n.body:'');
+    remEl.value=n.reminder||'';
+    nedPinned=!!n.pinned;nedLiked=!!n.liked;
+    buildNedCats(n.label||'заметка');
+    // Аудио
+    if(n.audio&&n.audio.length){nedAudioClips=[...n.audio];renderNedAudioList();}
+  } else {
+    label.textContent='Новая заметка';
+    textEl.value='';remEl.value='';
+    buildNedCats('заметка');
+  }
+  updNedPinLike();
+  // Undo: сохраняем начальное состояние
+  nedSnapshot();
+  document.getElementById('note-editor-overlay').classList.add('open');
+  setTimeout(()=>textEl.focus(),260);
+  // Слушаем изменения для undo
+  textEl.addEventListener('input',nedOnInput);
+}
+
+function nedOnInput(){nedSnapshot();}
+
+function nedSnapshot(){
+  const state={text:document.getElementById('ned-text').value,rem:document.getElementById('ned-reminder').value,cat:getSelCat(),audio:[...nedAudioClips],pinned:nedPinned,liked:nedLiked};
+  // Не дублируем если ничего не изменилось
+  const last=nedHistory[nedHistory.length-1];
+  if(last&&JSON.stringify(last)===JSON.stringify(state))return;
+  nedHistory.push(state);nedFuture=[];
+  updUndoRedoBtns();
+}
+function nedUndo(){
+  if(nedHistory.length<=1)return;
+  nedFuture.push(nedHistory.pop());
+  applyNedState(nedHistory[nedHistory.length-1]);
+  updUndoRedoBtns();
+}
+function nedRedo(){
+  if(!nedFuture.length)return;
+  const s=nedFuture.pop();nedHistory.push(s);
+  applyNedState(s);updUndoRedoBtns();
+}
+function applyNedState(s){
+  document.getElementById('ned-text').value=s.text;
+  document.getElementById('ned-reminder').value=s.rem;
+  buildNedCats(s.cat);
+  nedAudioClips=[...s.audio];renderNedAudioList();
+  nedPinned=s.pinned;nedLiked=s.liked;updNedPinLike();
+}
+function updUndoRedoBtns(){
+  const undoEl=document.getElementById('undo-count-el'),redoEl=document.getElementById('redo-count-el');
+  const undoBtn=document.getElementById('ned-undo'),redoBtn=document.getElementById('ned-redo');
+  const canUndo=nedHistory.length>1,canRedo=nedFuture.length>0;
+  undoBtn.classList.toggle('disabled',!canUndo);
+  redoBtn.classList.toggle('disabled',!canRedo);
+  if(canUndo){undoEl.style.display='inline';undoEl.textContent=nedHistory.length-1;}else{undoEl.style.display='none';}
+  if(canRedo){redoEl.style.display='inline';redoEl.textContent=nedFuture.length;}else{redoEl.style.display='none';}
+}
+function getSelCat(){const s=document.querySelector('.ned-cat-btn.sel');return s?s.dataset.cat:'заметка';}
+function buildNedCats(sel){
+  const el=document.getElementById('ned-cats');if(!el)return;
+  el.innerHTML='';
+  CATS.forEach(c=>{
+    const b=document.createElement('button');b.className='ned-cat-btn'+(c===sel?' sel':'');
+    b.textContent=c;b.dataset.cat=c;
+    b.onclick=()=>{el.querySelectorAll('.ned-cat-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');nedSnapshot();};
+    el.appendChild(b);
+  });
+}
+function updNedPinLike(){
+  document.getElementById('ned-pin-label').textContent=nedPinned?'Закреплено':'Закрепить';
+  document.getElementById('ned-like-label').textContent=nedLiked?'В избранном':'Избранное';
+  document.getElementById('ned-pin-btn').classList.toggle('active',nedPinned);
+  document.getElementById('ned-like-btn').classList.toggle('active',nedLiked);
+}
+function nedTogglePin(){nedPinned=!nedPinned;updNedPinLike();nedSnapshot();}
+function nedToggleLike(){nedLiked=!nedLiked;updNedPinLike();nedSnapshot();}
+
+// Аудио запись в редакторе
+function nedToggleAudio(){
+  if(nedRecording){nedStopAudio();return;}
+  nedStartAudio();
+}
+function nedStartAudio(){
+  if(!navigator.mediaDevices){showToast('Микрофон недоступен');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    nedRecording=true;
+    document.getElementById('ned-rec-btn').classList.add('active-rec');
+    document.getElementById('ned-rec-label').textContent='Остановить запись ●';
+    const chunks=[];
+    nedMediaRec=new MediaRecorder(stream);
+    nedMediaRec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+    nedMediaRec.onstop=()=>{
+      const blob=new Blob(chunks,{type:'audio/webm'});
+      const reader=new FileReader();
+      reader.onload=()=>{
+        nedAudioClips.push({data:reader.result,dur:nedRecDur,createdAt:Date.now()});
+        renderNedAudioList();nedSnapshot();
+        stream.getTracks().forEach(t=>t.stop());
+      };
+      reader.readAsDataURL(blob);
+      nedRecording=false;
+      document.getElementById('ned-rec-btn').classList.remove('active-rec');
+      document.getElementById('ned-rec-label').textContent='Записать аудио';
+    };
+    nedMediaRec.start();
+    // Таймер
+    nedRecDur=0;nedRecTimer=setInterval(()=>{nedRecDur++;document.getElementById('ned-rec-label').textContent='Остановить ('+nedRecDur+'с) ●';},1000);
+  }).catch(()=>showToast('Нет доступа к микрофону'));
+}
+let nedRecDur=0,nedRecTimer=null;
+function nedStopAudio(){
+  clearInterval(nedRecTimer);
+  if(nedMediaRec&&nedRecording)nedMediaRec.stop();
+}
+function renderNedAudioList(){
+  const el=document.getElementById('ned-audio-list');if(!el)return;el.innerHTML='';
+  nedAudioClips.forEach((clip,i)=>{
+    const row=document.createElement('div');row.className='ned-audio-row';
+    row.innerHTML=`
+      <button class="ned-audio-play" onclick="playClip(${i})"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+      <div class="ned-audio-info"><div class="ned-audio-label">Аудио ${i+1}</div><div class="ned-audio-dur">${clip.dur||0} сек</div></div>
+      <button class="ned-audio-del" onclick="delClip(${i})">×</button>
+    `;
+    el.appendChild(row);
+  });
+}
+function playClip(i){const c=nedAudioClips[i];if(!c)return;if(_audioEl){_audioEl.pause();_audioEl=null;}_audioEl=new Audio(c.data);_audioEl.play().catch(()=>showToast('Ошибка'));}
+function delClip(i){nedAudioClips.splice(i,1);renderNedAudioList();nedSnapshot();}
+
+function closeNoteEditor(){
+  // Остановить запись если идёт
+  if(nedRecording)nedStopAudio();
+  const overlay=document.getElementById('note-editor-overlay');
+  overlay.classList.remove('open');
+  // Убираем слушатель
+  const t=document.getElementById('ned-text');if(t)t.removeEventListener('input',nedOnInput);
+  nedIdx=null;nedHistory=[];nedFuture=[];
+}
+
+function saveNoteEditor(){
+  const textVal=document.getElementById('ned-text').value.trim();
+  if(!textVal){showToast('Напишите текст');return;}
+  const remVal=document.getElementById('ned-reminder').value;
+  const catVal=getSelCat();
+  const ts=Date.now();
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  // Разбиваем на title + body
+  const lines=textVal.split('\n');
+  const title=lines[0].trim();
+  const body=lines.slice(1).join('\n').trim();
+  const item={title,body,label:catVal,reminder:remVal||null,pinned:nedPinned,liked:nedLiked,audio:nedAudioClips,updatedAt:ts};
+  if(nedIdx!==null){
+    item.createdAt=notes[nedIdx].createdAt||ts;
+    notes[nedIdx]=item;
+    showToast('Изменено ✓');
+  } else {
+    item.createdAt=ts;
+    // Новые заметки — в начало списка
+    notes.unshift(item);
+    showToast('Сохранено ✓');
+  }
+  localStorage.setItem('rz_notes',JSON.stringify(notes));
+  loadNotes();closeNoteEditor();
+  if(remVal&&notifGranted())scheduleAll();
+}
+
 // ── NOTEPAD ──
 let recog=null,isRec=false;
-
 function loadNotepad(){
   const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
   const el=document.getElementById('notepad-list');if(!el)return;el.innerHTML='';
-  if(!list.length){
-    el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">Записей пока нет<br><span style="font-size:13px;display:block;margin-top:5px;">Напишите или надиктуйте ниже</span></div>';return;
-  }
+  if(!list.length){el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">Записей пока нет<br><span style="font-size:13px;display:block;margin-top:5px;">Напишите или надиктуйте ниже</span></div>';return;}
   list.slice().reverse().forEach((n,ri)=>{
     const i=list.length-1-ri;
     const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';
     const d=document.createElement('div');d.className='pad-item';
-    d.innerHTML=`<div class="pad-stripe" style="background:${stripe};"></div>
+    d.innerHTML=`<div class="pad-stripe" style="background:${stripe};border-radius:4px 0 0 4px;"></div>
       <div class="pad-cat">${esc(n.label||'заметка')}</div>
       <div class="pad-title">${esc(n.title)}</div>
       <div class="pad-text">${esc(n.text)}</div>
       <div class="pad-meta">${esc(n.date)}</div>
-      <div class="item-actions">
-        <button class="act-btn act-edit" onclick="editPad(${i})">Изменить</button>
+      <div class="pad-acts">
         <button class="act-btn act-del" onclick="delPad(${i})">Удалить</button>
       </div>`;
     el.appendChild(d);
   });
 }
-
 function analyzeText(text){
-  const t=text.toLowerCase();
-  let label='заметка';
+  const t=text.toLowerCase();let label='заметка';
   if(/таблетк|лекарств|врач|аптек|давлени|болит/.test(t))label='здоровье';
   else if(/купить|магазин|заказать|продукт/.test(t))label='покупки';
   else if(/позвонить|написать|связаться|перезвонить/.test(t))label='контакт';
@@ -1051,215 +1327,90 @@ function analyzeText(text){
   else if(/идея|думаю|мысль/.test(t))label='идея';
   else if(/рецепт|приготовить|варить/.test(t))label='рецепт';
   else if(/адрес|улица|дом №/.test(t))label='адрес';
-  // Поиск даты/времени в тексте
-  let reminder=null;
-  const now=new Date();
+  let reminder=null;const now=new Date();
   const timeM=text.match(/в\s+(\d{1,2})[:\.](\d{2})/);
-  const todayM=/сегодня/i.test(text);
   const tomM=/завтра/i.test(text);
-  if(timeM){
-    const h=parseInt(timeM[1]),m=parseInt(timeM[2]);
-    const dt=new Date(now);
-    if(tomM)dt.setDate(dt.getDate()+1);
-    dt.setHours(h,m,0,0);
-    if(dt>now||tomM)reminder=dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'T'+pad(h)+':'+pad(m);
-  }
-  const words=text.trim().split(/\s+/);
-  const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
+  if(timeM){const h=parseInt(timeM[1]),m=parseInt(timeM[2]);const dt=new Date(now);if(tomM)dt.setDate(dt.getDate()+1);dt.setHours(h,m,0,0);if(dt>now||tomM)reminder=dt.getFullYear()+'-'+pad2(dt.getMonth()+1)+'-'+pad2(dt.getDate())+'T'+pad2(h)+':'+pad2(m);}
+  const words=text.trim().split(/\s+/);const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   return{title,label,reminder};
 }
-
 function saveNotepad(){
-  const inp=document.getElementById('notepad-input');
-  const text=inp.value.trim();if(!text){showToast('Напишите что-нибудь');return;}
-  const{title,label,reminder}=analyzeText(text);
-  const ts=Date.now();
-  // В заметки
+  const inp=document.getElementById('notepad-input');const text=inp.value.trim();if(!text){showToast('Напишите что-нибудь');return;}
+  const{title,label,reminder}=analyzeText(text);const ts=Date.now();
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+  notes.unshift({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true,audio:[],pinned:false,liked:false});
   localStorage.setItem('rz_notes',JSON.stringify(notes));
-  // В историю блокнота
-  const pad=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-  const now=new Date();
-  const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
-  pad.push({text,date,label,title,createdAt:ts});
-  localStorage.setItem('rz_notepad',JSON.stringify(pad));
-  inp.value='';inp.style.height='auto';
-  loadNotepad();loadNotes();
-  const msg=reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`;
-  showToast(msg);
+  const padList=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
+  const now=new Date();const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
+  padList.push({text,date,label,title,createdAt:ts});
+  localStorage.setItem('rz_notepad',JSON.stringify(padList));
+  inp.value='';inp.style.height='auto';loadNotepad();loadNotes();
+  showToast(reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`);
   if(reminder&&notifGranted())scheduleAll();
 }
-function pad2(x){return String(x).padStart(2,'0');}
-
-function editPad(i){
-  const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-  const n=list[i];if(!n)return;
-  ST='notepad';EI=i;
-  document.getElementById('sheet-title').textContent='Изменить запись';
-  document.getElementById('sheet-body').innerHTML=`<div class="sheet-lbl">Текст</div><textarea class="sheet-in" id="sh1" rows="4">${esc(n.text)}</textarea>`;
-  document.getElementById('overlay').classList.add('open');
-  setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},260);
-}
-function delPad(i){
-  const l=JSON.parse(localStorage.getItem('rz_notepad')||'[]');l.splice(i,1);
-  localStorage.setItem('rz_notepad',JSON.stringify(l));loadNotepad();showToast('Удалено');
-}
-
+function delPad(i){const l=JSON.parse(localStorage.getItem('rz_notepad')||'[]');l.splice(i,1);localStorage.setItem('rz_notepad',JSON.stringify(l));loadNotepad();showToast('Удалено');}
 function npResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 
-let voiceLocked=false,voicePointerId=null,voiceStartY=0,voiceHoldTimer=null,voiceHoldActive=false,voiceIgnoreClick=false,voiceShouldSave=false,voiceHadError=false,voiceSessionText='',voiceDraftBefore='';
-
-function voiceEls(){
-  return{panel:document.getElementById('voice-panel'),btn:document.getElementById('mic-btn'),title:document.getElementById('voice-title'),sub:document.getElementById('voice-sub'),lock:document.getElementById('voice-lock-text')};
-}
-function setVoiceState(state){
-  const v=voiceEls();if(!v.btn)return;
-  v.panel.classList.toggle('recording',state==='recording'||state==='locked');
-  v.panel.classList.toggle('locked',state==='locked');
-  v.btn.classList.toggle('rec',state==='recording'||state==='locked');
-  v.btn.classList.toggle('locked',state==='locked');
-  if(state==='locked'){
-    v.title.textContent='Запись закреплена';v.sub.textContent='Можно отпустить. Нажмите ещё раз, чтобы сохранить.';v.lock.textContent='Замок включён';
-  }else if(state==='recording'){
-    v.title.textContent='Говорите, я записываю';v.sub.textContent='Отпустите — сохраню. Свайп вверх — зафиксировать.';v.lock.textContent='Свайп вверх — замок';
-  }else{
-    v.title.textContent='Нажмите и говорите';v.sub.textContent='Удерживайте для быстрой записи';v.lock.textContent='Свайп вверх — замок';
-  }
-}
-function cleanSpeech(s){return(s||'').replace(/\s+/g,' ').trim();}
-function appendVoiceText(text){
-  const add=cleanSpeech(text);if(!add)return;
-  const inp=document.getElementById('notepad-input');if(!inp)return;
-  const cur=cleanSpeech(inp.value);
-  if(cur&&cur.toLowerCase().endsWith(add.toLowerCase()))return;
-  inp.value=cur?cur+' '+add:add;
-  voiceSessionText=cleanSpeech((voiceSessionText+' '+add));
-  npResize(inp);
-}
-function initVoiceControl(){
-  const btn=document.getElementById('mic-btn');if(!btn||btn.dataset.ready)return;btn.dataset.ready='1';
-  btn.addEventListener('pointerdown',e=>{
-    voicePointerId=e.pointerId;voiceStartY=e.clientY;voiceHoldActive=false;voiceIgnoreClick=false;
-    try{btn.setPointerCapture(e.pointerId);}catch(err){}
-    clearTimeout(voiceHoldTimer);
-    voiceHoldTimer=setTimeout(()=>{voiceHoldActive=true;if(!isRec)startVoice();},190);
-  });
-  btn.addEventListener('pointermove',e=>{
-    if(voicePointerId!==e.pointerId)return;
-    if((voiceHoldActive||isRec)&&voiceStartY-e.clientY>72){voiceLocked=true;setVoiceState('locked');}
-  });
-  function endPointer(e){
-    if(voicePointerId!==e.pointerId)return;
-    clearTimeout(voiceHoldTimer);voicePointerId=null;
-    try{btn.releasePointerCapture(e.pointerId);}catch(err){}
-    if(voiceHoldActive){
-      voiceIgnoreClick=true;setTimeout(()=>voiceIgnoreClick=false,260);
-      if(isRec&&!voiceLocked)stopVoice(true);
-    }
-    voiceHoldActive=false;
-  }
-  btn.addEventListener('pointerup',endPointer);
-  btn.addEventListener('pointercancel',endPointer);
-  btn.addEventListener('click',e=>{e.preventDefault();if(voiceIgnoreClick)return;toggleVoice();});
-}
+// ── ГОЛОС (переделан) ──
 function toggleVoice(){isRec?stopVoice(true):startVoice();}
+
 function startVoice(){
   if(isRec)return;
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast('Голос не поддерживается');return;}
-  const inp=document.getElementById('notepad-input');
-  voiceDraftBefore=inp?cleanSpeech(inp.value):'';voiceSessionText='';voiceShouldSave=false;voiceHadError=false;voiceLocked=false;
+  if(!SR){showToast('Голосовой ввод не поддерживается в этом браузере');return;}
   recog=new SR();recog.lang='ru-RU';recog.continuous=true;recog.interimResults=true;
-  recog.onstart=()=>{isRec=true;setVoiceState('recording');};
-  recog.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)appendVoiceText(e.results[i][0].transcript);};
-  recog.onerror=e=>{voiceHadError=true;showToast('Ошибка: '+e.error);stopVoice(false);};
-  recog.onend=()=>finishVoice(voiceShouldSave&&!voiceHadError);
-  try{recog.start();}catch(e){voiceHadError=true;finishVoice(false);showToast('Не удалось начать запись');}
-}
-function stopVoice(autoSave=true){
-  voiceShouldSave=autoSave;
-  if(recog){try{recog.stop();return;}catch(e){}}
-  finishVoice(autoSave&&!voiceHadError);
-}
-function finishVoice(autoSave){
-  const wasRec=isRec;recog=null;isRec=false;voiceLocked=false;voiceHoldActive=false;clearTimeout(voiceHoldTimer);setVoiceState('idle');
-  if(wasRec&&autoSave)saveVoiceDraft();
-}
-function saveVoiceDraft(){
-  const inp=document.getElementById('notepad-input');if(!inp)return;
-  const current=cleanSpeech(inp.value);
-  if(!current||(!voiceSessionText&&current===voiceDraftBefore)){showToast('Не расслышал. Попробуйте ещё раз.');return;}
-  saveNotepad();
-}// ── MODAL ──
-function noteForm(title='',label='',reminder=''){
-  return`<div class="sheet-lbl">Текст</div>
-  <textarea class="sheet-in" id="sh1" rows="3" placeholder="Что важно запомнить...">${esc(title)}</textarea>
-  <div class="sheet-lbl">Категория</div>
-  <input class="sheet-in" id="sh3" placeholder="здоровье, покупки, дело..." value="${esc(label)}">
-  <div class="sheet-lbl">Напоминание (необязательно)</div>
-  <input class="sheet-in" id="sh2" type="datetime-local" value="${esc(reminder||'')}">`;
+  recog.onstart=()=>{
+    isRec=true;
+    const btn=document.getElementById('mic-btn');if(btn){btn.classList.remove('idle');btn.classList.add('recording');}
+    const hint=document.getElementById('voice-hint');if(hint){hint.textContent='Говорите… нажмите ещё раз, чтобы остановить';hint.classList.add('rec');}
+    const vs=document.getElementById('voice-status');if(vs)vs.classList.add('show');
+  };
+  recog.onresult=e=>{
+    let interim='',final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    // Обновляем статус промежуточным
+    const vst=document.getElementById('voice-status-text');if(vst)vst.textContent=interim||'Говорите...';
+    if(final){
+      const inp=document.getElementById('notepad-input');if(!inp)return;
+      const cur=inp.value.trim();inp.value=cur?cur+' '+final.trim():final.trim();
+      npResize(inp);
+    }
+  };
+  recog.onerror=e=>{showToast('Ошибка записи: '+e.error);finishVoice(false);};
+  recog.onend=()=>finishVoice(false);
+  try{recog.start();}catch(e){showToast('Не удалось начать запись');finishVoice(false);}
 }
 
-function openSheet(type){
-  ST=type;EI=null;
-  document.getElementById('sheet-title').textContent='Новая заметка';
-  document.getElementById('sheet-body').innerHTML=noteForm();
-  document.getElementById('overlay').classList.add('open');
-  setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},260);
+function stopVoice(autoSave){
+  if(recog){try{recog.stop();}catch(e){}}
+  if(autoSave){const inp=document.getElementById('notepad-input');if(inp&&inp.value.trim())saveNotepad();}
+  finishVoice(false);
 }
-function closeSheet(){document.getElementById('overlay').classList.remove('open');ST=null;EI=null;}
 
-// Закрытие только если клик начался на overlay
-(function(){
-  let downOn=false;
-  const ov=document.getElementById('overlay');
-  ov.addEventListener('mousedown',e=>{downOn=e.target===ov;});
-  ov.addEventListener('mouseup',e=>{if(downOn&&e.target===ov)closeSheet();downOn=false;});
-  ov.addEventListener('touchend',e=>{if(e.target===ov)closeSheet();});
-})();
-
-function saveSheet(){
-  const v1=(document.getElementById('sh1')||{}).value||'';
-  const v2=(document.getElementById('sh2')||{}).value||'';
-  const v3=(document.getElementById('sh3')||{}).value||'';
-  if(!v1.trim()){showToast('Напишите текст');return;}
-  const ts=Date.now();
-
-  if(ST==='note'||ST===null){
-    const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-    const item={title:v1.trim(),body:'',label:v3.trim()||'заметка',reminder:v2||null,updatedAt:ts};
-    if(EI!==null){item.createdAt=list[EI].createdAt||ts;list[EI]=item;}
-    else{item.createdAt=ts;list.push(item);}
-    localStorage.setItem('rz_notes',JSON.stringify(list));
-    loadNotes();closeSheet();
-    showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
-    if(v2&&notifGranted())scheduleAll();
-  } else if(ST==='notepad'){
-    const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-    if(EI!==null){list[EI].text=v1.trim();list[EI].updatedAt=ts;}
-    localStorage.setItem('rz_notepad',JSON.stringify(list));
-    loadNotepad();closeSheet();showToast('Изменено ✓');
-  }
+function finishVoice(save){
+  recog=null;isRec=false;
+  const btn=document.getElementById('mic-btn');if(btn){btn.classList.remove('recording');btn.classList.add('idle');}
+  const hint=document.getElementById('voice-hint');if(hint){hint.textContent='Нажмите, чтобы надиктовать';hint.classList.remove('rec');}
+  const vs=document.getElementById('voice-status');if(vs)vs.classList.remove('show');
 }
 
 // ── LOAD ALL ──
 function loadAll(){
-  loadNotes();
-  loadNotepad();
-  initVoiceControl();
-  scheduleAll();
-  calRender();
-  updCalTrigger();
+  loadNotes();loadNotepad();scheduleAll();calRender();updCalTrigger();
+  // Восстановить вид
+  setView(noteView);
 }
 
 // ── SERVICE WORKER ──
-if('serviceWorker'in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
+if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 
 // ── INIT ──
 loadAll();
+// Показываем FAB если стартовали на notes (маловероятно, но на всякий)
+document.getElementById('fab-bar').classList.toggle('show',cur==='notes');
 </script>
 </body>
 </html>
