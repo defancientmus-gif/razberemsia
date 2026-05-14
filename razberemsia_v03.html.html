@@ -438,6 +438,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .auth-tag{font-size:16px;color:var(--fg-m);text-align:center;margin-bottom:4px;font-weight:400;}
 .auth-ver{font-size:11px;color:oklch(0.52 0.012 150 / 0.45);text-align:center;margin-bottom:32px;font-weight:500;}
 .auth-card{
+  display:none;
   background:oklch(1 0 0 / 0.80);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border:1px solid oklch(0.88 0.02 150 / 0.50);
@@ -1079,7 +1080,7 @@ let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
 // ── AUTH ──
 auth.onAuthStateChanged(u=>{
   if(u){CU=u;showApp();updUI(u);loadAll();}
-  else{setTimeout(initRC,600);}
+  else{setTimeout(devLogin,300);}
 });
 
 function showApp(){
@@ -1223,16 +1224,8 @@ async function devLogin(){
     btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Загрузка...</span>';
   }
   await new Promise(r=>setTimeout(r,2000));
-  try{
-    const r=await auth.signInAnonymously();
-    CU=r.user;showApp();updUI(CU);loadAll();
-  }catch(e){
-    eEl.textContent=aErr(e.code);eEl.style.display='block';
-    if(btn){
-      btn.classList.remove('loading');
-      btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Для разработчиков</span>';
-    }
-  }
+  CU={uid:'dev-local',phoneNumber:''};
+  showApp();updUI(CU);loadAll();
 }
 
 // ── CODE INPUT ──
