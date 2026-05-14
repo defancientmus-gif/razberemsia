@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#f0ede6">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-feather.svg">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23e8f2ea'/%3E%3Cpath d='M140 40a42 42 0 00-59.4 59.4L32 148h59.5z' fill='none' stroke='%235a8f62' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='112' y1='56' x2='14' y2='154' stroke='%235a8f62' stroke-width='10' stroke-linecap='round'/%3E%3Cline x1='122' y1='105' x2='63' y2='105' stroke='%235a8f62' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,7 +73,10 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
 
 /* ── HEADER ── */
 header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:6px;min-width:0;max-width:168px;flex:0 1 auto;}
+.logo-feather{width:24px;height:24px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:oklch(1 0 0 / 0.46);border:1px solid oklch(0.88 0.02 150 / 0.48);box-shadow:0 5px 16px -10px oklch(0.28 0.06 150 / 0.35);animation:feather-fly 3.8s ease-in-out infinite;}
+.logo-feather svg{width:15px;height:15px;stroke:oklch(0.48 0.10 150);stroke-width:1.65;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.logo-name{overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .logo-ver{font-size:9px;color:oklch(0.52 0.012 150 / 0.45);font-family:var(--sys);font-weight:500;vertical-align:middle;letter-spacing:.02em;}
 .logo-icon-wrap{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:oklch(0.99 0.005 150 / 0.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid oklch(0.92 0.015 150 / 0.5);box-shadow:0 4px 16px -4px oklch(0 0 0 / 0.06);}
 .logo-icon-svg{width:32px;height:32px;border-radius:8px;}
@@ -427,7 +430,11 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 52px;
   transition:opacity .3s,transform .3s;}
 #auth-screen.hidden{opacity:0;pointer-events:none;transform:translateY(-16px);}
-.auth-logo{font-family:'Playfair Display',serif;font-size:40px;color:var(--fg);text-align:center;margin-bottom:6px;letter-spacing:-.5px;}
+.auth-logo{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:40px;color:var(--fg);text-align:center;margin-bottom:6px;letter-spacing:-.5px;}
+.auth-logo-mark{width:58px;height:58px;border-radius:21px;display:flex;align-items:center;justify-content:center;background:oklch(1 0 0 / 0.54);border:1px solid oklch(0.88 0.02 150 / 0.52);box-shadow:0 12px 34px -18px oklch(0.28 0.06 150 / 0.30), inset 0 1px 0 oklch(1 0 0 / 0.46);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:feather-fly 3.4s ease-in-out infinite;}
+.auth-logo-mark svg{width:29px;height:29px;stroke:oklch(0.48 0.10 150);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.auth-logo-text{line-height:1;}
+@keyframes feather-fly{0%,100%{transform:translateY(0) translateX(0) rotate(-4deg);}25%{transform:translateY(-5px) translateX(3px) rotate(4deg);}50%{transform:translateY(-2px) translateX(-2px) rotate(-2deg);}75%{transform:translateY(-6px) translateX(2px) rotate(5deg);}}
 .auth-tag{font-size:16px;color:var(--fg-m);text-align:center;margin-bottom:4px;font-weight:400;}
 .auth-ver{font-size:11px;color:oklch(0.52 0.012 150 / 0.45);text-align:center;margin-bottom:32px;font-weight:500;}
 .auth-card{
@@ -458,7 +465,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .auth-back{background:none;border:none;color:var(--fg-l);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sys);padding:12px;width:100%;margin-top:4px;-webkit-appearance:none;}
 .auth-resend{background:none;border:none;color:var(--accent-d);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;text-decoration:underline;}
 .auth-timer{font-size:14px;color:var(--fg-l);}
-.dev-btn{background:none;border:none;color:oklch(0.52 0.012 150 / 0.28);font-size:11px;cursor:pointer;font-family:var(--sys);padding:10px;-webkit-appearance:none;display:block;width:100%;text-align:center;margin-top:8px;}
+.dev-btn{background:none;border:none;color:oklch(0.52 0.012 150 / 0.30);font-size:11px;cursor:pointer;font-family:var(--sys);padding:10px;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;text-align:center;margin-top:8px;}
+.dev-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.dev-btn.loading{pointer-events:none;color:oklch(0.52 0.10 150 / 0.48);}
+.dev-btn.loading svg{animation:feather-fly 1.4s ease-in-out infinite;}
 
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
@@ -690,7 +700,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 <!-- AUTH -->
 <div id="auth-screen">
-  <div class="auth-logo">Разберёмся</div>
+  <div class="auth-logo">
+    <span class="auth-logo-mark"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
+    <span class="auth-logo-text">Разберёмся</span>
+  </div>
   <div class="auth-tag">Спокойный помощник рядом</div>
   <div class="auth-ver">v4.10 · бета</div>
   <div class="auth-card">
@@ -705,7 +718,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <button class="auth-btn" id="sms-btn" onclick="sendSms()">Получить код</button>
       <div class="auth-err" id="phone-err"></div>
       <div class="auth-note">Данные защищены Firebase (Google)</div>
-      <button class="dev-btn" onclick="devLogin()">Войти без СМС · для разработчиков</button>
+      <button class="dev-btn" id="dev-btn" onclick="devLogin()"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Для разработчиков</span></button>
     </div>
     <div class="auth-step" id="step-code">
       <div class="auth-lbl">Подтверждение</div>
@@ -753,7 +766,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      Разберёмся<span class="logo-ver">v4.10</span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v4.10</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
@@ -1203,13 +1216,22 @@ async function sendSms(){
 }
 
 async function devLogin(){
-  const eEl=document.getElementById('phone-err');
+  const eEl=document.getElementById('phone-err'),btn=document.getElementById('dev-btn');
   eEl.style.display='none';
+  if(btn){
+    btn.classList.add('loading');
+    btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Загрузка...</span>';
+  }
+  await new Promise(r=>setTimeout(r,2000));
   try{
     const r=await auth.signInAnonymously();
     CU=r.user;showApp();updUI(CU);loadAll();
   }catch(e){
     eEl.textContent=aErr(e.code);eEl.style.display='block';
+    if(btn){
+      btn.classList.remove('loading');
+      btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Для разработчиков</span>';
+    }
   }
 }
 
@@ -1305,7 +1327,7 @@ function scheduleAll(){
     const delay=dt.getTime()-Date.now();
     if(delay<=0||delay>7*24*3600*1000)return;
     const tid=setTimeout(()=>{
-      try{new Notification('Разберёмся',{body:n.title,icon:'icon-192.png'});}catch(e){}
+      try{new Notification('Разберёмся',{body:n.title,icon:'icon-feather.svg'});}catch(e){}
     },delay);
     _NT.push(tid);
   });

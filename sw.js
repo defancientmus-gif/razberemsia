@@ -1,5 +1,5 @@
 const CACHE = 'rz-v4';
-const ASSETS = ['razberemsia_v03.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+const ASSETS = ['razberemsia_v03.html', 'manifest.json', 'icon-feather.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -42,8 +42,8 @@ self.addEventListener('message', e => {
     const tid = setTimeout(() => {
       self.registration.showNotification('Разберёмся', {
         body: n.title || n.body?.slice(0, 80) || 'Напоминание',
-        icon: 'icon-192.png',
-        badge: 'icon-192.png',
+        icon: 'icon-feather.svg',
+        badge: 'icon-feather.svg',
         tag: n.id || String(dt), // tag prevents duplicates
       });
     }, delay);
