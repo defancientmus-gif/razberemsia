@@ -220,10 +220,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bubble-time{font-size:10px;color:var(--text-l);}
 .bubble-del{background:none;border:none;cursor:pointer;-webkit-appearance:none;padding:2px 5px;opacity:.3;font-size:12px;font-family:var(--sys);color:var(--text-l);}
 .bubble-del:active{opacity:.8;}
-<<<<<<< HEAD
-.home-bar{display:flex;align-items:flex-end;gap:8px;padding:8px 12px 14px;background:rgba(248,244,237,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(200,195,188,0.35);flex-shrink:0;}
-.home-voice-hint{display:none;text-align:center;padding:5px 14px;font-size:13px;color:var(--rose);font-weight:600;flex-shrink:0;letter-spacing:.01em;}
-=======
 .home-bar{display:flex;align-items:center;justify-content:center;padding:16px 12px 28px;background:transparent;flex-shrink:0;position:relative;}
 .home-voice-hint{display:none;text-align:center;padding:5px 14px;font-size:13px;color:var(--rose);font-weight:600;flex-shrink:0;letter-spacing:.01em;}
 .big-voice-btn{position:relative;width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 38% 35%,rgba(255,255,255,0.55) 0%,rgba(122,158,126,0.22) 55%,rgba(74,110,78,0.18) 100%);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border:1.5px solid rgba(255,255,255,0.55);box-shadow:0 8px 32px rgba(74,110,78,0.18),0 2px 8px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.6);transition:transform .18s cubic-bezier(.4,0,.2,1),box-shadow .18s;}
@@ -253,7 +249,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .input-sheet-mic.rec svg{stroke:var(--rose);}
 .input-sheet-send{flex:1;background:var(--sage);color:#fff;border:none;border-radius:14px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;transition:background .12s;}
 .input-sheet-send:active{background:var(--sage-d);}
->>>>>>> 41b1a38 (update)
 
 /* NOTEPAD */
 .notepad-bar{display:flex;align-items:flex-end;gap:8px;padding:8px 12px 10px;background:rgba(248,244,237,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(200,195,188,0.35);flex-shrink:0;}
@@ -416,12 +411,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-<<<<<<< HEAD
-    <div class="logo">Разберёмся<span class="logo-ver">v3.85</span></div>
-    <div class="hcenter">
-      <div class="hdate" id="hdate"></div>
-      <div class="hclock" id="hclock"></div>
-=======
     <div class="logo">Разберёмся<span class="logo-ver">v3.90</span></div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
@@ -434,26 +423,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <button class="hbtn" id="hbtn" onclick="toggleMenu(event)">
         <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
       </button>
->>>>>>> 41b1a38 (update)
     </div>
   </header>
 
   <div class="screens">
 
-<<<<<<< HEAD
-    <!-- HOME -->
     <div class="scr active" id="s-home" style="padding:0;overflow:hidden;">
       <div style="height:100%;display:flex;flex-direction:column;">
         <div class="jarvis-top">
-          <div class="greet-block" style="padding:6px 0 4px;">
-            <div class="greet-time" id="greet-time">Добрый день</div>
-            <div class="greet-name" id="greet-name">Здравствуйте</div>
-          </div>
-=======
-    <div class="scr active" id="s-home" style="padding:0;overflow:hidden;">
-      <div style="height:100%;display:flex;flex-direction:column;">
-        <div class="jarvis-top">
->>>>>>> 41b1a38 (update)
           <div class="jarvis-quick">
             <button class="jq-btn jq-emer" onclick="go('emergency')">
               <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -466,16 +443,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
           </div>
         </div>
         <div class="jarvis-feed" id="home-feed"></div>
-<<<<<<< HEAD
-        <div class="home-voice-hint" id="home-voice-status">🎙 Слушаю...</div>
-        <div class="home-bar">
-          <button id="home-mic-btn" class="notepad-mic" onclick="toggleHomeVoice()">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
-          </button>
-          <textarea id="home-input" class="notepad-field" rows="1" placeholder="Что на уме..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveHome();}"></textarea>
-          <button class="notepad-send" onclick="saveHome()">
-            <svg viewBox="0 0 24 24" width="19" height="19" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-=======
         <div class="home-voice-hint" id="home-voice-status"></div>
         <div class="home-bar">
           <div style="display:flex;flex-direction:column;align-items:center;">
@@ -486,7 +453,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
           </div>
           <button class="home-edit-btn" onclick="openInputSheet()">
             <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
->>>>>>> 41b1a38 (update)
           </button>
         </div>
       </div>
@@ -535,11 +501,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         <div style="padding:8px 14px 6px;flex-shrink:0;">
           <button class="backbtn" onclick="go('home')">
             <div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
-<<<<<<< HEAD
-            <div><div class="back-lbl">Блокнот</div><div class="back-hint">Быстрые записи</div></div>
-=======
             <div class="back-lbl">Назад</div>
->>>>>>> 41b1a38 (update)
           </button>
         </div>
         <div id="notepad-list" style="flex:1;overflow-y:auto;padding:6px 14px 8px;"></div>
@@ -667,11 +629,6 @@ let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
   const MG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   function upd(){
     const n=new Date(),h=n.getHours();
-<<<<<<< HEAD
-    const g=document.getElementById('greet-time');
-    if(g)g.textContent=h<6?'Доброй ночи':h<12?'Доброе утро':h<17?'Добрый день':h<22?'Добрый вечер':'Доброй ночи';
-=======
->>>>>>> 41b1a38 (update)
     const hd=document.getElementById('hdate');
     if(hd)hd.textContent=D[n.getDay()]+', '+n.getDate()+' '+MG[n.getMonth()];
   }
@@ -712,16 +669,13 @@ function updUI(u){
   const name=localStorage.getItem('rz_name')||'';
   document.getElementById('hmenu-phone').textContent=disp;
   document.getElementById('hmenu-name').textContent=name||'Добро пожаловать';
-<<<<<<< HEAD
-  document.getElementById('greet-name').textContent=name||'Здравствуйте';
-=======
->>>>>>> 41b1a38 (update)
   document.getElementById('set-phone-disp').textContent=disp;
   document.getElementById('set-name-disp').textContent=name||'—';
   const ni=document.getElementById('name-input');if(ni)ni.value=name;
 }
 
 function devLogin(){
+  try{if(RV){RV.clear();}RV=null;}catch(e){}
   CU={phoneNumber:'+70000000000',getIdToken:()=>Promise.resolve('dev')};
   updUI(CU);showApp();loadAll();
 }
@@ -1278,11 +1232,7 @@ function saveSheet(){
 }
 
 // ── HOME FEED (JARVIS) ──
-<<<<<<< HEAD
-let homeRecog=null,homeIsRec=false;
-=======
 let homeRecog=null,homeIsRec=false,sheetRecog=null,sheetIsRec=false;
->>>>>>> 41b1a38 (update)
 
 function loadHomeFeed(){
   const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
@@ -1292,11 +1242,7 @@ function loadHomeFeed(){
   const badge=document.getElementById('notes-count-badge');
   if(badge)badge.textContent=notes.length?'('+notes.length+')':'';
   if(!list.length){
-<<<<<<< HEAD
-    el.innerHTML='<div class="chat-empty"><span class="chat-empty-ico">✦</span><div class="chat-empty-t">Здесь будут ваши мысли</div><span class="chat-empty-s">Напишите или надиктуйте ниже</span></div>';
-=======
     el.innerHTML='<div class="chat-empty"><span class="chat-empty-ico">✦</span><div class="chat-empty-t">Здесь будут ваши мысли</div><span class="chat-empty-s">Нажмите кнопку — говорите, мы запишем</span></div>';
->>>>>>> 41b1a38 (update)
     return;
   }
   list.forEach((n,i)=>{
@@ -1322,10 +1268,7 @@ function saveHome(){
   padList.push({text,date,label,title,createdAt:ts});
   localStorage.setItem('rz_notepad',JSON.stringify(padList));
   inp.value='';inp.style.height='auto';
-<<<<<<< HEAD
-=======
   closeInputSheet();
->>>>>>> 41b1a38 (update)
   loadHomeFeed();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
   if(reminder&&notifGranted())scheduleAll();
@@ -1336,8 +1279,6 @@ function delHomeEntry(i){
   localStorage.setItem('rz_notepad',JSON.stringify(l));loadHomeFeed();
 }
 
-<<<<<<< HEAD
-=======
 // INPUT SHEET
 function openInputSheet(){
   document.getElementById('input-sheet-overlay').classList.add('open');
@@ -1370,18 +1311,10 @@ function stopSheetVoice(){
 }
 
 // BIG VOICE BUTTON (главный экран — сразу пишет в notepad)
->>>>>>> 41b1a38 (update)
 function toggleHomeVoice(){homeIsRec?stopHomeVoice():startHomeVoice();}
 function startHomeVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голос не поддерживается');return;}
-<<<<<<< HEAD
-  homeRecog=new SR();homeRecog.lang='ru-RU';homeRecog.continuous=true;homeRecog.interimResults=true;
-  homeRecog.onstart=()=>{homeIsRec=true;document.getElementById('home-mic-btn').classList.add('rec');document.getElementById('home-voice-status').style.display='block';};
-  homeRecog.onresult=e=>{
-    let fin='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
-    if(fin){const inp=document.getElementById('home-input');inp.value+=(inp.value?' ':'')+fin;npResize(inp);}
-=======
   homeRecog=new SR();homeRecog.lang='ru-RU';homeRecog.continuous=false;homeRecog.interimResults=false;
   homeRecog.onstart=()=>{
     homeIsRec=true;
@@ -1407,7 +1340,6 @@ function startHomeVoice(){
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
       if(reminder&&notifGranted())scheduleAll();
     }
->>>>>>> 41b1a38 (update)
   };
   homeRecog.onerror=e=>{showToast('Ошибка: '+e.error);stopHomeVoice();};
   homeRecog.onend=()=>stopHomeVoice();
@@ -1417,11 +1349,7 @@ function stopHomeVoice(){
   if(homeRecog)try{homeRecog.stop();}catch(e){}
   homeRecog=null;homeIsRec=false;
   const btn=document.getElementById('home-mic-btn');if(btn)btn.classList.remove('rec');
-<<<<<<< HEAD
-  document.getElementById('home-voice-status').style.display='none';
-=======
   const lbl=document.getElementById('home-voice-label');if(lbl)lbl.textContent='Нажмите, чтобы говорить';
->>>>>>> 41b1a38 (update)
 }
 
 // ── LOAD ALL ──
