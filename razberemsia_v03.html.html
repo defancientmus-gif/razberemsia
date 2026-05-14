@@ -375,6 +375,33 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text);letter-spacing:-.2px;padding:18px 20px 0;margin-bottom:0;}
 .sheet-lbl{font-size:11px;font-weight:600;color:var(--text-l);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
 
+/* Шапка заметки — выровненная */
+.sheet-hdr-row{display:flex;align-items:center;gap:8px;padding:16px 20px 0;}
+.sheet-hdr-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--text);letter-spacing:-.2px;flex:1;min-width:0;}
+.sheet-undo-btn{width:30px;height:30px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.4;transition:opacity .15s,background .15s;flex-shrink:0;-webkit-appearance:none;}
+.sheet-undo-btn:active,.sheet-undo-btn:hover{opacity:.8;background:rgba(0,0,0,0.05);}
+.sheet-undo-btn svg{width:16px;height:16px;stroke:var(--text);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.sheet-undo-btn:disabled{opacity:.18;pointer-events:none;}
+
+/* Кнопка категории в шапке */
+.sheet-cat-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(122,158,126,0.1);border:1px solid rgba(122,158,126,0.2);border-radius:50px;padding:4px 10px 4px 8px;font-size:11px;font-weight:600;color:rgba(74,110,78,0.8);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:background .12s;flex-shrink:0;}
+.sheet-cat-btn:active{background:rgba(122,158,126,0.18);}
+.sheet-cat-btn svg{width:8px;height:8px;stroke:rgba(74,110,78,0.7);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.sheet-cat-dot{width:6px;height:6px;border-radius:50%;background:rgba(122,158,126,0.7);flex-shrink:0;}
+
+/* Выпадающее меню категорий */
+.cat-dropdown{position:absolute;top:100%;right:0;margin-top:4px;background:rgba(242,238,232,0.96);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.65);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.1),inset 0 1px 0 rgba(255,255,255,0.8);z-index:100;min-width:160px;overflow:hidden;display:none;}
+.cat-dropdown.open{display:block;animation:glassIn .2s cubic-bezier(.22,1,.36,1);}
+.cat-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:14px;color:var(--text);font-family:var(--sys);transition:background .1s;}
+.cat-opt:active,.cat-opt:hover{background:rgba(122,158,126,0.1);}
+.cat-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* Напоминание — компактное */
+.sheet-reminder-row{display:flex;align-items:center;gap:8px;padding:0 20px 14px;}
+.sheet-reminder-lbl{font-size:11px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.sheet-reminder-in{flex:1;background:transparent;border:none;border-bottom:1px solid rgba(200,195,188,0.3);padding:4px 0;font-size:14px;font-family:var(--sys);color:var(--text);outline:none;-webkit-user-select:text;user-select:text;}
+.sheet-reminder-in:focus{border-bottom-color:rgba(122,158,126,0.5);}
+
 /* Поле — прозрачное, как в v0 */
 .sheet-in{
   width:100%;background:transparent;
@@ -698,8 +725,23 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div class="overlay" id="overlay">
   <div class="sheet">
     <div class="sheet-ambient"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0;">
+    <!-- Шапка: заголовок + undo/redo + категория + микрофон -->
+    <div class="sheet-hdr-row">
       <div class="sheet-title" id="sheet-title"></div>
+      <button class="sheet-undo-btn" id="sheet-undo-btn" onclick="sheetUndo()" title="Назад" disabled>
+        <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+      </button>
+      <button class="sheet-undo-btn" id="sheet-redo-btn" onclick="sheetRedo()" title="Вперёд" disabled>
+        <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+      </button>
+      <div style="position:relative;" id="sheet-cat-wrap">
+        <button class="sheet-cat-btn" id="sheet-cat-btn" onclick="toggleCatDropdown()" style="display:none;">
+          <div class="sheet-cat-dot" id="sheet-cat-dot"></div>
+          <span id="sheet-cat-label">заметка</span>
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="cat-dropdown" id="cat-dropdown"></div>
+      </div>
       <div class="sheet-note-mic-wrap" id="sheet-note-mic-wrap" style="display:none;">
         <div class="snm-mist"></div>
         <button class="snm-btn" id="snm-btn" onclick="toggleNoteSheetVoice()">
@@ -707,8 +749,13 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         </button>
       </div>
     </div>
-    <div class="sheet-hdr-line" style="margin-top:12px;"></div>
+    <div class="sheet-hdr-line" style="margin-top:10px;"></div>
     <div class="sheet-body-wrap" id="sheet-body"></div>
+    <!-- Напоминание отдельной строкой -->
+    <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">
+      <span class="sheet-reminder-lbl">Напомнить</span>
+      <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local">
+    </div>
     <div class="sheet-footer">
       <span class="sheet-char-count" id="sheet-char-count"></span>
       <div class="sheet-footer-actions">
@@ -1223,13 +1270,21 @@ function openNoteSheet(i){
   const n=notes[i];if(!n)return;
   ST='note';EI=i;
   document.getElementById('sheet-title').textContent='Заметка';
-  document.getElementById('sheet-body').innerHTML=noteForm(n.title,n.label,n.reminder);
-  document.getElementById('sheet-char-count').textContent=(n.title||'').length+' симв';
+  document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
+  document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' симв';
   document.getElementById('sheet-note-mic-wrap').style.display='flex';
+  showSheetCat(n.label||'заметка');
+  initSheetReminder(n.reminder||'');
+  initSheetUndo(n.body||n.title||'');
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>{
     const f=document.getElementById('sh1');
-    if(f){f.focus();f.oninput=()=>{document.getElementById('sheet-char-count').textContent=f.value.length+' симв';};}
+    if(f){
+      f.focus();
+      f.addEventListener('input',()=>{
+        sheetUndoStack.push(f.value);sheetRedoStack=[];updUndoBtns();updCharCount(f);
+      });
+    }
   },300);
 }
 
@@ -1341,21 +1396,71 @@ function stopVoice(){
 }
 
 // ── MODAL ──
-function noteForm(title='',label='',reminder=''){
-  return`<textarea class="sheet-in" id="sh1" rows="8" placeholder="Что важно запомнить..." style="min-height:180px;font-size:16px;line-height:1.75;">${esc(title)}</textarea>
-  <div style="display:flex;gap:10px;margin-top:4px;">
-    <div style="flex:1;">
-      <div class="sheet-lbl">Категория</div>
-      <input class="sheet-in" id="sh3" placeholder="здоровье, покупки..." value="${esc(label)}" style="min-height:auto;padding:8px 0;font-size:14px;">
-    </div>
-    <div style="flex:1;">
-      <div class="sheet-lbl">Напоминание</div>
-      <input class="sheet-in" id="sh2" type="datetime-local" value="${esc(reminder||'')}" style="min-height:auto;padding:8px 0;font-size:14px;">
-    </div>
-  </div>`;
+let sheetUndoStack=[],sheetRedoStack=[];
+
+function noteForm(title=''){
+  return`<textarea class="sheet-in" id="sh1" rows="8" placeholder="Что важно запомнить..." style="min-height:200px;font-size:16px;line-height:1.75;border-bottom:none;">${esc(title)}</textarea>`;
 }
 
-let noteSheetRecog=null,noteSheetRec=false;
+function initSheetUndo(text){
+  sheetUndoStack=[text];sheetRedoStack=[];
+  updUndoBtns();
+}
+function sheetUndo(){
+  const f=document.getElementById('sh1');if(!f)return;
+  if(sheetUndoStack.length>1){sheetRedoStack.push(sheetUndoStack.pop());f.value=sheetUndoStack[sheetUndoStack.length-1];updUndoBtns();updCharCount(f);}
+}
+function sheetRedo(){
+  const f=document.getElementById('sh1');if(!f)return;
+  if(sheetRedoStack.length){const v=sheetRedoStack.pop();sheetUndoStack.push(v);f.value=v;updUndoBtns();updCharCount(f);}
+}
+function updUndoBtns(){
+  const u=document.getElementById('sheet-undo-btn');if(u)u.disabled=sheetUndoStack.length<=1;
+  const r=document.getElementById('sheet-redo-btn');if(r)r.disabled=!sheetRedoStack.length;
+}
+function updCharCount(f){
+  const el=document.getElementById('sheet-char-count');if(el)el.textContent=f.value.length+' симв';
+}
+
+function showSheetCat(label){
+  const btn=document.getElementById('sheet-cat-btn');
+  const dot=document.getElementById('sheet-cat-dot');
+  const lbl=document.getElementById('sheet-cat-label');
+  if(!btn)return;
+  btn.style.display='inline-flex';
+  const col=STRIPES[label||'заметка']||'#c4b8a8';
+  if(dot)dot.style.background=col;
+  if(lbl)lbl.textContent=label||'заметка';
+  btn.dataset.label=label||'заметка';
+}
+
+function toggleCatDropdown(){
+  const dd=document.getElementById('cat-dropdown');if(!dd)return;
+  if(dd.classList.contains('open')){dd.classList.remove('open');return;}
+  const cur=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
+  dd.innerHTML=Object.keys(STRIPES).map(l=>`
+    <div class="cat-opt" onclick="selectCat('${l}')">
+      <div class="cat-opt-dot" style="background:${STRIPES[l]};"></div>${l}
+      ${l===cur?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--sage-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+    </div>`).join('');
+  dd.classList.add('open');
+  setTimeout(()=>document.addEventListener('click',closeCatOnClick,{once:true}),10);
+}
+function closeCatOnClick(e){
+  const dd=document.getElementById('cat-dropdown');
+  if(dd&&!dd.contains(e.target))dd.classList.remove('open');
+}
+function selectCat(label){
+  showSheetCat(label);
+  document.getElementById('cat-dropdown').classList.remove('open');
+}
+
+function initSheetReminder(val){
+  const row=document.getElementById('sheet-reminder-row');
+  const inp=document.getElementById('sheet-reminder-in');
+  if(row)row.style.display='flex';
+  if(inp)inp.value=val||'';
+}
 
 function openSheet(type){
   ST=type;EI=null;
@@ -1363,12 +1468,30 @@ function openSheet(type){
   document.getElementById('sheet-body').innerHTML=noteForm();
   document.getElementById('sheet-char-count').textContent='';
   document.getElementById('sheet-note-mic-wrap').style.display='flex';
+  showSheetCat('заметка');
+  initSheetReminder('');
+  initSheetUndo('');
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>{
     const f=document.getElementById('sh1');
-    if(f){f.focus();f.oninput=()=>{document.getElementById('sheet-char-count').textContent=f.value.length+' симв';};}
+    if(f){
+      f.focus();
+      f.addEventListener('input',()=>{
+        sheetUndoStack.push(f.value);sheetRedoStack=[];updUndoBtns();updCharCount(f);
+      });
+    }
   },300);
 }
+
+function closeSheet(){
+  stopNoteSheetVoice();
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('cat-dropdown').classList.remove('open');
+  ST=null;EI=null;
+}
+
+let noteSheetRecog=null,noteSheetRec=false;
+
 
 function closeSheet(){
   stopNoteSheetVoice();
@@ -1407,12 +1530,16 @@ function stopNoteSheetVoice(){
 
 function saveSheet(){
   const v1=(document.getElementById('sh1')||{}).value||'';
-  const v2=(document.getElementById('sh2')||{}).value||'';
-  const v3=(document.getElementById('sh3')||{}).value||'';
+  const catBtn=document.getElementById('sheet-cat-btn');
+  const v3=catBtn?catBtn.dataset.label||'заметка':'заметка';
+  const reminderEl=document.getElementById('sheet-reminder-in');
+  const v2=reminderEl?reminderEl.value:'';
   if(!v1.trim()){showToast('Напишите текст');return;}
+  const words=v1.trim().split(/\s+/);
+  const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
   const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  const item={title:v1.trim(),body:v1.trim(),label:v3.trim()||'заметка',reminder:v2||null,updatedAt:ts};
+  const item={title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts};
   if(EI!==null){item.createdAt=list[EI].createdAt||ts;list[EI]=item;}
   else{item.createdAt=ts;list.push(item);}
   localStorage.setItem('rz_notes',JSON.stringify(list));
