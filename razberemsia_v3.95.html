@@ -96,13 +96,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .note-cat{font-size:10px;font-weight:600;color:var(--text-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
 .item-title{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.1px;}
 .item-meta{font-size:11px;color:var(--text-l);margin-top:8px;font-weight:400;}
-.item-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.act-btn{border-radius:10px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;min-height:36px;border:1px solid transparent;transition:background .12s;}
-.act-edit{background:rgba(122,158,126,0.12);color:var(--sage-d);border-color:rgba(122,158,126,0.25);}
-.act-edit:active{background:rgba(122,158,126,0.22);}
-.act-del{background:rgba(192,80,74,0.07);color:var(--rose);border-color:rgba(192,80,74,0.16);}
-.act-del:active{background:rgba(192,80,74,0.14);}
-.reminder-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(122,158,126,0.1);color:var(--sage-d);font-size:12px;font-weight:600;border-radius:50px;padding:4px 11px;border:1px solid rgba(122,158,126,0.2);margin-top:7px;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);}
+.reminder-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(122,158,126,0.1);color:var(--sage-d);font-size:12px;font-weight:600;border-radius:50px;padding:4px 11px;border:1px solid rgba(122,158,126,0.2);margin-top:7px;}
 .reminder-tag svg{width:12px;height:12px;stroke:var(--sage-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .notif-banner{background:rgba(122,158,126,0.08);border:1px solid rgba(122,158,126,0.2);border-radius:var(--r);padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
 .notif-banner svg{width:20px;height:20px;stroke:var(--sage-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
@@ -173,14 +167,30 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bubble-delete-bg{position:absolute;right:0;top:0;bottom:0;width:64px;background:rgba(192,80,74,0.85);display:flex;align-items:center;justify-content:center;border-radius:0 20px 4px 0;opacity:0;transition:opacity .2s;}
 .bubble-delete-bg svg{width:18px;height:18px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .bubble{
-  background:radial-gradient(circle at 25% 25%,rgba(255,255,255,0.45) 0%,transparent 50%),rgba(122,158,126,0.14);
-  border:1px solid rgba(255,255,255,0.48);
-  border-radius:20px 20px 4px 20px;padding:11px 14px 8px;max-width:88%;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  box-shadow:inset 0 1px 3px rgba(255,255,255,0.5),0 3px 12px rgba(100,160,130,0.07);
+  background:
+    radial-gradient(ellipse 80% 50% at 30% 15%,rgba(255,255,255,0.52) 0%,transparent 55%),
+    radial-gradient(circle at 80% 80%,rgba(180,215,195,0.18) 0%,transparent 50%),
+    rgba(225,238,228,0.22);
+  border:1px solid rgba(255,255,255,0.62);
+  border-radius:22px 22px 5px 22px;
+  padding:12px 16px 9px;max-width:86%;
+  backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  box-shadow:
+    inset 0 1.5px 4px rgba(255,255,255,0.65),
+    inset 0 -1px 2px rgba(180,215,195,0.08),
+    0 4px 20px rgba(100,160,130,0.08),
+    0 1px 4px rgba(100,160,130,0.05),
+    0 0 0 1px rgba(200,225,210,0.15);
   cursor:pointer;transition:transform .2s cubic-bezier(.4,0,.2,1);
   position:relative;z-index:1;touch-action:pan-y;
   will-change:transform;
+  overflow:hidden;
+}
+.bubble::before{
+  content:'';position:absolute;top:6px;left:10px;
+  width:20px;height:10px;border-radius:50%;
+  background:rgba(255,255,255,0.48);
+  transform:rotate(-20deg);filter:blur(1px);pointer-events:none;
 }
 .bubble-text{font-size:15px;color:var(--text);line-height:1.55;word-break:break-word;}
 .bubble-footer{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:5px;}
@@ -269,7 +279,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   background:transparent;border:none;border-radius:0;
   border-bottom:1px solid rgba(200,195,188,0.3);
   padding:4px 0 10px;font-size:16px;font-family:var(--sys);color:var(--text);
-  outline:none;resize:none;min-height:100px;max-height:220px;line-height:1.65;
+  outline:none;resize:none;min-height:120px;max-height:240px;line-height:1.75;
   -webkit-user-select:text;user-select:text;transition:border-color .15s;
   box-shadow:none;backdrop-filter:none;
 }
@@ -1140,26 +1150,38 @@ function loadNotes(){
   filtered.forEach(n=>{
     const i=all.indexOf(n);
     const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';
-    const d=document.createElement('div');d.className='item-card';
+    const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
+    // Delete bg
+    const delBg=document.createElement('div');
+    delBg.style.cssText='position:absolute;right:0;top:0;bottom:0;width:72px;background:rgba(192,80,74,0.82);display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .2s;';
+    delBg.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+    // Card
+    const d=document.createElement('div');d.className='item-card';d.style.margin='0';
     let rHtml='';
     if(n.reminder){
-      rHtml=`<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;">
-        <button class="reminder-tag" onclick="editNote(${i})">
-          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-          ${esc(fmtDt(n.reminder))}
-        </button>
-      </div>`;
+      rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
     }
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
       <div class="note-cat">${esc(n.label||'заметка')}</div>
       <div class="item-title">${esc(n.title)}</div>
       ${rHtml}
-      <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>
-      <div class="item-actions">
-        <button class="act-btn act-edit" onclick="editNote(${i})">Изменить</button>
-        <button class="act-btn act-del" onclick="delNote(${i})">Удалить</button>
-      </div>`;
-    el.appendChild(d);
+      <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+    d.onclick=()=>openNoteSheet(i);
+    // Swipe to delete
+    let sx=0,swiped=false;
+    d.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;},{passive:true});
+    d.addEventListener('touchmove',e=>{
+      const dx=e.touches[0].clientX-sx;
+      if(dx<-8){const shift=Math.max(dx,-72);d.style.transform=`translateX(${shift}px)`;delBg.style.opacity=Math.min(-shift/72,1);swiped=shift<-36;}
+    },{passive:true});
+    d.addEventListener('touchend',()=>{
+      if(swiped){
+        d.style.transform='translateX(-72px)';delBg.style.opacity='1';
+        delBg.onclick=()=>{delNote(i);};
+        setTimeout(()=>{const r=()=>{d.style.transform='';delBg.style.opacity='0';swiped=false;document.removeEventListener('touchstart',r);};document.addEventListener('touchstart',r,{once:true});},100);
+      } else {d.style.transform='';delBg.style.opacity='0';}
+    },{passive:true});
+    wrap.appendChild(delBg);wrap.appendChild(d);el.appendChild(wrap);
   });
 }
 
@@ -1212,17 +1234,22 @@ function loadNotepad(){
   list.forEach((n,ri)=>{
     const i=all.length-1-ri;
     const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';
-    const d=document.createElement('div');d.className='pad-item';
+    const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
+    const delBg=document.createElement('div');
+    delBg.style.cssText='position:absolute;right:0;top:0;bottom:0;width:72px;background:rgba(192,80,74,0.82);display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .2s;';
+    delBg.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+    const d=document.createElement('div');d.className='pad-item';d.style.margin='0';
     d.innerHTML=`<div class="pad-stripe" style="background:${stripe};"></div>
       <div class="pad-cat">${esc(n.label||'заметка')}</div>
       <div class="pad-title">${esc(n.title)}</div>
       <div class="pad-text">${esc(n.body||'')}</div>
-      <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>
-      <div class="item-actions">
-        <button class="act-btn act-edit" onclick="openNoteSheet(${i})">Изменить</button>
-        <button class="act-btn act-del" onclick="delNote(${i})">Удалить</button>
-      </div>`;
-    el.appendChild(d);
+      <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+    d.onclick=()=>openNoteSheet(i);
+    let sx=0,swiped=false;
+    d.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;},{passive:true});
+    d.addEventListener('touchmove',e=>{const dx=e.touches[0].clientX-sx;if(dx<-8){const shift=Math.max(dx,-72);d.style.transform=`translateX(${shift}px)`;delBg.style.opacity=Math.min(-shift/72,1);swiped=shift<-36;}},{passive:true});
+    d.addEventListener('touchend',()=>{if(swiped){d.style.transform='translateX(-72px)';delBg.style.opacity='1';delBg.onclick=()=>delNote(i);setTimeout(()=>{const r=()=>{d.style.transform='';delBg.style.opacity='0';swiped=false;document.removeEventListener('touchstart',r);};document.addEventListener('touchstart',r,{once:true});},100);}else{d.style.transform='';delBg.style.opacity='0';}},{passive:true});
+    wrap.appendChild(delBg);wrap.appendChild(d);el.appendChild(wrap);
   });
 }
 
