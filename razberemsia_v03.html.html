@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v4.00</title>
+<title>Разберёмся v4.05</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="dns-prefetch" href="https://firebaseapp.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -72,12 +72,10 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
 
 /* ── HEADER ── */
 header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Playfair Display',serif;font-size:21px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:6px;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;}
 .logo-ver{font-size:9px;color:oklch(0.52 0.012 150 / 0.45);font-family:var(--sys);font-weight:500;vertical-align:middle;letter-spacing:.02em;}
-/* Feather-float on logo icon */
-@keyframes feather-float{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-3px) rotate(4deg);}}
-.logo-feather{display:inline-flex;animation:feather-float 4s ease-in-out infinite;}
-.logo-feather svg{width:18px;height:18px;stroke:var(--accent);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.logo-icon-wrap{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:oklch(0.99 0.005 150 / 0.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid oklch(0.92 0.015 150 / 0.5);box-shadow:0 4px 16px -4px oklch(0 0 0 / 0.06);}
+.logo-icon-svg{width:32px;height:32px;border-radius:8px;}
 
 .hcenter{display:flex;flex-direction:column;align-items:center;margin:0 auto;}
 .hdate{font-size:11px;font-weight:500;color:var(--fg-l);letter-spacing:.01em;}
@@ -263,7 +261,15 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .jq-emer:active{background:oklch(0.58 0.16 25 / 0.12);}
 
 /* ── HOME FEED ── */
-.jarvis-feed{flex:1;overflow-y:auto;padding:8px 14px 12px;}
+.jarvis-feed{
+  flex:1;overflow-y:auto;padding:8px 14px 12px;
+  margin:4px 10px 6px;
+  border-radius:20px;
+  background:oklch(0.99 0.004 150 / 0.45);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid oklch(0.90 0.02 150 / 0.38);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.60), inset 0 -1px 0 oklch(0.88 0.02 150 / 0.12);
+}
 .jarvis-feed::-webkit-scrollbar{display:none;}
 .chat-empty{text-align:center;padding:44px 24px 20px;}
 .chat-empty-ico{font-size:34px;display:block;margin-bottom:14px;opacity:.4;}
@@ -305,64 +311,50 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bubble-time{font-size:10px;color:var(--fg-l);}
 
 /* ── HOME BAR ── */
-.home-bar{display:flex;align-items:center;padding:10px 14px 24px;gap:10px;background:transparent;flex-shrink:0;}
+.home-bar{padding:8px 14px 28px;flex-shrink:0;}
 
-/* Input pill */
-.input-pill{
-  flex:1;height:44px;cursor:pointer;-webkit-appearance:none;border:none;
-  display:flex;align-items:center;padding:0 16px;
-  background:
-    radial-gradient(circle at 25% 35%, oklch(1 0 0 / 0.52) 0%, transparent 45%),
-    oklch(1 0 0 / 0.18);
-  border:1px solid oklch(1 0 0 / 0.55);
-  border-radius:22px;
-  backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
-  box-shadow:inset 0 1.5px 4px oklch(1 0 0 / 0.6), 0 4px 16px oklch(0.52 0.10 150 / 0.08);
-  font-family:var(--sys);font-size:14px;color:oklch(0.52 0.012 150 / 0.65);
-  position:relative;overflow:hidden;transition:box-shadow .2s;
+/* ── NEW NOTE BUTTON (wide, hold=voice) ── */
+.new-note-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:14px 20px;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
+  border-radius:18px;
+  background:radial-gradient(circle at 25% 30%, oklch(1 0 0 / 0.55) 0%, transparent 50%),oklch(0.99 0.005 150 / 0.50);
+  backdrop-filter:blur(50px) saturate(2);-webkit-backdrop-filter:blur(50px) saturate(2);
+  border:1px solid oklch(0.92 0.015 150 / 0.60);
+  box-shadow:0 6px 30px -6px oklch(0 0 0 / 0.06), inset 0 1px 0 oklch(1 0 0 / 0.25);
+  transition:background .25s,border-color .25s,box-shadow .25s,transform .15s;
+  position:relative;overflow:hidden;-webkit-touch-callout:none;
 }
-.input-pill::before{content:'';position:absolute;top:7px;left:12px;width:18px;height:10px;border-radius:50%;background:oklch(1 0 0 / 0.5);transform:rotate(-20deg);filter:blur(1px);}
-.input-pill:active{transform:scale(.98);box-shadow:inset 0 1.5px 4px oklch(1 0 0 / 0.5), 0 2px 6px oklch(0.52 0.10 150 / 0.06);}
-
-/* Voice mist */
-.voice-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.voice-mist{position:absolute;width:72px;height:72px;border-radius:50%;pointer-events:none;}
-.voice-mist::before,.voice-mist::after{content:'';position:absolute;border-radius:50%;animation:vm-breathe ease-in-out infinite;}
-.voice-mist::before{inset:0;background:radial-gradient(circle, oklch(0.75 0.08 150 / 0.16) 0%, transparent 70%);animation-duration:3.5s;}
-.voice-mist::after{inset:-8px;background:radial-gradient(circle, oklch(0.70 0.10 150 / 0.10) 0%, transparent 65%);animation-duration:5s;animation-delay:.9s;}
-@keyframes vm-breathe{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.14);opacity:1;}}
-
-/* Big voice button */
-.big-voice-btn{
-  width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;-webkit-appearance:none;
-  position:relative;z-index:1;
-  background:
-    radial-gradient(circle at 30% 28%, oklch(1 0 0 / 0.62) 0%, transparent 40%),
-    radial-gradient(circle at 65% 70%, oklch(0.82 0.06 150 / 0.22) 0%, transparent 45%),
-    oklch(0.92 0.05 150 / 0.12);
-  border:1px solid oklch(1 0 0 / 0.52);
-  box-shadow:
-    inset 0 2px 5px oklch(1 0 0 / 0.58),
-    inset 0 -1px 3px oklch(0.75 0.08 150 / 0.10),
-    0 8px 28px oklch(0.52 0.10 150 / 0.14),
-    0 3px 10px oklch(0.52 0.10 150 / 0.08);
-  backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
-  display:flex;align-items:center;justify-content:center;
-  animation:bubble-float 4.5s ease-in-out infinite;
-  transition:box-shadow .3s;overflow:hidden;
+.new-note-btn::before{content:'';position:absolute;top:8px;left:16px;width:22px;height:12px;border-radius:50%;background:oklch(1 0 0 / 0.45);transform:rotate(-18deg);filter:blur(1px);pointer-events:none;}
+.new-note-btn.holding{
+  background:radial-gradient(circle at 25% 30%, oklch(1 0 0 / 0.45) 0%, transparent 50%),oklch(0.95 0.06 25 / 0.45);
+  border-color:oklch(0.65 0.18 25 / 0.55);
+  transform:scale(0.97);
+  animation:rec-border-pulse 1.2s ease-in-out infinite;
 }
-.big-voice-btn::before{content:'';position:absolute;top:8px;left:10px;width:14px;height:9px;border-radius:50%;background:oklch(1 0 0 / 0.62);transform:rotate(-25deg);filter:blur(0.5px);}
-.big-voice-btn::after{content:'';position:absolute;bottom:10px;right:11px;width:7px;height:4px;border-radius:50%;background:oklch(1 0 0 / 0.35);transform:rotate(15deg);}
-.big-voice-btn svg{width:20px;height:20px;stroke:oklch(0.35 0.09 150 / 0.65);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1;transition:stroke .3s;filter:drop-shadow(0 1px 2px oklch(0.35 0.09 150 / 0.15));}
-@keyframes bubble-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-.big-voice-btn:active{transform:scale(.9)!important;animation:none;}
-.big-voice-btn.rec{
-  border-color:oklch(0.58 0.16 25 / 0.28);
-  box-shadow:inset 0 2px 5px oklch(1 0 0 / 0.5), 0 0 0 6px oklch(0.58 0.16 25 / 0.05), 0 0 0 12px oklch(0.58 0.16 25 / 0.025), 0 8px 28px oklch(0.58 0.16 25 / 0.10);
-  animation:bubble-rec 2.5s ease-in-out infinite;}
-.big-voice-btn.rec svg{stroke:oklch(0.50 0.16 25 / 0.65);}
-@keyframes bubble-rec{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-4px) scale(1.04);}}
-.home-voice-label{font-size:11px;color:var(--fg-l);text-align:center;margin-top:6px;letter-spacing:.01em;transition:color .3s;}
+.new-note-btn.handsfree{
+  background:oklch(0.93 0.08 25 / 0.40);
+  border-color:oklch(0.62 0.20 25 / 0.70);
+  animation:rec-border-pulse 0.9s ease-in-out infinite;
+}
+@keyframes rec-border-pulse{
+  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25 / 0.18), 0 0 0 5px oklch(0.65 0.18 25 / 0.06), 0 6px 28px -4px oklch(0.55 0.20 25 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.18);}
+  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25 / 0.30), 0 0 0 8px oklch(0.65 0.18 25 / 0.10), 0 6px 28px -4px oklch(0.55 0.20 25 / 0.30), inset 0 1px 0 oklch(1 0 0 / 0.18);}
+}
+.new-note-btn:not(.holding):not(.handsfree):active{transform:scale(.98);}
+.nnb-feather svg{width:18px;height:18px;stroke:oklch(0.48 0.10 150);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s;}
+.new-note-btn.holding .nnb-feather svg,.new-note-btn.handsfree .nnb-feather svg{stroke:oklch(0.45 0.18 25);}
+.nnb-text{font-size:15px;font-weight:500;color:var(--fg);transition:color .25s;}
+.new-note-btn.holding .nnb-text,.new-note-btn.handsfree .nnb-text{color:oklch(0.35 0.14 25);}
+.nnb-hint{font-size:12px;color:oklch(0.52 0.012 150 / 0.38);transition:opacity .25s;}
+.new-note-btn.holding .nnb-hint,.new-note-btn.handsfree .nnb-hint{opacity:0;}
+.nnb-mic svg{width:15px;height:15px;stroke:oklch(0.52 0.012 150 / 0.40);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s;}
+.new-note-btn.holding .nnb-mic svg,.new-note-btn.handsfree .nnb-mic svg{stroke:oklch(0.50 0.18 25 / 0.80);}
+.nnb-lock{display:none;align-items:center;gap:4px;}
+.new-note-btn.handsfree .nnb-lock{display:flex;}
+.nnb-lock svg{width:13px;height:13px;stroke:oklch(0.45 0.18 25 / 0.80);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.nnb-lock-txt{font-size:11px;color:oklch(0.45 0.14 25 / 0.80);}
+.home-voice-label{font-size:11px;color:var(--fg-l);text-align:center;margin-top:5px;letter-spacing:.01em;transition:color .3s;min-height:16px;}
 .home-voice-label.rec{color:oklch(0.50 0.16 25 / 0.70);}
 
 /* ── NOTEPAD BAR ── */
@@ -628,6 +620,27 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .input-sheet-bg{position:absolute;inset:0;background:oklch(0.25 0.02 150 / 0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 /* Reuse .sheet styles for the inner div */
 
+/* ── TRASH SCREEN ── */
+.trash-empty{text-align:center;padding:48px 24px;color:var(--fg-l);font-size:15px;line-height:1.8;}
+.trash-empty svg{width:40px;height:40px;stroke:oklch(0.52 0.012 150 / 0.30);stroke-width:1.2;fill:none;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px;}
+.trash-restore-btn{display:inline-flex;align-items:center;gap:6px;background:oklch(0.52 0.10 150 / 0.10);border:1px solid oklch(0.52 0.10 150 / 0.22);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--accent-d);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;margin-left:auto;transition:background .12s;}
+.trash-restore-btn:active{background:oklch(0.52 0.10 150 / 0.18);}
+.trash-restore-btn svg{width:12px;height:12px;stroke:var(--accent-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.trash-count{font-size:12px;color:var(--fg-l);text-align:center;margin-bottom:12px;}
+.trash-clear-btn{display:block;width:100%;background:oklch(0.58 0.16 25 / 0.08);border:1px solid oklch(0.58 0.16 25 / 0.18);border-radius:14px;padding:13px;font-size:14px;font-weight:600;color:var(--rose);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;margin-top:12px;transition:background .12s;}
+.trash-clear-btn:active{background:oklch(0.58 0.16 25 / 0.16);}
+.trash-item{
+  background:oklch(0.99 0.004 150 / 0.55);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid oklch(0.90 0.02 150 / 0.42);
+  border-radius:var(--r);padding:12px 16px 12px 20px;margin-bottom:8px;
+  position:relative;overflow:hidden;word-break:break-word;opacity:0.75;
+}
+.trash-item .note-stripe{opacity:0.5;}
+
+/* ── HOME BAR — matches screenshot layout ── */
+.home-bar{padding:6px 14px 28px;flex-shrink:0;}
+
 /* ── ANIMATIONS ── */
 @keyframes fIn{from{opacity:0}to{opacity:1}}
 @keyframes sUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -646,7 +659,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберёмся</div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v4.00 · бета</div>
+  <div class="auth-ver">v4.05 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -706,15 +719,23 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div class="app">
   <header>
     <div class="logo">
-      <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      Разберёмся<span class="logo-ver">v4.00</span>
+      <div class="logo-icon-wrap">
+        <svg class="logo-icon-svg" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="180" height="180" rx="37" fill="oklch(0.96 0.018 150)"/>
+          <g style="transform:scale(95%);transform-origin:center">
+            <path fill="oklch(0.38 0.10 150)" d="M101.141 53H136.632C151.023 53 162.689 64.666 162.689 79.057V112.904H148.112V79.057C148.112 78.71 148.098 78.366 148.072 78.025L112.581 112.898C112.701 112.902 112.821 112.904 112.941 112.904H148.112V126.672H112.941C98.55 126.672 86.564 114.891 86.564 100.5V66.743H101.141V100.5C101.141 101.15 101.191 101.792 101.289 102.422L137.56 66.782C137.255 66.756 136.945 66.743 136.632 66.743H101.141V53Z"/>
+            <path fill="oklch(0.38 0.10 150)" d="M65.293 124.136L14 66.737H34.636L64.75 100.436V66.737H80.137V118.47C80.137 126.278 70.495 129.958 65.293 124.136Z"/>
+          </g>
+        </svg>
+      </div>
+      Разберёмся<span class="logo-ver">v4.05</span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
       <div class="hclock" id="hclock"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="hbtn glow" onclick="showToast('Корзина — скоро')" style="opacity:.55;">
+      <button class="hbtn" onclick="go('trash')" title="Корзина" id="trash-btn">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
       </button>
       <button class="hbtn" id="hbtn" onclick="toggleMenu(event)">
@@ -742,15 +763,20 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         </div>
         <div class="jarvis-feed" id="home-feed"></div>
         <div class="home-bar">
-          <button class="input-pill" onclick="openInputSheet()">Что на уме...</button>
-          <div class="voice-wrap">
-            <div class="voice-mist"></div>
-            <button id="home-mic-btn" class="big-voice-btn" onclick="toggleHomeVoice()">
-              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
-            </button>
-          </div>
+          <button class="new-note-btn" id="new-note-btn"
+            oncontextmenu="return false"
+            onpointerdown="nnbPointerDown(event)"
+            onpointerup="nnbPointerUp(event)"
+            onpointerleave="nnbPointerLeave(event)"
+            onpointermove="nnbPointerMove(event)">
+            <span class="nnb-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
+            <span class="nnb-text">Новая заметка</span>
+            <span class="nnb-hint">или зажми</span>
+            <span class="nnb-mic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span>
+            <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
+          </button>
+          <div class="home-voice-label" id="home-voice-label"></div>
         </div>
-        <div class="home-voice-label" id="home-voice-label" style="text-align:center;padding:0 0 8px;font-size:11px;color:var(--fg-l);"></div>
       </div>
     </div>
 
@@ -845,6 +871,16 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
           <div class="set-arr">›</div>
         </button>
       </div>
+    </div>
+
+    <!-- TRASH -->
+    <div class="scr" id="s-trash">
+      <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="back-lbl">Назад</div></button></div>
+      <div class="sec-title">Корзина</div>
+      <div class="sec-sub">Удалённые заметки. Восстановите или удалите навсегда.</div>
+      <div class="trash-count" id="trash-count"></div>
+      <div id="trash-list"></div>
+      <button class="trash-clear-btn" id="trash-clear-btn" onclick="clearTrash()" style="display:none;">Очистить корзину навсегда</button>
     </div>
 
   </div>
@@ -1084,6 +1120,7 @@ function go(id){
   if(id==='home')loadHomeFeed();
   if(id==='notes'){renderNotifBanner();loadNotes();}
   if(id==='notepad')loadNotepad();
+  if(id==='trash')loadTrash();
 }
 
 // ── SWIPE BACK ──
@@ -1624,11 +1661,89 @@ function saveSheet(){
 }
 
 function editNote(i){openNoteSheet(i);}
+
+// ── TRASH (мягкое удаление) ──
 function delNote(i){
-  const l=JSON.parse(localStorage.getItem('rz_notes')||'[]');l.splice(i,1);
-  localStorage.setItem('rz_notes',JSON.stringify(l));
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const deleted=notes.splice(i,1)[0];
+  if(deleted){
+    deleted._deletedAt=Date.now();
+    const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+    trash.unshift(deleted);
+    // Держим корзину не более 50 записей
+    if(trash.length>50)trash.pop();
+    localStorage.setItem('rz_trash',JSON.stringify(trash));
+  }
+  localStorage.setItem('rz_notes',JSON.stringify(notes));
   loadNotes();loadHomeFeed();loadNotepad();
-  showToast('Удалено');
+  showToast('В корзину · можно восстановить');
+  updTrashBadge();
+}
+
+function loadTrash(){
+  const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+  const el=document.getElementById('trash-list');
+  const cnt=document.getElementById('trash-count');
+  const clearBtn=document.getElementById('trash-clear-btn');
+  if(!el)return;
+  if(cnt)cnt.textContent=trash.length?`${trash.length} ${trash.length===1?'заметка':trash.length<5?'заметки':'заметок'}` :'';
+  if(clearBtn)clearBtn.style.display=trash.length?'block':'none';
+  el.innerHTML='';
+  if(!trash.length){
+    el.innerHTML=`<div class="trash-empty"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Корзина пуста</div>`;
+    return;
+  }
+  trash.forEach((n,i)=>{
+    const stripe=STRIPES[n.label||'заметка']||STRIPES.заметка;
+    const d=document.createElement('div');d.className='trash-item';
+    const when=n._deletedAt?fmtMeta(n._deletedAt):'';
+    d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.5;"></div>
+      <div class="note-cat">${esc(n.label||'заметка')}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div class="item-title" style="opacity:0.7;">${esc(n.title)}</div>
+        <button class="trash-restore-btn" onclick="restoreNote(${i})">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Восстановить
+        </button>
+      </div>
+      <div class="item-meta">Удалено ${esc(when)}</div>`;
+    el.appendChild(d);
+  });
+}
+
+function restoreNote(i){
+  const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+  const n=trash.splice(i,1)[0];
+  if(n){
+    delete n._deletedAt;
+    const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+    notes.push(n);
+    localStorage.setItem('rz_notes',JSON.stringify(notes));
+  }
+  localStorage.setItem('rz_trash',JSON.stringify(trash));
+  loadTrash();loadNotes();loadHomeFeed();loadNotepad();
+  showToast('Заметка восстановлена ✓');
+  updTrashBadge();
+}
+
+function clearTrash(){
+  if(!confirm('Удалить всё из корзины навсегда?'))return;
+  localStorage.setItem('rz_trash','[]');
+  loadTrash();
+  showToast('Корзина очищена');
+  updTrashBadge();
+}
+
+function updTrashBadge(){
+  const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+  const btn=document.getElementById('trash-btn');
+  if(!btn)return;
+  if(trash.length){
+    btn.style.opacity='1';
+    btn.style.position='relative';
+  } else {
+    btn.style.opacity='0.55';
+  }
 }
 
 // ── NOTE SHEET VOICE ──
@@ -1803,8 +1918,20 @@ function loadHomeFeed(){
 function delHomeEntry(i){
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
   const realIdx=notes.length-1-i;
-  if(realIdx>=0){notes.splice(realIdx,1);localStorage.setItem('rz_notes',JSON.stringify(notes));}
+  if(realIdx>=0){
+    const deleted=notes.splice(realIdx,1)[0];
+    if(deleted){
+      deleted._deletedAt=Date.now();
+      const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+      trash.unshift(deleted);
+      if(trash.length>50)trash.pop();
+      localStorage.setItem('rz_trash',JSON.stringify(trash));
+    }
+    localStorage.setItem('rz_notes',JSON.stringify(notes));
+  }
   loadHomeFeed();loadNotes();loadNotepad();
+  showToast('В корзину · можно восстановить');
+  updTrashBadge();
 }
 
 // ── INPUT SHEET ──
@@ -1873,7 +2000,70 @@ function stopSheetVoice(){
   if(sheetRecog)try{sheetRecog.stop();}catch(e){}
 }
 
-// ── BIG VOICE BUTTON ──
+// ── NEW NOTE BUTTON — hold logic ──
+let _nnbHoldTimer=null, _nnbHolding=false, _nnbHandsfree=false;
+let _nnbStartY=0; // for swipe-up detection
+
+function nnbPointerDown(e){
+  _nnbStartY = e.clientY;
+  _nnbHolding=false;
+  _nnbHoldTimer=setTimeout(()=>{
+    _nnbHolding=true;
+    const btn=document.getElementById('new-note-btn');
+    if(btn)btn.classList.add('holding');
+    startHomeVoice();
+  },400);
+}
+
+function nnbPointerMove(e){
+  if(!_nnbHolding)return;
+  const dy=_nnbStartY-e.clientY;
+  // Swipe up 40px = handsfree lock
+  if(dy>40&&!_nnbHandsfree){
+    _nnbHandsfree=true;
+    const btn=document.getElementById('new-note-btn');
+    if(btn){btn.classList.remove('holding');btn.classList.add('handsfree');}
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl)lbl.textContent='🔒 Хендсфри — говорите';
+    // Release pointer — keep recording
+  }
+}
+
+function nnbPointerUp(e){
+  clearTimeout(_nnbHoldTimer);
+  if(_nnbHandsfree){
+    // Handsfree: pointer up doesn't stop — tap again to stop
+    return;
+  }
+  if(_nnbHolding){
+    // Was holding — stop voice on release
+    _nnbHolding=false;
+    const btn=document.getElementById('new-note-btn');
+    if(btn)btn.classList.remove('holding');
+    stopHomeVoice();
+  } else {
+    // Short tap — open note sheet
+    openSheet('note');
+  }
+}
+
+function nnbPointerLeave(e){
+  clearTimeout(_nnbHoldTimer);
+  if(_nnbHolding&&!_nnbHandsfree){
+    _nnbHolding=false;
+    const btn=document.getElementById('new-note-btn');
+    if(btn)btn.classList.remove('holding');
+    stopHomeVoice();
+  }
+}
+
+function nnbStopHandsfree(){
+  _nnbHandsfree=false;_nnbHolding=false;
+  const btn=document.getElementById('new-note-btn');
+  if(btn){btn.classList.remove('holding');btn.classList.remove('handsfree');}
+}
+
+// ── HOME VOICE (used by new note button) ──
 function toggleHomeVoice(){homeIsRec?stopHomeVoice():startHomeVoice();}
 function startHomeVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1883,8 +2073,7 @@ function startHomeVoice(){
   homeRecog.lang='ru-RU';homeRecog.continuous=true;homeRecog.interimResults=false;
   homeRecog.onstart=()=>{
     homeIsRec=true;collected='';
-    const btn=document.getElementById('home-mic-btn');if(btn)btn.classList.add('rec');
-    const lbl=document.getElementById('home-voice-label');if(lbl){lbl.textContent='Говорите…';lbl.classList.add('rec');}
+    const lbl=document.getElementById('home-voice-label');if(lbl){lbl.textContent='🎙 Говорите…';lbl.classList.add('rec');}
   };
   homeRecog.onresult=e=>{
     for(let i=e.resultIndex;i<e.results.length;i++){
@@ -1897,8 +2086,9 @@ function startHomeVoice(){
   };
   homeRecog.onend=()=>{
     homeIsRec=false;homeRecog=null;
-    const btn=document.getElementById('home-mic-btn');if(btn)btn.classList.remove('rec');
     const lbl=document.getElementById('home-voice-label');if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
+    // Reset button states
+    if(!_nnbHandsfree){nnbStopHandsfree();}else{nnbStopHandsfree();}
     const text=collected.trim();
     if(!text)return;
     const{title,label,reminder}=analyzeText(text);
@@ -1921,6 +2111,7 @@ function loadAll(){
   loadHomeFeed();
   loadNotes();
   loadNotepad();
+  updTrashBadge();
   if('requestIdleCallback'in window){
     requestIdleCallback(()=>{scheduleAll();calRender();updCalTrigger();});
   } else {
