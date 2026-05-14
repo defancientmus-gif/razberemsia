@@ -169,22 +169,24 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .chat-empty-ico{font-size:34px;display:block;margin-bottom:14px;opacity:.4;}
 .chat-empty-t{font-size:16px;color:var(--text-l);line-height:1.7;}
 .chat-empty-s{font-size:13px;color:var(--stone);display:block;margin-top:8px;}
-.bubble-wrap{display:flex;justify-content:flex-end;margin-bottom:10px;}
+.bubble-wrap{display:flex;justify-content:flex-end;margin-bottom:10px;position:relative;overflow:hidden;border-radius:20px 20px 4px 20px;}
+.bubble-delete-bg{position:absolute;right:0;top:0;bottom:0;width:64px;background:rgba(192,80,74,0.85);display:flex;align-items:center;justify-content:center;border-radius:0 20px 4px 0;opacity:0;transition:opacity .2s;}
+.bubble-delete-bg svg{width:18px;height:18px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .bubble{
   background:radial-gradient(circle at 25% 25%,rgba(255,255,255,0.45) 0%,transparent 50%),rgba(122,158,126,0.14);
   border:1px solid rgba(255,255,255,0.48);
   border-radius:20px 20px 4px 20px;padding:11px 14px 8px;max-width:88%;
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   box-shadow:inset 0 1px 3px rgba(255,255,255,0.5),0 3px 12px rgba(100,160,130,0.07);
-  cursor:pointer;transition:transform .12s;
+  cursor:pointer;transition:transform .2s cubic-bezier(.4,0,.2,1);
+  position:relative;z-index:1;touch-action:pan-y;
+  will-change:transform;
 }
-.bubble:active{transform:scale(.97);}
 .bubble-text{font-size:15px;color:var(--text);line-height:1.55;word-break:break-word;}
 .bubble-footer{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:5px;}
 .bubble-cat{font-size:10px;font-weight:700;color:var(--sage-d);background:rgba(122,158,126,0.11);border-radius:50px;padding:2px 8px;text-transform:uppercase;letter-spacing:.06em;}
 .bubble-time{font-size:10px;color:var(--text-l);}
-.bubble-del{background:none;border:none;cursor:pointer;-webkit-appearance:none;padding:2px 5px;opacity:.3;font-size:12px;font-family:var(--sys);color:var(--text-l);}
-.bubble-del:active{opacity:.8;}
+
 /* ── HOME BAR ── */
 .home-bar{display:flex;align-items:center;padding:10px 14px 24px;gap:10px;background:transparent;flex-shrink:0;}
 .home-voice-hint{display:none;}
@@ -236,34 +238,43 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-voice-label{font-size:11px;color:var(--text-l);text-align:center;margin-top:6px;letter-spacing:.01em;transition:color .3s;}
 .home-voice-label.rec{color:rgba(180,55,50,0.7);}
 
-/* ── INPUT SHEET ── */
-.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:flex-end;}
+/* ── INPUT SHEET — same glass style as modal ── */
+.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;align-items:flex-end;justify-content:center;padding:0;}
 .input-sheet-overlay.open{display:flex;}
-.input-sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,0.15);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+.input-sheet-overlay::before{content:'';position:absolute;inset:0;background:rgba(240,235,228,0.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.input-sheet-bg{position:absolute;inset:0;}
 .input-sheet{
-  position:relative;
-  background:radial-gradient(circle at 25% 8%,rgba(255,255,255,0.42) 0%,transparent 45%),radial-gradient(circle at 80% 90%,rgba(200,230,215,0.18) 0%,transparent 40%),rgba(240,236,230,0.78);
-  backdrop-filter:blur(32px) saturate(1.5);-webkit-backdrop-filter:blur(32px) saturate(1.5);
+  position:relative;z-index:1;
+  width:100%;max-width:480px;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%,rgba(200,225,210,0.22),transparent 60%),
+    radial-gradient(circle at 15% 15%,rgba(255,255,255,0.55) 0%,transparent 40%),
+    radial-gradient(circle at 85% 85%,rgba(180,215,195,0.15) 0%,transparent 45%),
+    rgba(242,238,232,0.82);
+  backdrop-filter:blur(40px) saturate(1.6);-webkit-backdrop-filter:blur(40px) saturate(1.6);
   border-radius:28px 28px 0 0;
-  border-top:1px solid rgba(255,255,255,0.62);
-  padding:0 0 40px;width:100%;max-width:480px;margin:0 auto;
-  animation:sUp .28s cubic-bezier(.4,0,.2,1);
+  border-top:1px solid rgba(255,255,255,0.75);
+  border-left:1px solid rgba(255,255,255,0.45);
+  border-right:1px solid rgba(255,255,255,0.45);
+  box-shadow:0 0 0 1px rgba(200,220,210,0.15),0 -8px 40px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.85);
+  animation:sUp .35s cubic-bezier(.22,1,.36,1);
+  overflow:hidden;
+  padding-bottom:28px;
 }
-.input-sheet-shine{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.8) 30%,rgba(255,255,255,0.92) 50%,rgba(255,255,255,0.8) 70%,transparent);margin-bottom:0;}
-.input-sheet-handle{width:32px;height:3px;border-radius:2px;background:rgba(180,175,168,0.45);margin:12px auto 0;}
-.input-sheet-hint{font-size:13px;color:var(--stone);text-align:center;margin:10px 20px 14px;line-height:1.55;font-style:italic;opacity:.72;}
+.input-sheet-shine{height:1.5px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,0.92) 35%,rgba(255,255,255,1) 50%,rgba(255,255,255,0.92) 65%,transparent 95%);flex-shrink:0;}
+.input-sheet-handle{width:32px;height:3px;border-radius:2px;background:rgba(180,175,168,0.4);margin:12px auto 0;}
+.input-sheet-hint{font-size:13px;color:var(--stone);text-align:center;margin:10px 20px 14px;line-height:1.55;font-style:italic;opacity:.7;}
 .input-sheet-field{
   display:block;width:calc(100% - 28px);margin:0 14px 12px;
-  background:radial-gradient(circle at 20% 20%,rgba(255,255,255,0.45) 0%,transparent 55%),rgba(255,255,255,0.32);
-  border:1px solid rgba(255,255,255,0.55);border-radius:20px;
-  padding:14px 16px;font-size:16px;font-family:var(--sys);color:var(--text);
-  outline:none;resize:none;min-height:100px;max-height:220px;line-height:1.55;
-  -webkit-user-select:text;user-select:text;
-  box-shadow:inset 0 1px 4px rgba(255,255,255,0.5),0 2px 8px rgba(0,0,0,0.03);
-  backdrop-filter:blur(8px);transition:border-color .15s;
+  background:transparent;border:none;border-radius:0;
+  border-bottom:1px solid rgba(200,195,188,0.3);
+  padding:4px 0 10px;font-size:16px;font-family:var(--sys);color:var(--text);
+  outline:none;resize:none;min-height:100px;max-height:220px;line-height:1.65;
+  -webkit-user-select:text;user-select:text;transition:border-color .15s;
+  box-shadow:none;backdrop-filter:none;
 }
 .input-sheet-field::placeholder{color:var(--stone);}
-.input-sheet-field:focus{border-color:rgba(122,158,126,0.4);}
+.input-sheet-field:focus{border-bottom-color:rgba(122,158,126,0.5);}
 .input-sheet-actions{display:flex;gap:10px;align-items:center;padding:0 14px;}
 .input-sheet-mic{
   width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;-webkit-appearance:none;flex-shrink:0;
@@ -1407,12 +1418,47 @@ function loadHomeFeed(){
   list.forEach((n,i)=>{
     const wrap=document.createElement('div');wrap.className='bubble-wrap';
     const catHtml=n.label&&n.label!=='заметка'?`<span class="bubble-cat">${esc(n.label)}</span>`:'';
-    // Find corresponding note index for editing
     const allNotes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
     const noteIdx=allNotes.findIndex(note=>note.createdAt===n.createdAt);
     const clickAttr=noteIdx>=0?`onclick="openNoteSheet(${noteIdx})"`:'' ;
-    wrap.innerHTML=`<div class="bubble" ${clickAttr}><div class="bubble-text">${esc(n.text)}</div><div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(n.date)}</span><button class="bubble-del" onclick="event.stopPropagation();delHomeEntry(${i})">✕</button></div></div>`;
+    wrap.innerHTML=`
+      <div class="bubble-delete-bg" id="bdel-${i}">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </div>
+      <div class="bubble" id="bbl-${i}" ${clickAttr}>
+        <div class="bubble-text">${esc(n.text)}</div>
+        <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(n.date)}</span></div>
+      </div>`;
     el.appendChild(wrap);
+    // Swipe to delete
+    const bbl=wrap.querySelector('.bubble');
+    const bdel=wrap.querySelector('.bubble-delete-bg');
+    let sx=0,swiped=false;
+    bbl.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;},{passive:true});
+    bbl.addEventListener('touchmove',e=>{
+      const dx=e.touches[0].clientX-sx;
+      if(dx<-8){
+        const shift=Math.max(dx,-68);
+        bbl.style.transform=`translateX(${shift}px)`;
+        bdel.style.opacity=Math.min(-shift/68,1);
+        swiped=shift<-34;
+      }
+    },{passive:true});
+    bbl.addEventListener('touchend',()=>{
+      if(swiped){
+        bbl.style.transform='translateX(-68px)';
+        bdel.style.opacity='1';
+        // Tap on delete bg confirms
+        bdel.onclick=()=>delHomeEntry(i);
+        // Tap elsewhere cancels
+        setTimeout(()=>{
+          const reset=()=>{bbl.style.transform='';bdel.style.opacity='0';swiped=false;document.removeEventListener('touchstart',reset);};
+          document.addEventListener('touchstart',reset,{once:true});
+        },100);
+      } else {
+        bbl.style.transform='';bdel.style.opacity='0';
+      }
+    },{passive:true});
   });
   el.scrollTop=el.scrollHeight;
 }
@@ -1478,41 +1524,49 @@ function toggleHomeVoice(){homeIsRec?stopHomeVoice():startHomeVoice();}
 function startHomeVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голос не поддерживается');return;}
-  homeRecog=new SR();homeRecog.lang='ru-RU';homeRecog.continuous=false;homeRecog.interimResults=false;
+  let collected='';
+  homeRecog=new SR();
+  homeRecog.lang='ru-RU';
+  homeRecog.continuous=true;
+  homeRecog.interimResults=false;
   homeRecog.onstart=()=>{
-    homeIsRec=true;
+    homeIsRec=true;collected='';
     const btn=document.getElementById('home-mic-btn');if(btn)btn.classList.add('rec');
-    const lbl=document.getElementById('home-voice-label');if(lbl)lbl.textContent='Говорите… нажмите чтобы остановить';
+    const lbl=document.getElementById('home-voice-label');if(lbl)lbl.textContent='Говорите…';
   };
   homeRecog.onresult=e=>{
-    let fin='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
-    if(fin.trim()){
-      // Сразу сохраняем
-      const text=fin.trim();
-      const{title,label,reminder}=analyzeText(text);
-      const ts=Date.now();
-      const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-      notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
-      localStorage.setItem('rz_notes',JSON.stringify(notes));
-      const padList=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-      const now=new Date();
-      const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
-      padList.push({text,date,label,title,createdAt:ts});
-      localStorage.setItem('rz_notepad',JSON.stringify(padList));
-      loadHomeFeed();
-      showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
-      if(reminder&&notifGranted())scheduleAll();
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)collected+=(collected?' ':'')+e.results[i][0].transcript;
     }
   };
-  homeRecog.onerror=e=>{showToast('Ошибка: '+e.error);stopHomeVoice();};
-  homeRecog.onend=()=>stopHomeVoice();
+  homeRecog.onerror=e=>{
+    if(e.error!=='no-speech')showToast('Ошибка: '+e.error);
+    stopHomeVoice();
+  };
+  homeRecog.onend=()=>{
+    homeIsRec=false;homeRecog=null;
+    const btn=document.getElementById('home-mic-btn');if(btn)btn.classList.remove('rec');
+    const lbl=document.getElementById('home-voice-label');if(lbl)lbl.textContent='';
+    const text=collected.trim();
+    if(!text)return;
+    const{title,label,reminder}=analyzeText(text);
+    const ts=Date.now();
+    const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+    notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+    localStorage.setItem('rz_notes',JSON.stringify(notes));
+    const padList=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
+    const now=new Date();
+    const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
+    padList.push({text,date,label,title,createdAt:ts});
+    localStorage.setItem('rz_notepad',JSON.stringify(padList));
+    loadHomeFeed();
+    showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
+    if(reminder&&notifGranted())scheduleAll();
+  };
   homeRecog.start();
 }
 function stopHomeVoice(){
   if(homeRecog)try{homeRecog.stop();}catch(e){}
-  homeRecog=null;homeIsRec=false;
-  const btn=document.getElementById('home-mic-btn');if(btn)btn.classList.remove('rec');
-  const lbl=document.getElementById('home-voice-label');if(lbl)lbl.textContent='Нажмите, чтобы говорить';
 }
 
 // ── LOAD ALL ──
