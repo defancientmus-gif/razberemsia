@@ -1202,23 +1202,25 @@ function delNote(i){
 let recog=null,isRec=false;
 
 function loadNotepad(){
-  const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
+  // Единый источник — rz_notes, показываем fromPad заметки
+  const all=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const list=all.slice().reverse();
   const el=document.getElementById('notepad-list');if(!el)return;el.innerHTML='';
   if(!list.length){
     el.innerHTML='<div style="text-align:center;color:var(--text-l);font-size:15px;padding:28px 0;">Записей пока нет<br><span style="font-size:13px;display:block;margin-top:5px;">Напишите или надиктуйте ниже</span></div>';return;
   }
-  list.slice().reverse().forEach((n,ri)=>{
-    const i=list.length-1-ri;
+  list.forEach((n,ri)=>{
+    const i=all.length-1-ri;
     const stripe=STRIPES[n.label||'заметка']||'#c4b8a8';
     const d=document.createElement('div');d.className='pad-item';
     d.innerHTML=`<div class="pad-stripe" style="background:${stripe};"></div>
       <div class="pad-cat">${esc(n.label||'заметка')}</div>
       <div class="pad-title">${esc(n.title)}</div>
-      <div class="pad-text">${esc(n.text)}</div>
-      <div class="pad-meta">${esc(n.date)}</div>
+      <div class="pad-text">${esc(n.body||'')}</div>
+      <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>
       <div class="item-actions">
-        <button class="act-btn act-edit" onclick="editPad(${i})">Изменить</button>
-        <button class="act-btn act-del" onclick="delPad(${i})">Удалить</button>
+        <button class="act-btn act-edit" onclick="openNoteSheet(${i})">Изменить</button>
+        <button class="act-btn act-del" onclick="delNote(${i})">Удалить</button>
       </div>`;
     el.appendChild(d);
   });
@@ -1257,37 +1259,17 @@ function saveNotepad(){
   const text=inp.value.trim();if(!text){showToast('Напишите что-нибудь');return;}
   const{title,label,reminder}=analyzeText(text);
   const ts=Date.now();
-  // В заметки
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
   notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
   localStorage.setItem('rz_notes',JSON.stringify(notes));
-  // В историю блокнота
-  const pad=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-  const now=new Date();
-  const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
-  pad.push({text,date,label,title,createdAt:ts});
-  localStorage.setItem('rz_notepad',JSON.stringify(pad));
   inp.value='';inp.style.height='auto';
-  loadNotepad();loadNotes();
-  const msg=reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`;
-  showToast(msg);
+  loadNotepad();loadNotes();loadHomeFeed();
+  showToast(reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`);
   if(reminder&&notifGranted())scheduleAll();
 }
 function pad2(x){return String(x).padStart(2,'0');}
 
-function editPad(i){
-  const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-  const n=list[i];if(!n)return;
-  ST='notepad';EI=i;
-  document.getElementById('sheet-title').textContent='Изменить запись';
-  document.getElementById('sheet-body').innerHTML=`<div class="sheet-lbl">Текст</div><textarea class="sheet-in" id="sh1" rows="4">${esc(n.text)}</textarea>`;
-  document.getElementById('overlay').classList.add('open');
-  setTimeout(()=>{const f=document.getElementById('sh1');if(f)f.focus();},260);
-}
-function delPad(i){
-  const l=JSON.parse(localStorage.getItem('rz_notepad')||'[]');l.splice(i,1);
-  localStorage.setItem('rz_notepad',JSON.stringify(l));loadNotepad();showToast('Удалено');
-}
+// editPad и delPad заменены на openNoteSheet и delNote (единый источник rz_notes)
 
 function npResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 
@@ -1383,32 +1365,24 @@ function saveSheet(){
   const v3=(document.getElementById('sh3')||{}).value||'';
   if(!v1.trim()){showToast('Напишите текст');return;}
   const ts=Date.now();
-
-  if(ST==='note'||ST===null){
-    const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-    const item={title:v1.trim(),body:'',label:v3.trim()||'заметка',reminder:v2||null,updatedAt:ts};
-    if(EI!==null){item.createdAt=list[EI].createdAt||ts;list[EI]=item;}
-    else{item.createdAt=ts;list.push(item);}
-    localStorage.setItem('rz_notes',JSON.stringify(list));
-    loadNotes();closeSheet();
-    showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
-    if(v2&&notifGranted())scheduleAll();
-  } else if(ST==='notepad'){
-    const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-    if(EI!==null){list[EI].text=v1.trim();list[EI].updatedAt=ts;}
-    localStorage.setItem('rz_notepad',JSON.stringify(list));
-    loadNotepad();closeSheet();showToast('Изменено ✓');
-  }
+  const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const item={title:v1.trim(),body:v1.trim(),label:v3.trim()||'заметка',reminder:v2||null,updatedAt:ts};
+  if(EI!==null){item.createdAt=list[EI].createdAt||ts;list[EI]=item;}
+  else{item.createdAt=ts;list.push(item);}
+  localStorage.setItem('rz_notes',JSON.stringify(list));
+  loadNotes();loadHomeFeed();loadNotepad();closeSheet();
+  showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
+  if(v2&&notifGranted())scheduleAll();
 }
 
 // ── HOME FEED (JARVIS) ──
 let homeRecog=null,homeIsRec=false,sheetRecog=null,sheetIsRec=false;
 
 function loadHomeFeed(){
-  const list=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const list=notes.slice().reverse(); // новые сверху
   const el=document.getElementById('home-feed');if(!el)return;
   el.innerHTML='';
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
   const badge=document.getElementById('notes-count-badge');
   if(badge)badge.textContent=notes.length?'('+notes.length+')':'';
   if(!list.length){
@@ -1416,18 +1390,17 @@ function loadHomeFeed(){
     return;
   }
   list.forEach((n,i)=>{
+    const realIdx=notes.length-1-i; // индекс в оригинальном массиве
     const wrap=document.createElement('div');wrap.className='bubble-wrap';
     const catHtml=n.label&&n.label!=='заметка'?`<span class="bubble-cat">${esc(n.label)}</span>`:'';
-    const allNotes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-    const noteIdx=allNotes.findIndex(note=>note.createdAt===n.createdAt);
-    const clickAttr=noteIdx>=0?`onclick="openNoteSheet(${noteIdx})"`:'' ;
+    const timeStr=fmtMeta(n.updatedAt||n.createdAt);
     wrap.innerHTML=`
       <div class="bubble-delete-bg" id="bdel-${i}">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
       </div>
-      <div class="bubble" id="bbl-${i}" ${clickAttr}>
-        <div class="bubble-text">${esc(n.text)}</div>
-        <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(n.date)}</span></div>
+      <div class="bubble" id="bbl-${i}" onclick="openNoteSheet(${realIdx})">
+        <div class="bubble-text">${esc(n.body||n.title||'')}</div>
+        <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
       </div>`;
     el.appendChild(wrap);
     // Swipe to delete
@@ -1471,21 +1444,18 @@ function saveHome(){
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
   notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
   localStorage.setItem('rz_notes',JSON.stringify(notes));
-  const padList=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-  const now=new Date();
-  const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
-  padList.push({text,date,label,title,createdAt:ts});
-  localStorage.setItem('rz_notepad',JSON.stringify(padList));
   inp.value='';inp.style.height='auto';
   closeInputSheet();
-  loadHomeFeed();
+  loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
   if(reminder&&notifGranted())scheduleAll();
 }
 
 function delHomeEntry(i){
-  const l=JSON.parse(localStorage.getItem('rz_notepad')||'[]');l.splice(i,1);
-  localStorage.setItem('rz_notepad',JSON.stringify(l));loadHomeFeed();
+  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const realIdx=notes.length-1-i;
+  if(realIdx>=0){notes.splice(realIdx,1);localStorage.setItem('rz_notes',JSON.stringify(notes));}
+  loadHomeFeed();loadNotes();loadNotepad();
 }
 
 // INPUT SHEET
@@ -1554,12 +1524,7 @@ function startHomeVoice(){
     const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
     notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
     localStorage.setItem('rz_notes',JSON.stringify(notes));
-    const padList=JSON.parse(localStorage.getItem('rz_notepad')||'[]');
-    const now=new Date();
-    const date=now.getDate()+' '+['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][now.getMonth()]+' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
-    padList.push({text,date,label,title,createdAt:ts});
-    localStorage.setItem('rz_notepad',JSON.stringify(padList));
-    loadHomeFeed();
+    loadHomeFeed();loadNotes();loadNotepad();
     showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
     if(reminder&&notifGranted())scheduleAll();
   };
