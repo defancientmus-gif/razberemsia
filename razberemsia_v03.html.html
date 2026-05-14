@@ -721,19 +721,40 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 <div class="toast" id="toast"></div>
 
-<!-- INPUT SHEET -->
+<!-- INPUT SHEET — same structure as note modal -->
 <div class="input-sheet-overlay" id="input-sheet-overlay">
   <div class="input-sheet-bg" onclick="closeInputSheet()"></div>
-  <div class="input-sheet">
-    <div class="input-sheet-shine"></div>
-    <div class="input-sheet-handle"></div>
-    <div class="input-sheet-hint">Мысли, задачи, покупки, что угодно — просто запишите.</div>
-    <textarea id="home-input" class="input-sheet-field" rows="4" placeholder="Что на уме..." oninput="npResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveHome();}"></textarea>
-    <div class="input-sheet-actions">
-      <button id="sheet-mic-btn" class="input-sheet-mic" onclick="toggleSheetVoice()">
-        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
-      </button>
-      <button class="input-sheet-send" onclick="saveHome()">Записать</button>
+  <div class="sheet" style="max-height:90vh;overflow-y:auto;">
+    <div class="sheet-ambient"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0;">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--text);letter-spacing:-.2px;">Новая запись</div>
+      <div class="sheet-note-mic-wrap">
+        <div class="snm-mist"></div>
+        <button class="snm-btn" id="input-sheet-mic-btn" onclick="toggleSheetVoice()">
+          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="sheet-hdr-line" style="margin-top:12px;"></div>
+    <div class="sheet-body-wrap">
+      <textarea class="sheet-in" id="home-input" rows="8" placeholder="Что на уме..." style="min-height:180px;font-size:16px;line-height:1.75;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,280)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&event.ctrlKey){event.preventDefault();saveHome();}"></textarea>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <div style="flex:1;">
+          <div class="sheet-lbl">Категория</div>
+          <input class="sheet-in" id="home-input-label" placeholder="здоровье, покупки..." style="min-height:auto;padding:8px 0;font-size:14px;">
+        </div>
+        <div style="flex:1;">
+          <div class="sheet-lbl">Напоминание</div>
+          <input class="sheet-in" id="home-input-reminder" type="datetime-local" style="min-height:auto;padding:8px 0;font-size:14px;">
+        </div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <span class="sheet-char-count" id="input-sheet-char-count"></span>
+      <div class="sheet-footer-actions">
+        <button class="sheet-cancel" onclick="closeInputSheet()">Отмена</button>
+        <button class="sheet-save" onclick="saveHome()">Записать</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1464,12 +1485,16 @@ function loadHomeFeed(){
 function saveHome(){
   const inp=document.getElementById('home-input');
   const text=inp.value.trim();if(!text){showToast('Напишите что-нибудь');return;}
-  const{title,label,reminder}=analyzeText(text);
+  const auto=analyzeText(text);
+  const labelEl=document.getElementById('home-input-label');
+  const reminderEl=document.getElementById('home-input-reminder');
+  const label=(labelEl&&labelEl.value.trim())||auto.label;
+  const reminder=(reminderEl&&reminderEl.value)||auto.reminder;
+  const title=auto.title;
   const ts=Date.now();
   const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
-  notes.push({title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+  notes.push({title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
   localStorage.setItem('rz_notes',JSON.stringify(notes));
-  inp.value='';inp.style.height='auto';
   closeInputSheet();
   loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
@@ -1486,10 +1511,20 @@ function delHomeEntry(i){
 // INPUT SHEET
 function openInputSheet(){
   document.getElementById('input-sheet-overlay').classList.add('open');
-  setTimeout(()=>{const f=document.getElementById('home-input');if(f)f.focus();},280);
+  document.getElementById('input-sheet-char-count').textContent='';
+  setTimeout(()=>{
+    const f=document.getElementById('home-input');
+    if(f){
+      f.value='';f.style.height='auto';f.focus();
+      f.oninput=()=>{document.getElementById('input-sheet-char-count').textContent=f.value.length+' симв';};
+    }
+    const l=document.getElementById('home-input-label');if(l)l.value='';
+    const r=document.getElementById('home-input-reminder');if(r)r.value='';
+  },300);
 }
 function closeInputSheet(){
   stopSheetVoice();
+  stopNoteSheetVoice();
   document.getElementById('input-sheet-overlay').classList.remove('open');
 }
 
@@ -1498,20 +1533,25 @@ function toggleSheetVoice(){sheetIsRec?stopSheetVoice():startSheetVoice();}
 function startSheetVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голос не поддерживается');return;}
-  sheetRecog=new SR();sheetRecog.lang='ru-RU';sheetRecog.continuous=true;sheetRecog.interimResults=true;
-  sheetRecog.onstart=()=>{sheetIsRec=true;document.getElementById('sheet-mic-btn').classList.add('rec');};
+  let collected='';
+  sheetRecog=new SR();sheetRecog.lang='ru-RU';sheetRecog.continuous=true;sheetRecog.interimResults=false;
+  sheetRecog.onstart=()=>{sheetIsRec=true;collected='';const btn=document.getElementById('input-sheet-mic-btn');if(btn)btn.classList.add('rec');};
   sheetRecog.onresult=e=>{
-    let fin='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
-    if(fin){const inp=document.getElementById('home-input');inp.value+=(inp.value?' ':'')+fin;npResize(inp);}
+    for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)collected+=(collected?' ':'')+e.results[i][0].transcript;
   };
-  sheetRecog.onerror=e=>{showToast('Ошибка: '+e.error);stopSheetVoice();};
-  sheetRecog.onend=()=>stopSheetVoice();
+  sheetRecog.onerror=e=>{if(e.error!=='no-speech')showToast('Ошибка: '+e.error);stopSheetVoice();};
+  sheetRecog.onend=()=>{
+    sheetIsRec=false;sheetRecog=null;
+    const btn=document.getElementById('input-sheet-mic-btn');if(btn)btn.classList.remove('rec');
+    if(collected.trim()){
+      const inp=document.getElementById('home-input');
+      if(inp){inp.value+=(inp.value?' ':'')+collected.trim();inp.oninput&&inp.oninput();}
+    }
+  };
   sheetRecog.start();
 }
 function stopSheetVoice(){
   if(sheetRecog)try{sheetRecog.stop();}catch(e){}
-  sheetRecog=null;sheetIsRec=false;
-  const btn=document.getElementById('sheet-mic-btn');if(btn)btn.classList.remove('rec');
 }
 
 // BIG VOICE BUTTON (главный экран — сразу пишет в notepad)
