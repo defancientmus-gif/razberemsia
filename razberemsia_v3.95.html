@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v3.90</title>
+<title>Разберёмся v3.95</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="dns-prefetch" href="https://firebaseapp.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -184,7 +184,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   cursor:pointer;transition:transform .2s cubic-bezier(.4,0,.2,1);
   position:relative;z-index:1;touch-action:pan-y;
   will-change:transform;
-  overflow:hidden;
 }
 .bubble::before{
   content:'';position:absolute;top:6px;left:10px;
@@ -249,10 +248,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-voice-label.rec{color:rgba(180,55,50,0.7);}
 
 /* ── INPUT SHEET — same glass style as modal ── */
-.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;align-items:flex-end;justify-content:center;padding:0;}
+.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:flex-end;align-items:center;}
 .input-sheet-overlay.open{display:flex;}
-.input-sheet-overlay::before{content:'';position:absolute;inset:0;background:rgba(240,235,228,0.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
-.input-sheet-bg{position:absolute;inset:0;}
+.input-sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,0.15);}
 .input-sheet{
   position:relative;z-index:1;
   width:100%;max-width:480px;
@@ -471,7 +469,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <div id="auth-screen">
   <div class="auth-logo">Разберёмся</div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v3.90 · бета</div>
+  <div class="auth-ver">v3.95 · бета</div>
   <div class="auth-card">
     <div class="auth-step active" id="step-phone">
       <div class="auth-lbl">Вход</div>
@@ -530,7 +528,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- APP -->
 <div class="app">
   <header>
-    <div class="logo">Разберёмся<span class="logo-ver">v3.90</span></div>
+    <div class="logo">Разберёмся<span class="logo-ver">v3.95</span></div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
       <div class="hclock" id="hclock"></div>
