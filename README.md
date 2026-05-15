@@ -34,6 +34,7 @@ git pull
 - `index.html` — главный прототип.
 - `manifest.json` — PWA-настройки.
 - `sw.js` — service worker и кэш.
+- `firestore.rules` — правила доступа к облачным заметкам Firebase.
 - `PROJECT_CONTEXT.md` — краткий контекст проекта.
 - `TODO.md` — ближайшие задачи.
 - `CHANGELOG.md` — история изменений.

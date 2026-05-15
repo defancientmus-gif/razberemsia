@@ -322,9 +322,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bubble::before{content:'';position:absolute;top:6px;left:10px;width:20px;height:10px;border-radius:50%;background:oklch(1 0 0 / 0.48);transform:rotate(-20deg);filter:blur(1px);pointer-events:none;}
 /* bubble-stripe removed */
 /* bubble-title removed */
-.bubble-text{font-size:13px;color:var(--fg-m);line-height:1.55;word-break:break-word;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.bubble-text.expanded{display:block;-webkit-line-clamp:unset;}
+.bubble-text{font-size:13px;color:var(--fg-m);line-height:1.55;word-break:break-word;white-space:pre-line;
+  display:block;max-height:4.65em;overflow:hidden;}
+.bubble-text.expanded{max-height:14em;overflow:auto;-webkit-overflow-scrolling:touch;}
 .bubble-expand-btn{display:inline-block;font-size:11px;font-weight:600;color:var(--accent-d);background:none;border:none;padding:2px 0 0;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;opacity:.7;}
 .bubble-footer{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:5px;}
 .bubble-cat{font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210 / 0.11);border-radius:50px;padding:2px 8px;text-transform:uppercase;letter-spacing:.06em;}
@@ -1174,8 +1174,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" as="script">
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" as="script">
+<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" as="script">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyDxaN6JLQkB56Wk1gxySyMFZwqkmhnmMDg",
@@ -1186,8 +1188,103 @@ firebase.initializeApp({
   appId:"1:243883413956:web:f40ce077b0e27918709491"
 });
 const auth=firebase.auth();auth.languageCode='ru';
+const db=firebase.firestore?firebase.firestore():null;
 
 let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
+let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false;
+
+function isLocalDev(){
+  return ['localhost','127.0.0.1',''].includes(location.hostname)||location.search.includes('dev=1');
+}
+function userScope(){
+  return CU&&CU.uid?CU.uid:'signed-out';
+}
+function scopedKey(key){
+  return key.startsWith('rz_')?'rz_'+userScope()+'_'+key.slice(3):key;
+}
+function readJson(key,fallback){
+  try{
+    const raw=localStorage.getItem(scopedKey(key));
+    return raw?JSON.parse(raw):fallback;
+  }catch(e){return fallback;}
+}
+function writeJson(key,value){
+  localStorage.setItem(scopedKey(key),JSON.stringify(value));
+  queueCloudSave();
+}
+function readText(key){
+  return localStorage.getItem(scopedKey(key))||'';
+}
+function writeText(key,value){
+  localStorage.setItem(scopedKey(key),String(value||''));
+  queueCloudSave();
+}
+function migrateLegacyLocal(){
+  ['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{
+    const target=scopedKey(key);
+    if(localStorage.getItem(target)!==null)return;
+    const legacy=localStorage.getItem(key);
+    if(legacy!==null)localStorage.setItem(target,legacy);
+  });
+}
+function getNotes(){return readJson('rz_notes',[]);}
+function saveNotes(notes){writeJson('rz_notes',notes);}
+function getTrash(){return readJson('rz_trash',[]);}
+function saveTrash(trash){writeJson('rz_trash',trash);}
+function getHistory(){return readJson('rz_history',[]);}
+function saveHistory(hist){writeJson('rz_history',hist);}
+function cloudAllowed(){
+  return !!(db&&CU&&CU.uid&&CU.uid!=='dev-local');
+}
+function cloudRef(){
+  return db.collection('users').doc(CU.uid).collection('private').doc('state');
+}
+async function loadCloudData(){
+  if(!cloudAllowed()||CLOUD_READY_UID===CU.uid)return;
+  CLOUD_LOADING=true;
+  try{
+    const snap=await cloudRef().get();
+    if(snap.exists){
+      const data=snap.data()||{};
+      if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
+      if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+      if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
+      if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
+    } else if(getNotes().length||getTrash().length||getHistory().length||readText('rz_name')){
+      await saveCloudNow();
+    }
+    CLOUD_READY_UID=CU.uid;
+  }catch(e){
+    console.warn('cloud load failed',e);
+    showToast('Не удалось загрузить облако, работаем локально');
+  }finally{
+    CLOUD_LOADING=false;
+  }
+}
+function queueCloudSave(){
+  if(CLOUD_LOADING||!cloudAllowed())return;
+  clearTimeout(CLOUD_SAVE_TIMER);
+  CLOUD_SAVE_TIMER=setTimeout(saveCloudNow,700);
+}
+async function saveCloudNow(){
+  if(!cloudAllowed())return;
+  try{
+    await cloudRef().set({
+      notes:getNotes(),
+      trash:getTrash(),
+      history:getHistory(),
+      name:readText('rz_name'),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  }catch(e){
+    console.warn('cloud save failed',e);
+    showToast('Не удалось сохранить в облако');
+  }
+}
+function initDevVisibility(){
+  const btn=document.getElementById('dev-btn');
+  if(btn)btn.style.display=isLocalDev()?'flex':'none';
+}
 
 function syncViewportForKeyboard(){
   const vv=window.visualViewport;
@@ -1227,9 +1324,11 @@ window.addEventListener('resize',syncViewportForKeyboard);
 auth.onAuthStateChanged(u=>{
   if(u){
     // Уже залогинен — мгновенный сплэш (400ms) и в приложение
-    setTimeout(()=>{CU=u;showApp();updUI(u);loadAll();},400);
+    setTimeout(async()=>{CU=u;migrateLegacyLocal();await loadCloudData();showApp();updUI(u);loadAll();},400);
   } else {
-    devLogin();
+    CU=null;
+    initDevVisibility();
+    showAuthScr();
   }
 });
 
@@ -1254,7 +1353,7 @@ function fmtNum(p){
 function updUI(u){
   const ph=u.phoneNumber||'';
   const disp=ph?fmtNum(ph):'dev режим';
-  const name=localStorage.getItem('rz_name')||'';
+  const name=readText('rz_name');
   document.getElementById('hmenu-phone').textContent=disp;
   document.getElementById('hmenu-name').textContent=name||'Добро пожаловать';
   document.getElementById('set-phone-disp').textContent=disp;
@@ -1282,7 +1381,7 @@ document.addEventListener('click',e=>{
 // ── SETTINGS ──
 function saveName(){
   const v=document.getElementById('name-input').value.trim();if(!v)return;
-  localStorage.setItem('rz_name',v);
+  writeText('rz_name',v);
   document.getElementById('set-name-disp').textContent=v;
   document.getElementById('hmenu-name').textContent=v;
   showToast('Имя сохранено ✓');
@@ -1292,7 +1391,7 @@ function saveName(){
 function doSignOut(){
   if(!confirm('Выйти из аккаунта?'))return;
   auth.signOut().then(()=>{
-    CU=null;closeMenu();
+    CU=null;CLOUD_READY_UID=null;closeMenu();
     if(RV){try{RV.clear();}catch(e){}RV=null;}
     CR=null;backToPhone();go('home');showAuthScr();
   });
@@ -1371,9 +1470,14 @@ async function sendSms(){
 }
 
 async function devLogin(){
+  if(!isLocalDev()){
+    showToast('Dev-вход доступен только локально');
+    return;
+  }
   // Сплэш уже виден (display:flex по умолчанию) — просто ждём
   await new Promise(r=>setTimeout(r,1300));
   CU={uid:'dev-local',phoneNumber:''};
+  migrateLegacyLocal();
   showApp();updUI(CU);loadAll();
 }
 
@@ -1397,7 +1501,7 @@ async function verifyCode(){
   btn.disabled=true;btn.textContent='Проверяем...';
   try{
     const r=await CR.confirm(code);
-    CU=r.user;clearInterval(CDI);showApp();updUI(CU);loadAll();
+    CU=r.user;clearInterval(CDI);migrateLegacyLocal();await loadCloudData();showApp();updUI(CU);loadAll();
   }catch(e){
     eEl.textContent=aErr(e.code);eEl.style.display='block';
     btn.disabled=false;btn.textContent='Войти';
@@ -1439,7 +1543,11 @@ function showToast(msg){
 }
 
 // ── ESC ──
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function jsAttr(s){return esc(JSON.stringify(String(s||'')));}
+function safeLabel(label){
+  return CATS.includes(label)?label:'заметка';
+}
 
 // ── NOTIFICATIONS ──
 function notifGranted(){try{return'Notification'in window&&Notification.permission==='granted';}catch(e){return false;}}
@@ -1462,7 +1570,7 @@ let _NT=[];
 function scheduleAll(){
   _NT.forEach(t=>clearTimeout(t));_NT=[];
   if(!notifGranted())return;
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   notes.forEach(n=>{
     if(!n.reminder||!n.title)return;
     const dt=parseDt(n.reminder);if(!dt)return;
@@ -1548,7 +1656,7 @@ function updCalTrigger(){
 })();
 
 function calRender(){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const dots=new Set();
   notes.forEach(n=>{
     if(n.reminder){
@@ -1598,13 +1706,13 @@ const CATS=Object.keys(STRIPES);
 let noteFilter=null;
 
 function loadNotes(){
-  const all=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const all=getNotes();
   renderStatChips(all);
   const el=document.getElementById('note-list');if(!el)return;
   el.innerHTML='';
   let filtered=all;
   if(CS)filtered=all.filter(n=>n.reminder&&n.reminder.slice(0,10)===CS);
-  if(noteFilter)filtered=filtered.filter(n=>(n.label||'заметка')===noteFilter);
+  if(noteFilter)filtered=filtered.filter(n=>safeLabel(n.label||'заметка')===noteFilter);
   if(!filtered.length){
     el.innerHTML='<div style="text-align:center;color:var(--fg-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «＋» чтобы добавить</span></div>';
     return;
@@ -1612,7 +1720,7 @@ function loadNotes(){
   const sorted=[...filtered].sort((a,b)=>(b.createdAt||b.updatedAt||0)-(a.createdAt||a.updatedAt||0));
   sorted.forEach(n=>{
     const nid=n.id;const i=all.indexOf(n);
-    const stripe=STRIPES[n.label||'заметка']||STRIPES.заметка;
+    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
     const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
     const d=document.createElement('div');d.className='item-card';d.style.margin='0';
@@ -1621,7 +1729,7 @@ function loadNotes(){
       rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
     }
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
-      <div class="note-cat">${esc(n.label||'заметка')}</div>
+      <div class="note-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div class="item-title">${esc(n.title)}</div>
       ${rHtml}
       <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
@@ -1634,15 +1742,15 @@ function loadNotes(){
 function renderStatChips(all){
   const el=document.getElementById('notes-stat');if(!el)return;
   const counts={};
-  all.forEach(n=>{const l=n.label||'заметка';counts[l]=(counts[l]||0)+1;});
+  all.forEach(n=>{const l=safeLabel(n.label||'заметка');counts[l]=(counts[l]||0)+1;});
   let html=`<button class="stat-chip${!noteFilter?' active':''}" onclick="setFilter(null)"><span style="font-size:13px;">Все</span><span class="stat-count">${all.length}</span></button>`;
   Object.entries(counts).forEach(([l,c])=>{
     const col=STRIPES[l]||STRIPES.заметка;
-    html+=`<button class="stat-chip${noteFilter===l?' active':''}" onclick="setFilter('${l}')"><span class="stat-dot" style="background:${col};"></span>${esc(l)}<span class="stat-count">${c}</span></button>`;
+    html+=`<button class="stat-chip${noteFilter===l?' active':''}" onclick="setFilter(${jsAttr(l)})"><span class="stat-dot" style="background:${col};"></span>${esc(l)}<span class="stat-count">${c}</span></button>`;
   });
   el.innerHTML=html;
 }
-function setFilter(f){noteFilter=f;loadNotes();}
+function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
 
 // ── SWIPE HELPERS ──
 function buildNoteSwipePanel(shape, radius, onDelete, onShare){
@@ -1750,12 +1858,12 @@ function noteForm(body=''){
 }
 
 function openNoteSheet(i){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const n=notes[i];if(!n)return;
   _openNoteWith(n);
 }
 function openNoteSheetById(id){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const n=notes.find(x=>x.id===id);
   if(!n)return;
   _openNoteWith(n);
@@ -1765,7 +1873,7 @@ function _openNoteWith(n){
   document.getElementById('sheet-title').textContent='Заметка';
   document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
   document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' символов';
-  showSheetCat(n.label||'заметка');
+  showSheetCat(safeLabel(n.label||'заметка'));
   initSheetReminder(n.reminder||'');
   initSheetUndo(n.body||n.title||'');
   _openSheet();
@@ -2000,28 +2108,28 @@ function saveSheet(){
   const f=document.getElementById('sh1');
   const v1=f?f.value:'';
   const catBtn=document.getElementById('sheet-cat-btn');
-  const v3=catBtn?catBtn.dataset.label||'заметка':'заметка';
+  const v3=safeLabel(catBtn?catBtn.dataset.label||'заметка':'заметка');
   const reminderEl=document.getElementById('sheet-reminder-in');
   const v2=reminderEl?reminderEl.value:'';
   if(!v1.trim()){showToast('Напишите текст');return;}
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
-  const list=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const list=getNotes();
   const existingIdx=EI!==null?list.findIndex(n=>n.id===EI):-1;
   const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts};
   if(existingIdx>=0){
     item.createdAt=list[existingIdx].createdAt||ts;
     // Save version history
     const oldSnap={...list[existingIdx]};
-    const hist=JSON.parse(localStorage.getItem('rz_history')||'[]');
+    const hist=getHistory();
     hist.unshift({hid:genId(),noteId:oldSnap.id,snapshot:oldSnap,savedAt:ts});
     if(hist.length>150)hist.pop();
-    localStorage.setItem('rz_history',JSON.stringify(hist));
+    saveHistory(hist);
     list[existingIdx]=item;
   }
   else{item.createdAt=ts;list.push(item);}
-  localStorage.setItem('rz_notes',JSON.stringify(list));
+  saveNotes(list);
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
   showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
@@ -2033,29 +2141,29 @@ function editNoteById(id){openNoteSheetById(id);}
 
 // ── TRASH (мягкое удаление) ──
 function delNoteById(id){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const i=notes.findIndex(n=>n.id===id);
   if(i>=0)delNote(i);
 }
 function delNote(i){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const deleted=notes.splice(i,1)[0];
   if(deleted){
     deleted._deletedAt=Date.now();
-    const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+    const trash=getTrash();
     trash.unshift(deleted);
     // Держим корзину не более 50 записей
     if(trash.length>50)trash.pop();
-    localStorage.setItem('rz_trash',JSON.stringify(trash));
+    saveTrash(trash);
   }
-  localStorage.setItem('rz_notes',JSON.stringify(notes));
+  saveNotes(notes);
   loadNotes();loadHomeFeed();loadNotepad();
   showToast('В корзину · можно восстановить');
   updTrashBadge();
 }
 
 function loadTrash(){
-  const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+  const trash=getTrash();
   const el=document.getElementById('trash-list');
   const cnt=document.getElementById('trash-count');
   const clearBtn=document.getElementById('trash-clear-btn');
@@ -2068,11 +2176,11 @@ function loadTrash(){
     return;
   }
   trash.forEach((n,i)=>{
-    const stripe=STRIPES[n.label||'заметка']||STRIPES.заметка;
+    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const d=document.createElement('div');d.className='trash-item';
     const when=n._deletedAt?fmtMeta(n._deletedAt):'';
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.5;"></div>
-      <div class="note-cat">${esc(n.label||'заметка')}</div>
+      <div class="note-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="item-title" style="opacity:0.7;">${esc(n.title)}</div>
         <button class="trash-restore-btn" onclick="restoreNote(${i})">
@@ -2084,7 +2192,7 @@ function loadTrash(){
     el.appendChild(d);
   });
   // История правок за последние 7 дней
-  const hist=JSON.parse(localStorage.getItem('rz_history')||'[]');
+  const hist=getHistory();
   const weekAgo=Date.now()-7*24*3600*1000;
   const recentHist=hist.filter(h=>h.savedAt>weekAgo);
   if(recentHist.length){
@@ -2092,11 +2200,11 @@ function loadTrash(){
     el.appendChild(htitle);
     recentHist.forEach((h,hi)=>{
       const sn=h.snapshot||{};
-      const stripe=STRIPES[sn.label||'заметка']||STRIPES.заметка;
+      const stripe=STRIPES[safeLabel(sn.label||'заметка')]||STRIPES.заметка;
       const d=document.createElement('div');d.className='hist-item';
       const when=fmtMeta(h.savedAt);
       d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.4;"></div>
-        <div class="note-cat">${esc(sn.label||'заметка')}</div>
+        <div class="note-cat">${esc(safeLabel(sn.label||'заметка'))}</div>
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div style="font-size:14px;color:var(--fg-m);opacity:.8;flex:1;">${esc(sn.title||'')} <span style="font-size:11px;color:var(--fg-l);">· была</span></div>
           <button class="hist-restore-btn" onclick="restoreHistory(${hi})">
@@ -2111,31 +2219,31 @@ function loadTrash(){
 }
 
 function restoreNote(i){
-  const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+  const trash=getTrash();
   const n=trash.splice(i,1)[0];
   if(n){
     delete n._deletedAt;
-    const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+    const notes=getNotes();
     notes.push(n);
-    localStorage.setItem('rz_notes',JSON.stringify(notes));
+    saveNotes(notes);
   }
-  localStorage.setItem('rz_trash',JSON.stringify(trash));
+  saveTrash(trash);
   loadTrash();loadNotes();loadHomeFeed();loadNotepad();
   showToast('Заметка восстановлена ✓');
   updTrashBadge();
 }
 
 function restoreHistory(hi){
-  const hist=JSON.parse(localStorage.getItem('rz_history')||'[]');
+  const hist=getHistory();
   const weekAgo=Date.now()-7*24*3600*1000;
   const recentHist=hist.filter(h=>h.savedAt>weekAgo);
   const h=recentHist[hi];if(!h)return;
   const sn=h.snapshot;if(!sn)return;
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const idx=notes.findIndex(n=>n.id===sn.id);
   if(idx>=0){
     notes[idx]=sn;
-    localStorage.setItem('rz_notes',JSON.stringify(notes));
+    saveNotes(notes);
     showToast('Версия восстановлена ✓');
     loadTrash();loadNotes();loadHomeFeed();loadNotepad();
   } else {
@@ -2143,7 +2251,7 @@ function restoreHistory(hi){
     sn._restoredFromHistory=true;
     delete sn._deletedAt;
     notes.push(sn);
-    localStorage.setItem('rz_notes',JSON.stringify(notes));
+    saveNotes(notes);
     showToast('Заметка восстановлена из истории ✓');
     loadTrash();loadNotes();loadHomeFeed();loadNotepad();
   }
@@ -2151,14 +2259,14 @@ function restoreHistory(hi){
 
 function clearTrash(){
   if(!confirm('Удалить всё из корзины навсегда?'))return;
-  localStorage.setItem('rz_trash','[]');
+  saveTrash([]);
   loadTrash();
   showToast('Корзина очищена');
   updTrashBadge();
 }
 
 function updTrashBadge(){
-  const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+  const trash=getTrash();
   const btn=document.getElementById('trash-btn');
   if(!btn)return;
   if(trash.length){
@@ -2195,7 +2303,7 @@ function stopNoteSheetVoice(){
 let recog=null,isRec=false;
 
 function loadNotepad(){
-  const all=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const all=getNotes();
   const list=all.slice().reverse();
   const el=document.getElementById('notepad-list');if(!el)return;el.innerHTML='';
   if(!list.length){
@@ -2203,12 +2311,12 @@ function loadNotepad(){
   }
   list.forEach((n,ri)=>{
     const i=all.length-1-ri;
-    const stripe=STRIPES[n.label||'заметка']||STRIPES.заметка;
+    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
     const delBg=buildNoteSwipePanel('list', 16, ()=>n.id?delNoteById(n.id):delNote(i), ()=>shareNote(n));
     const d=document.createElement('div');d.className='pad-item';d.style.margin='0';
     d.innerHTML=`<div class="pad-stripe" style="background:${stripe};"></div>
-      <div class="pad-cat">${esc(n.label||'заметка')}</div>
+      <div class="pad-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div class="pad-title">${esc(n.title)}</div>
       <div class="pad-text">${esc(n.body||'')}</div>
       <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
@@ -2249,9 +2357,9 @@ function saveNotepad(){
   const text=inp.value.trim();if(!text){showToast('Напишите что-нибудь');return;}
   const{title,label,reminder}=analyzeText(text);
   const ts=Date.now();
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   notes.push({id:genId(),title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
-  localStorage.setItem('rz_notes',JSON.stringify(notes));
+  saveNotes(notes);
   inp.value='';inp.style.height='auto';
   loadNotepad();loadNotes();loadHomeFeed();
   showToast(reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`);
@@ -2285,7 +2393,7 @@ function stopVoice(){
 let homeRecog=null,homeIsRec=false;
 
 function loadHomeFeed(){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const list=[...notes]; // oldest→newest = chat order, newest at bottom
   const el=document.getElementById('home-feed');if(!el)return;
   el.innerHTML='';
@@ -2296,16 +2404,16 @@ function loadHomeFeed(){
   }
   list.forEach((n,i)=>{
     const realIdx=i;
-    const stripe=STRIPES[n.label||'заметка']||STRIPES.заметка;
+    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.className='bubble-wrap';
-    const catHtml=n.label&&n.label!=='заметка'?`<span class="bubble-cat">${esc(n.label)}</span>`:'';
+    const catHtml=safeLabel(n.label||'заметка')!=='заметка'?`<span class="bubble-cat">${esc(safeLabel(n.label))}</span>`:'';
     const timeStr=fmtMeta(n.updatedAt||n.createdAt);
     const bodyText=n.body||n.title||'';
     const bId=n.id||('b'+i);
     const isLong=bodyText.length>90||(bodyText.match(/\n/g)||[]).length>1;
     const titleLine=''; // clean bubbles — no title prefix
     const bodyPreview=n.body||bodyText||'';
-    const expandBtn=isLong?`<button class="bubble-expand-btn" id="bxb-${bId}" onclick="event.stopPropagation();toggleBubble('${bId}',this)">ещё</button>`:'';
+    const expandBtn=isLong?`<button class="bubble-expand-btn" id="bxb-${esc(bId)}" onclick="event.stopPropagation();toggleBubble(${jsAttr(bId)},this)">ещё</button>`:'';
     // ← DOM-элемент вставляем через prepend, НЕ через шаблонную строку
     wrap.innerHTML=`
       <div class="bubble">
@@ -2326,18 +2434,18 @@ function loadHomeFeed(){
 }
 
 function delHomeEntry(id,legacyI){
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   const realIdx=id?notes.findIndex(n=>n.id===id):(notes.length-1-legacyI);
   if(realIdx>=0){
     const deleted=notes.splice(realIdx,1)[0];
     if(deleted){
       deleted._deletedAt=Date.now();
-      const trash=JSON.parse(localStorage.getItem('rz_trash')||'[]');
+      const trash=getTrash();
       trash.unshift(deleted);
       if(trash.length>50)trash.pop();
-      localStorage.setItem('rz_trash',JSON.stringify(trash));
+      saveTrash(trash);
     }
-    localStorage.setItem('rz_notes',JSON.stringify(notes));
+    saveNotes(notes);
   }
   loadHomeFeed();loadNotes();loadNotepad();
   showToast('В корзину · можно восстановить');
@@ -2370,13 +2478,13 @@ function saveHome(){
   const auto=analyzeText(text);
   const labelEl=document.getElementById('home-input-label');
   const reminderEl=document.getElementById('home-input-reminder');
-  const label=(labelEl&&labelEl.value.trim())||auto.label;
+  const label=safeLabel((labelEl&&labelEl.value.trim())||auto.label);
   const reminder=(reminderEl&&reminderEl.value)||auto.reminder;
   const title=auto.title;
   const ts=Date.now();
-  const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+  const notes=getNotes();
   notes.push({id:genId(),title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
-  localStorage.setItem('rz_notes',JSON.stringify(notes));
+  saveNotes(notes);
   closeInputSheet();
   loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
@@ -2508,9 +2616,9 @@ function startHomeVoice(){
     if(!text)return;
     const{title,label,reminder}=analyzeText(text);
     const ts=Date.now();
-    const notes=JSON.parse(localStorage.getItem('rz_notes')||'[]');
+    const notes=getNotes();
     notes.push({id:genId(),title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
-    localStorage.setItem('rz_notes',JSON.stringify(notes));
+    saveNotes(notes);
     loadHomeFeed();loadNotes();loadNotepad();
     showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
     if(reminder&&notifGranted())scheduleAll();
@@ -2521,37 +2629,6 @@ function stopHomeVoice(){
   if(homeRecog)try{homeRecog.stop();}catch(e){}
 }
 
-
-// ── PWA ICON GENERATOR — sky blue feather ──
-(function(){
-  try{
-    const sz=192;
-    const c=document.createElement('canvas');c.width=c.height=sz;
-    const x=c.getContext('2d');
-    // Фон — небесно-голубой с закруглёнными углами
-    const r=42;
-    x.beginPath();x.moveTo(r,0);x.lineTo(sz-r,0);x.quadraticCurveTo(sz,0,sz,r);
-    x.lineTo(sz,sz-r);x.quadraticCurveTo(sz,sz,sz-r,sz);
-    x.lineTo(r,sz);x.quadraticCurveTo(0,sz,0,sz-r);
-    x.lineTo(0,r);x.quadraticCurveTo(0,0,r,0);x.closePath();
-    const g=x.createLinearGradient(0,0,sz,sz);
-    g.addColorStop(0,'#e8f2ff');g.addColorStop(1,'#d0e8ff');
-    x.fillStyle=g;x.fill();
-    // Перо
-    x.strokeStyle='#3370bb';x.lineWidth=10;x.lineCap='round';x.lineJoin='round';
-    x.scale(sz/24,sz/24);
-    x.beginPath();
-    // M20.24 12.24 a6 6 0 00-8.49-8.49 L5 10.5 V19 h8.5z
-    x.moveTo(20.24,12.24);
-    x.arcTo(20.24,6.24,14.24,6.24,6);
-    x.lineTo(5,10.5);x.lineTo(5,19);x.lineTo(13.5,19);x.closePath();
-    x.stroke();
-    x.beginPath();x.moveTo(16,8);x.lineTo(2,22);x.stroke();
-    x.beginPath();x.moveTo(17.5,15);x.lineTo(9,15);x.stroke();
-    const url=c.toDataURL('image/png');
-    const ati=document.getElementById('ati');if(ati)ati.href=url;
-  }catch(e){}
-})();
 
 // ── LOAD ALL ──
 function loadAll(){
@@ -2574,7 +2651,9 @@ window.addEventListener('load',()=>{
 });
 
 // ── INIT ──
+initDevVisibility();
 loadAll();
 </script>
 </body>
 </html>
+
