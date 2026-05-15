@@ -450,53 +450,198 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ── AUTH ── */
-#auth-screen{position:fixed;inset:0;z-index:700;
-  background:linear-gradient(165deg, oklch(0.98 0.010 210), oklch(0.92 0.018 218));
-  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 52px;
-  transition:opacity .35s ease;}
-#auth-screen.hidden{opacity:0;pointer-events:none;transform:translateY(-16px);}
-.auth-logo{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:40px;color:var(--fg);text-align:center;margin-bottom:6px;letter-spacing:-.5px;}
-.auth-logo-mark{display:flex;align-items:center;justify-content:center;animation:feather-fly 3.4s ease-in-out infinite;}
-.auth-logo-mark svg{width:52px;height:52px;stroke:var(--accent-d);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 4px 14px oklch(0.54 0.13 210 / 0.30));}
-.auth-logo-text{line-height:1;}
-@keyframes feather-fly{0%,100%{transform:translateY(0) translateX(0) rotate(-4deg);}25%{transform:translateY(-5px) translateX(3px) rotate(4deg);}50%{transform:translateY(-2px) translateX(-2px) rotate(-2deg);}75%{transform:translateY(-6px) translateX(2px) rotate(5deg);}}
-.auth-tag{font-size:16px;color:var(--fg-m);text-align:center;margin-bottom:4px;font-weight:400;}
-/* Splash fade animation */
-@keyframes splashFadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-@keyframes splashFadeOut{from{opacity:1;}to{opacity:0;}}
-.auth-logo{animation:splashFadeIn .4s cubic-bezier(.22,1,.36,1) both;}
-.auth-tag{animation:splashFadeIn .4s .1s cubic-bezier(.22,1,.36,1) both;}
-.auth-ver{animation:splashFadeIn .4s .18s cubic-bezier(.22,1,.36,1) both;}
-/* splash-out removed — showApp handles opacity transition */
-.auth-ver{font-size:11px;color:oklch(0.52 0.012 210 / 0.45);text-align:center;margin-bottom:0;font-weight:500;}
+#auth-screen{
+  position:fixed;inset:0;z-index:700;
+  background:linear-gradient(160deg,
+    oklch(0.97 0.012 210) 0%,
+    oklch(0.94 0.016 215) 50%,
+    oklch(0.91 0.020 218) 100%);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px 20px 48px;
+  transition:opacity .35s ease;
+}
+#auth-screen.hidden{opacity:0;pointer-events:none;}
+
+/* Logo */
+.auth-logo{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  margin-bottom:10px;
+  animation:splashFadeIn .45s cubic-bezier(.22,1,.36,1) both;
+}
+.auth-logo-mark{
+  width:64px;height:64px;border-radius:20px;
+  background:oklch(1 0 0 / 0.72);
+  border:1px solid oklch(0.90 0.02 210 / 0.55);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 24px oklch(0.54 0.13 210 / 0.18),inset 0 1px 0 oklch(1 0 0 / 0.9);
+  animation:feather-fly 3.4s ease-in-out infinite;
+}
+.auth-logo-mark svg{width:30px;height:30px;stroke:var(--accent-d);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.auth-logo-text{
+  font-family:'Playfair Display',serif;
+  font-size:36px;color:var(--fg);letter-spacing:-.5px;line-height:1;
+}
+
+.auth-tag{
+  font-size:15px;color:var(--fg-l);text-align:center;
+  font-weight:400;letter-spacing:.01em;
+  margin-bottom:2px;
+  animation:splashFadeIn .45s .08s cubic-bezier(.22,1,.36,1) both;
+}
+.auth-ver{
+  font-size:11px;color:oklch(0.52 0.012 210 / 0.40);
+  text-align:center;margin-bottom:0;font-weight:500;letter-spacing:.04em;
+  animation:splashFadeIn .45s .14s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Card */
 .auth-card{
-  display:block;
-  background:oklch(1 0 0 / 0.80);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid oklch(0.88 0.02 210 / 0.50);
-  border-radius:24px;padding:28px 24px;width:100%;max-width:400px;}
+  width:100%;max-width:380px;margin-top:20px;
+  background:oklch(1 0 0 / 0.82);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border:1px solid oklch(0.90 0.02 210 / 0.55);
+  border-radius:28px;padding:28px 24px 24px;
+  box-shadow:0 8px 40px oklch(0 0 0 / 0.08),inset 0 1px 0 oklch(1 0 0 / 0.9);
+  animation:splashFadeIn .45s .2s cubic-bezier(.22,1,.36,1) both;
+}
 .auth-step{display:none;}
 .auth-step.active{display:block;}
-.auth-lbl{font-size:12px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
-.auth-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--fg);margin-bottom:6px;letter-spacing:-.3px;}
-.auth-sub{font-size:14px;color:var(--fg-m);line-height:1.65;margin-bottom:20px;}
+
+/* Checking overlay inside card */
+.auth-card.checking .auth-step{display:none;}
+.auth-card.checking .auth-loading{display:block;}
+
+/* Step label */
+.auth-lbl{
+  font-size:11px;font-weight:700;color:var(--accent-d);
+  text-transform:uppercase;letter-spacing:.10em;margin-bottom:10px;
+}
+/* Step title */
+.auth-title{
+  font-family:'Playfair Display',serif;
+  font-size:26px;color:var(--fg);margin-bottom:6px;letter-spacing:-.3px;line-height:1.15;
+}
+/* Step subtitle */
+.auth-sub{
+  font-size:14px;color:var(--fg-m);line-height:1.65;margin-bottom:20px;
+}
+
+/* Email input */
+.auth-email-wrap{position:relative;margin-bottom:10px;}
+.auth-email-wrap::before{
+  content:'';position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='2' y='4' width='20' height='16' rx='2'/%3E%3Cpath d='M2 7l10 7 10-7' stroke='%237a9e9a' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  opacity:.55;pointer-events:none;
+}
+.auth-email-in{
+  display:block;width:100%;
+  background:oklch(0.97 0.010 210 / 0.85);
+  border:1.5px solid oklch(0.85 0.025 210 / 0.55);
+  border-radius:14px;
+  padding:14px 16px 14px 42px;
+  font-size:17px;font-family:var(--sys);color:var(--fg);
+  outline:none;
+  -webkit-appearance:none;-webkit-user-select:text;user-select:text;
+  transition:border-color .18s,background .18s;
+  letter-spacing:-.1px;
+}
+.auth-email-in::placeholder{color:oklch(0.65 0.015 210);font-size:15px;}
+.auth-email-in:focus{
+  border-color:oklch(0.54 0.13 210 / 0.65);
+  background:oklch(1 0 0 / 0.92);
+}
+
+/* Send button */
+.auth-btn{
+  display:block;width:100%;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:14px;padding:16px;
+  font-size:16px;font-weight:700;cursor:pointer;
+  font-family:var(--sys);
+  -webkit-appearance:none;
+  transition:background .14s,transform .1s;
+  letter-spacing:.01em;
+  margin-top:4px;
+}
+.auth-btn:active{background:var(--accent-d);transform:scale(.98);}
+.auth-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* Error */
+.auth-err{
+  font-size:13px;color:var(--rose);margin-top:10px;
+  display:none;line-height:1.55;
+  padding:10px 14px;
+  background:oklch(0.58 0.16 25 / 0.07);
+  border:1px solid oklch(0.58 0.16 25 / 0.18);
+  border-radius:10px;
+}
+
+/* Note below button */
+.auth-note{
+  font-size:13px;color:var(--fg-l);text-align:center;
+  margin-top:14px;line-height:1.65;
+}
+.auth-note strong{color:var(--fg-m);font-weight:600;}
+
+/* Sent step */
+.auth-sent-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:oklch(0.54 0.13 210 / 0.10);
+  border:1px solid oklch(0.54 0.13 210 / 0.22);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;
+}
+.auth-sent-icon svg{width:22px;height:22px;stroke:var(--accent-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.auth-sent-email{
+  display:inline-block;
+  font-weight:700;color:var(--fg);
+  background:oklch(0.54 0.13 210 / 0.09);
+  border-radius:8px;padding:2px 8px;margin:4px 0 16px;
+  font-size:15px;word-break:break-all;
+}
+.auth-back{
+  display:block;width:100%;
+  background:none;border:1.5px solid oklch(0.85 0.025 210 / 0.55);
+  color:var(--fg-m);font-size:14px;font-weight:600;
+  cursor:pointer;font-family:var(--sys);
+  padding:13px;margin-top:6px;border-radius:12px;
+  -webkit-appearance:none;
+  transition:background .12s,border-color .12s;
+}
+.auth-back:active{background:oklch(0 0 0 / 0.04);}
+
+/* Loading state */
+.auth-loading{
+  display:none;text-align:center;
+  padding:18px 0 14px;
+}
+.auth-loading-dots{
+  display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:12px;
+}
+.auth-loading-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);opacity:.3;
+  animation:dot-pulse 1.4s ease-in-out infinite;
+}
+.auth-loading-dot:nth-child(2){animation-delay:.22s;}
+.auth-loading-dot:nth-child(3){animation-delay:.44s;}
+@keyframes dot-pulse{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.25);}}
+.auth-loading-text{font-size:14px;color:var(--fg-m);font-weight:500;}
+
+/* Resend timer (kept, just in case) */
+.auth-resend{background:none;border:none;color:var(--accent-d);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;text-decoration:underline;}
+.auth-timer{font-size:14px;color:var(--fg-l);}
 .phone-row{display:flex;gap:8px;margin-bottom:12px;}
 .phone-prefix{background:oklch(0.97 0.015 90 / 0.9);border:1.5px solid oklch(0.88 0.02 210 / 0.48);border-radius:12px;padding:13px 14px;font-size:18px;font-weight:600;color:var(--fg);font-family:var(--sys);width:64px;text-align:center;flex-shrink:0;}
 .phone-in{flex:1;background:oklch(0.97 0.015 90 / 0.9);border:1.5px solid oklch(0.88 0.02 210 / 0.48);border-radius:12px;padding:13px 15px;font-size:18px;font-family:var(--sys);color:var(--fg);outline:none;min-height:52px;-webkit-appearance:none;-webkit-user-select:text;user-select:text;}
 .auth-card .phone-in{display:block;width:100%;margin-bottom:8px;}
 .phone-in:focus{border-color:oklch(0.52 0.10 210 / 0.55);}
 .phone-in::placeholder{color:var(--stone);font-size:16px;}
-.auth-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:14px;padding:16px;font-size:18px;font-weight:700;cursor:pointer;font-family:var(--sys);min-height:56px;-webkit-appearance:none;transition:background .14s;margin-top:4px;}
-.auth-btn:active{background:var(--accent-d);}
-.auth-btn:disabled{opacity:.4;cursor:not-allowed;}
-.auth-err{font-size:14px;color:var(--rose);margin-top:10px;display:none;line-height:1.5;}
-.auth-note{font-size:13px;color:var(--fg-l);text-align:center;margin-top:14px;line-height:1.6;}
-.auth-back{background:none;border:none;color:var(--fg-l);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sys);padding:12px;width:100%;margin-top:4px;-webkit-appearance:none;}
-.auth-resend{background:none;border:none;color:var(--accent-d);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;text-decoration:underline;}
-.auth-timer{font-size:14px;color:var(--fg-l);}
-.auth-loading{display:none;text-align:center;color:var(--fg-m);font-size:14px;line-height:1.6;padding:10px 0 2px;}
-.auth-card.checking .auth-step{display:none;}
-.auth-card.checking .auth-loading{display:block;}
+
+@keyframes splashFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes feather-fly{0%,100%{transform:translateY(0) translateX(0) rotate(-4deg);}25%{transform:translateY(-5px) translateX(3px) rotate(4deg);}50%{transform:translateY(-2px) translateX(-2px) rotate(-2deg);}75%{transform:translateY(-6px) translateX(2px) rotate(5deg);}}
 
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
@@ -823,28 +968,62 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-logo">
-    <span class="auth-logo-mark"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
+    <div class="auth-logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+    </div>
     <span class="auth-logo-text">Разберёмся</span>
   </div>
   <div class="auth-tag">Спокойный помощник рядом</div>
   <div class="auth-ver">v4.13 · бета</div>
+
   <div class="auth-card">
+
+    <!-- Шаг 1: Ввод почты -->
     <div class="auth-step active" id="step-email">
       <div class="auth-lbl">Вход</div>
       <div class="auth-title">Ваша почта</div>
-      <div class="auth-sub">Отправим ссылку для входа. Пароль запоминать не нужно.</div>
-      <input class="phone-in" id="email-input" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" onkeydown="if(event.key==='Enter')sendEmailLink()">
+      <div class="auth-sub">Отправим ссылку для входа — пароль запоминать не нужно.</div>
+      <div class="auth-email-wrap">
+        <input
+          class="auth-email-in"
+          id="email-input"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="name@gmail.com"
+          onkeydown="if(event.key==='Enter')sendEmailLink()"
+        >
+      </div>
       <button class="auth-btn" id="email-btn" onclick="sendEmailLink()">Получить ссылку</button>
       <div class="auth-err" id="email-err"></div>
-      <div class="auth-note">Заметки будут доступны на ваших устройствах после входа по этой почте</div>
+      <div class="auth-note">Заметки появятся на всех ваших устройствах после входа</div>
     </div>
+
+    <!-- Шаг 2: Ссылка отправлена -->
     <div class="auth-step" id="step-sent">
+      <div class="auth-sent-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+      </div>
       <div class="auth-lbl">Проверьте почту</div>
       <div class="auth-title">Ссылка отправлена</div>
-      <div class="auth-sub" id="sent-sub">Откройте письмо и нажмите ссылку входа.</div>
-      <button class="auth-btn" onclick="backToEmail()">Ввести другую почту</button>
+      <div class="auth-sub" id="sent-sub">Откройте письмо и нажмите на ссылку входа.</div>
+      <div class="auth-note" style="margin-top:0;margin-bottom:16px;">На iPhone: откройте ссылку прямо из письма в Safari. Вход сохранится автоматически.</div>
+      <button class="auth-back" onclick="backToEmail()">← Ввести другую почту</button>
     </div>
-    <div class="auth-loading" id="auth-loading">Проверяем вход…</div>
+
+    <!-- Состояние проверки -->
+    <div class="auth-loading" id="auth-loading">
+      <div class="auth-loading-dots">
+        <div class="auth-loading-dot"></div>
+        <div class="auth-loading-dot"></div>
+        <div class="auth-loading-dot"></div>
+      </div>
+      <div class="auth-loading-text">Проверяем вход…</div>
+    </div>
+
   </div>
 </div>
 
@@ -1150,7 +1329,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 const SUPABASE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_YtwehFnevo4R3UpmOnTTXQ_j4PQY21D';
 const sbConfigured=/^https:\/\//.test(SUPABASE_URL)&&SUPABASE_ANON_KEY&&!SUPABASE_ANON_KEY.startsWith('PASTE_');
-const sb=sbConfigured?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+const sb=sbConfigured?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
+  auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,flowType:'pkce'}
+}):null;
 
 let CU=null,ST=null,EI=null;
 let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false;
@@ -1236,35 +1417,56 @@ window.addEventListener('resize',syncViewportForKeyboard);
 
 // ── AUTH ──
 async function initAuth(){
+  // Сначала всегда показываем "Проверяем вход..." — не форму
   showAuthScr();
   setAuthChecking(true);
+
   if(!sbConfigured){
     setAuthChecking(false);
-    const err=document.getElementById('email-err');
-    if(err){err.textContent='Supabase ещё не настроен. Добавьте URL и anon key.';err.style.display='block';}
+    showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
+
   try{
-    if(new URLSearchParams(location.search).has('code')){
-      await sb.auth.exchangeCodeForSession(location.href);
+    // Обрабатываем magic link: ?code= (PKCE) или #access_token= (implicit)
+    const hasCode=new URLSearchParams(location.search).has('code');
+    const hasHash=location.hash&&location.hash.includes('access_token');
+    if(hasCode||hasHash){
+      if(hasCode){
+        await sb.auth.exchangeCodeForSession(location.href);
+      }
+      // При hash-фрагменте supabase-js с detectSessionInUrl сам подхватит
       history.replaceState(null,'',location.origin+location.pathname);
     }
-    const {data}=await sb.auth.getSession();
-    if(data&&data.session&&data.session.user){
-      await enterUser(data.session.user);
+
+    // Retry-loop: ждём до 5 секунд пока сессия появится
+    let session=null;
+    for(let i=0;i<6;i++){
+      const {data}=await sb.auth.getSession();
+      if(data&&data.session&&data.session.user){session=data.session;break;}
+      if(i<5)await new Promise(r=>setTimeout(r,850));
+    }
+
+    if(session&&session.user){
+      await enterUser(session.user);
     } else {
       CU=null;setAuthChecking(false);
     }
   }catch(e){
     console.warn('auth init failed',e);
     CU=null;setAuthChecking(false);
-    const err=document.getElementById('email-err');
-    if(err){err.textContent='Не удалось завершить вход. Попробуйте отправить ссылку ещё раз.';err.style.display='block';}
+    showAuthErr('Не удалось завершить вход. Попробуйте отправить ссылку ещё раз.');
   }
+
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session&&session.user){await enterUser(session.user);}
     else{CU=null;CLOUD_READY_UID=null;showAuthScr();setAuthChecking(false);}
   });
+}
+
+function showAuthErr(msg){
+  const err=document.getElementById('email-err');
+  if(err){err.textContent=msg;err.style.display='block';}
 }
 async function enterUser(user){
   CU=user;migrateLegacyLocal();await loadCloudData();showApp();updUI(user);loadAll();
@@ -1293,24 +1495,34 @@ async function sendEmailLink(){
   const email=(document.getElementById('email-input')?.value||'').trim().toLowerCase();
   const eEl=document.getElementById('email-err'),btn=document.getElementById('email-btn');
   if(eEl){eEl.style.display='none';eEl.textContent='';}
-  if(!sbConfigured){if(eEl){eEl.textContent='Supabase ещё не настроен';eEl.style.display='block';}return;}
-  if(!navigator.onLine){if(eEl){eEl.textContent='Нет интернета. Проверьте подключение и попробуйте ещё раз.';eEl.style.display='block';}return;}
-  if(!/^\S+@\S+\.\S+$/.test(email)){if(eEl){eEl.textContent='Введите почту полностью';eEl.style.display='block';}return;}
+  if(!sbConfigured){showAuthErr('Supabase ещё не настроен');return;}
+  if(!navigator.onLine){showAuthErr('Нет интернета. Проверьте подключение и попробуйте ещё раз.');return;}
+  if(!/^\S+@\S+\.\S{2,}$/.test(email)){showAuthErr('Введите почту полностью, например: name@gmail.com');return;}
   btn.disabled=true;btn.textContent='Отправляем...';
   try{
-    const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+    const redirectTo=(location.origin+location.pathname).replace(/\/?$/,'/');
+    const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});
     if(error)throw error;
     localStorage.setItem('rz_last_email',email);
     document.getElementById('step-email').classList.remove('active');
     document.getElementById('step-sent').classList.add('active');
-    document.getElementById('sent-sub').textContent='Отправили ссылку на '+email+'. Откройте письмо на любом устройстве.';
+    document.getElementById('sent-sub').textContent='Отправили ссылку на '+email+'. Откройте письмо и нажмите на неё.';
   }catch(e){
     console.warn('email link failed',e);
-    const msg=String(e?.message||e?.error_description||e?.error||'');
-    let text='Не удалось отправить ссылку. Попробуйте ещё раз.';
-    if(/invalid|email/i.test(msg))text='Проверьте адрес почты и попробуйте ещё раз.';
-    if(/rate|security|seconds|minute|limit/i.test(msg))text='Ссылка уже отправлялась недавно. Подождите минуту и попробуйте ещё раз.';
-    if(eEl){eEl.textContent=text;eEl.style.display='block';}
+    const msg=String(e?.message||e?.error_description||e?.error||'').toLowerCase();
+    const dbg=new URLSearchParams(location.search).has('debug');
+    let text='Не удалось отправить ссылку — попробуйте ещё раз.';
+    if(/rate|security|seconds|minute|limit/i.test(msg)){
+      text='Ссылка уже отправлялась. Подождите минуту и попробуйте ещё раз.';
+    } else if(/not allowed|disabled|enable|provider/i.test(msg)){
+      text='Вход по почте временно недоступен. Проверьте настройки Supabase.';
+    } else if(/redirect/i.test(msg)){
+      text='Ошибка конфигурации redirect URL в Supabase.';
+    } else if(/invalid.*email|email.*invalid|format/i.test(msg)){
+      text='Проверьте адрес почты — кажется, он введён неправильно.';
+    }
+    if(dbg)text+=' [debug: '+String(e?.message||e).slice(0,120)+']';
+    showAuthErr(text);
   }finally{btn.disabled=false;btn.textContent='Получить ссылку';}
 }
 function backToEmail(){
