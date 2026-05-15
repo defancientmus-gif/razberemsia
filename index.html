@@ -630,9 +630,39 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes dot-pulse{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.25);}}
 .auth-loading-text{font-size:14px;color:var(--fg-m);font-weight:500;}
 
-/* Resend timer (kept, just in case) */
-.auth-resend{background:none;border:none;color:var(--accent-d);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;text-decoration:underline;}
-.auth-timer{font-size:14px;color:var(--fg-l);}
+/* OTP code input */
+.otp-wrap{margin-bottom:12px;}
+.otp-in{
+  display:block;width:100%;
+  background:oklch(0.97 0.010 210 / 0.85);
+  border:1.5px solid oklch(0.85 0.025 210 / 0.55);
+  border-radius:14px;
+  padding:18px 16px;
+  font-size:32px;font-family:var(--sys);color:var(--fg);
+  text-align:center;letter-spacing:10px;font-weight:700;
+  outline:none;-webkit-appearance:none;
+  -webkit-user-select:text;user-select:text;
+  transition:border-color .18s,background .18s;
+}
+.otp-in::placeholder{color:oklch(0.78 0.015 210);letter-spacing:6px;font-weight:400;font-size:24px;}
+.otp-in:focus{
+  border-color:oklch(0.54 0.13 210 / 0.65);
+  background:oklch(1 0 0 / 0.92);
+}
+.auth-resend-row{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;margin-top:10px;flex-wrap:wrap;
+}
+.auth-resend-hint{font-size:13px;color:var(--fg-l);}
+.auth-resend-btn{
+  background:none;border:none;
+  color:var(--accent-d);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--sys);-webkit-appearance:none;
+  text-decoration:underline;padding:0;
+}
+.auth-resend-btn:disabled{color:var(--fg-l);text-decoration:none;cursor:default;}
+.auth-resend-timer{font-size:13px;color:var(--fg-l);}
+.auth-resend-timer.hidden{display:none;}
 .phone-row{display:flex;gap:8px;margin-bottom:12px;}
 .phone-prefix{background:oklch(0.97 0.015 90 / 0.9);border:1.5px solid oklch(0.88 0.02 210 / 0.48);border-radius:12px;padding:13px 14px;font-size:18px;font-weight:600;color:var(--fg);font-family:var(--sys);width:64px;text-align:center;flex-shrink:0;}
 .phone-in{flex:1;background:oklch(0.97 0.015 90 / 0.9);border:1.5px solid oklch(0.88 0.02 210 / 0.48);border-radius:12px;padding:13px 15px;font-size:18px;font-family:var(--sys);color:var(--fg);outline:none;min-height:52px;-webkit-appearance:none;-webkit-user-select:text;user-select:text;}
@@ -1002,29 +1032,40 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <div class="auth-note">Заметки появятся на всех ваших устройствах после входа</div>
     </div>
 
-    <!-- Шаг 2: Ссылка отправлена -->
-    <div class="auth-step" id="step-sent">
+    <!-- Шаг 2: Ввод кода -->
+    <div class="auth-step" id="step-code">
       <div class="auth-sent-icon">
-        <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
       </div>
       <div class="auth-lbl">Проверьте почту</div>
-      <div class="auth-title">Ссылка отправлена</div>
-      <div class="auth-sub" id="sent-sub">Откройте письмо и нажмите на ссылку входа.</div>
-      <div class="auth-note" style="margin-top:0;margin-bottom:16px;">На iPhone: откройте ссылку прямо из письма в Safari. Вход сохранится автоматически.</div>
-      <button class="auth-back" onclick="backToEmail()">← Ввести другую почту</button>
-    </div>
-
-    <!-- Состояние проверки -->
-    <div class="auth-loading" id="auth-loading">
-      <div class="auth-loading-dots">
-        <div class="auth-loading-dot"></div>
-        <div class="auth-loading-dot"></div>
-        <div class="auth-loading-dot"></div>
+      <div class="auth-title">Введите код</div>
+      <div class="auth-sub" id="sent-sub">Отправили 6-значный код на <strong id="sent-email-disp"></strong></div>
+      <div class="otp-wrap">
+        <input
+          class="otp-in"
+          id="otp-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="000000"
+          oninput="onOtpInput(this)"
+          onkeydown="if(event.key==='Enter')verifyOtpCode()"
+        >
       </div>
-      <div class="auth-loading-text">Проверяем вход…</div>
+      <button class="auth-btn" id="otp-btn" onclick="verifyOtpCode()">Войти</button>
+      <div class="auth-err" id="otp-err"></div>
+      <div class="auth-resend-row">
+        <span class="auth-resend-hint">Не пришло?</span>
+        <button class="auth-resend-btn" id="resend-btn" onclick="resendCode()" disabled>
+          Отправить снова
+        </button>
+        <span class="auth-resend-timer" id="resend-timer">через <span id="resend-sec">60</span> с</span>
+      </div>
+      <button class="auth-back" onclick="backToEmail()">← Другая почта</button>
     </div>
 
-  </div>
+  </div><!-- /auth-card -->
 </div>
 
 <!-- MENU -->
@@ -1417,56 +1458,34 @@ window.addEventListener('resize',syncViewportForKeyboard);
 
 // ── AUTH ──
 async function initAuth(){
-  // Сначала всегда показываем "Проверяем вход..." — не форму
   showAuthScr();
-  setAuthChecking(true);
-
   if(!sbConfigured){
-    setAuthChecking(false);
     showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
-
+  // Тихо проверяем: есть ли уже активная сессия (например, не вышел с прошлого раза)
   try{
-    // Обрабатываем magic link: ?code= (PKCE) или #access_token= (implicit)
-    const hasCode=new URLSearchParams(location.search).has('code');
-    const hasHash=location.hash&&location.hash.includes('access_token');
-    if(hasCode||hasHash){
-      if(hasCode){
-        await sb.auth.exchangeCodeForSession(location.href);
-      }
-      // При hash-фрагменте supabase-js с detectSessionInUrl сам подхватит
-      history.replaceState(null,'',location.origin+location.pathname);
+    const {data}=await sb.auth.getSession();
+    if(data?.session?.user){
+      await enterUser(data.session.user);
+      return;
     }
+  }catch(e){console.warn('session check failed',e);}
 
-    // Retry-loop: ждём до 5 секунд пока сессия появится
-    let session=null;
-    for(let i=0;i<6;i++){
-      const {data}=await sb.auth.getSession();
-      if(data&&data.session&&data.session.user){session=data.session;break;}
-      if(i<5)await new Promise(r=>setTimeout(r,850));
-    }
-
-    if(session&&session.user){
-      await enterUser(session.user);
-    } else {
-      CU=null;setAuthChecking(false);
-    }
-  }catch(e){
-    console.warn('auth init failed',e);
-    CU=null;setAuthChecking(false);
-    showAuthErr('Не удалось завершить вход. Попробуйте отправить ссылку ещё раз.');
-  }
-
+  // Слушаем изменения сессии (вход через verifyOtp)
   sb.auth.onAuthStateChange(async(event,session)=>{
-    if(session&&session.user){await enterUser(session.user);}
-    else{CU=null;CLOUD_READY_UID=null;showAuthScr();setAuthChecking(false);}
+    if(session?.user){await enterUser(session.user);}
+    else{CU=null;CLOUD_READY_UID=null;showAuthScr();}
   });
 }
 
 function showAuthErr(msg){
-  const err=document.getElementById('email-err');
-  if(err){err.textContent=msg;err.style.display='block';}
+  // Показываем ошибку в том шаге который сейчас активен
+  const emailErr=document.getElementById('email-err');
+  const otpErr=document.getElementById('otp-err');
+  const codeActive=document.getElementById('step-code')?.classList.contains('active');
+  const errEl=codeActive?otpErr:emailErr;
+  if(errEl){errEl.textContent=msg;errEl.style.display='block';}
 }
 async function enterUser(user){
   CU=user;migrateLegacyLocal();await loadCloudData();showApp();updUI(user);loadAll();
@@ -1491,6 +1510,9 @@ function updUI(u){
   document.getElementById('set-name-disp').textContent=name||'—';
   const ni=document.getElementById('name-input');if(ni)ni.value=name;
 }
+let _otpEmail='';
+let _resendTimer=null;
+
 async function sendEmailLink(){
   const email=(document.getElementById('email-input')?.value||'').trim().toLowerCase();
   const eEl=document.getElementById('email-err'),btn=document.getElementById('email-btn');
@@ -1500,34 +1522,106 @@ async function sendEmailLink(){
   if(!/^\S+@\S+\.\S{2,}$/.test(email)){showAuthErr('Введите почту полностью, например: name@gmail.com');return;}
   btn.disabled=true;btn.textContent='Отправляем...';
   try{
-    const redirectTo=(location.origin+location.pathname).replace(/\/?$/,'/');
-    const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});
+    // OTP-режим: без emailRedirectTo → Supabase шлёт 6-значный код вместо ссылки
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
     if(error)throw error;
+    _otpEmail=email;
     localStorage.setItem('rz_last_email',email);
+    const disp=document.getElementById('sent-email-disp');
+    if(disp)disp.textContent=email;
     document.getElementById('step-email').classList.remove('active');
-    document.getElementById('step-sent').classList.add('active');
-    document.getElementById('sent-sub').textContent='Отправили ссылку на '+email+'. Откройте письмо и нажмите на неё.';
+    document.getElementById('step-code').classList.add('active');
+    const oi=document.getElementById('otp-input');
+    if(oi){oi.value='';setTimeout(()=>oi.focus(),120);}
+    startResendTimer();
   }catch(e){
-    console.warn('email link failed',e);
+    console.warn('otp send failed',e);
     const msg=String(e?.message||e?.error_description||e?.error||'').toLowerCase();
     const dbg=new URLSearchParams(location.search).has('debug');
-    let text='Не удалось отправить ссылку — попробуйте ещё раз.';
+    let text='Не удалось отправить код — попробуйте ещё раз.';
     if(/rate|security|seconds|minute|limit/i.test(msg)){
-      text='Ссылка уже отправлялась. Подождите минуту и попробуйте ещё раз.';
+      text='Код уже отправлялся. Подождите минуту и попробуйте ещё раз.';
     } else if(/not allowed|disabled|enable|provider/i.test(msg)){
       text='Вход по почте временно недоступен. Проверьте настройки Supabase.';
-    } else if(/redirect/i.test(msg)){
-      text='Ошибка конфигурации redirect URL в Supabase.';
     } else if(/invalid.*email|email.*invalid|format/i.test(msg)){
       text='Проверьте адрес почты — кажется, он введён неправильно.';
     }
     if(dbg)text+=' [debug: '+String(e?.message||e).slice(0,120)+']';
     showAuthErr(text);
-  }finally{btn.disabled=false;btn.textContent='Получить ссылку';}
+  }finally{btn.disabled=false;btn.textContent='Получить код';}
 }
+
+async function verifyOtpCode(){
+  const code=(document.getElementById('otp-input')?.value||'').trim().replace(/\D/g,'');
+  const eEl=document.getElementById('otp-err'),btn=document.getElementById('otp-btn');
+  if(eEl){eEl.style.display='none';eEl.textContent='';}
+  if(code.length!==6){
+    if(eEl){eEl.textContent='Введите 6 цифр из письма';eEl.style.display='block';}
+    return;
+  }
+  btn.disabled=true;btn.textContent='Проверяем...';
+  try{
+    const {data,error}=await sb.auth.verifyOtp({email:_otpEmail,token:code,type:'email'});
+    if(error)throw error;
+    if(data?.session?.user)await enterUser(data.session.user);
+  }catch(e){
+    console.warn('otp verify failed',e);
+    const msg=String(e?.message||'').toLowerCase();
+    let text='Неверный или устаревший код. Запросите новый.';
+    if(/expired/i.test(msg))text='Код устарел — запросите новый ниже.';
+    if(/invalid/i.test(msg))text='Неверный код. Проверьте письмо и попробуйте ещё раз.';
+    if(eEl){eEl.textContent=text;eEl.style.display='block';}
+  }finally{btn.disabled=false;btn.textContent='Войти';}
+}
+
+function onOtpInput(el){
+  el.value=el.value.replace(/\D/g,'').slice(0,6);
+  if(el.value.length===6)verifyOtpCode();
+}
+
+async function resendCode(){
+  const btn=document.getElementById('resend-btn');
+  btn.disabled=true;
+  const eEl=document.getElementById('otp-err');
+  if(eEl){eEl.style.display='none';}
+  try{
+    const {error}=await sb.auth.signInWithOtp({email:_otpEmail,options:{shouldCreateUser:true}});
+    if(error)throw error;
+    const oi=document.getElementById('otp-input');
+    if(oi){oi.value='';oi.focus();}
+    startResendTimer();
+  }catch(e){
+    if(eEl){eEl.textContent='Не удалось отправить код. Подождите и попробуйте ещё раз.';eEl.style.display='block';}
+    btn.disabled=false;
+  }
+}
+
+function startResendTimer(){
+  clearInterval(_resendTimer);
+  const btn=document.getElementById('resend-btn');
+  const timerEl=document.getElementById('resend-timer');
+  const secEl=document.getElementById('resend-sec');
+  if(btn)btn.disabled=true;
+  if(timerEl)timerEl.classList.remove('hidden');
+  let sec=60;
+  if(secEl)secEl.textContent=sec;
+  _resendTimer=setInterval(()=>{
+    sec--;
+    if(secEl)secEl.textContent=sec;
+    if(sec<=0){
+      clearInterval(_resendTimer);
+      if(btn)btn.disabled=false;
+      if(timerEl)timerEl.classList.add('hidden');
+    }
+  },1000);
+}
+
 function backToEmail(){
-  document.getElementById('step-sent').classList.remove('active');
+  clearInterval(_resendTimer);
+  document.getElementById('step-code').classList.remove('active');
   document.getElementById('step-email').classList.add('active');
+  const eEl=document.getElementById('email-err');
+  if(eEl){eEl.style.display='none';}
 }
 // ── MENU ──
 function toggleMenu(e){
