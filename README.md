@@ -34,7 +34,21 @@ git pull
 - `index.html` — главный прототип.
 - `manifest.json` — PWA-настройки.
 - `sw.js` — service worker и кэш.
-- `firestore.rules` — правила доступа к облачным заметкам Firebase.
+- `supabase.sql` — таблица и RLS-правила для облачных заметок Supabase.
+
+## Supabase
+
+Для живого входа по почте нужно вставить в `index.html`:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+В Supabase SQL Editor выполните `supabase.sql`. Он создаёт таблицу `user_state` и правила, чтобы пользователь видел только свои заметки.
+
+В Supabase Auth URL Configuration укажите:
+
+- Site URL: `https://defancientmus-gif.github.io/razberemsia/`
+- Redirect URL: `https://defancientmus-gif.github.io/razberemsia/`
 - `PROJECT_CONTEXT.md` — краткий контекст проекта.
 - `TODO.md` — ближайшие задачи.
 - `CHANGELOG.md` — история изменений.

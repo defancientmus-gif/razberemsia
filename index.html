@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Разберёмся v4.10</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
-<link rel="dns-prefetch" href="https://firebaseapp.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
 <!-- Fallback inline manifest для случая если файл не найден -->
@@ -471,7 +470,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* splash-out removed — showApp handles opacity transition */
 .auth-ver{font-size:11px;color:oklch(0.52 0.012 210 / 0.45);text-align:center;margin-bottom:0;font-weight:500;}
 .auth-card{
-  display:none!important;
+  display:block;
   background:oklch(1 0 0 / 0.80);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border:1px solid oklch(0.88 0.02 210 / 0.50);
@@ -491,11 +490,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .auth-btn:disabled{opacity:.4;cursor:not-allowed;}
 .auth-err{font-size:14px;color:var(--rose);margin-top:10px;display:none;line-height:1.5;}
 .auth-note{font-size:13px;color:var(--fg-l);text-align:center;margin-top:14px;line-height:1.6;}
-.sms-warn{background:oklch(0.52 0.10 210 / 0.08);border:1px solid oklch(0.52 0.10 210 / 0.18);border-radius:14px;padding:13px 16px;margin-top:14px;font-size:13px;color:var(--fg-m);line-height:1.7;}
-.sms-warn strong{color:var(--fg);font-weight:700;}
-.code-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
-.code-d{width:46px;height:58px;background:oklch(0.97 0.015 90 / 0.9);border:1.5px solid oklch(0.88 0.02 210 / 0.48);border-radius:14px;font-size:26px;font-weight:700;text-align:center;font-family:var(--sys);color:var(--fg);outline:none;-webkit-appearance:none;-webkit-user-select:text;user-select:text;transition:border-color .15s;}
-.code-d:focus{border-color:oklch(0.52 0.10 210 / 0.55);}
 .auth-back{background:none;border:none;color:var(--fg-l);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sys);padding:12px;width:100%;margin-top:4px;-webkit-appearance:none;}
 .auth-resend{background:none;border:none;color:var(--accent-d);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;text-decoration:underline;}
 .auth-timer{font-size:14px;color:var(--fg-l);}
@@ -748,8 +742,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes fIn{from{opacity:0}to{opacity:1}}
 @keyframes sUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 ::-webkit-scrollbar{display:none;}
-#recaptcha-container{position:fixed;bottom:-300px;right:-300px;z-index:-1;opacity:0;width:0;height:0;}
-.grecaptcha-badge{visibility:hidden!important;}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
@@ -837,39 +829,21 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   <div class="auth-tag">Спокойный помощник рядом</div>
   <div class="auth-ver">v4.10 · бета</div>
   <div class="auth-card">
-    <div class="auth-step active" id="step-phone">
+    <div class="auth-step active" id="step-email">
       <div class="auth-lbl">Вход</div>
-      <div class="auth-title">Ваш номер</div>
-      <div class="auth-sub">Отправим код — один раз, больше ничего не нужно запоминать.</div>
-      <div class="phone-row">
-        <div class="phone-prefix">+7</div>
-        <input class="phone-in" id="phone-input" type="tel" inputmode="numeric" placeholder="999 000-00-00" maxlength="13" oninput="fmtPhoneInput(this)" onkeydown="if(event.key==='Enter')sendSms()">
-      </div>
-      <button class="auth-btn" id="sms-btn" onclick="sendSms()">Получить код</button>
-      <div class="auth-err" id="phone-err"></div>
-      <div class="auth-note">Данные защищены Firebase (Google)</div>
-      <button class="dev-btn" id="dev-btn" onclick="devLogin()"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Для разработчиков</span></button>
+      <div class="auth-title">Ваша почта</div>
+      <div class="auth-sub">Отправим ссылку для входа. Пароль запоминать не нужно.</div>
+      <input class="phone-in" id="email-input" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" onkeydown="if(event.key==='Enter')sendEmailLink()">
+      <button class="auth-btn" id="email-btn" onclick="sendEmailLink()">Получить ссылку</button>
+      <div class="auth-err" id="email-err"></div>
+      <div class="auth-note">Заметки будут доступны на ваших устройствах после входа по этой почте</div>
+      <button class="dev-btn" id="dev-btn" onclick="devLogin()"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg><span>Локальный режим</span></button>
     </div>
-    <div class="auth-step" id="step-code">
-      <div class="auth-lbl">Подтверждение</div>
-      <div class="auth-title">Код из СМС</div>
-      <div class="auth-sub" id="code-sub">Введите 6 цифр.</div>
-      <div class="code-row">
-        <input class="code-d" id="d0" type="tel" inputmode="numeric" maxlength="1" oninput="digitIn(this,0)" onkeydown="digitBack(event,0)">
-        <input class="code-d" id="d1" type="tel" inputmode="numeric" maxlength="1" oninput="digitIn(this,1)" onkeydown="digitBack(event,1)">
-        <input class="code-d" id="d2" type="tel" inputmode="numeric" maxlength="1" oninput="digitIn(this,2)" onkeydown="digitBack(event,2)">
-        <input class="code-d" id="d3" type="tel" inputmode="numeric" maxlength="1" oninput="digitIn(this,3)" onkeydown="digitBack(event,3)">
-        <input class="code-d" id="d4" type="tel" inputmode="numeric" maxlength="1" oninput="digitIn(this,4)" onkeydown="digitBack(event,4)">
-        <input class="code-d" id="d5" type="tel" inputmode="numeric" maxlength="1" oninput="digitIn(this,5)" onkeydown="digitBack(event,5)">
-      </div>
-      <button class="auth-btn" id="verify-btn" onclick="verifyCode()">Войти</button>
-      <div class="auth-err" id="code-err"></div>
-      <div class="sms-warn"><strong>Никому не сообщайте этот код.</strong><br>Настоящий банк или сервис никогда не просит код из СМС по телефону.</div>
-      <div style="text-align:center;margin-top:14px;">
-        <span class="auth-timer" id="resend-timer">Повторно через <b id="cd">60</b> сек</span>
-        <button class="auth-resend" id="resend-btn" style="display:none" onclick="resendSms()">Отправить снова</button>
-      </div>
-      <button class="auth-back" onclick="backToPhone()">← Изменить номер</button>
+    <div class="auth-step" id="step-sent">
+      <div class="auth-lbl">Проверьте почту</div>
+      <div class="auth-title">Ссылка отправлена</div>
+      <div class="auth-sub" id="sent-sub">Откройте письмо и нажмите ссылку входа.</div>
+      <button class="auth-btn" onclick="backToEmail()">Ввести другую почту</button>
     </div>
   </div>
 </div>
@@ -1024,7 +998,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <div class="set-group">
         <div class="set-row">
           <div class="set-ico">📱</div>
-          <div><div class="set-label" id="set-phone-disp">—</div><div class="set-value">Номер для входа</div></div>
+          <div><div class="set-label" id="set-account-disp">—</div><div class="set-value">Почта для входа</div></div>
         </div>
       </div>
       <div class="set-group-title">О данных</div>
@@ -1035,7 +1009,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <div class="set-group">
         <button class="btn-danger" onclick="doSignOut()">
           <div class="set-ico">🚪</div>
-          <div><div class="set-label">Выйти из аккаунта</div><div class="set-value">Потребуется войти снова по СМС</div></div>
+          <div><div class="set-label">Выйти из аккаунта</div><div class="set-value">Потребуется снова войти по почте</div></div>
           <div class="set-arr">›</div>
         </button>
       </div>
@@ -1170,82 +1144,39 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   </div>
 </div>
 
-<div id="recaptcha-container"></div>
-
-<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" as="script">
-<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" as="script">
-<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" as="script">
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" as="script">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyDxaN6JLQkB56Wk1gxySyMFZwqkmhnmMDg",
-  authDomain:"razberemsia-89726.firebaseapp.com",
-  projectId:"razberemsia-89726",
-  storageBucket:"razberemsia-89726.firebasestorage.app",
-  messagingSenderId:"243883413956",
-  appId:"1:243883413956:web:f40ce077b0e27918709491"
-});
-const auth=firebase.auth();auth.languageCode='ru';
-const db=firebase.firestore?firebase.firestore():null;
+const SUPABASE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_YtwehFnevo4R3UpmOnTTXQ_j4PQY21D';
+const sbConfigured=/^https:\/\//.test(SUPABASE_URL)&&SUPABASE_ANON_KEY&&!SUPABASE_ANON_KEY.startsWith('PASTE_');
+const sb=sbConfigured?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 
-let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
+let CU=null,ST=null,EI=null;
 let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false;
 
-function isLocalDev(){
-  return ['localhost','127.0.0.1',''].includes(location.hostname)||location.search.includes('dev=1');
-}
-function userScope(){
-  return CU&&CU.uid?CU.uid:'signed-out';
-}
-function scopedKey(key){
-  return key.startsWith('rz_')?'rz_'+userScope()+'_'+key.slice(3):key;
-}
-function readJson(key,fallback){
-  try{
-    const raw=localStorage.getItem(scopedKey(key));
-    return raw?JSON.parse(raw):fallback;
-  }catch(e){return fallback;}
-}
-function writeJson(key,value){
-  localStorage.setItem(scopedKey(key),JSON.stringify(value));
-  queueCloudSave();
-}
-function readText(key){
-  return localStorage.getItem(scopedKey(key))||'';
-}
-function writeText(key,value){
-  localStorage.setItem(scopedKey(key),String(value||''));
-  queueCloudSave();
-}
-function migrateLegacyLocal(){
-  ['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{
-    const target=scopedKey(key);
-    if(localStorage.getItem(target)!==null)return;
-    const legacy=localStorage.getItem(key);
-    if(legacy!==null)localStorage.setItem(target,legacy);
-  });
-}
+function isLocalDev(){return ['localhost','127.0.0.1',''].includes(location.hostname)||location.search.includes('dev=1');}
+function userScope(){return CU&&CU.id?CU.id:'signed-out';}
+function scopedKey(key){return key.startsWith('rz_')?'rz_'+userScope()+'_'+key.slice(3):key;}
+function readJson(key,fallback){try{const raw=localStorage.getItem(scopedKey(key));return raw?JSON.parse(raw):fallback;}catch(e){return fallback;}}
+function writeJson(key,value){localStorage.setItem(scopedKey(key),JSON.stringify(value));queueCloudSave();}
+function readText(key){return localStorage.getItem(scopedKey(key))||'';}
+function writeText(key,value){localStorage.setItem(scopedKey(key),String(value||''));queueCloudSave();}
+function migrateLegacyLocal(){['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{const target=scopedKey(key);if(localStorage.getItem(target)!==null)return;const legacy=localStorage.getItem(key);if(legacy!==null)localStorage.setItem(target,legacy);});}
 function getNotes(){return readJson('rz_notes',[]);}
 function saveNotes(notes){writeJson('rz_notes',notes);}
 function getTrash(){return readJson('rz_trash',[]);}
 function saveTrash(trash){writeJson('rz_trash',trash);}
 function getHistory(){return readJson('rz_history',[]);}
 function saveHistory(hist){writeJson('rz_history',hist);}
-function cloudAllowed(){
-  return !!(db&&CU&&CU.uid&&CU.uid!=='dev-local');
-}
-function cloudRef(){
-  return db.collection('users').doc(CU.uid).collection('private').doc('state');
-}
+function cloudAllowed(){return !!(sb&&CU&&CU.id&&CU.id!=='dev-local');}
 async function loadCloudData(){
-  if(!cloudAllowed()||CLOUD_READY_UID===CU.uid)return;
+  if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
   try{
-    const snap=await cloudRef().get();
-    if(snap.exists){
-      const data=snap.data()||{};
+    const {data,error}=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
+    if(error)throw error;
+    if(data){
       if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
       if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
       if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
@@ -1253,39 +1184,20 @@ async function loadCloudData(){
     } else if(getNotes().length||getTrash().length||getHistory().length||readText('rz_name')){
       await saveCloudNow();
     }
-    CLOUD_READY_UID=CU.uid;
-  }catch(e){
-    console.warn('cloud load failed',e);
-    showToast('Не удалось загрузить облако, работаем локально');
-  }finally{
-    CLOUD_LOADING=false;
-  }
+    CLOUD_READY_UID=CU.id;
+  }catch(e){console.warn('cloud load failed',e);showToast('Не удалось загрузить облако, работаем локально');}
+  finally{CLOUD_LOADING=false;}
 }
-function queueCloudSave(){
-  if(CLOUD_LOADING||!cloudAllowed())return;
-  clearTimeout(CLOUD_SAVE_TIMER);
-  CLOUD_SAVE_TIMER=setTimeout(saveCloudNow,700);
-}
+function queueCloudSave(){if(CLOUD_LOADING||!cloudAllowed())return;clearTimeout(CLOUD_SAVE_TIMER);CLOUD_SAVE_TIMER=setTimeout(saveCloudNow,700);}
 async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
-    await cloudRef().set({
-      notes:getNotes(),
-      trash:getTrash(),
-      history:getHistory(),
-      name:readText('rz_name'),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-  }catch(e){
-    console.warn('cloud save failed',e);
-    showToast('Не удалось сохранить в облако');
-  }
+    const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),name:readText('rz_name'),updated_at:new Date().toISOString()};
+    const {error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
+    if(error)throw error;
+  }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
 }
-function initDevVisibility(){
-  const btn=document.getElementById('dev-btn');
-  if(btn)btn.style.display=isLocalDev()?'flex':'none';
-}
-
+function initDevVisibility(){const btn=document.getElementById('dev-btn');if(btn)btn.style.display=isLocalDev()?'flex':'none';}
 function syncViewportForKeyboard(){
   const vv=window.visualViewport;
   const h=vv?vv.height:window.innerHeight;
@@ -1321,17 +1233,28 @@ window.addEventListener('resize',syncViewportForKeyboard);
 })();
 
 // ── AUTH ──
-auth.onAuthStateChanged(u=>{
-  if(u){
-    // Уже залогинен — мгновенный сплэш (400ms) и в приложение
-    setTimeout(async()=>{CU=u;migrateLegacyLocal();await loadCloudData();showApp();updUI(u);loadAll();},400);
-  } else {
-    CU=null;
-    initDevVisibility();
+async function initAuth(){
+  initDevVisibility();
+  if(!sbConfigured){
     showAuthScr();
+    const err=document.getElementById('email-err');
+    if(err){err.textContent='Supabase ещё не настроен. Добавьте URL и anon key.';err.style.display='block';}
+    return;
   }
-});
-
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session&&data.session.user){
+    await enterUser(data.session.user);
+  } else {
+    CU=null;showAuthScr();
+  }
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(session&&session.user){await enterUser(session.user);}
+    else{CU=null;CLOUD_READY_UID=null;showAuthScr();}
+  });
+}
+async function enterUser(user){
+  CU=user;migrateLegacyLocal();await loadCloudData();showApp();updUI(user);loadAll();
+}
 function showApp(){
   const a=document.getElementById('auth-screen');
   a.style.opacity='0';
@@ -1340,28 +1263,44 @@ function showApp(){
 function showAuthScr(){
   const a=document.getElementById('auth-screen');
   a.style.display='flex';
+  a.style.opacity='1';
   a.classList.remove('hidden');
-  setTimeout(initRC,400);
-}
-
-function fmtNum(p){
-  if(!p)return'—';
-  const d=p.replace(/\D/g,'').slice(-10);
-  if(d.length!==10)return p;
-  return'+7 '+d.slice(0,3)+' '+d.slice(3,6)+'-'+d.slice(6,8)+'-'+d.slice(8,10);
 }
 function updUI(u){
-  const ph=u.phoneNumber||'';
-  const disp=ph?fmtNum(ph):'dev режим';
+  const email=u&&u.email?u.email:(u&&u.id==='dev-local'?'локальный режим':'—');
   const name=readText('rz_name');
-  document.getElementById('hmenu-phone').textContent=disp;
+  document.getElementById('hmenu-phone').textContent=email;
   document.getElementById('hmenu-name').textContent=name||'Добро пожаловать';
-  document.getElementById('set-phone-disp').textContent=disp;
+  document.getElementById('set-account-disp').textContent=email;
   document.getElementById('set-name-disp').textContent=name||'—';
   const ni=document.getElementById('name-input');if(ni)ni.value=name;
 }
-
-
+async function sendEmailLink(){
+  const email=(document.getElementById('email-input')?.value||'').trim().toLowerCase();
+  const eEl=document.getElementById('email-err'),btn=document.getElementById('email-btn');
+  if(eEl){eEl.style.display='none';eEl.textContent='';}
+  if(!sbConfigured){if(eEl){eEl.textContent='Supabase ещё не настроен';eEl.style.display='block';}return;}
+  if(!/^\S+@\S+\.\S+$/.test(email)){if(eEl){eEl.textContent='Введите почту полностью';eEl.style.display='block';}return;}
+  btn.disabled=true;btn.textContent='Отправляем...';
+  try{
+    const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+    if(error)throw error;
+    localStorage.setItem('rz_last_email',email);
+    document.getElementById('step-email').classList.remove('active');
+    document.getElementById('step-sent').classList.add('active');
+    document.getElementById('sent-sub').textContent='Отправили ссылку на '+email+'. Откройте письмо на любом устройстве.';
+  }catch(e){
+    if(eEl){eEl.textContent='Не удалось отправить ссылку. Проверьте почту и настройки Supabase.';eEl.style.display='block';}
+  }finally{btn.disabled=false;btn.textContent='Получить ссылку';}
+}
+function backToEmail(){
+  document.getElementById('step-sent').classList.remove('active');
+  document.getElementById('step-email').classList.add('active');
+}
+async function devLogin(){
+  if(!isLocalDev()){showToast('Локальный режим доступен только локально');return;}
+  CU={id:'dev-local',email:'локально'};migrateLegacyLocal();showApp();updUI(CU);loadAll();
+}
 
 // ── MENU ──
 function toggleMenu(e){
@@ -1390,11 +1329,7 @@ function saveName(){
 // ── SIGN OUT ──
 function doSignOut(){
   if(!confirm('Выйти из аккаунта?'))return;
-  auth.signOut().then(()=>{
-    CU=null;CLOUD_READY_UID=null;closeMenu();
-    if(RV){try{RV.clear();}catch(e){}RV=null;}
-    CR=null;backToPhone();go('home');showAuthScr();
-  });
+  (async()=>{if(sb)await sb.auth.signOut();CU=null;CLOUD_READY_UID=null;closeMenu();go('home');showAuthScr();})();
 }
 
 // ── NAVIGATION ──
@@ -1426,114 +1361,6 @@ function go(id){
     if(dx>80&&cur==='notes'){go('home');return;}
   },{passive:true});
 })();
-
-// ── RECAPTCHA ──
-function initRC(){
-  if(RV)return;
-  const old=document.getElementById('recaptcha-container');
-  const f=document.createElement('div');f.id='recaptcha-container';
-  old.parentNode.replaceChild(f,old);
-  RV=new firebase.auth.RecaptchaVerifier('recaptcha-container',{size:'invisible',callback:()=>{}});
-  RV.render().catch(()=>{});
-}
-
-// ── PHONE FORMAT ──
-function fmtPhoneInput(el){
-  let v=el.value.replace(/\D/g,'');if(v.length>10)v=v.slice(0,10);
-  let o='';
-  if(v.length>0)o+=v.slice(0,3);
-  if(v.length>3)o+=' '+v.slice(3,6);
-  if(v.length>6)o+='-'+v.slice(6,8);
-  if(v.length>8)o+='-'+v.slice(8,10);
-  el.value=o;
-}
-
-// ── SMS ──
-async function sendSms(){
-  const raw=document.getElementById('phone-input').value.replace(/\D/g,'');
-  const eEl=document.getElementById('phone-err'),btn=document.getElementById('sms-btn');
-  eEl.style.display='none';
-  if(raw.length<10){eEl.textContent='Введите номер полностью';eEl.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Отправляем...';
-  try{
-    if(!RV)initRC();
-    CR=await auth.signInWithPhoneNumber('+7'+raw,RV);
-    document.getElementById('step-phone').classList.remove('active');
-    document.getElementById('step-code').classList.add('active');
-    document.getElementById('code-sub').textContent='Отправили на +7 '+raw.slice(0,3)+' '+raw.slice(3,6)+'-'+raw.slice(6,8)+'-'+raw.slice(8,10);
-    document.getElementById('d0').focus();startCD();
-  }catch(e){
-    eEl.textContent=aErr(e.code);eEl.style.display='block';
-    btn.disabled=false;btn.textContent='Получить код';
-    try{RV.clear();}catch(_){}RV=null;
-  }
-}
-
-async function devLogin(){
-  if(!isLocalDev()){
-    showToast('Dev-вход доступен только локально');
-    return;
-  }
-  // Сплэш уже виден (display:flex по умолчанию) — просто ждём
-  await new Promise(r=>setTimeout(r,1300));
-  CU={uid:'dev-local',phoneNumber:''};
-  migrateLegacyLocal();
-  showApp();updUI(CU);loadAll();
-}
-
-// ── CODE INPUT ──
-function digitIn(el,i){
-  const v=el.value.replace(/\D/g,'');el.value=v?v[0]:'';
-  if(v&&i<5)document.getElementById('d'+(i+1)).focus();
-  if(getCode().length===6)verifyCode();
-}
-function digitBack(e,i){
-  if(e.key==='Backspace'&&!document.getElementById('d'+i).value&&i>0){
-    e.preventDefault();const p=document.getElementById('d'+(i-1));p.value='';p.focus();
-  }
-}
-function getCode(){let c='';for(let i=0;i<6;i++)c+=document.getElementById('d'+i).value;return c;}
-
-async function verifyCode(){
-  const code=getCode(),eEl=document.getElementById('code-err'),btn=document.getElementById('verify-btn');
-  eEl.style.display='none';
-  if(code.length<6){eEl.textContent='Введите все 6 цифр';eEl.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Проверяем...';
-  try{
-    const r=await CR.confirm(code);
-    CU=r.user;clearInterval(CDI);migrateLegacyLocal();await loadCloudData();showApp();updUI(CU);loadAll();
-  }catch(e){
-    eEl.textContent=aErr(e.code);eEl.style.display='block';
-    btn.disabled=false;btn.textContent='Войти';
-    for(let i=0;i<6;i++)document.getElementById('d'+i).value='';
-    document.getElementById('d0').focus();
-  }
-}
-
-function startCD(){
-  let s=60;document.getElementById('cd').textContent=s;
-  document.getElementById('resend-timer').style.display='inline';
-  document.getElementById('resend-btn').style.display='none';
-  clearInterval(CDI);
-  CDI=setInterval(()=>{
-    s--;document.getElementById('cd').textContent=s;
-    if(s<=0){clearInterval(CDI);document.getElementById('resend-timer').style.display='none';document.getElementById('resend-btn').style.display='inline';}
-  },1000);
-}
-function resendSms(){backToPhone();setTimeout(sendSms,100);}
-function backToPhone(){
-  clearInterval(CDI);
-  document.getElementById('step-code').classList.remove('active');
-  document.getElementById('step-phone').classList.add('active');
-  document.getElementById('code-err').style.display='none';
-  document.getElementById('phone-err').style.display='none';
-  const b=document.getElementById('sms-btn');b.disabled=false;b.textContent='Получить код';
-  for(let i=0;i<6;i++)document.getElementById('d'+i).value='';
-}
-function aErr(c){
-  const m={'auth/invalid-phone-number':'Неверный номер.','auth/too-many-requests':'Слишком много попыток.','auth/invalid-verification-code':'Неверный код.','auth/code-expired':'Код устарел.','auth/network-request-failed':'Нет интернета.'};
-  return m[c]||'Что-то пошло не так.';
-}
 
 // ── TOAST ──
 let _toastT=null;
@@ -2651,8 +2478,7 @@ window.addEventListener('load',()=>{
 });
 
 // ── INIT ──
-initDevVisibility();
-loadAll();
+initAuth();
 </script>
 </body>
 </html>
