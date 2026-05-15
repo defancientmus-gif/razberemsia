@@ -42,6 +42,7 @@ input,textarea{-webkit-user-select:text;user-select:text;}
   --r: 16px;
   --sys: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
   --vvh: 100vh;
+  --vvtop: 0px;
   --kb: 0px;
 }
 
@@ -475,7 +476,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
-  position:fixed;inset:0;z-index:300;
+  position:fixed;top:var(--vvtop);left:0;right:0;bottom:auto;height:var(--vvh);z-index:300;
   display:none;align-items:center;justify-content:center;padding:14px 8px;
 }
 .overlay.open{display:flex;}
@@ -492,7 +493,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   max-width:430px;
   height:min(76dvh, 680px);
   max-height:calc(var(--vvh) - 28px);
-  margin-bottom:var(--kb);
+  margin-bottom:0;
   display:flex;flex-direction:column;
   background:
     radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 150 / 0.20), transparent 55%),
@@ -510,6 +511,13 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes sheetRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 @keyframes sheetDrop{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(12px);}}
 .sheet.closing{animation:sheetDrop .20s cubic-bezier(.4,0,1,1) forwards;}
+
+.keyboard-open .overlay.open{align-items:flex-end;padding:8px 8px 0;}
+.keyboard-open .sheet{
+  height:min(62dvh, calc(var(--vvh) - 4px));
+  max-height:calc(var(--vvh) - 4px);
+  margin-bottom:0;
+}
 
 /* Shine line at top */
 .sheet-shine{height:1.5px;flex-shrink:0;
@@ -542,7 +550,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .sheet-undo-btn:active{background:oklch(0.90 0.02 150 / 0.60);transform:scale(.92);}
 .sheet-undo-btn svg{width:16px;height:16px;stroke:var(--fg-m);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.sheet-undo-btn:disabled{opacity:.22;pointer-events:none;}
+.sheet-undo-btn.is-disabled{opacity:.22;}
 /* X close button */
 .sheet-close-btn{
   width:36px;height:36px;border-radius:50%;
@@ -663,8 +671,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .snm-btn.rec{border-color:oklch(0.58 0.16 25 / 0.30);}
 
 /* ── INPUT SHEET (home new entry) — same glass style ── */
-.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:center;align-items:center;padding:14px 8px;}
+.input-sheet-overlay{position:fixed;top:var(--vvtop);left:0;right:0;bottom:auto;height:var(--vvh);z-index:350;display:none;flex-direction:column;justify-content:center;align-items:center;padding:14px 8px;}
 .input-sheet-overlay.open{display:flex;animation:fIn .16s ease;}
+.keyboard-open .input-sheet-overlay.open{justify-content:flex-end;padding:8px 8px 0;}
 .input-sheet-bg{position:absolute;inset:0;background:oklch(0.25 0.02 150 / 0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 /* Reuse .sheet styles for the inner div */
 
@@ -963,10 +972,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
       </div>
       <div class="sheet-hdr-title" id="sheet-title">Новая заметка</div>
-      <button class="sheet-undo-btn" id="sheet-undo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetUndo()" title="Отменить" disabled>
+      <button class="sheet-undo-btn is-disabled" id="sheet-undo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetUndo()" title="Отменить" aria-disabled="true">
         <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
       </button>
-      <button class="sheet-undo-btn" id="sheet-redo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetRedo()" title="Повторить" disabled>
+      <button class="sheet-undo-btn is-disabled" id="sheet-redo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetRedo()" title="Повторить" aria-disabled="true">
         <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
       </button>
       <button class="sheet-close-btn" onclick="closeSheet()">
@@ -1067,9 +1076,12 @@ let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
 function syncViewportForKeyboard(){
   const vv=window.visualViewport;
   const h=vv?vv.height:window.innerHeight;
+  const top=vv?vv.offsetTop:0;
   const kb=vv?Math.max(0,window.innerHeight-vv.height-vv.offsetTop):0;
   document.documentElement.style.setProperty('--vvh',h+'px');
+  document.documentElement.style.setProperty('--vvtop',top+'px');
   document.documentElement.style.setProperty('--kb',kb+'px');
+  document.documentElement.classList.toggle('keyboard-open',kb>80);
 }
 syncViewportForKeyboard();
 if(window.visualViewport){
@@ -1639,15 +1651,19 @@ function refocusSheetInput(f){
 }
 function sheetUndo(){
   const f=document.getElementById('sh1');if(!f)return;
-  if(sheetUndoStack.length>1){sheetRedoStack.push(sheetUndoStack.pop());f.value=sheetUndoStack[sheetUndoStack.length-1];updUndoBtns();updCharCount(f);refocusSheetInput(f);}
+  if(sheetUndoStack.length>1){sheetRedoStack.push(sheetUndoStack.pop());f.value=sheetUndoStack[sheetUndoStack.length-1];updUndoBtns();updCharCount(f);}
+  refocusSheetInput(f);
 }
 function sheetRedo(){
   const f=document.getElementById('sh1');if(!f)return;
-  if(sheetRedoStack.length){const v=sheetRedoStack.pop();sheetUndoStack.push(v);f.value=v;updUndoBtns();updCharCount(f);refocusSheetInput(f);}
+  if(sheetRedoStack.length){const v=sheetRedoStack.pop();sheetUndoStack.push(v);f.value=v;updUndoBtns();updCharCount(f);}
+  refocusSheetInput(f);
 }
 function updUndoBtns(){
-  const u=document.getElementById('sheet-undo-btn');if(u)u.disabled=sheetUndoStack.length<=1;
-  const r=document.getElementById('sheet-redo-btn');if(r)r.disabled=!sheetRedoStack.length;
+  const u=document.getElementById('sheet-undo-btn');
+  if(u){const off=sheetUndoStack.length<=1;u.classList.toggle('is-disabled',off);u.setAttribute('aria-disabled',off?'true':'false');}
+  const r=document.getElementById('sheet-redo-btn');
+  if(r){const off=!sheetRedoStack.length;r.classList.toggle('is-disabled',off);r.setAttribute('aria-disabled',off?'true':'false');}
 }
 function updCharCount(f){
   const el=document.getElementById('sheet-char-count');if(el)el.textContent=f.value.length+' символов';
@@ -1705,7 +1721,14 @@ function initSheetReminder(val){
 }
 
 // Tap on overlay-bg to close (not on sheet itself)
-document.getElementById('overlay-bg').addEventListener('click',()=>closeSheet());
+document.getElementById('overlay-bg').addEventListener('click',()=>{
+  if(document.documentElement.classList.contains('keyboard-open')){
+    const f=document.getElementById('sh1');
+    refocusSheetInput(f);
+    return;
+  }
+  closeSheet();
+});
 
 function saveSheet(){
   const f=document.getElementById('sh1');
