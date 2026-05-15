@@ -1,22 +1,15 @@
-﻿﻿# Razberemsia deploy.ps1
-# Auto-path, auto SW cache bump
+param([string]$msg = "update")
 
-$paths = @(
-    "C:\Users\Kosmos\Desktop\Разберёмся",
-    "C:\Users\Defancient\Desktop\Разберёмся"
-)
+$dir = $PSScriptRoot
 
-$dir = $paths | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-if (-not $dir) {
+if (-not $dir -or -not (Test-Path $dir)) {
     Write-Host "ERR: folder not found" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "OK: $dir" -ForegroundColor Cyan
+Write-Host "DIR: $dir" -ForegroundColor Cyan
 Set-Location $dir
 
-# Bump SW cache version
 $swPath = Join-Path $dir "sw.js"
 if (Test-Path $swPath) {
     $sw = Get-Content $swPath -Raw -Encoding UTF8
@@ -24,12 +17,10 @@ if (Test-Path $swPath) {
         $oldVer = [int]$Matches[1]
         $newVer = $oldVer + 1
         $sw = $sw -replace "rz-v$oldVer", "rz-v$newVer"
-        [System.IO.File]::WriteAllText($swPath, $sw, [System.Text.Encoding]::UTF8)
+        [System.IO.File]::WriteAllText($swPath, $sw, [System.Text.UTF8Encoding]::new($false))
         Write-Host "SW: rz-v$oldVer -> rz-v$newVer" -ForegroundColor Yellow
     }
 }
-
-$msg = if ($args[0]) { $args[0] } else { "update" }
 
 git add -A
 
@@ -50,10 +41,10 @@ if ($LASTEXITCODE -ne 0) {
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
-    Write-Host "Deployed: $msg" -ForegroundColor Green
+    Write-Host "OK: $msg" -ForegroundColor Green
     Write-Host "https://defancientmus-gif.github.io/razberemsia/" -ForegroundColor Cyan
     Write-Host "https://github.com/defancientmus-gif/razberemsia/actions" -ForegroundColor Cyan
 } else {
-    Write-Host "Push failed" -ForegroundColor Red
+    Write-Host "PUSH FAILED" -ForegroundColor Red
     exit 1
 }
