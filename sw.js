@@ -1,4 +1,4 @@
-const CACHE = 'rz-v10';
+﻿const CACHE = 'rz-v11';
 const ASSETS = ['razberemsia_v03.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

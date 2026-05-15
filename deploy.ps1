@@ -1,31 +1,59 @@
-﻿$ErrorActionPreference = "Stop"
+﻿﻿# Razberemsia deploy.ps1
+# Auto-path, auto SW cache bump
 
-Set-Location -LiteralPath $PSScriptRoot
+$paths = @(
+    "C:\Users\Kosmos\Desktop\Разберёмся",
+    "C:\Users\Defancient\Desktop\Разберёмся"
+)
 
-$branch = "main"
-$message = if ($args.Count -gt 0) { $args -join " " } else { "update $(Get-Date -Format 'yyyy-MM-dd HH:mm')" }
+$dir = $paths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-Write-Host "Deploy folder: $PSScriptRoot" -ForegroundColor Cyan
-Write-Host "Branch: $branch" -ForegroundColor Cyan
-
-git status --short
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-git add -A
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-git diff --cached --quiet
-$hasChanges = $LASTEXITCODE -ne 0
-
-if (-not $hasChanges) {
-  Write-Host "No changes to deploy." -ForegroundColor Yellow
-  exit 0
+if (-not $dir) {
+    Write-Host "ERR: folder not found" -ForegroundColor Red
+    exit 1
 }
 
-git commit -m $message
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+Write-Host "OK: $dir" -ForegroundColor Cyan
+Set-Location $dir
 
-git push origin HEAD:$branch
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+# Bump SW cache version
+$swPath = Join-Path $dir "sw.js"
+if (Test-Path $swPath) {
+    $sw = Get-Content $swPath -Raw -Encoding UTF8
+    if ($sw -match "rz-v(\d+)") {
+        $oldVer = [int]$Matches[1]
+        $newVer = $oldVer + 1
+        $sw = $sw -replace "rz-v$oldVer", "rz-v$newVer"
+        [System.IO.File]::WriteAllText($swPath, $sw, [System.Text.Encoding]::UTF8)
+        Write-Host "SW: rz-v$oldVer -> rz-v$newVer" -ForegroundColor Yellow
+    }
+}
 
-Write-Host "Deploy complete." -ForegroundColor Green
+$msg = if ($args[0]) { $args[0] } else { "update" }
+
+git add -A
+
+$changed = git status --short
+if (-not $changed) {
+    Write-Host "Nothing to commit" -ForegroundColor Green
+    exit 0
+}
+
+git commit -m $msg
+if ($LASTEXITCODE -ne 0) { exit 1 }
+
+git push origin HEAD:main
+if ($LASTEXITCODE -ne 0) {
+    git pull --rebase origin main
+    git push origin HEAD:main
+}
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host ""
+    Write-Host "Deployed: $msg" -ForegroundColor Green
+    Write-Host "https://defancientmus-gif.github.io/razberemsia/" -ForegroundColor Cyan
+    Write-Host "https://github.com/defancientmus-gif/razberemsia/actions" -ForegroundColor Cyan
+} else {
+    Write-Host "Push failed" -ForegroundColor Red
+    exit 1
+}
