@@ -41,6 +41,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
   --warm:       oklch(0.94 0.015 90);
   --r: 16px;
   --sys: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  --vvh: 100vh;
+  --kb: 0px;
 }
 
 html,body{height:100%;overflow:hidden;}
@@ -427,7 +429,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* ── AUTH ── */
 #auth-screen{position:fixed;inset:0;z-index:700;
   background:linear-gradient(165deg, oklch(0.98 0.012 150), oklch(0.92 0.022 150));
-  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 52px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:56px 24px 52px;
   transition:opacity .3s,transform .3s;}
 #auth-screen.hidden{opacity:0;pointer-events:none;transform:translateY(-16px);}
 .auth-logo{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:40px;color:var(--fg);text-align:center;margin-bottom:6px;letter-spacing:-.5px;}
@@ -436,9 +438,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .auth-logo-text{line-height:1;}
 @keyframes feather-fly{0%,100%{transform:translateY(0) translateX(0) rotate(-4deg);}25%{transform:translateY(-5px) translateX(3px) rotate(4deg);}50%{transform:translateY(-2px) translateX(-2px) rotate(-2deg);}75%{transform:translateY(-6px) translateX(2px) rotate(5deg);}}
 .auth-tag{font-size:16px;color:var(--fg-m);text-align:center;margin-bottom:4px;font-weight:400;}
-.auth-ver{font-size:11px;color:oklch(0.52 0.012 150 / 0.45);text-align:center;margin-bottom:32px;font-weight:500;}
+.auth-ver{font-size:11px;color:oklch(0.52 0.012 150 / 0.45);text-align:center;margin-bottom:0;font-weight:500;}
 .auth-card{
-  display:none;
+  display:none!important;
   background:oklch(1 0 0 / 0.80);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border:1px solid oklch(0.88 0.02 150 / 0.50);
@@ -474,7 +476,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
   position:fixed;inset:0;z-index:300;
-  display:none;align-items:flex-end;justify-content:center;padding:0;
+  display:none;align-items:flex-end;justify-content:center;padding:0 8px;
 }
 .overlay.open{display:flex;}
 .overlay-bg{
@@ -483,11 +485,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 
-/* Full-screen floating sheet */
+/* Floating sheet */
 .sheet{
   position:relative;z-index:1;
-  width:100%;max-width:480px;
-  height:100vh;
+  width:min(430px, calc(100vw - 16px));
+  max-width:430px;
+  height:min(82dvh, 720px);
+  max-height:calc(var(--vvh) - 16px);
+  margin-bottom:calc(8px + var(--kb));
   display:flex;flex-direction:column;
   background:
     radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 150 / 0.20), transparent 55%),
@@ -495,10 +500,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     oklch(0.975 0.010 150 / 0.96);
   backdrop-filter:blur(60px) saturate(2);
   -webkit-backdrop-filter:blur(60px) saturate(2);
-  border-radius:0;
-  border:none;
-  border-top:1px solid oklch(1 0 0 / 0.72);
-  box-shadow:0 -2px 40px oklch(0 0 0 / 0.08);
+  border-radius:28px;
+  border:1px solid oklch(1 0 0 / 0.68);
+  box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.34),0 4px 24px -16px oklch(0.22 0.05 150 / 0.28), inset 0 1px 0 oklch(1 0 0 / 0.82);
   animation:sheetRise .32s cubic-bezier(.22,1,.36,1);
   overflow:hidden;
   transition:background .4s cubic-bezier(.4,0,.2,1);
@@ -520,7 +524,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* Header — icon + title + undo/redo + X */
 .sheet-hdr-row{
   display:flex;align-items:center;gap:8px;
-  padding:calc(env(safe-area-inset-top, 0px) + 18px) 20px 0;flex-shrink:0;
+  padding:16px 18px 0;flex-shrink:0;
 }
 .sheet-hdr-feather{display:flex;align-items:center;flex-shrink:0;}
 .sheet-hdr-feather svg{width:15px;height:15px;stroke:oklch(0.52 0.10 150 / 0.55);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -529,7 +533,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   flex:1;min-width:0;
 }
 .sheet-undo-btn{
-  width:40px;height:40px;border-radius:50%;
+  width:36px;height:36px;border-radius:50%;
   border:1px solid oklch(0.88 0.02 150 / 0.42);
   background:oklch(1 0 0 / 0.52);
   box-shadow:inset 0 1.5px 3px oklch(1 0 0 / 0.65),0 2px 8px oklch(0 0 0 / 0.05);
@@ -541,7 +545,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-undo-btn:disabled{opacity:.22;pointer-events:none;}
 /* X close button */
 .sheet-close-btn{
-  width:40px;height:40px;border-radius:50%;
+  width:36px;height:36px;border-radius:50%;
   border:1px solid oklch(0.88 0.02 150 / 0.42);
   background:oklch(1 0 0 / 0.52);
   box-shadow:inset 0 1.5px 3px oklch(1 0 0 / 0.65),0 2px 8px oklch(0 0 0 / 0.05);
@@ -582,10 +586,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .cat-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 
 /* Divider */
-.sheet-hdr-line{height:1px;background:oklch(0.88 0.02 150 / 0.22);flex-shrink:0;margin-top:12px;}
+.sheet-hdr-line{height:1px;background:oklch(0.88 0.02 150 / 0.22);flex-shrink:0;margin-top:10px;}
 
 /* Body */
-.sheet-body-wrap{flex:1;overflow-y:auto;padding:2px 20px 0;}
+.sheet-body-wrap{flex:1;overflow-y:auto;padding:4px 18px 0;}
 .sheet-body-wrap::-webkit-scrollbar{display:none;}
 
 /* Textarea */
@@ -602,7 +606,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .sheet-in::placeholder{color:oklch(0.68 0.015 150 / 0.55);}
 .sheet-in:focus{animation:border-pulse 2s ease-in-out infinite;}
-.sheet-in[rows]{resize:none;min-height:300px;border-bottom:none;}
+.sheet-in[rows]{resize:none;min-height:44dvh;border-bottom:none;}
 .sheet-lbl{font-size:11px;font-weight:600;color:var(--fg-l);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
 
 /* Reminder row */
@@ -614,7 +618,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* Footer — "0 символов  |  Cmd Enter  сохранить" */
 .sheet-footer{
   display:flex;align-items:center;justify-content:space-between;
-  padding:10px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding:8px 18px calc(env(safe-area-inset-bottom, 0px) + 12px);
   border-top:1px solid oklch(0.88 0.02 150 / 0.15);
   flex-shrink:0;
 }
@@ -659,7 +663,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .snm-btn.rec{border-color:oklch(0.58 0.16 25 / 0.30);}
 
 /* ── INPUT SHEET (home new entry) — same glass style ── */
-.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:flex-end;align-items:center;}
+.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:flex-end;align-items:center;padding:0 8px;}
 .input-sheet-overlay.open{display:flex;animation:fIn .16s ease;}
 .input-sheet-bg{position:absolute;inset:0;background:oklch(0.25 0.02 150 / 0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 /* Reuse .sheet styles for the inner div */
@@ -1059,6 +1063,20 @@ firebase.initializeApp({
 const auth=firebase.auth();auth.languageCode='ru';
 
 let CU=null,CR=null,RV=null,CDI=null,ST=null,EI=null;
+
+function syncViewportForKeyboard(){
+  const vv=window.visualViewport;
+  const h=vv?vv.height:window.innerHeight;
+  const kb=vv?Math.max(0,window.innerHeight-vv.height-vv.offsetTop):0;
+  document.documentElement.style.setProperty('--vvh',h+'px');
+  document.documentElement.style.setProperty('--kb',kb+'px');
+}
+syncViewportForKeyboard();
+if(window.visualViewport){
+  visualViewport.addEventListener('resize',syncViewportForKeyboard);
+  visualViewport.addEventListener('scroll',syncViewportForKeyboard);
+}
+window.addEventListener('resize',syncViewportForKeyboard);
 
 // ── CLOCK ──
 (function(){
@@ -1535,7 +1553,7 @@ function attachSwipeDelete(card,delBg,onDelete){
 let sheetUndoStack=[],sheetRedoStack=[];
 
 function noteForm(body=''){
-  return`<textarea class="sheet-in" id="sh1" rows="10" placeholder="Что важно запомнить..." style="min-height:220px;">${esc(body)}</textarea>`;
+  return`<textarea class="sheet-in" id="sh1" rows="10" placeholder="Что важно запомнить...">${esc(body)}</textarea>`;
 }
 
 function openNoteSheet(i){
@@ -1572,6 +1590,7 @@ function openSheet(type){
 }
 
 function _openSheet(){
+  syncViewportForKeyboard();
   // Reset panel transform before opening
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
@@ -1995,6 +2014,7 @@ function delHomeEntry(id,legacyI){
 let sheetRecog=null,sheetIsRec=false;
 
 function openInputSheet(){
+  syncViewportForKeyboard();
   document.getElementById('input-sheet-overlay').classList.add('open');
   document.getElementById('input-sheet-char-count').textContent='';
   setTimeout(()=>{
