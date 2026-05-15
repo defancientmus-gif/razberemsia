@@ -109,7 +109,7 @@
 | Параметр | Значение |
 |---|---|
 | Репозиторий | defancientmus-gif/razberemsia |
-| Основной файл | razberemsia_v03.html |
+| Основной файл | index.html |
 | Деплой | `.\deploy.ps1` |
 | Хостинг | GitHub Pages |
 | Auth | Firebase (razberemsia-89726) |
@@ -177,7 +177,7 @@ bubble-float: translateY(0) ↔ translateY(-5px), 4.5s
 ## 🗂️ КАК НАЧАТЬ НОВЫЙ ЧАТ
 
 1. New chat в проекте «Разберёмся»
-2. Прикрепить `razberemsia_v03.html`
+2. Прикрепить `index.html`
 3. Прикрепить `razberemsia_master.md`
 4. Написать: «Продолжаем. Контекст прилагаю. Делаем vX.XX — [задача]»
 5. Claude сразу обновляет версию во всех трёх местах HTML

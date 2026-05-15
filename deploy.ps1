@@ -1,6 +1,6 @@
 param([string]$msg = "update")
 
-$dir = $PSScriptRoot
+$dir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $PSCommandPath }
 
 if (-not $dir -or -not (Test-Path $dir)) {
     Write-Host "ERR: folder not found" -ForegroundColor Red

@@ -1,5 +1,5 @@
-const CACHE = 'rz-v13';
-const ASSETS = ['razberemsia_v03.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'rz-v16';
+const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -56,7 +56,7 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(
     self.clients.matchAll({ type: 'window' }).then(clients => {
       if (clients.length) return clients[0].focus();
-      return self.clients.openWindow('./razberemsia_v03.html');
+      return self.clients.openWindow('./');
     })
   );
 });

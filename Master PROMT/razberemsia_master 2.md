@@ -65,7 +65,7 @@ Claude обязан в начале каждой сессии:
   ```
   echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=razberemsia_v4.00.html"></head></html>' > index.html
   ```
-- Или вернуть имя `razberemsia_v03.html` как постоянное для GH Pages
+- Главное имя для GH Pages: `index.html`
 
 ### Приоритет 2 — Полноэкранная заметка
 - Сейчас modal по центру. Нужно: выплывает снизу на весь экран

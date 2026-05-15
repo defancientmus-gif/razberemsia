@@ -3,8 +3,8 @@
 Главный документ проекта. Читать первым в новом чате.
 
 Последнее обновление: 2026-05-15  
-Рабочая папка: `C:\Users\Defancient\Desktop\Разберёмся`  
-Главный файл прототипа: `C:\Users\Defancient\Desktop\Разберёмся\3 SMS\razberemsia_v03.html.html`
+Рабочая папка: корень репозитория `razberemsia` на текущем устройстве  
+Главный файл прототипа: `index.html`
 
 ## Рабочий Промпт AI-Партнёра
 
@@ -28,9 +28,9 @@
 Рабочий стиль:
 
 - быстро, но с бэкапом;
-- перед правкой главного HTML всегда создать бэкап в `C:\Users\Defancient\Desktop\Разберёмся\html_backups`;
-- работать с проектом на Desktop: `C:\Users\Defancient\Desktop\Разберёмся`;
-- главный файл: `C:\Users\Defancient\Desktop\Разберёмся\3 SMS\razberemsia_v03.html.html`;
+- перед правкой главного HTML всегда создать бэкап в папке `1`;
+- работать из корня репозитория, а не из абсолютного пути конкретного ПК;
+- главный файл: `index.html`;
 - не редактировать старую копию в Downloads;
 - для быстрых визуальных правок: бэкап → правка → короткая проверка → ответ;
 - для PWA, service worker, deploy, git и логики: быть аккуратнее и проверять тщательнее;
@@ -139,7 +139,7 @@
 Фактическое состояние на 2026-05-15:
 
 - рабочая папка перенесена на Desktop;
-- основной HTML: `3 SMS\razberemsia_v03.html.html`;
+- основной HTML: `index.html`;
 - стартовый экран — splash с пером, названием `Разберёмся`, подписью и версией;
 - автовход включён в локальный dev-режим через пару секунд;
 - SMS-логика в файле осталась, но стартовая карточка входа скрыта;
@@ -153,35 +153,35 @@
 
 Проект:
 
-`C:\Users\Defancient\Desktop\Разберёмся`
+корень репозитория `razberemsia`
 
 Основные файлы:
 
-- `3 SMS\razberemsia_v03.html.html` — главный HTML/PWA-прототип.
-- `3 SMS\manifest.json` — PWA-настройки, название, иконки.
-- `3 SMS\sw.js` — service worker и cache version.
-- `3 SMS\icon-192.png` — PWA-иконка 192px.
-- `3 SMS\icon-512.png` — PWA-иконка 512px.
-- `3 SMS\icon-feather.svg` — SVG-источник пера.
-- `3 SMS\deploy.ps1` — commit + push в GitHub.
-- `html_backups\` — архив предыдущих HTML-версий.
+- `index.html` — главный HTML/PWA-прототип и входная точка GitHub Pages.
+- `manifest.json` — PWA-настройки, название, иконки.
+- `sw.js` — service worker и cache version.
+- `icon-192.png` — PWA-иконка 192px.
+- `icon-512.png` — PWA-иконка 512px.
+- `icon-feather.svg` — SVG-источник пера.
+- `deploy.ps1` — commit + push в GitHub.
+- `1\` — архив предыдущих HTML-версий.
 - `MASTER.md` — этот документ.
 
 Не редактировать старую копию в Downloads. Downloads можно использовать только как источник старых бэкапов.
 
 ## Бэкапы
 
-Перед каждой правкой `razberemsia_v03.html.html` делать бэкап сюда:
+Перед каждой правкой `index.html` делать бэкап сюда:
 
-`C:\Users\Defancient\Desktop\Разберёмся\html_backups`
+`1\`
 
 Формат:
 
-`razberemsia_v03_before_<что_меняем>_YYYY-MM-DD_HHMM.html`
+`index_before_<что_меняем>_YYYY-MM-DD_HHMM.html`
 
 Пример:
 
-`razberemsia_v03_before_undo_keyboard_fix_2026-05-15_0332.html`
+`index_before_undo_keyboard_fix_2026-05-15_0332.html`
 
 Перед крупной правкой `MASTER.md` тоже делать копию рядом с ним.
 
@@ -191,9 +191,9 @@
 
 В текущем рабочем прототипе имя файла пока оставлено постоянным:
 
-`razberemsia_v03.html.html`
+`index.html`
 
-Это сделано, чтобы не ломать GitHub Pages, service worker и ссылки. Если возвращаем версионирование файлов, нужно сначала продумать редирект через `index.html` и обновление `manifest/sw`.
+Это сделано, чтобы не ломать GitHub Pages, service worker и ссылки. Версии лучше вести внутри интерфейса, changelog и git-коммитов, а имя входного файла оставлять постоянным.
 
 Версии из старого контекста:
 
@@ -323,7 +323,7 @@ sheet-char-count     — счётчик символов
 
 Рабочая папка для деплоя:
 
-`C:\Users\Defancient\Desktop\Разберёмся\3 SMS`
+корень репозитория `razberemsia`
 
 Команда:
 
@@ -346,10 +346,10 @@ git push origin HEAD:main
 
 ## Проверка
 
-Из папки `3 SMS`:
+Из корня репозитория:
 
 ```powershell
-& 'C:\Users\Defancient\AppData\Local\OpenAI\Codex\bin\node.exe' -e "const fs=require('fs'); JSON.parse(fs.readFileSync('manifest.json','utf8')); const html=fs.readFileSync('razberemsia_v03.html.html','utf8'); const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]); for (const s of scripts) new Function(s); new Function(fs.readFileSync('sw.js','utf8')); console.log('manifest + inline js + sw syntax ok');"
+node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('manifest.json','utf8')); const html=fs.readFileSync('index.html','utf8'); const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]); for (const s of scripts) new Function(s); new Function(fs.readFileSync('sw.js','utf8')); console.log('manifest + inline js + sw syntax ok');"
 ```
 
 Проверять после правок:

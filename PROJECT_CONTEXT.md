@@ -22,7 +22,8 @@
 - Как хороший родственник или терпеливый помощник.
 
 ## Текущая версия
-Demo 9.7%
+Интерфейс: v4.10  
+Продуктовый контекст: Demo 9.7%
 
 Шкала версии: 1% — можно показать идею людям, 100% — зрелый масштабируемый продукт «на миллион долларов».
 
@@ -51,14 +52,29 @@ Demo 9.7%
 Это должна быть собственная метафора, не копия Pied Piper.
 
 ## Основные файлы
-- `razberemsia_v03.html` — главный прототип.
+- `index.html` — главный прототип и входная точка GitHub Pages/PWA.
 - `manifest.json` — PWA manifest.
 - `sw.js` — service worker.
 - `icon-192.png`, `icon-512.png` — PWA иконки.
 - `deploy.ps1` — git add/commit/push.
 
+## Правило имён и путей
+- Главный HTML всегда называется `index.html`.
+- `manifest.json` открывает `/razberemsia/`, а не конкретный HTML-файл.
+- `sw.js` кэширует `index.html`.
+- `deploy.ps1` не содержит абсолютных путей и работает из папки, где лежит сам скрипт.
+- Старые HTML-копии хранить только в папке `1`.
+- На любом ПК источник правды — GitHub-репозиторий `defancientmus-gif/razberemsia`.
+
 ## Как продолжать на другом ПК
-Перед началом работы:
+Один раз на новом устройстве:
+
+```powershell
+git clone https://github.com/defancientmus-gif/razberemsia.git
+cd razberemsia
+```
+
+Перед началом работы в уже скачанной папке:
 
 ```powershell
 git pull

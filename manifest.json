@@ -2,7 +2,7 @@
   "name": "Разберёмся",
   "short_name": "Разберёмся",
   "description": "Спокойный цифровой помощник рядом",
-  "start_url": "/razberemsia/razberemsia_v03.html",
+  "start_url": "/razberemsia/",
   "scope": "/razberemsia/",
   "display": "standalone",
   "orientation": "portrait",
@@ -28,21 +28,21 @@
       "name": "Добавить заметку",
       "short_name": "Заметка",
       "description": "Быстро добавить заметку или дело",
-      "url": "/razberemsia/razberemsia_v03.html?action=note",
+      "url": "/razberemsia/?action=note",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Что-то случилось",
       "short_name": "Помощь",
       "description": "Мошенники, не могу войти, боюсь нажать",
-      "url": "/razberemsia/razberemsia_v03.html?action=emergency",
+      "url": "/razberemsia/?action=emergency",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Позвонить близкому",
       "short_name": "Звонок",
       "description": "Быстрый звонок одним касанием",
-      "url": "/razberemsia/razberemsia_v03.html?action=contacts",
+      "url": "/razberemsia/?action=contacts",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ]
