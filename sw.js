@@ -1,5 +1,14 @@
-const CACHE = 'rz-v18';
-const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'rz-v21';
+const ASSETS = [
+  './',
+  'index.html',
+  'manifest.json',
+  'pwa-feather-180.png',
+  'pwa-feather-192.png',
+  'pwa-feather-512.png',
+  'icon-192.png',
+  'icon-512.png'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -20,7 +29,12 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
+    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => {
+      if (e.request.mode === 'navigate') {
+        return caches.match('./').then(home => home || caches.match('index.html'));
+      }
+      return caches.match('index.html');
+    }))
   );
 });
 
@@ -42,8 +56,8 @@ self.addEventListener('message', e => {
     const tid = setTimeout(() => {
       self.registration.showNotification('Разберёмся', {
         body: n.title || n.body?.slice(0, 80) || 'Напоминание',
-        icon: 'icon-192.png',
-        badge: 'icon-192.png',
+        icon: 'pwa-feather-192.png',
+        badge: 'pwa-feather-192.png',
         tag: n.id || String(dt), // tag prevents duplicates
       });
     }, delay);

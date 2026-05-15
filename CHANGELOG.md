@@ -1,5 +1,11 @@
 # CHANGELOG — Разберёмся
 
+## v4.11 — PWA иконка и офлайн-открытие
+- Добавлены новые versioned-иконки `pwa-feather-180.png`, `pwa-feather-192.png`, `pwa-feather-512.png`.
+- `manifest.json`, Apple touch icon, favicon, ярлыки и уведомления переведены на новое перо.
+- Старые `icon-192.png` и `icon-512.png` оставлены как совместимые копии.
+- Service worker теперь отдаёт `index.html` как fallback для offline-навигации.
+
 ## v4.10 — порядок файлов и переносимость
 - Главный рабочий HTML приведён к единому имени `index.html`.
 - `manifest.json` теперь открывает `/razberemsia/`, а не конкретный HTML-файл.

@@ -55,7 +55,8 @@
 - `index.html` — главный прототип и входная точка GitHub Pages/PWA.
 - `manifest.json` — PWA manifest.
 - `sw.js` — service worker.
-- `icon-192.png`, `icon-512.png` — PWA иконки.
+- `pwa-feather-180.png`, `pwa-feather-192.png`, `pwa-feather-512.png` — PWA иконки.
+- `icon-192.png`, `icon-512.png` — совместимые копии для старых ссылок.
 - `deploy.ps1` — git add/commit/push.
 
 ## Правило имён и путей
