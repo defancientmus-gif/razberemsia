@@ -1,19 +1,13 @@
-// Разберёмся — Service Worker v1.0
-const CACHE = 'razberemsia-v1';
-const ASSETS = [
-  '/razberemsia/razberemsia_v03.html',
-  '/razberemsia/manifest.json'
-];
+const CACHE = 'rz-v18';
+const ASSETS = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
-// ── Установка — кешируем основные файлы ──
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {}))
   );
   self.skipWaiting();
 });
 
-// ── Активация — удаляем старый кеш ──
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -23,68 +17,46 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// ── Запросы — сначала сеть, при ошибке кеш ──
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
   );
 });
 
-// ── Push-уведомления от сервера (будущее) ──
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {};
-  const title = data.title || 'Разберёмся';
-  const body  = data.body  || 'Новое напоминание';
-  e.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: '/razberemsia/icon-192.png',
-      badge: '/razberemsia/icon-192.png',
-      vibrate: [200, 100, 200],
-      tag: data.tag || 'razberemsia',
-      renotify: true,
-      data: { url: data.url || '/razberemsia/razberemsia_v03.html' }
-    })
-  );
-});
+// ── Уведомления через SW (один источник, без дублей) ──
+// Используется только если страница закрыта — иначе работает setTimeout из app
+let scheduled = [];
 
-// ── Клик по уведомлению — открываем приложение ──
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  const url = e.notification.data?.url || '/razberemsia/razberemsia_v03.html';
-  e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      for (const client of list) {
-        if (client.url.includes('razberemsia') && 'focus' in client)
-          return client.focus();
-      }
-      return clients.openWindow(url);
-    })
-  );
-});
-
-// ── Локальные уведомления (расписание из основного потока) ──
 self.addEventListener('message', e => {
-  if (e.data?.type === 'SCHEDULE') {
-    const { notes } = e.data;
-    scheduleNotifications(notes);
-  }
-});
-
-function scheduleNotifications(notes) {
+  if (e.data?.type !== 'SCHEDULE') return;
+  scheduled.forEach(t => clearTimeout(t));
+  scheduled = [];
+  const notes = e.data.notes || [];
+  const now = Date.now();
   notes.forEach(n => {
     if (!n.reminder) return;
-    const delay = new Date(n.reminder) - Date.now();
-    if (delay > 0 && delay < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(() => {
-        self.registration.showNotification('Разберёмся', {
-          body: n.title,
-          icon: '/razberemsia/icon-192.png',
-          vibrate: [200, 100, 200],
-          tag: 'reminder-' + n.title,
-          data: { url: '/razberemsia/razberemsia_v03.html?action=notes' }
-        });
-      }, delay);
-    }
+    const dt = new Date(n.reminder).getTime();
+    const delay = dt - now;
+    if (delay <= 0 || delay > 7 * 24 * 3600 * 1000) return;
+    const tid = setTimeout(() => {
+      self.registration.showNotification('Разберёмся', {
+        body: n.title || n.body?.slice(0, 80) || 'Напоминание',
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
+        tag: n.id || String(dt), // tag prevents duplicates
+      });
+    }, delay);
+    scheduled.push(tid);
   });
-}
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then(clients => {
+      if (clients.length) return clients[0].focus();
+      return self.clients.openWindow('./');
+    })
+  );
+});
