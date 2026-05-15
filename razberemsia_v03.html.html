@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#f0ede6">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
-<link rel="apple-touch-icon" href="icon-feather.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23e8f2ea'/%3E%3Cpath d='M140 40a42 42 0 00-59.4 59.4L32 148h59.5z' fill='none' stroke='%235a8f62' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='112' y1='56' x2='14' y2='154' stroke='%235a8f62' stroke-width='10' stroke-linecap='round'/%3E%3Cline x1='122' y1='105' x2='63' y2='105' stroke='%235a8f62' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -429,7 +429,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* ── AUTH ── */
 #auth-screen{position:fixed;inset:0;z-index:700;
   background:linear-gradient(165deg, oklch(0.98 0.012 150), oklch(0.92 0.022 150));
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:56px 24px 52px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 52px;
   transition:opacity .3s,transform .3s;}
 #auth-screen.hidden{opacity:0;pointer-events:none;transform:translateY(-16px);}
 .auth-logo{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:40px;color:var(--fg);text-align:center;margin-bottom:6px;letter-spacing:-.5px;}
@@ -476,7 +476,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
   position:fixed;inset:0;z-index:300;
-  display:none;align-items:flex-end;justify-content:center;padding:0 8px;
+  display:none;align-items:center;justify-content:center;padding:14px 8px;
 }
 .overlay.open{display:flex;}
 .overlay-bg{
@@ -490,9 +490,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   position:relative;z-index:1;
   width:min(430px, calc(100vw - 16px));
   max-width:430px;
-  height:min(82dvh, 720px);
-  max-height:calc(var(--vvh) - 16px);
-  margin-bottom:calc(8px + var(--kb));
+  height:min(76dvh, 680px);
+  max-height:calc(var(--vvh) - 28px);
+  margin-bottom:var(--kb);
   display:flex;flex-direction:column;
   background:
     radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 150 / 0.20), transparent 55%),
@@ -606,7 +606,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .sheet-in::placeholder{color:oklch(0.68 0.015 150 / 0.55);}
 .sheet-in:focus{animation:border-pulse 2s ease-in-out infinite;}
-.sheet-in[rows]{resize:none;min-height:44dvh;border-bottom:none;}
+.sheet-in[rows]{resize:none;min-height:38dvh;border-bottom:none;}
 .sheet-lbl{font-size:11px;font-weight:600;color:var(--fg-l);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
 
 /* Reminder row */
@@ -663,7 +663,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .snm-btn.rec{border-color:oklch(0.58 0.16 25 / 0.30);}
 
 /* ── INPUT SHEET (home new entry) — same glass style ── */
-.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:flex-end;align-items:center;padding:0 8px;}
+.input-sheet-overlay{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;justify-content:center;align-items:center;padding:14px 8px;}
 .input-sheet-overlay.open{display:flex;animation:fIn .16s ease;}
 .input-sheet-bg{position:absolute;inset:0;background:oklch(0.25 0.02 150 / 0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 /* Reuse .sheet styles for the inner div */
@@ -963,10 +963,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
         <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
       </div>
       <div class="sheet-hdr-title" id="sheet-title">Новая заметка</div>
-      <button class="sheet-undo-btn" id="sheet-undo-btn" onclick="sheetUndo()" title="Отменить" disabled>
+      <button class="sheet-undo-btn" id="sheet-undo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetUndo()" title="Отменить" disabled>
         <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
       </button>
-      <button class="sheet-undo-btn" id="sheet-redo-btn" onclick="sheetRedo()" title="Повторить" disabled>
+      <button class="sheet-undo-btn" id="sheet-redo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetRedo()" title="Повторить" disabled>
         <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
       </button>
       <button class="sheet-close-btn" onclick="closeSheet()">
@@ -1338,7 +1338,7 @@ function scheduleAll(){
     const delay=dt.getTime()-Date.now();
     if(delay<=0||delay>7*24*3600*1000)return;
     const tid=setTimeout(()=>{
-      try{new Notification('Разберёмся',{body:n.title,icon:'icon-feather.svg'});}catch(e){}
+      try{new Notification('Разберёмся',{body:n.title,icon:'icon-192.png'});}catch(e){}
     },delay);
     _NT.push(tid);
   });
@@ -1633,13 +1633,17 @@ function closeSheet(){
 function initSheetUndo(text){
   sheetUndoStack=[text];sheetRedoStack=[];updUndoBtns();
 }
+function refocusSheetInput(f){
+  if(!f)return;
+  try{f.focus({preventScroll:true});}catch(e){f.focus();}
+}
 function sheetUndo(){
   const f=document.getElementById('sh1');if(!f)return;
-  if(sheetUndoStack.length>1){sheetRedoStack.push(sheetUndoStack.pop());f.value=sheetUndoStack[sheetUndoStack.length-1];updUndoBtns();updCharCount(f);}
+  if(sheetUndoStack.length>1){sheetRedoStack.push(sheetUndoStack.pop());f.value=sheetUndoStack[sheetUndoStack.length-1];updUndoBtns();updCharCount(f);refocusSheetInput(f);}
 }
 function sheetRedo(){
   const f=document.getElementById('sh1');if(!f)return;
-  if(sheetRedoStack.length){const v=sheetRedoStack.pop();sheetUndoStack.push(v);f.value=v;updUndoBtns();updCharCount(f);}
+  if(sheetRedoStack.length){const v=sheetRedoStack.pop();sheetUndoStack.push(v);f.value=v;updUndoBtns();updCharCount(f);refocusSheetInput(f);}
 }
 function updUndoBtns(){
   const u=document.getElementById('sheet-undo-btn');if(u)u.disabled=sheetUndoStack.length<=1;
