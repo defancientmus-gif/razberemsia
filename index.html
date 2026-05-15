@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
 <!-- Fallback inline manifest для случая если файл не найден -->
-<script>try{fetch("manifest.json").catch(()=>{const b=new Blob([atob("eyJuYW1lIjogItCg0LDQt9Cx0LXRgNGR0LzRgdGPIiwgInNob3J0X25hbWUiOiAi0KDQsNC30LHQtdGA0ZHQvNGB0Y8iLCAiZGVzY3JpcHRpb24iOiAi0KHQv9C+0LrQvtC50L3Ri9C5INC/0L7QvNC+0YnQvdC40Log0YDRj9C00L7QvCIsICJzdGFydF91cmwiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiI2YwZjVmZiIsICJ0aGVtZV9jb2xvciI6ICIjZjBmNWZmIiwgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0IiwgImljb25zIjogW3sic3JjIjogImljb24tMTkyLnBuZyIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn0sIHsic3JjIjogImljb24tNTEyLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==")],{type:"application/manifest+json"});document.querySelector('link[rel="manifest"]').href=URL.createObjectURL(b);})}catch(e){}</script>
+<script>try{fetch("manifest.json").catch(()=>{const m={name:"Разберёмся",short_name:"Разберёмся",description:"Спокойный помощник рядом",start_url:"./",display:"standalone",background_color:"#eef8f6",theme_color:"#eef8f6",orientation:"portrait",icons:[{src:"pwa-feather-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"pwa-feather-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};const b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});document.querySelector('link[rel="manifest"]').href=URL.createObjectURL(b);})}catch(e){}</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Разберёмся">
 <meta name="theme-color" content="#f0ede6">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
-<link rel="apple-touch-icon" href="icon-192.png" id="ati">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23ddeeff'/%3E%3Cpath d='M140 40a42 42 0 00-59.4 59.4L32 148h59.5z' fill='none' stroke='%233378cc' stroke-width='11' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='112' y1='56' x2='14' y2='154' stroke='%233378cc' stroke-width='11' stroke-linecap='round'/%3E%3Cline x1='122' y1='105' x2='63' y2='105' stroke='%233378cc' stroke-width='11' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="pwa-feather-180.png" sizes="180x180" id="ati">
+<link rel="icon" type="image/png" href="pwa-feather-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=block" rel="stylesheet" media="print" onload="this.media='all'">
@@ -1469,7 +1469,7 @@ function scheduleAll(){
     const delay=dt.getTime()-Date.now();
     if(delay<=0||delay>7*24*3600*1000)return;
     const tid=setTimeout(()=>{
-      try{new Notification('Разберёмся',{body:n.title,icon:'icon-192.png'});}catch(e){}
+      try{new Notification('Разберёмся',{body:n.title,icon:'pwa-feather-192.png'});}catch(e){}
     },delay);
     _NT.push(tid);
   });

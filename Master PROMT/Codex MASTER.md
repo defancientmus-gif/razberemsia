@@ -160,8 +160,10 @@
 - `index.html` — главный HTML/PWA-прототип и входная точка GitHub Pages.
 - `manifest.json` — PWA-настройки, название, иконки.
 - `sw.js` — service worker и cache version.
-- `icon-192.png` — PWA-иконка 192px.
-- `icon-512.png` — PWA-иконка 512px.
+- `pwa-feather-180.png` — Apple touch icon.
+- `pwa-feather-192.png` — PWA-иконка 192px.
+- `pwa-feather-512.png` — PWA-иконка 512px.
+- `icon-192.png`, `icon-512.png` — совместимые копии для старых ссылок.
 - `icon-feather.svg` — SVG-источник пера.
 - `deploy.ps1` — commit + push в GitHub.
 - `1\` — архив предыдущих HTML-версий.
@@ -206,7 +208,7 @@
 
 - Не возвращать Next.js/Vite. Сейчас это single-file HTML/PWA-прототип.
 - После изменений в PWA, иконках, service worker или логике кэша обновлять cache name в `sw.js`: `rz-v10`, `rz-v11`, и так далее.
-- Если меняются PWA-иконки, обновлять оба PNG: `icon-192.png` и `icon-512.png`.
+- Если меняются PWA-иконки, обновлять `pwa-feather-180.png`, `pwa-feather-192.png`, `pwa-feather-512.png` и совместимые копии `icon-192.png`, `icon-512.png`.
 - Внутреннее перо приложения — эталон для логотипа и PWA-иконки. Не перерисовывать его в другом стиле.
 - На iOS/Safari не использовать `backdrop-filter` на `::before` / `::after` overlay-элементов: это может ломать stacking context.
 - Голосовые результаты сохранять осторожно: исторически были баги, когда `onresult` срабатывал не так, как ожидалось; предпочтительно проверять сценарий до конца.
