@@ -1575,23 +1575,26 @@ async function initAuth(){
     showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
-  // Всегда слушаем изменения сессии
+  try{
+    const {data}=await sb.auth.getSession();
+    if(data?.session?.user){
+      showSplash();
+      await enterUser(data.session.user);
+    }
+  }catch(e){console.warn('session check failed',e);}
+  // Регистрируем после getSession — избегаем двойного enterUser через INITIAL_SESSION
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session?.user){
       if(CU&&CU.id===session.user.id)return;
       await enterUser(session.user);
     } else {
       if(!CU)return;
-      CU=null;CLOUD_READY_UID=null;showAuthScr();
+      CU=null;CLOUD_READY_UID=null;
+      const m=document.getElementById('main-app');
+      if(m)m.style.display='none';
+      showAuthScr();
     }
   });
-  try{
-    const {data}=await sb.auth.getSession();
-    if(data?.session?.user){
-      showSplash(); // сплэш пока грузимся
-      await enterUser(data.session.user);
-    }
-  }catch(e){console.warn('session check failed',e);}
 }
 
 function showAuthErr(msg){
@@ -1691,8 +1694,8 @@ async function verifyOtpCode(){
   const code=(document.getElementById('otp-input')?.value||'').trim().replace(/\D/g,'');
   const eEl=document.getElementById('otp-err'),btn=document.getElementById('otp-btn');
   if(eEl){eEl.style.display='none';eEl.textContent='';}
-  if(code.length<6||code.length>8){
-    if(eEl){eEl.textContent='Введите код из письма (6–8 цифр)';eEl.style.display='block';}
+  if(code.length!==6){
+    if(eEl){eEl.textContent='Введите 6-значный код из письма';eEl.style.display='block';}
     return;
   }
   btn.disabled=true;btn.textContent='Проверяем...';
@@ -1769,6 +1772,8 @@ function skipToCode(){
   _otpEmail=email;
   const disp=document.getElementById('sent-email-disp');
   if(disp)disp.textContent=email;
+  const eErr=document.getElementById('email-err');if(eErr){eErr.style.display='none';}
+  const oErr=document.getElementById('otp-err');if(oErr){oErr.style.display='none';}
   document.getElementById('step-email').classList.remove('active');
   document.getElementById('step-code').classList.add('active');
   const oi=document.getElementById('otp-input');
@@ -1803,7 +1808,9 @@ async function doSignOut(e){
   if(e)e.preventDefault();
   if(!confirm('Выйти из аккаунта?'))return;
   try{if(sb)await sb.auth.signOut();}catch(err){console.warn('sign out failed',err);}
-  CU=null;CLOUD_READY_UID=null;closeMenu();go('home');showAuthScr();setAuthChecking(false);
+  CU=null;CLOUD_READY_UID=null;closeMenu();go('home');
+  const m=document.getElementById('main-app');if(m)m.style.display='none';
+  showAuthScr();setAuthChecking(false);
 }
 
 // ── NAVIGATION ──
