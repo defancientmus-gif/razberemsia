@@ -38,7 +38,9 @@ git pull
 
 ## Supabase
 
-Для живого входа по почте нужно вставить в `index.html`:
+Для живого входа по почте используется Supabase email OTP: пользователь вводит почту, получает 6-значный код и вводит его в приложении.
+
+В `index.html` должны быть публичные клиентские значения:
 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
@@ -49,6 +51,11 @@ git pull
 
 - Site URL: `https://defancientmus-gif.github.io/razberemsia/`
 - Redirect URL: `https://defancientmus-gif.github.io/razberemsia/`
+
+Важно: не использовать `service_role` key в клиентском HTML и не отключать RLS.
+
+## Документы проекта
+
 - `PROJECT_CONTEXT.md` — краткий контекст проекта.
 - `TODO.md` — ближайшие задачи.
 - `CHANGELOG.md` — история изменений.

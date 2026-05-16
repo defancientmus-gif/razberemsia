@@ -1039,7 +1039,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
       <div class="auth-lbl">Проверьте почту</div>
       <div class="auth-title">Введите код</div>
-      <div class="auth-sub">Отправили 6-значный код на <strong id="sent-email-disp"></strong></div>
+      <div class="auth-sub">Отправили 8-значный код на <strong id="sent-email-disp"></strong></div>
       <div class="otp-wrap">
         <input
           class="otp-in"
@@ -1047,8 +1047,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
           type="text"
           inputmode="numeric"
           autocomplete="one-time-code"
-          maxlength="6"
-          placeholder="000000"
+          maxlength="8"
+          placeholder="00000000"
           oninput="onOtpInput(this)"
           onkeydown="if(event.key==='Enter')verifyOtpCode()"
         >
@@ -1567,8 +1567,8 @@ async function verifyOtpCode(){
   const code=(document.getElementById('otp-input')?.value||'').trim().replace(/\D/g,'');
   const eEl=document.getElementById('otp-err'),btn=document.getElementById('otp-btn');
   if(eEl){eEl.style.display='none';eEl.textContent='';}
-  if(code.length!==6){
-    if(eEl){eEl.textContent='Введите 6 цифр из письма';eEl.style.display='block';}
+  if(code.length!==8){
+    if(eEl){eEl.textContent='Введите 8 цифр из письма';eEl.style.display='block';}
     return;
   }
   btn.disabled=true;btn.textContent='Проверяем...';
@@ -1587,8 +1587,8 @@ async function verifyOtpCode(){
 }
 
 function onOtpInput(el){
-  el.value=el.value.replace(/\D/g,'').slice(0,6);
-  if(el.value.length===6)verifyOtpCode();
+  el.value=el.value.replace(/\D/g,'').slice(0,8);
+  if(el.value.length===8)verifyOtpCode();
 }
 
 async function resendCode(){
