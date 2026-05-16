@@ -456,7 +456,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     oklch(0.97 0.012 210) 0%,
     oklch(0.94 0.016 215) 50%,
     oklch(0.91 0.020 218) 100%);
-  display:none;flex-direction:column;
+  display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   padding:24px 20px 48px;
   transition:opacity .35s ease;
@@ -1571,36 +1571,27 @@ function hideSplash(){
   setTimeout(()=>{s.style.display='none';s.classList.add('hidden');},380);
 }
 async function initAuth(){
-  // Ждём загрузки Playfair Display — без этого сплэш прыгает со шрифтом
-  try{await document.fonts.load('400 1em "Playfair Display"');}catch(e){}
-  showSplash();
   if(!sbConfigured){
-    await new Promise(r=>setTimeout(r,500));
-    hideSplash();showAuthScr();
     showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
-  const t0=Date.now();
-  let hasSession=false;
-  try{
-    const {data}=await sb.auth.getSession();
-    if(data?.session?.user){hasSession=true;await enterUser(data.session.user);}
-  }catch(e){console.warn('session check failed',e);}
-  // Сплэш минимум 900ms — системе нужно время после cold start
-  const wait=Math.max(0,900-(Date.now()-t0));
-  await new Promise(r=>setTimeout(r,wait));
-  hideSplash();
-  if(!hasSession)showAuthScr();
-  // Слушаем изменения сессии; CU-проверка предотвращает двойной enterUser
+  // Всегда слушаем изменения сессии
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session?.user){
-      if(CU&&CU.id===session.user.id)return; // уже вошли
+      if(CU&&CU.id===session.user.id)return;
       await enterUser(session.user);
     } else {
-      if(!CU)return; // уже на экране входа
+      if(!CU)return;
       CU=null;CLOUD_READY_UID=null;showAuthScr();
     }
   });
+  try{
+    const {data}=await sb.auth.getSession();
+    if(data?.session?.user){
+      showSplash(); // сплэш пока грузимся
+      await enterUser(data.session.user);
+    }
+  }catch(e){console.warn('session check failed',e);}
 }
 
 function showAuthErr(msg){
