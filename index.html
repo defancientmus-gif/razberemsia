@@ -1039,7 +1039,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
       <div class="auth-lbl">Проверьте почту</div>
       <div class="auth-title">Введите код</div>
-      <div class="auth-sub" id="sent-sub">Отправили 6-значный код на <strong id="sent-email-disp"></strong></div>
+      <div class="auth-sub">Отправили 6-значный код на <strong id="sent-email-disp"></strong></div>
       <div class="otp-wrap">
         <input
           class="otp-in"
@@ -1463,16 +1463,10 @@ async function initAuth(){
     showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
-  // Тихо проверяем: есть ли уже активная сессия (например, не вышел с прошлого раза)
   try{
     const {data}=await sb.auth.getSession();
-    if(data?.session?.user){
-      await enterUser(data.session.user);
-      return;
-    }
+    if(data?.session?.user){await enterUser(data.session.user);return;}
   }catch(e){console.warn('session check failed',e);}
-
-  // Слушаем изменения сессии (вход через verifyOtp)
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session?.user){await enterUser(session.user);}
     else{CU=null;CLOUD_READY_UID=null;showAuthScr();}
@@ -1520,10 +1514,22 @@ async function sendEmailLink(){
   if(!sbConfigured){showAuthErr('Supabase ещё не настроен');return;}
   if(!navigator.onLine){showAuthErr('Нет интернета. Проверьте подключение и попробуйте ещё раз.');return;}
   if(!/^\S+@\S+\.\S{2,}$/.test(email)){showAuthErr('Введите почту полностью, например: name@gmail.com');return;}
-  btn.disabled=true;btn.textContent='Отправляем...';
+  btn.disabled=true;
+
+  // Анимация ожидания на кнопке
+  let dots=0;
+  const ticker=setInterval(()=>{
+    dots=(dots+1)%4;
+    btn.textContent='Отправляем'+'.'.repeat(dots||1);
+  },400);
+
   try{
-    // OTP-режим: без emailRedirectTo → Supabase шлёт 6-значный код вместо ссылки
-    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+    // Таймаут 10 секунд — если Supabase не ответил, показываем ошибку
+    const withTimeout=Promise.race([
+      sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}}),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000))
+    ]);
+    const {error}=await withTimeout;
     if(error)throw error;
     _otpEmail=email;
     localStorage.setItem('rz_last_email',email);
@@ -1539,16 +1545,22 @@ async function sendEmailLink(){
     const msg=String(e?.message||e?.error_description||e?.error||'').toLowerCase();
     const dbg=new URLSearchParams(location.search).has('debug');
     let text='Не удалось отправить код — попробуйте ещё раз.';
-    if(/rate|security|seconds|minute|limit/i.test(msg)){
+    if(/timeout/i.test(msg)){
+      text='Сервер не ответил. Проверьте интернет и попробуйте ещё раз.';
+    } else if(/rate|security|seconds|minute|limit/i.test(msg)){
       text='Код уже отправлялся. Подождите минуту и попробуйте ещё раз.';
     } else if(/not allowed|disabled|enable|provider/i.test(msg)){
-      text='Вход по почте временно недоступен. Проверьте настройки Supabase.';
+      text='Вход по почте временно недоступен.';
     } else if(/invalid.*email|email.*invalid|format/i.test(msg)){
       text='Проверьте адрес почты — кажется, он введён неправильно.';
     }
-    if(dbg)text+=' [debug: '+String(e?.message||e).slice(0,120)+']';
+    if(dbg)text+=' ['+String(e?.message||e).slice(0,120)+']';
     showAuthErr(text);
-  }finally{btn.disabled=false;btn.textContent='Получить код';}
+  }finally{
+    clearInterval(ticker);
+    btn.disabled=false;
+    btn.textContent='Получить код';
+  }
 }
 
 async function verifyOtpCode(){
