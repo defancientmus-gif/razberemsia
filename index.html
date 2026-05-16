@@ -2390,12 +2390,40 @@ function onSheetInput(){
   updCharCount(f);
 }
 
+function isLikelyListPaste(lines){
+  if(lines.length<2)return false;
+  const marked=lines.filter(l=>/^\s*(?:[-*]|•|\d+[.)])\s+/.test(l)).length;
+  if(marked>=2&&marked/lines.length>=0.5)return true;
+
+  const words=lines.map(l=>l.split(/\s+/).filter(Boolean).length);
+  const avgWords=words.reduce((a,b)=>a+b,0)/words.length;
+  const shortLines=lines.filter(l=>l.length<=64&&l.split(/\s+/).filter(Boolean).length<=7).length;
+  const headingLike=lines.filter(l=>/[.:;!?]\s*$/.test(l)).length;
+  const longLines=lines.filter(l=>l.length>110||l.split(/\s+/).filter(Boolean).length>14).length;
+
+  return lines.length>=3&&shortLines/lines.length>=0.85&&avgWords<=5&&headingLike===0&&longLines===0;
+}
+
+function insertPlainTextIntoSheet(f,text){
+  const pos=f.selectionStart||0;
+  const end=f.selectionEnd||pos;
+  const val=f.value;
+  f.value=val.slice(0,pos)+text+val.slice(end);
+  f.selectionStart=f.selectionEnd=pos+text.length;
+  onSheetInput();
+}
+
 function onSheetPaste(e){
   const text=e.clipboardData?.getData('text');
   if(!text)return;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.length<2)return; // одна строка — вставляем как обычно
   const f=document.getElementById('sh1');if(!f)return;
+  if(!isLikelyListPaste(lines)){
+    e.preventDefault();
+    insertPlainTextIntoSheet(f,text);
+    return;
+  }
 
   // Заметка уже непустая → вставляем как bullet-строки в текст
   if(f.value.trim()){
