@@ -456,7 +456,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     oklch(0.97 0.012 210) 0%,
     oklch(0.94 0.016 215) 50%,
     oklch(0.91 0.020 218) 100%);
-  display:flex;flex-direction:column;
+  display:none;flex-direction:column;
   align-items:center;justify-content:center;
   padding:24px 20px 48px;
   transition:opacity .35s ease;
@@ -733,6 +733,28 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes splashFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 @keyframes feather-fly{0%,100%{transform:translateY(0) translateX(0) rotate(-4deg);}25%{transform:translateY(-5px) translateX(3px) rotate(4deg);}50%{transform:translateY(-2px) translateX(-2px) rotate(-2deg);}75%{transform:translateY(-6px) translateX(2px) rotate(5deg);}}
 
+/* ── SPLASH ── */
+#splash{
+  position:fixed;inset:0;z-index:900;
+  background:linear-gradient(160deg,oklch(0.97 0.012 210) 0%,oklch(0.94 0.016 215) 50%,oklch(0.91 0.020 218) 100%);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+  transition:opacity .35s ease;
+}
+#splash.hidden{opacity:0;pointer-events:none;}
+.splash-mark{
+  width:72px;height:72px;border-radius:22px;
+  background:oklch(1 0 0 / 0.75);
+  border:1px solid oklch(0.90 0.02 210 / 0.55);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 28px oklch(0.54 0.13 210 / 0.20),inset 0 1px 0 oklch(1 0 0 / 0.90);
+  animation:feather-fly 3.4s ease-in-out infinite, splashFadeIn .45s cubic-bezier(.22,1,.36,1) both;
+}
+.splash-mark svg{width:34px;height:34px;stroke:var(--accent-d);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.splash-name{
+  font-family:'Playfair Display',serif;font-size:28px;color:var(--fg);letter-spacing:-.4px;
+  animation:splashFadeIn .45s .12s cubic-bezier(.22,1,.36,1) both;
+}
+
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
   position:fixed;top:var(--vvtop);left:0;right:0;bottom:auto;height:var(--vvh);z-index:300;
@@ -765,6 +787,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.34),0 4px 24px -16px oklch(0.22 0.05 210 / 0.28), inset 0 1px 0 oklch(1 0 0 / 0.82);
   animation:sheetRise .32s cubic-bezier(.22,1,.36,1);
   overflow:hidden;
+  will-change:transform;
   transition:background .4s cubic-bezier(.4,0,.2,1);
 }
 @keyframes sheetRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
@@ -1055,6 +1078,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   <div class="cld cld5"></div>
 </div>
 
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-mark">
+    <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+  </div>
+  <div class="splash-name">Разберёмся</div>
+</div>
+
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-logo">
@@ -1087,8 +1118,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
           onkeydown="if(event.key==='Enter')sendEmailLink()"
         >
       </div>
-      <button class="auth-btn" id="email-btn" onclick="sendEmailLink()">Получить ссылку</button>
+      <button class="auth-btn" id="email-btn" onclick="sendEmailLink()">Получить код</button>
       <div class="auth-err" id="email-err"></div>
+      <button class="auth-back" style="margin-top:10px;" onclick="skipToCode()">Уже есть код →</button>
       <div class="auth-note">Заметки появятся на всех ваших устройствах после входа</div>
     </div>
 
@@ -1107,8 +1139,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
           type="text"
           inputmode="numeric"
           autocomplete="one-time-code"
-          maxlength="8"
-          placeholder="00000000"
+          maxlength="6"
+          placeholder="000000"
           oninput="onOtpInput(this)"
           onkeydown="if(event.key==='Enter')verifyOtpCode()"
         >
@@ -1440,6 +1472,7 @@ const sb=sbConfigured?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
 
 let CU=null,ST=null,EI=null;
 let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false;
+let _cardSwiping=false; // флаг: карточка перехватила свайп, подавить навигацию
 
 function userScope(){return CU&&CU.id?CU.id:'signed-out';}
 function scopedKey(key){return key.startsWith('rz_')?'rz_'+userScope()+'_'+key.slice(3):key;}
@@ -1486,7 +1519,13 @@ function setAuthChecking(checking){
   const card=document.querySelector('#auth-screen .auth-card');
   if(card)card.classList.toggle('checking',!!checking);
 }
+let _vpTimer=null;
 function syncViewportForKeyboard(){
+  // Дебаунс 40ms — убирает дрожание при анимации клавиатуры
+  clearTimeout(_vpTimer);
+  _vpTimer=setTimeout(_doSyncViewport,40);
+}
+function _doSyncViewport(){
   const vv=window.visualViewport;
   const h=vv?vv.height:window.innerHeight;
   const top=vv?vv.offsetTop:0;
@@ -1521,19 +1560,46 @@ window.addEventListener('resize',syncViewportForKeyboard);
 })();
 
 // ── AUTH ──
+function showSplash(){
+  const s=document.getElementById('splash');
+  if(!s)return;s.style.display='flex';s.style.opacity='1';s.classList.remove('hidden');
+}
+function hideSplash(){
+  const s=document.getElementById('splash');
+  if(!s)return;
+  s.style.opacity='0';
+  setTimeout(()=>{s.style.display='none';s.classList.add('hidden');},380);
+}
 async function initAuth(){
-  showAuthScr();
+  // Ждём загрузки Playfair Display — без этого сплэш прыгает со шрифтом
+  try{await document.fonts.load('400 1em "Playfair Display"');}catch(e){}
+  showSplash();
   if(!sbConfigured){
+    await new Promise(r=>setTimeout(r,500));
+    hideSplash();showAuthScr();
     showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
+  const t0=Date.now();
+  let hasSession=false;
   try{
     const {data}=await sb.auth.getSession();
-    if(data?.session?.user){await enterUser(data.session.user);return;}
+    if(data?.session?.user){hasSession=true;await enterUser(data.session.user);}
   }catch(e){console.warn('session check failed',e);}
+  // Сплэш минимум 900ms — системе нужно время после cold start
+  const wait=Math.max(0,900-(Date.now()-t0));
+  await new Promise(r=>setTimeout(r,wait));
+  hideSplash();
+  if(!hasSession)showAuthScr();
+  // Слушаем изменения сессии; CU-проверка предотвращает двойной enterUser
   sb.auth.onAuthStateChange(async(event,session)=>{
-    if(session?.user){await enterUser(session.user);}
-    else{CU=null;CLOUD_READY_UID=null;showAuthScr();}
+    if(session?.user){
+      if(CU&&CU.id===session.user.id)return; // уже вошли
+      await enterUser(session.user);
+    } else {
+      if(!CU)return; // уже на экране входа
+      CU=null;CLOUD_READY_UID=null;showAuthScr();
+    }
   });
 }
 
@@ -1549,6 +1615,7 @@ async function enterUser(user){
   CU=user;migrateLegacyLocal();await loadCloudData();showApp();updUI(user);loadAll();
 }
 function showApp(){
+  hideSplash();
   const a=document.getElementById('auth-screen');
   a.style.opacity='0';
   setTimeout(()=>{a.style.display='none';a.classList.add('hidden');},360);
@@ -1651,7 +1718,7 @@ async function verifyOtpCode(){
 }
 
 function onOtpInput(el){
-  el.value=el.value.replace(/\D/g,'').slice(0,8);
+  el.value=el.value.replace(/\D/g,'').slice(0,6);
   if(el.value.length>=6)verifyOtpCode();
 }
 
@@ -1698,6 +1765,21 @@ function backToEmail(){
   document.getElementById('step-email').classList.add('active');
   const eEl=document.getElementById('email-err');
   if(eEl){eEl.style.display='none';}
+}
+function skipToCode(){
+  const email=(document.getElementById('email-input')?.value||'').trim();
+  if(!email){
+    const eEl=document.getElementById('email-err');
+    if(eEl){eEl.textContent='Введите почту, потом нажмите «Уже есть код»';eEl.style.display='block';}
+    return;
+  }
+  _otpEmail=email;
+  const disp=document.getElementById('sent-email-disp');
+  if(disp)disp.textContent=email;
+  document.getElementById('step-email').classList.remove('active');
+  document.getElementById('step-code').classList.add('active');
+  const oi=document.getElementById('otp-input');
+  if(oi){oi.value='';oi.focus();}
 }
 // ── MENU ──
 function toggleMenu(e){
@@ -1752,12 +1834,14 @@ function go(id){
   let sx=0,sy=0,st=0;
   document.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;st=Date.now();},{passive:true});
   document.addEventListener('touchend',e=>{
-    if(Date.now()-st>300)return;
+    if(Date.now()-st>280)return;
+    if(_cardSwiping){_cardSwiping=false;return;} // карточка перехватила свайп
     const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
-    if(Math.abs(dy)>60)return;
-    if(dx>80&&sx<60&&cur!=='home')go('home');
-    if(dx<-80&&cur==='home'){go('notes');return;}
-    if(dx>80&&cur==='notes'){go('home');return;}
+    if(Math.abs(dy)>55)return;
+    // Навигация: только от левого края (sx<44px), правый свайп ≥90px
+    if(dx>90&&sx<44&&cur!=='home')go('home');
+    if(dx<-90&&sx<44&&cur==='home'){go('notes');return;}
+    if(dx>90&&sx<44&&cur==='notes'){go('home');return;}
   },{passive:true});
 })();
 
@@ -1906,7 +1990,7 @@ function fmtDt(s){
 function fmtMeta(ts){
   if(!ts)return'';
   const d=new Date(ts);
-  const M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const M=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
   return d.getDate()+' '+M[d.getMonth()]+', '+pad(d.getHours())+':'+pad(d.getMinutes());
 }
 function pad(x){return String(x).padStart(2,'0');}
@@ -2104,7 +2188,7 @@ function attachSwipeDelete(card,delBg,onDelete,W){
   card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;card.style.transition='none';},{passive:true});
   card.addEventListener('touchmove',e=>{
     const dx=e.touches[0].clientX-sx;
-    if(dx<-4){const shift=Math.max(dx,-W);card.style.transform=`translateX(${shift}px)`;delBg.style.opacity=Math.min(-shift/W,1);swiped=shift<-(W*0.45);}
+    if(dx<-8){_cardSwiping=true;const shift=Math.max(dx,-W);card.style.transform=`translateX(${shift}px)`;delBg.style.opacity=Math.min(-shift/W,1);swiped=shift<-(W*0.45);}
   },{passive:true});
   card.addEventListener('touchend',()=>{
     card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';
@@ -2123,7 +2207,7 @@ function attachSwipeBubble(card,delBg,W){
   card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;card.style.transition='none';},{passive:true});
   card.addEventListener('touchmove',e=>{
     const dx=e.touches[0].clientX-sx;
-    if(dx<-4){const shift=Math.max(dx,-W);card.style.transform=`translateX(${shift}px)`;if(delBg)delBg.style.opacity=Math.min(-shift/W,1);swiped=shift<-(W*0.45);}
+    if(dx<-8){_cardSwiping=true;const shift=Math.max(dx,-W);card.style.transform=`translateX(${shift}px)`;if(delBg)delBg.style.opacity=Math.min(-shift/W,1);swiped=shift<-(W*0.45);}
   },{passive:true});
   card.addEventListener('touchend',()=>{
     card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';
@@ -2211,6 +2295,7 @@ function _openSheet(){
       f.parentNode.replaceChild(fresh,f);
       fresh.addEventListener('input',onSheetInput);
       fresh.addEventListener('keydown',onSheetKeydown);
+      fresh.addEventListener('paste',onSheetPaste);
       fresh.focus();
     }
     const bw=document.getElementById('sheet-body');
@@ -2227,8 +2312,8 @@ function onSheetKeydown(e){
   const lineText=val.slice(lineStart,pos);
 
   if(e.key==='Enter'){
-    // ── Numbered list: "1. text" ──
-    const numMatch=lineText.match(/^(\d+)\.\s/);
+    // ── Numbered list: "1. text" / "1.text" / "1) text" ──
+    const numMatch=lineText.match(/^(\d+)[.)]\s*/);
     if(numMatch){
       const rest=lineText.slice(numMatch[0].length).trim();
       if(!rest){
@@ -2269,7 +2354,7 @@ function onSheetKeydown(e){
   // ── Apple Notes: автоактивация при вводе "1. " / "- " / "* " ──
   // Срабатывает на Space после маркера в начале строки
   if(e.key===' '){
-    const trigger=lineText.match(/^(\d+\.|[-\*])$/);
+    const trigger=lineText.match(/^(\d+[.)]|[-\*])$/);
     if(trigger){
       // Дать браузеру напечатать пробел, потом трансформируем
       setTimeout(()=>{
@@ -2304,6 +2389,42 @@ function onSheetInput(){
   sheetRedoStack=[];
   updUndoBtns();
   updCharCount(f);
+}
+
+function onSheetPaste(e){
+  const text=e.clipboardData?.getData('text');
+  if(!text)return;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2)return; // одна строка — вставляем как обычно
+  const f=document.getElementById('sh1');if(!f)return;
+
+  // Заметка уже непустая → вставляем как bullet-строки в текст
+  if(f.value.trim()){
+    e.preventDefault();
+    const bullets=lines.map(l=>'• '+l.replace(/^[•\-\*]\s*/,'').replace(/^\d+[.)]\s*/,'')).join('\n');
+    const pos=f.selectionStart;const val=f.value;
+    f.value=val.slice(0,pos)+bullets+val.slice(f.selectionEnd);
+    f.selectionStart=f.selectionEnd=pos+bullets.length;
+    onSheetInput();return;
+  }
+
+  // Заметка пустая → переключаем в режим списка с галочками
+  e.preventDefault();
+  const clean=lines.map(l=>l.replace(/^[•\-\*]\s*/,'').replace(/^\d+[.)]\s*/,''));
+  const overlay=document.getElementById('overlay');
+  const body=document.getElementById('sheet-body');
+  if(!overlay||!body)return;
+  overlay.classList.add('list-mode');
+  body.innerHTML=`<textarea class="list-sheet-area" id="sh1" placeholder="Каждый пункт с новой строки">${esc(clean.join('\n'))}</textarea>`;
+  const ta=body.querySelector('#sh1');
+  if(ta){
+    ta.addEventListener('input',onSheetInput);
+    ta.addEventListener('keydown',onSheetKeydown);
+    ta.addEventListener('paste',onSheetPaste);
+    ta.focus();
+  }
+  ST='list';
+  showToast('Список с галочками готов ✓');
 }
 
 function closeSheet(){
@@ -2630,10 +2751,15 @@ function loadNotepad(){
       <div class="pad-title">${esc(n.title)}</div>
       <div class="pad-text">${esc(n.body||'')}</div>
       <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
-    d.onclick=()=>n.id?openNoteSheetById(n.id):openNoteSheet(i);
+    d.onclick=(e)=>{e.stopPropagation();n.id?openNoteSheetById(n.id):openNoteSheet(i);};
     attachSwipeDelete(d,delBg,null,116);
     wrap.appendChild(delBg);wrap.appendChild(d);el.appendChild(wrap);
   });
+  // Тап на пустое место → новая заметка
+  el.onclick=(e)=>{
+    if(e.target.closest('.pad-item,.note-swipe-panel,.bubble-swipe-panel'))return;
+    openSheet('note');
+  };
 }
 
 function analyzeText(text){
@@ -2719,7 +2845,7 @@ function loadHomeFeed(){
     const bId=n.id||('b'+i);
 
     if(n.type==='list'){
-      // Список — рендерим как чеклист
+      // Список — рендерим как чеклист (тап на пузырь не открывает редактор)
       wrap.innerHTML=`
         <div class="bubble" style="cursor:default;">
           <div id="list-inner-${esc(bId)}">${buildListInner(n)}</div>
@@ -2732,10 +2858,9 @@ function loadHomeFeed(){
       wrap.prepend(swipePanel);
       const bbl=wrap.querySelector('.bubble');
       const bdel=wrap.querySelector('.bubble-swipe-panel');
-      bbl.onclick=()=>openListSheet(n.id);
       attachSwipeBubble(bbl,bdel,116);
     } else {
-      // Обычная заметка
+      // Обычная заметка (тап на пузырь не открывает редактор)
       const catHtml=safeLabel(n.label||'заметка')!=='заметка'?`<span class="bubble-cat">${esc(safeLabel(n.label))}</span>`:'';
       const bodyText=n.body||n.title||'';
       const isLong=bodyText.length>90||(bodyText.match(/\n/g)||[]).length>1;
@@ -2751,13 +2876,16 @@ function loadHomeFeed(){
       wrap.prepend(swipePanel);
       const bbl=wrap.querySelector('.bubble');
       const bdel=wrap.querySelector('.bubble-swipe-panel');
-      bbl.onclick=()=>n.id?openNoteSheetById(n.id):openNoteSheet(realIdx);
       attachSwipeBubble(bbl,bdel,116);
     }
     el.appendChild(wrap);
   });
   el.scrollTop=el.scrollHeight;
-}
+  // Тап на пустое место чата → новая заметка
+  el.onclick=(e)=>{
+    if(e.target.closest('.bubble,.bubble-swipe-panel,.bubble-wrap'))return;
+    openSheet('note');
+  };
 
 function delHomeEntry(id,legacyI){
   const notes=getNotes();
