@@ -1178,7 +1178,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 </div>
 
 <!-- APP -->
-<div class="app">
+<div class="app" id="main-app" style="display:none;">
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
@@ -1619,6 +1619,8 @@ function showApp(){
   const a=document.getElementById('auth-screen');
   a.style.opacity='0';
   setTimeout(()=>{a.style.display='none';a.classList.add('hidden');},360);
+  const m=document.getElementById('main-app');
+  if(m)m.style.display='flex';
 }
 function showAuthScr(){
   const a=document.getElementById('auth-screen');
