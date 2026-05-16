@@ -630,7 +630,67 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes dot-pulse{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.25);}}
 .auth-loading-text{font-size:14px;color:var(--fg-m);font-weight:500;}
 
-/* OTP code input */
+/* ── LIST NOTE ── */
+.list-items{padding:2px 0;}
+.list-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:5px 0;
+  border-bottom:1px solid oklch(0.88 0.02 210 / 0.18);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.list-item:last-child{border-bottom:none;}
+.list-cb{
+  width:20px;height:20px;flex-shrink:0;margin-top:1px;
+  border:1.5px solid oklch(0.54 0.13 210 / 0.40);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .14s,border-color .14s;
+}
+.list-item.done .list-cb{
+  background:var(--accent);border-color:var(--accent);
+}
+.list-item.done .list-cb::after{
+  content:'';width:4px;height:8px;
+  border:2px solid #fff;border-top:none;border-left:none;
+  transform:rotate(45deg) translateY(-1px);display:block;
+}
+.list-item-text{
+  font-size:15px;color:var(--fg);flex:1;
+  line-height:1.45;word-break:break-word;
+  transition:color .14s;
+}
+.list-item.done .list-item-text{
+  text-decoration:line-through;color:var(--fg-l);
+}
+.list-progress{
+  font-size:11px;font-weight:600;color:var(--accent-d);
+  opacity:.7;margin-bottom:6px;letter-spacing:.02em;
+}
+/* List sheet */
+.list-sheet-area{
+  width:100%;background:none;border:none;outline:none;
+  font-size:17px;font-family:var(--sys);color:var(--fg);
+  line-height:1.8;resize:none;min-height:180px;
+  -webkit-user-select:text;user-select:text;
+  padding:4px 0;
+}
+.list-sheet-area::placeholder{color:var(--stone);font-size:16px;}
+/* List quick button */
+.list-quick-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;
+  background:oklch(1 0 0 / 0.55);
+  border:1.5px solid oklch(0.88 0.02 210 / 0.45);
+  border-radius:16px;padding:13px 20px;
+  font-size:15px;font-weight:600;color:var(--fg-m);
+  cursor:pointer;font-family:var(--sys);-webkit-appearance:none;
+  transition:background .12s;margin-top:10px;
+}
+.list-quick-btn svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.list-quick-btn:active{background:oklch(0.52 0.10 210 / 0.08);}
+/* List sheet — скрываем лишнее */
+.overlay.list-mode .sheet-cat-row,
+.overlay.list-mode #sheet-reminder-row{display:none!important;}
 .otp-wrap{margin-bottom:12px;}
 .otp-in{
   display:block;width:100%;
@@ -1039,7 +1099,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
       <div class="auth-lbl">Проверьте почту</div>
       <div class="auth-title">Введите код</div>
-      <div class="auth-sub">Отправили 8-значный код на <strong id="sent-email-disp"></strong></div>
+      <div class="auth-sub">Отправили код на <strong id="sent-email-disp"></strong></div>
       <div class="otp-wrap">
         <input
           class="otp-in"
@@ -1136,6 +1196,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
             <span class="nnb-hint">или зажми</span>
             <span class="nnb-mic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span>
             <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
+          </button>
+          <button class="list-quick-btn" onclick="openListSheet()">
+            <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/></svg>
+            Новый список
           </button>
           <div class="home-voice-label" id="home-voice-label"></div>
         </div>
@@ -1567,8 +1631,8 @@ async function verifyOtpCode(){
   const code=(document.getElementById('otp-input')?.value||'').trim().replace(/\D/g,'');
   const eEl=document.getElementById('otp-err'),btn=document.getElementById('otp-btn');
   if(eEl){eEl.style.display='none';eEl.textContent='';}
-  if(code.length!==8){
-    if(eEl){eEl.textContent='Введите 8 цифр из письма';eEl.style.display='block';}
+  if(code.length<6||code.length>8){
+    if(eEl){eEl.textContent='Введите код из письма (6–8 цифр)';eEl.style.display='block';}
     return;
   }
   btn.disabled=true;btn.textContent='Проверяем...';
@@ -1588,7 +1652,7 @@ async function verifyOtpCode(){
 
 function onOtpInput(el){
   el.value=el.value.replace(/\D/g,'').slice(0,8);
-  if(el.value.length===8)verifyOtpCode();
+  if(el.value.length>=6)verifyOtpCode();
 }
 
 async function resendCode(){
@@ -1697,7 +1761,89 @@ function go(id){
   },{passive:true});
 })();
 
-// ── TOAST ──
+// ── LIST NOTES ──
+function openListSheet(noteId){
+  // Убираем category и reminder через класс
+  const overlay=document.getElementById('overlay');
+  if(overlay)overlay.classList.add('list-mode');
+  EI=noteId||null;
+  document.getElementById('sheet-title').textContent='Список';
+  if(noteId){
+    const n=getNotes().find(x=>x.id===noteId);
+    const txt=(n?.items||[]).map(it=>it.t).join('\n');
+    document.getElementById('sheet-body').innerHTML=`<textarea class="list-sheet-area" id="sh1" placeholder="Каждый пункт с новой строки">${esc(txt)}</textarea>`;
+  } else {
+    document.getElementById('sheet-body').innerHTML=`<textarea class="list-sheet-area" id="sh1" placeholder="Молоко&#10;Хлеб&#10;Яйца&#10;&#10;Вставьте или напишите — каждый пункт с новой строки"></textarea>`;
+  }
+  document.getElementById('sheet-char-count').textContent='';
+  ST='list';
+  _openSheet();
+  setTimeout(()=>{
+    const ta=document.getElementById('sh1');
+    if(ta){ta.focus();if(!noteId)ta.select();}
+  },120);
+}
+
+function saveListSheet(){
+  const f=document.getElementById('sh1');
+  const raw=f?f.value:'';
+  const items=raw.split('\n').map(t=>t.trim()).filter(Boolean);
+  if(!items.length){showToast('Список пустой');return;}
+  const ts=Date.now();
+  const notes=getNotes();
+  if(EI){
+    // Редактирование: сохраняем состояния галочек если текст совпадает
+    const old=notes.find(n=>n.id===EI);
+    const oldItems=old?.items||[];
+    const merged=items.map(t=>{
+      const prev=oldItems.find(o=>o.t===t);
+      return {t,d:prev?prev.d:false};
+    });
+    const idx=notes.findIndex(n=>n.id===EI);
+    if(idx>=0){notes[idx]={...notes[idx],items:merged,updatedAt:ts};}
+  } else {
+    const note={id:genId(),type:'list',items:items.map(t=>({t,d:false})),createdAt:ts,updatedAt:ts};
+    notes.push(note);
+  }
+  saveNotes(notes);
+  loadHomeFeed();loadNotes();
+  closeSheet();
+  showToast(EI?'Список обновлён ✓':'Список сохранён ✓');
+}
+
+function toggleListItem(noteId,idx){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n||!n.items)return;
+  n.items[idx].d=!n.items[idx].d;
+  n.updatedAt=Date.now();
+  saveNotes(notes);
+  // Перерисовываем только этот пузырь
+  renderListBubble(noteId);
+}
+
+function renderListBubble(noteId){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n)return;
+  const el=document.getElementById('list-inner-'+noteId);
+  if(!el)return;
+  el.innerHTML=buildListInner(n);
+}
+
+function buildListInner(n){
+  const items=n.items||[];
+  const done=items.filter(i=>i.d).length;
+  const progress=items.length>1?`<div class="list-progress">${done} из ${items.length}</div>`:'';
+  const rows=items.map((it,idx)=>`
+    <div class="list-item${it.d?' done':''}" onclick="event.stopPropagation();toggleListItem('${esc(n.id)}',${idx})">
+      <div class="list-cb"></div>
+      <span class="list-item-text">${esc(it.t)}</span>
+    </div>`).join('');
+  return progress+`<div class="list-items">${rows}</div>`;
+}
+
+
 let _toastT=null;
 function showToast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
@@ -2163,6 +2309,7 @@ function onSheetInput(){
 function closeSheet(){
   stopNoteSheetVoice();
   stopSheetVoice();
+  document.getElementById('overlay')?.classList.remove('list-mode');
   const dd=document.getElementById('cat-dropdown');
   if(dd)dd.classList.remove('open');
   const panel=document.getElementById('sheet-panel');
@@ -2267,6 +2414,7 @@ document.getElementById('overlay-bg').addEventListener('click',()=>{
 });
 
 function saveSheet(){
+  if(ST==='list'){saveListSheet();return;}
   const f=document.getElementById('sh1');
   const v1=f?f.value:'';
   const catBtn=document.getElementById('sheet-cat-btn');
@@ -2566,30 +2714,46 @@ function loadHomeFeed(){
   }
   list.forEach((n,i)=>{
     const realIdx=i;
-    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.className='bubble-wrap';
-    const catHtml=safeLabel(n.label||'заметка')!=='заметка'?`<span class="bubble-cat">${esc(safeLabel(n.label))}</span>`:'';
     const timeStr=fmtMeta(n.updatedAt||n.createdAt);
-    const bodyText=n.body||n.title||'';
     const bId=n.id||('b'+i);
-    const isLong=bodyText.length>90||(bodyText.match(/\n/g)||[]).length>1;
-    const titleLine=''; // clean bubbles — no title prefix
-    const bodyPreview=n.body||bodyText||'';
-    const expandBtn=isLong?`<button class="bubble-expand-btn" id="bxb-${esc(bId)}" onclick="event.stopPropagation();toggleBubble(${jsAttr(bId)},this)">ещё</button>`:'';
-    // ← DOM-элемент вставляем через prepend, НЕ через шаблонную строку
-    wrap.innerHTML=`
-      <div class="bubble">
-        ${titleLine}
-        <div class="bubble-text" id="bt-${bId}">${esc(bodyPreview)}</div>
-        ${expandBtn}
-        <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
-      </div>`;
-    const swipePanel=buildBubbleSwipePanel(()=>delHomeEntry(n.id,i),()=>shareNote(n));
-    wrap.prepend(swipePanel);
-    const bbl=wrap.querySelector('.bubble');
-    const bdel=wrap.querySelector('.bubble-swipe-panel');
-    bbl.onclick=()=>n.id?openNoteSheetById(n.id):openNoteSheet(realIdx);
-    attachSwipeBubble(bbl,bdel,116);
+
+    if(n.type==='list'){
+      // Список — рендерим как чеклист
+      wrap.innerHTML=`
+        <div class="bubble" style="cursor:default;">
+          <div id="list-inner-${esc(bId)}">${buildListInner(n)}</div>
+          <div class="bubble-footer">
+            <span class="bubble-cat">список</span>
+            <span class="bubble-time">${esc(timeStr)}</span>
+          </div>
+        </div>`;
+      const swipePanel=buildBubbleSwipePanel(()=>delHomeEntry(n.id,i),()=>{});
+      wrap.prepend(swipePanel);
+      const bbl=wrap.querySelector('.bubble');
+      const bdel=wrap.querySelector('.bubble-swipe-panel');
+      bbl.onclick=()=>openListSheet(n.id);
+      attachSwipeBubble(bbl,bdel,116);
+    } else {
+      // Обычная заметка
+      const catHtml=safeLabel(n.label||'заметка')!=='заметка'?`<span class="bubble-cat">${esc(safeLabel(n.label))}</span>`:'';
+      const bodyText=n.body||n.title||'';
+      const isLong=bodyText.length>90||(bodyText.match(/\n/g)||[]).length>1;
+      const bodyPreview=n.body||bodyText||'';
+      const expandBtn=isLong?`<button class="bubble-expand-btn" id="bxb-${esc(bId)}" onclick="event.stopPropagation();toggleBubble(${jsAttr(bId)},this)">ещё</button>`:'';
+      wrap.innerHTML=`
+        <div class="bubble">
+          <div class="bubble-text" id="bt-${bId}">${esc(bodyPreview)}</div>
+          ${expandBtn}
+          <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
+        </div>`;
+      const swipePanel=buildBubbleSwipePanel(()=>delHomeEntry(n.id,i),()=>shareNote(n));
+      wrap.prepend(swipePanel);
+      const bbl=wrap.querySelector('.bubble');
+      const bdel=wrap.querySelector('.bubble-swipe-panel');
+      bbl.onclick=()=>n.id?openNoteSheetById(n.id):openNoteSheet(realIdx);
+      attachSwipeBubble(bbl,bdel,116);
+    }
     el.appendChild(wrap);
   });
   el.scrollTop=el.scrollHeight;
