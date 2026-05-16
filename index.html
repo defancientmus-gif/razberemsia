@@ -1639,7 +1639,6 @@ async function sendEmailLink(){
   const eEl=document.getElementById('email-err'),btn=document.getElementById('email-btn');
   if(eEl){eEl.style.display='none';eEl.textContent='';}
   if(!sbConfigured){showAuthErr('Supabase ещё не настроен');return;}
-  if(!navigator.onLine){showAuthErr('Нет интернета. Проверьте подключение и попробуйте ещё раз.');return;}
   if(!/^\S+@\S+\.\S{2,}$/.test(email)){showAuthErr('Введите почту полностью, например: name@gmail.com');return;}
   btn.disabled=true;
 
