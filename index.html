@@ -177,6 +177,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .item-card:active{transform:scale(.98);}
 .note-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
+.note-num{position:absolute;top:10px;right:12px;font-size:11px;font-weight:800;color:var(--fg-l);background:oklch(1 0 0 / 0.48);border:1px solid oklch(0.88 0.02 210 / 0.35);border-radius:999px;padding:2px 7px;letter-spacing:.02em;}
 .note-cat{font-size:10px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
 .item-title{font-size:17px;font-weight:600;color:var(--fg);letter-spacing:-.1px;}
 .item-meta{font-size:11px;color:var(--fg-l);margin-top:8px;font-weight:400;}
@@ -334,6 +335,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bubble-text.expanded{max-height:14em;overflow:auto;-webkit-overflow-scrolling:touch;}
 .bubble-expand-btn{display:inline-block;font-size:11px;font-weight:600;color:var(--accent-d);background:none;border:none;padding:2px 0 0;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;opacity:.7;}
 .bubble-footer{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:5px;}
+.bubble-num{font-size:10px;font-weight:800;color:var(--fg-l);background:oklch(1 0 0 / 0.42);border:1px solid oklch(0.88 0.02 210 / 0.28);border-radius:999px;padding:2px 7px;letter-spacing:.02em;}
 .bubble-cat{font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210 / 0.11);border-radius:50px;padding:2px 8px;text-transform:uppercase;letter-spacing:.06em;}
 .bubble-time{font-size:10px;color:var(--fg-l);}
 
@@ -2197,6 +2199,7 @@ function loadNotes(){
   const sorted=[...filtered].sort((a,b)=>(b.createdAt||b.updatedAt||0)-(a.createdAt||a.updatedAt||0));
   sorted.forEach(n=>{
     const nid=n.id;const i=all.indexOf(n);
+    const displayNum=i>=0?i+1:sorted.indexOf(n)+1;
     const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
     const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
@@ -2206,6 +2209,7 @@ function loadNotes(){
       rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
     }
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
+      <div class="note-num">#${displayNum}</div>
       <div class="note-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div class="item-title">${esc(n.title)}</div>
       ${rHtml}
@@ -2915,6 +2919,7 @@ function loadHomeFeed(){
   }
   list.forEach((n,i)=>{
     const realIdx=i;
+    const displayNum=i+1;
     const wrap=document.createElement('div');wrap.className='bubble-wrap';
     const timeStr=fmtMeta(n.updatedAt||n.createdAt);
     const bId=n.id||('b'+i);
@@ -2925,6 +2930,7 @@ function loadHomeFeed(){
         <div class="bubble" style="cursor:default;">
           <div id="list-inner-${esc(bId)}">${buildListInner(n)}</div>
           <div class="bubble-footer">
+            <span class="bubble-num">#${displayNum}</span>
             <span class="bubble-cat">список</span>
             <span class="bubble-time">${esc(timeStr)}</span>
           </div>
@@ -2948,7 +2954,7 @@ function loadHomeFeed(){
         <div class="bubble" style="cursor:pointer;">
           <div class="bubble-text" id="bt-${bId}">${esc(bodyPreview)}</div>
           ${expandBtn}
-          <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
+          <div class="bubble-footer"><span class="bubble-num">#${displayNum}</span>${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
         </div>`;
       const swipePanel=buildBubbleSwipePanel(()=>delHomeEntry(n.id,i),()=>shareNote(n));
       wrap.prepend(swipePanel);
