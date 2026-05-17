@@ -298,6 +298,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bact-share svg{stroke:oklch(0.28 0.05 210);stroke-width:1.6;}
 .bact-del{background:oklch(0.76 0.05 15 / 0.38);border-radius:0 22px 5px 0;color:oklch(0.32 0.04 15);}
 .bact-del svg{stroke:oklch(0.32 0.04 15);stroke-width:1.6;}
+@keyframes del-x-spin{0%,100%{transform:rotate(0deg);}50%{transform:rotate(135deg);}}
+@keyframes bubble-pop{0%{transform:scale(1);opacity:1;filter:blur(0px);}28%{transform:scale(1.07);opacity:0.9;filter:blur(0px);}100%{transform:scale(0.04);opacity:0;filter:blur(12px);}}
+.del-x-svg{animation:del-x-spin 1.3s ease-in-out infinite;transform-origin:center;}
+.bubble-popping{animation:bubble-pop 0.30s cubic-bezier(.55,0,1,.8) forwards !important;pointer-events:none !important;}
 .bubble{
   background:
     radial-gradient(ellipse 80% 50% at 30% 15%, oklch(1 0 0 / 0.58) 0%, transparent 55%),
@@ -911,7 +915,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-reminder-in{flex:1;background:transparent;border:none;border-bottom:1px solid oklch(0.88 0.02 210 / 0.25);padding:4px 0;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;-webkit-user-select:text;user-select:text;}
 .sheet-reminder-in:focus{border-bottom-color:oklch(0.52 0.10 210 / 0.45);}
 
-/* AI note analysis */
+/* ── AI PANEL ── */
 .sheet-ai-btn{display:flex;align-items:center;gap:5px;padding:0 10px;height:32px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:oklch(0.55 0.12 290 / 0.10);color:oklch(0.45 0.12 290);transition:background .18s,transform .12s;}
 .sheet-ai-btn:active{transform:scale(.95);}
 .sheet-ai-btn.ai-on{background:oklch(0.55 0.12 290 / 0.20);color:oklch(0.38 0.14 290);}
@@ -1428,6 +1432,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <span class="sheet-reminder-lbl">Напомнить</span>
       <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local">
     </div>
+    <!-- AI Panel (появляется при включении) -->
     <div class="ai-panel" id="ai-panel" style="display:none;"></div>
     <!-- Footer -->
     <div class="sheet-footer">
@@ -2222,79 +2227,56 @@ function renderStatChips(all){
 function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
 
 // ── SWIPE HELPERS ──
-function buildNoteSwipePanel(shape, radius, onDelete, onShare){
+function buildNoteSwipePanel(shape, radius, onDelete){
+  const r=(radius||16)+'px';
   const el=document.createElement('div');
-  const r=radius+'px';
-  el.style.cssText=`position:absolute;right:0;top:0;bottom:0;width:116px;display:flex;flex-direction:row;align-items:stretch;border-radius:0 ${r} ${r} 0;opacity:0;transition:opacity .22s;overflow:hidden;`;
-  const shareBtn=document.createElement('button');
-  shareBtn.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;cursor:pointer;background:oklch(0.55 0.09 210 / 0.32);color:oklch(0.25 0.05 210);font-family:var(--sys);transition:background .1s;';
-  shareBtn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" stroke="oklch(0.28 0.06 210)" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span style="font-size:9px;font-weight:600;letter-spacing:.04em;">поделиться</span>';
-  shareBtn.onclick=(e)=>{e.stopPropagation();onShare&&onShare();};
-  const delBtn=document.createElement('button');
-  delBtn.style.cssText=`flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;cursor:pointer;background:oklch(0.76 0.05 15 / 0.35);color:oklch(0.32 0.04 15);font-family:var(--sys);border-radius:0 ${r} ${r} 0;transition:background .1s;`;
-  delBtn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" stroke="oklch(0.32 0.04 15)" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg><span style="font-size:9px;font-weight:600;letter-spacing:.04em;">удалить</span>';
-  delBtn.onclick=(e)=>{e.stopPropagation();onDelete&&onDelete();};
-  el.appendChild(shareBtn);el.appendChild(delBtn);
+  el.style.cssText=`position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 ${r} ${r} 0;opacity:0;transition:opacity .15s;pointer-events:none;`;
+  el.innerHTML=`<svg class="del-x-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="oklch(0.52 0.20 15)" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  el._onDelete=onDelete;
   return el;
 }
 
-function buildBubbleSwipePanel(onDelete, onShare){
+function buildBubbleSwipePanel(onDelete){
   const el=document.createElement('div');
   el.className='bubble-swipe-panel';
-  el.style.cssText='position:absolute;right:0;top:0;bottom:0;width:116px;display:flex;flex-direction:row;align-items:stretch;border-radius:0 22px 5px 0;opacity:0;transition:opacity .22s;overflow:hidden;';
-  const shareBtn=document.createElement('button');
-  shareBtn.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;cursor:pointer;background:oklch(0.55 0.09 210 / 0.32);color:oklch(0.25 0.05 210);font-family:var(--sys);';
-  shareBtn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" stroke="oklch(0.28 0.06 210)" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span style="font-size:9px;font-weight:600;letter-spacing:.04em;">поделиться</span>';
-  shareBtn.onclick=(e)=>{e.stopPropagation();onShare&&onShare();};
-  const delBtn=document.createElement('button');
-  delBtn.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;cursor:pointer;background:oklch(0.76 0.05 15 / 0.35);color:oklch(0.32 0.04 15);font-family:var(--sys);border-radius:0 22px 5px 0;';
-  delBtn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" stroke="oklch(0.32 0.04 15)" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg><span style="font-size:9px;font-weight:600;letter-spacing:.04em;">удалить</span>';
-  delBtn.onclick=(e)=>{e.stopPropagation();onDelete&&onDelete();};
-  el.appendChild(shareBtn);el.appendChild(delBtn);
+  el.style.cssText='position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 22px 5px 0;opacity:0;transition:opacity .15s;pointer-events:none;';
+  el.innerHTML=`<svg class="del-x-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="oklch(0.52 0.20 15)" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  el._onDelete=onDelete;
   return el;
 }
 
-function attachSwipeDelete(card,delBg,onDelete,W){
-  W=W||116;
-  const reset=()=>{
-    card.style.transform='';card.style.transition='';
-    delBg.style.opacity='0';
-    card.style.pointerEvents='';
-  };
-  let sx=0,swiped=false;
-  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;card.style.transition='none';},{passive:true});
+function attachSwipeDelete(card,xEl,_legacy,_W){
+  const W=64;
+  const onDelete=xEl?xEl._onDelete:null;
+  const reset=()=>{card.style.transform='';card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';if(xEl)xEl.style.opacity='0';card.style.pointerEvents='';};
+  let sx=0,triggered=false;
+  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;triggered=false;card.style.transition='none';},{passive:true});
   card.addEventListener('touchmove',e=>{
     const dx=e.touches[0].clientX-sx;
-    if(dx<-8){_cardSwiping=true;const shift=Math.max(dx,-W);card.style.transform=`translateX(${shift}px)`;delBg.style.opacity=Math.min(-shift/W,1);swiped=shift<-(W*0.45);}
+    if(dx<-6){_cardSwiping=true;const shift=Math.max(dx,-W*1.4);card.style.transform=`translateX(${shift}px)`;if(xEl)xEl.style.opacity=String(Math.min(-shift/(W*0.5),1));triggered=-shift>W*0.55;}
   },{passive:true});
   card.addEventListener('touchend',()=>{
-    card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';
-    if(swiped){
-      card.style.transform=`translateX(-${W}px)`;delBg.style.opacity='1';
-      card.style.pointerEvents='none';
-      setTimeout(()=>document.addEventListener('touchstart',reset,{once:true}),120);
-    } else {reset();}
+    if(triggered){if(xEl)xEl.style.opacity='0';card.classList.add('bubble-popping');card.style.pointerEvents='none';setTimeout(()=>onDelete&&onDelete(),280);}
+    else{reset();}
   },{passive:true});
 }
 
-function attachSwipeBubble(card,delBg,W){
-  W=W||116;
-  const reset=()=>{card.style.transform='';card.style.transition='';if(delBg)delBg.style.opacity='0';card.style.pointerEvents='';};
-  let sx=0,swiped=false;
-  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;swiped=false;card.style.transition='none';},{passive:true});
+function attachSwipeBubble(card,xEl,_W){
+  const W=64;
+  const onDelete=xEl?xEl._onDelete:null;
+  const reset=()=>{card.style.transform='';card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';if(xEl)xEl.style.opacity='0';card.style.pointerEvents='';};
+  let sx=0,triggered=false;
+  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;triggered=false;card.style.transition='none';},{passive:true});
   card.addEventListener('touchmove',e=>{
     const dx=e.touches[0].clientX-sx;
-    if(dx<-8){_cardSwiping=true;const shift=Math.max(dx,-W);card.style.transform=`translateX(${shift}px)`;if(delBg)delBg.style.opacity=Math.min(-shift/W,1);swiped=shift<-(W*0.45);}
+    if(dx<-6){_cardSwiping=true;const shift=Math.max(dx,-W*1.4);card.style.transform=`translateX(${shift}px)`;if(xEl)xEl.style.opacity=String(Math.min(-shift/(W*0.5),1));triggered=-shift>W*0.55;}
   },{passive:true});
   card.addEventListener('touchend',()=>{
-    card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';
-    if(swiped){
-      card.style.transform=`translateX(-${W}px)`;if(delBg)delBg.style.opacity='1';
-      card.style.pointerEvents='none';
-      setTimeout(()=>document.addEventListener('touchstart',reset,{once:true}),120);
-    } else {reset();}
+    if(triggered){if(xEl)xEl.style.opacity='0';card.classList.add('bubble-popping');card.style.pointerEvents='none';setTimeout(()=>onDelete&&onDelete(),280);}
+    else{reset();}
   },{passive:true});
 }
+
 
 function shareNote(n){
   const text=(n.title||'')+(n.body&&n.body!==n.title?'\n\n'+(n.body):'');
@@ -2473,40 +2455,12 @@ function onSheetInput(){
   updCharCount(f);
 }
 
-function isLikelyListPaste(lines){
-  if(lines.length<2)return false;
-  const marked=lines.filter(l=>/^\s*(?:[-*]|•|\d+[.)])\s+/.test(l)).length;
-  if(marked>=2&&marked/lines.length>=0.5)return true;
-
-  const words=lines.map(l=>l.split(/\s+/).filter(Boolean).length);
-  const avgWords=words.reduce((a,b)=>a+b,0)/words.length;
-  const shortLines=lines.filter(l=>l.length<=64&&l.split(/\s+/).filter(Boolean).length<=7).length;
-  const headingLike=lines.filter(l=>/[.:;!?]\s*$/.test(l)).length;
-  const longLines=lines.filter(l=>l.length>110||l.split(/\s+/).filter(Boolean).length>14).length;
-
-  return lines.length>=3&&shortLines/lines.length>=0.85&&avgWords<=5&&headingLike===0&&longLines===0;
-}
-
-function insertPlainTextIntoSheet(f,text){
-  const pos=f.selectionStart||0;
-  const end=f.selectionEnd||pos;
-  const val=f.value;
-  f.value=val.slice(0,pos)+text+val.slice(end);
-  f.selectionStart=f.selectionEnd=pos+text.length;
-  onSheetInput();
-}
-
 function onSheetPaste(e){
   const text=e.clipboardData?.getData('text');
   if(!text)return;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.length<2)return; // одна строка — вставляем как обычно
   const f=document.getElementById('sh1');if(!f)return;
-  if(!isLikelyListPaste(lines)){
-    e.preventDefault();
-    insertPlainTextIntoSheet(f,text);
-    return;
-  }
 
   // Заметка уже непустая → вставляем как bullet-строки в текст
   if(f.value.trim()){
@@ -3220,3 +3174,4 @@ initAuth();
 </script>
 </body>
 </html>
+
