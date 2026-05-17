@@ -2182,12 +2182,22 @@ async function runAiAnalysis(text,panel){
       throw new Error((e.error||res.statusText)+' ['+res.status+']');
     }
     const {summary,tags,actions}=await res.json();
+    const autoLabel=tagsToPrimaryLabel(tags||[]);
+    if(autoLabel){
+      const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
+      if(curCat==='заметка'){
+        showSheetCat(autoLabel);
+        showCatHint(autoLabel);
+      }
+    }
     let html='<div class="ai-panel-inner">';
     if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
     if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги</div><div class="ai-tags">${tags.map(t=>`<span class="ai-tag">${esc(t)}</span>`).join('')}</div></div>`;}
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map(a=>`<div class="ai-action">${esc(a)}</div>`).join('')}</div></div>`;}
     html+='</div>';
     panel.innerHTML=html;
+    panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
+    panel.dataset.aiSummary=summary||'';
   }catch(e){
     console.warn('AI error',e);
     const msg=String(e?.message||'').includes('no session')?'Войдите в аккаунт для AI-функций.':'Ошибка: '+String(e?.message||'неизвестно');
@@ -2471,6 +2481,38 @@ const ICONS={
 };
 function catIcon(label){return ICONS[safeLabel(label||'заметка')]||'📄';}
 
+const TAG_TO_CAT={
+  здоровье:'здоровье',врач:'здоровье',доктор:'здоровье',давление:'здоровье',
+  таблетки:'здоровье',лекарства:'здоровье',аптека:'здоровье',больница:'здоровье',
+  анализы:'здоровье',поликлиника:'здоровье',симптом:'здоровье',лечение:'здоровье',
+  медицина:'здоровье',диагноз:'здоровье',температура:'здоровье',процедура:'здоровье',
+  покупки:'покупки',магазин:'покупки',список:'покупки',продукты:'покупки',
+  еда:'покупки',заказ:'покупки',доставка:'покупки',рынок:'покупки',
+  семья:'контакт',мама:'контакт',папа:'контакт',дети:'контакт',внуки:'контакт',
+  родители:'контакт',позвонить:'контакт',написать:'контакт',связаться:'контакт',
+  контакт:'контакт',друг:'контакт',родственник:'контакт',перезвонить:'контакт',
+  событие:'событие',встреча:'событие',собрание:'событие',поездка:'событие',
+  праздник:'событие',день_рождения:'событие',отпуск:'событие',дата:'событие',
+  расписание:'событие',запись:'событие',планирование:'событие',
+  идея:'идея',мысль:'идея',план:'идея',желание:'идея',
+  мечта:'идея',проект:'идея',концепция:'идея',придумал:'идея',
+  рецепт:'рецепт',готовить:'рецепт',блюдо:'рецепт',кулинария:'рецепт',
+  ингредиенты:'рецепт',приготовить:'рецепт',
+  адрес:'адрес',улица:'адрес',место:'адрес',навигатор:'адрес',маршрут:'адрес'
+};
+
+function tagsToPrimaryLabel(tags){
+  if(!Array.isArray(tags)||!tags.length)return null;
+  const score={};
+  tags.forEach(rawTag=>{
+    const t=String(rawTag).replace(/^#/,'').toLowerCase().trim().replace(/\s+/g,'_');
+    const cat=TAG_TO_CAT[t];
+    if(cat)score[cat]=(score[cat]||0)+1;
+  });
+  if(!Object.keys(score).length)return null;
+  return Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0];
+}
+
 // ── NOTES ──
 let noteFilter=null;
 let noteViewMode=localStorage.getItem('rz_note_view')||'list';
@@ -2556,11 +2598,14 @@ function loadNotes(){
       if(n.reminder){
         rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
       }
+      const tagsHtml=Array.isArray(n.aiTags)&&n.aiTags.length
+        ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">${n.aiTags.slice(0,2).map(t=>`<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:oklch(0.55 0.12 290 / 0.09);color:oklch(0.40 0.12 290);border:1px solid oklch(0.55 0.12 290 / 0.16);">${esc(t)}</span>`).join('')}</div>`
+        : '';
       d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
         <div class="note-num">#${displayNum}</div>
         <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
         <div class="item-title">${esc(n.title)}</div>
-        ${rHtml}
+        ${rHtml}${tagsHtml}
         <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
     }
     d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
@@ -3004,6 +3049,17 @@ document.getElementById('overlay-bg').addEventListener('click',()=>{
   closeSheet();
 });
 
+function showCatHint(label){
+  const wrap=document.getElementById('sheet-cat-wrap');if(!wrap)return;
+  const old=document.getElementById('ai-cat-hint');if(old)old.remove();
+  const hint=document.createElement('div');
+  hint.id='ai-cat-hint';
+  hint.style.cssText='font-size:11px;color:oklch(0.55 0.12 290);margin-top:4px;padding:0 2px;animation:splashFadeIn .2s ease;display:flex;align-items:center;gap:4px;';
+  hint.innerHTML=`<svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>✦ AI предложил: ${esc(catIcon(label))} ${esc(label)}`;
+  wrap.appendChild(hint);
+  setTimeout(()=>hint.remove(),5000);
+}
+
 function saveSheet(){
   if(ST==='list'){saveListSheet();return;}
   const f=document.getElementById('sh1');
@@ -3013,12 +3069,20 @@ function saveSheet(){
   const reminderEl=document.getElementById('sheet-reminder-in');
   const v2=reminderEl?reminderEl.value:'';
   if(!v1.trim()){showToast('Напишите текст');return;}
+  const list=getNotes();
+  const existingIdx=EI!==null?list.findIndex(n=>n.id===EI):-1;
+  const prev=existingIdx>=0?list[existingIdx]:null;
+  const aiPanel=document.getElementById('ai-panel');
+  let aiTags=Array.isArray(prev?.aiTags)?prev.aiTags:[];
+  let aiSummary=prev?.aiSummary||'';
+  if(aiPanel?.dataset.aiTags){
+    try{const parsed=JSON.parse(aiPanel.dataset.aiTags);if(Array.isArray(parsed))aiTags=parsed.filter(t=>typeof t==='string').slice(0,8);}catch(e){}
+  }
+  if(aiPanel?.dataset.aiSummary)aiSummary=aiPanel.dataset.aiSummary;
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
-  const list=getNotes();
-  const existingIdx=EI!==null?list.findIndex(n=>n.id===EI):-1;
-  const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts};
+  const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary};
   if(existingIdx>=0){
     item.createdAt=list[existingIdx].createdAt||ts;
     // Save version history
@@ -3238,14 +3302,15 @@ function loadNotepad(){
 
 function analyzeText(text){
   const t=text.toLowerCase();
-  let label='заметка';
-  if(/таблетк|лекарств|врач|аптек|давлени|болит/.test(t))label='здоровье';
-  else if(/купить|магазин|заказать|продукт/.test(t))label='покупки';
-  else if(/позвонить|написать|связаться|перезвонить/.test(t))label='контакт';
-  else if(/встреча|собрание|поехать/.test(t))label='событие';
-  else if(/идея|думаю|мысль/.test(t))label='идея';
-  else if(/рецепт|приготовить|варить/.test(t))label='рецепт';
-  else if(/адрес|улица|дом №/.test(t))label='адрес';
+  const rawTags=[];
+  if(/таблетк|лекарств|врач|аптек|давлени|болит|больниц|анализ/.test(t))rawTags.push('здоровье');
+  if(/купить|магазин|заказать|продукт|список/.test(t))rawTags.push('покупки');
+  if(/позвонить|написать|связаться|перезвонить|мама|папа|семья|внук/.test(t))rawTags.push('позвонить');
+  if(/встреча|собрание|поехать|праздник|запись/.test(t))rawTags.push('событие');
+  if(/идея|думаю|мысль|план/.test(t))rawTags.push('идея');
+  if(/рецепт|приготовить|варить/.test(t))rawTags.push('рецепт');
+  if(/адрес|улица|дом №|маршрут/.test(t))rawTags.push('адрес');
+  let label=tagsToPrimaryLabel(rawTags)||'заметка';
   let reminder=null;
   const now=new Date();
   const timeM=text.match(/в\s+(\d{1,2})[:\.](\d{2})/);
