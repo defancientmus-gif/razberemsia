@@ -84,6 +84,7 @@ Service worker cache: `rz-v50`
 - AI API key не хранится в `index.html`.
 - Edge Function код лежит в `supabase/functions/ai/index.ts`.
 - AI-поток задуман как анализ заметки: `summary`, `tags`, `actions`.
+- 2026-05-18 впервые заработала полная AI-цепочка: заметка -> `✦ AI` -> Supabase Edge Function -> Anthropic -> блоки «Суть / Теги / Можно сделать» в UI.
 
 ## Что сейчас не считать решённым
 
