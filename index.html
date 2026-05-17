@@ -1433,7 +1433,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local">
     </div>
     <!-- AI Panel (появляется при включении) -->
-    <div class="ai-panel" id="ai-panel" style="display:none;"></div>
+    <div id="ai-panel" style="display:none;"></div>
     <!-- Footer -->
     <div class="sheet-footer">
       <span class="sheet-char-count" id="sheet-char-count"></span>
@@ -1860,7 +1860,7 @@ function go(id){
 }
 
 // ── AI PANEL ──
-const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/ai';
+const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/smooth-processor';
 let _aiOn=false;
 
 function toggleAiPanel(){
@@ -1901,7 +1901,6 @@ async function runAiAnalysis(text,panel){
     if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
     if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги</div><div class="ai-tags">${tags.map(t=>`<span class="ai-tag">${esc(t)}</span>`).join('')}</div></div>`;}
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map(a=>`<div class="ai-action">${esc(a)}</div>`).join('')}</div></div>`;}
-    if(!summary&&!tags?.length&&!actions?.length){html+='<div class="ai-err">AI вернул пустой разбор. Попробуйте переформулировать заметку.</div>';}
     html+='</div>';
     panel.innerHTML=html;
   }catch(e){
@@ -2344,11 +2343,6 @@ function openSheet(type){
 function _openSheet(){
   syncViewportForKeyboard();
   sheetListMode=false;
-  _aiOn=false;
-  const aiBtn=document.getElementById('sheet-ai-btn');
-  const aiPanel=document.getElementById('ai-panel');
-  if(aiBtn)aiBtn.classList.remove('ai-on');
-  if(aiPanel){aiPanel.style.display='none';aiPanel.innerHTML='';}
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
   document.getElementById('overlay').classList.add('open');
