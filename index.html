@@ -2903,6 +2903,11 @@ function loadHomeFeed(){
   const list=[...notes]; // oldest→newest = chat order, newest at bottom
   const el=document.getElementById('home-feed');if(!el)return;
   el.innerHTML='';
+  // Тап на пустое место чата → новая заметка
+  el.onclick=(e)=>{
+    if(e.target.closest('.bubble,.bubble-swipe-panel,.bubble-wrap'))return;
+    openSheet('note');
+  };
   const badge=document.getElementById('notes-count-badge');
   if(badge)badge.textContent=notes.length?'('+notes.length+')':'';
   if(!list.length){
@@ -2963,11 +2968,6 @@ function loadHomeFeed(){
     el.appendChild(wrap);
   });
   el.scrollTop=el.scrollHeight;
-  // Тап на пустое место чата → новая заметка
-  el.onclick=(e)=>{
-    if(e.target.closest('.bubble,.bubble-swipe-panel,.bubble-wrap'))return;
-    openSheet('note');
-  };
 }
 
 function delHomeEntry(id,legacyI){
