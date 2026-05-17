@@ -911,6 +911,27 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-reminder-in{flex:1;background:transparent;border:none;border-bottom:1px solid oklch(0.88 0.02 210 / 0.25);padding:4px 0;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;-webkit-user-select:text;user-select:text;}
 .sheet-reminder-in:focus{border-bottom-color:oklch(0.52 0.10 210 / 0.45);}
 
+/* AI note analysis */
+.sheet-ai-btn{display:flex;align-items:center;gap:5px;padding:0 10px;height:32px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:oklch(0.55 0.12 290 / 0.10);color:oklch(0.45 0.12 290);transition:background .18s,transform .12s;}
+.sheet-ai-btn:active{transform:scale(.95);}
+.sheet-ai-btn.ai-on{background:oklch(0.55 0.12 290 / 0.20);color:oklch(0.38 0.14 290);}
+.sheet-ai-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.ai-panel{margin:0 16px 10px;border-radius:14px;background:oklch(0.97 0.008 290 / 0.85);border:1px solid oklch(0.55 0.12 290 / 0.15);overflow:hidden;animation:splashFadeIn .22s cubic-bezier(.22,1,.36,1);}
+.ai-panel-inner{padding:12px 14px;}
+.ai-loading{display:flex;align-items:center;gap:8px;color:oklch(0.50 0.10 290);font-size:13px;}
+.ai-loading svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;animation:ai-spin .8s linear infinite;}
+@keyframes ai-spin{to{transform:rotate(360deg);}}
+.ai-section{margin-bottom:10px;}
+.ai-section:last-child{margin-bottom:0;}
+.ai-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:oklch(0.55 0.12 290 / 0.65);margin-bottom:4px;}
+.ai-text{font-size:13px;line-height:1.55;color:oklch(0.28 0.02 250);}
+.ai-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+.ai-tag{padding:2px 8px;border-radius:6px;background:oklch(0.55 0.12 290 / 0.12);color:oklch(0.40 0.12 290);font-size:11px;font-weight:500;}
+.ai-actions{display:flex;flex-direction:column;gap:3px;margin-top:2px;}
+.ai-action{font-size:12px;color:oklch(0.35 0.06 250);padding-left:14px;position:relative;}
+.ai-action::before{content:'→';position:absolute;left:0;color:oklch(0.55 0.12 290 / 0.55);}
+.ai-err{font-size:12px;color:oklch(0.50 0.15 25);}
+
 /* Footer — "0 символов  |  Cmd Enter  сохранить" */
 .sheet-footer{
   display:flex;align-items:center;justify-content:space-between;
@@ -1407,10 +1428,15 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <span class="sheet-reminder-lbl">Напомнить</span>
       <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local">
     </div>
+    <div class="ai-panel" id="ai-panel" style="display:none;"></div>
     <!-- Footer -->
     <div class="sheet-footer">
       <span class="sheet-char-count" id="sheet-char-count"></span>
       <div class="sheet-footer-actions">
+        <button class="sheet-ai-btn" id="sheet-ai-btn" onclick="toggleAiPanel()" title="AI-анализ заметки">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          ✦ AI
+        </button>
         <button class="sheet-cancel" onclick="closeSheet()">Отмена</button>
         <button class="sheet-save" onclick="saveSheet()">сохранить</button>
       </div>
@@ -1826,6 +1852,58 @@ function go(id){
   if(id==='notes'){renderNotifBanner();loadNotes();}
   if(id==='notepad')loadNotepad();
   if(id==='trash')loadTrash();
+}
+
+// ── AI PANEL ──
+const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/ai';
+let _aiOn=false;
+
+function toggleAiPanel(){
+  const btn=document.getElementById('sheet-ai-btn');
+  const panel=document.getElementById('ai-panel');
+  if(!btn||!panel)return;
+  _aiOn=!_aiOn;
+  btn.classList.toggle('ai-on',_aiOn);
+  if(!_aiOn){panel.style.display='none';return;}
+  const f=document.getElementById('sh1');
+  const text=(f?.value||'').trim();
+  if(text.length<15){
+    panel.style.display='block';
+    panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
+    return;
+  }
+  runAiAnalysis(text,panel);
+}
+
+async function runAiAnalysis(text,panel){
+  panel.style.display='block';
+  panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Анализирую...</div></div>`;
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)throw new Error('no session');
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'analyze',payload:{text}})
+    });
+    if(!res.ok){
+      const e=await res.json().catch(()=>({}));
+      throw new Error(e.error||res.statusText);
+    }
+    const {summary,tags,actions}=await res.json();
+    let html='<div class="ai-panel-inner">';
+    if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
+    if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги</div><div class="ai-tags">${tags.map(t=>`<span class="ai-tag">${esc(t)}</span>`).join('')}</div></div>`;}
+    if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map(a=>`<div class="ai-action">${esc(a)}</div>`).join('')}</div></div>`;}
+    if(!summary&&!tags?.length&&!actions?.length){html+='<div class="ai-err">AI вернул пустой разбор. Попробуйте переформулировать заметку.</div>';}
+    html+='</div>';
+    panel.innerHTML=html;
+  }catch(e){
+    console.warn('AI error',e);
+    const msg=String(e?.message||'').includes('no session')?'Войдите в аккаунт для AI-функций.':'AI временно недоступен. Проверьте что Edge Function задеплоена.';
+    panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${msg}</div></div>`;
+  }
 }
 
 // ── SWIPE BACK ──
@@ -2284,6 +2362,11 @@ function openSheet(type){
 function _openSheet(){
   syncViewportForKeyboard();
   sheetListMode=false;
+  _aiOn=false;
+  const aiBtn=document.getElementById('sheet-ai-btn');
+  const aiPanel=document.getElementById('ai-panel');
+  if(aiBtn)aiBtn.classList.remove('ai-on');
+  if(aiPanel){aiPanel.style.display='none';aiPanel.innerHTML='';}
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
   document.getElementById('overlay').classList.add('open');
@@ -3137,4 +3220,3 @@ initAuth();
 </script>
 </body>
 </html>
-
