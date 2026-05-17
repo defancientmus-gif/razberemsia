@@ -115,6 +115,7 @@ Service worker cache: `rz-v50`
 - GitHub repo `defancientmus-gif/razberemsia` — общий источник правды между Mac и Windows;
 - перед работой на любой машине делать `git pull`;
 - после работы делать commit/push, чтобы вторая машина получила те же файлы.
+- после важных рабочих этапов делать zip-снимок в `backups/`, чтобы была ручная точка «тут функция точно работала».
 
 Текущая карта:
 
@@ -139,6 +140,7 @@ Service worker cache: `rz-v50`
 - `Ai Memory/AI_MEMORY_MASTER.md` — архитектура AI-памяти, проектного кластера и клиентского облака.
 - `Ai Memory/Master Modes/Codex/` — сохранённые мастер-режимы Codex.
 - `Ai Memory/Master Modes/Claude/` — сохранённые мастер-режимы Claude.
+- `backups/` — ручные zip-снимки важных рабочих этапов, не замена git.
 - `1/` — архив старых HTML-копий, не рабочая версия.
 - `prototypes/city-planner-prototype.html` — отдельный прототип игрового города, не основной runtime.
 
