@@ -237,17 +237,75 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .year-btn{flex:0 0 calc(25% - 5px);background:oklch(0.52 0.10 210 / 0.08);border:1px solid oklch(0.52 0.10 210 / 0.18);border-radius:10px;padding:8px 4px;font-size:15px;font-weight:600;color:var(--fg);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);text-align:center;transition:background .1s;}
 .year-btn:active,.year-btn.cur{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-/* ── FILTER CHIPS ── */
-.notes-stat{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.notes-stat::-webkit-scrollbar{display:none;}
-.stat-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;
-  background:oklch(1 0 0 / 0.72);
-  border:1px solid oklch(0.88 0.02 210 / 0.48);
-  border-radius:50px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--fg-m);cursor:pointer;-webkit-appearance:none;font-family:var(--sys);transition:background .12s;}
-.stat-chip:active,.stat-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-.stat-chip.active .stat-dot{background:oklch(1 0 0 / 0.8);}
-.stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.stat-count{font-size:11px;font-weight:700;opacity:.7;}
+/* ── FOLDER CARDS ── */
+.notes-stat{display:block;margin-bottom:14px;overflow:visible;}
+.stat-chip,.stat-dot,.stat-count{display:none;}
+.folders-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px;padding:0 2px;display:block;}
+.folders-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.folder-card.folder-all{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:12px 16px 11px;}
+.folder-card.folder-all .folder-ico{margin-bottom:0;font-size:22px;}
+.folder-card.folder-all .folder-body{flex:1;}
+.folder-card.folder-all .folder-name{font-size:15px;font-weight:700;}
+.folder-card{
+  position:relative;
+  background:
+    radial-gradient(ellipse 120% 60% at 30% 0%,oklch(1 0 0 / 0.45) 0%,transparent 55%),
+    oklch(0.88 0.07 210 / 0.30);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border:1px solid oklch(1 0 0 / 0.70);
+  border-radius:14px;
+  padding:15px 14px 13px;
+  cursor:pointer;-webkit-appearance:none;font-family:var(--sys);text-align:left;
+  transition:transform .16s ease,box-shadow .16s ease,background .18s ease;
+  overflow:hidden;
+  box-shadow:
+    inset 0 1.5px 0 oklch(1 0 0 / 0.90),
+    inset 0 -1px 0 oklch(0.70 0.08 210 / 0.12),
+    0 4px 18px oklch(0.52 0.10 210 / 0.09);
+}
+.folder-card::before{
+  content:'';
+  position:absolute;top:-1px;left:14px;
+  width:38px;height:8px;
+  border-radius:5px 5px 0 0;
+  background:oklch(1 0 0 / 0.62);
+  border:1px solid oklch(1 0 0 / 0.75);
+  border-bottom:none;
+}
+.folder-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 25% 15%,oklch(1 0 0 / 0.32) 0%,transparent 52%);
+  pointer-events:none;border-radius:14px;
+}
+.folder-card.active{
+  background:
+    radial-gradient(ellipse 120% 60% at 30% 0%,oklch(1 0 0 / 0.55) 0%,transparent 55%),
+    oklch(0.80 0.10 210 / 0.44);
+  border-color:oklch(0.76 0.12 210 / 0.60);
+  box-shadow:
+    inset 0 1.5px 0 oklch(1 0 0 / 0.95),
+    0 6px 24px oklch(0.52 0.10 210 / 0.20);
+}
+.folder-card.active::before{background:var(--accent);border-color:var(--accent-d);}
+.folder-card:active{transform:scale(.95);}
+@keyframes folderIn{from{opacity:0;transform:translateY(10px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+.folder-card{animation:folderIn .28s cubic-bezier(.22,1,.36,1) both;}
+.folder-card:nth-child(2){animation-delay:.04s;}
+.folder-card:nth-child(3){animation-delay:.08s;}
+.folder-card:nth-child(4){animation-delay:.12s;}
+.folder-card:nth-child(5){animation-delay:.16s;}
+.folder-card:nth-child(6){animation-delay:.20s;}
+.folder-card:nth-child(7){animation-delay:.24s;}
+.folder-ico{font-size:24px;margin-bottom:8px;display:block;line-height:1;position:relative;z-index:1;}
+.folder-name{font-size:13px;font-weight:700;color:var(--fg);display:block;margin-bottom:5px;letter-spacing:-.1px;position:relative;z-index:1;}
+.folder-pill{
+  display:inline-block;
+  background:oklch(0.52 0.10 210 / 0.13);
+  border:1px solid oklch(0.52 0.10 210 / 0.22);
+  border-radius:50px;padding:2px 9px;
+  font-size:11px;font-weight:700;color:var(--accent-d);
+  position:relative;z-index:1;
+}
 
 /* ── ADD BUTTON ── */
 .add-dashed{background:transparent;border:1.5px dashed oklch(0.80 0.02 210 / 0.55);border-radius:var(--r);padding:14px;width:100%;font-size:16px;font-weight:600;color:var(--fg-l);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;transition:background .12s;margin-top:2px;}
@@ -994,7 +1052,59 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .input-sheet-overlay.open{display:flex;animation:fIn .16s ease;}
 .keyboard-open .input-sheet-overlay.open{justify-content:flex-end;padding:8px 8px 0;}
 .input-sheet-bg{position:absolute;inset:0;background:oklch(0.25 0.02 210 / 0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-/* Reuse .sheet styles for the inner div */
+
+/* ── AUDIO NOTE IN SHEET ── */
+.sheet-voice-row{display:flex;align-items:center;gap:10px;padding:10px 18px 0;flex-shrink:0;}
+.sheet-voice-btn{
+  display:flex;align-items:center;gap:8px;
+  background:
+    radial-gradient(circle at 28% 22%,oklch(1 0 0 / 0.50) 0%,transparent 50%),
+    oklch(0.90 0.06 210 / 0.28);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid oklch(1 0 0 / 0.65);
+  border-radius:50px;
+  padding:8px 15px 8px 11px;
+  font-size:13px;font-weight:600;color:var(--fg-m);
+  cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.85),0 2px 10px oklch(0.52 0.10 210 / 0.08);
+  transition:all .16s ease;white-space:nowrap;
+}
+.sheet-voice-btn:active{transform:scale(.95);}
+.sheet-voice-btn.rec{
+  background:oklch(0.62 0.14 25 / 0.12);
+  border-color:oklch(0.62 0.14 25 / 0.35);
+  color:var(--rose);
+  animation:voice-pulse-btn 1.4s ease-in-out infinite;
+}
+@keyframes voice-pulse-btn{0%,100%{box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.85),0 0 0 0 oklch(0.62 0.14 25 / 0.25);}50%{box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.85),0 0 0 6px oklch(0.62 0.14 25 / 0);}}
+.sheet-voice-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.sheet-voice-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;animation:blink .9s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+.voice-wave-row{display:none;align-items:center;justify-content:center;gap:3px;padding:6px 18px 0;height:28px;}
+.voice-wave-row.show{display:flex;}
+.vwb{width:3px;border-radius:2px;background:var(--rose);opacity:.6;animation:vwa .6s ease-in-out infinite alternate;}
+@keyframes vwa{from{transform:scaleY(.25);}to{transform:scaleY(1);}}
+.ai-transcript-block{
+  margin:10px 18px 4px;
+  padding:11px 13px;
+  background:oklch(0.55 0.12 290 / 0.07);
+  border:1px solid oklch(0.55 0.12 290 / 0.18);
+  border-radius:12px;
+  font-size:13px;line-height:1.6;color:var(--fg-m);
+  animation:splashFadeIn .22s cubic-bezier(.22,1,.36,1);
+}
+.ai-transcript-label{
+  font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:oklch(0.55 0.12 290 / 0.65);margin-bottom:5px;display:flex;align-items:center;gap:5px;
+}
+.note-audio-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:oklch(0.52 0.10 210 / 0.09);
+  border:1px solid oklch(0.52 0.10 210 / 0.18);
+  border-radius:50px;padding:2px 9px;
+  font-size:11px;font-weight:600;color:var(--accent-d);
+  margin-top:4px;
+}
 
 /* ── TRASH SCREEN ── */
 .trash-empty{text-align:center;padding:48px 24px;color:var(--fg-l);font-size:15px;line-height:1.8;}
@@ -1431,6 +1541,13 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
     </div>
     <div class="sheet-hdr-line"></div>
+    <div class="sheet-voice-row">
+      <button class="sheet-voice-btn" id="sheet-voice-btn" onclick="toggleSheetAudioNote()">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+        <span id="sheet-voice-lbl">🎤 Голосовая заметка</span>
+      </button>
+    </div>
+    <div class="voice-wave-row" id="sheet-wave-row" style="gap:3px;"></div>
     <!-- Body textarea -->
     <div class="sheet-body-wrap" id="sheet-body"></div>
     <!-- Reminder -->
@@ -2180,6 +2297,17 @@ const STRIPES={
   заметка:'oklch(0.70 0.04 210)'
 };
 const CATS=Object.keys(STRIPES);
+const ICONS={
+  здоровье:'🏥',
+  покупки:'🛒',
+  контакт:'👤',
+  событие:'📅',
+  идея:'💡',
+  рецепт:'🍽️',
+  адрес:'📍',
+  заметка:'📝'
+};
+function catIcon(label){return ICONS[safeLabel(label||'заметка')]||'📄';}
 
 // ── NOTES ──
 let noteFilter=null;
@@ -2210,7 +2338,7 @@ function loadNotes(){
     }
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
       <div class="note-num">#${displayNum}</div>
-      <div class="note-cat">${esc(safeLabel(n.label||'заметка'))}</div>
+      <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
       <div class="item-title">${esc(n.title)}</div>
       ${rHtml}
       <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
@@ -2228,11 +2356,22 @@ function renderStatChips(all){
   const el=document.getElementById('notes-stat');if(!el)return;
   const counts={};
   all.forEach(n=>{const l=safeLabel(n.label||'заметка');counts[l]=(counts[l]||0)+1;});
-  let html=`<button class="stat-chip${!noteFilter?' active':''}" onclick="setFilter(null)"><span style="font-size:13px;">Все</span><span class="stat-count">${all.length}</span></button>`;
+  let html='<span class="folders-lbl">Разделы</span><div class="folders-grid">';
+  html+=`<button class="folder-card folder-all${!noteFilter?' active':''}" onclick="setFilter(null)">
+    <span class="folder-ico">📋</span>
+    <div class="folder-body">
+      <span class="folder-name">Все заметки</span>
+      <span class="folder-pill">${all.length}</span>
+    </div>
+  </button>`;
   Object.entries(counts).forEach(([l,c])=>{
-    const col=STRIPES[l]||STRIPES.заметка;
-    html+=`<button class="stat-chip${noteFilter===l?' active':''}" onclick="setFilter(${jsAttr(l)})"><span class="stat-dot" style="background:${col};"></span>${esc(l)}<span class="stat-count">${c}</span></button>`;
+    html+=`<button class="folder-card${noteFilter===l?' active':''}" onclick="setFilter(${jsAttr(l)})">
+      <span class="folder-ico">${catIcon(l)}</span>
+      <span class="folder-name">${esc(l)}</span>
+      <span class="folder-pill">${c}</span>
+    </button>`;
   });
+  html+='</div>';
   el.innerHTML=html;
 }
 function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
@@ -2500,6 +2639,8 @@ function onSheetPaste(e){
 function closeSheet(){
   stopNoteSheetVoice();
   stopSheetVoice();
+  stopSheetAudioNote();
+  document.querySelector('.ai-transcript-block')?.remove();
   document.getElementById('overlay')?.classList.remove('list-mode');
   const dd=document.getElementById('cat-dropdown');
   if(dd)dd.classList.remove('open');
@@ -2681,7 +2822,7 @@ function loadTrash(){
     const d=document.createElement('div');d.className='trash-item';
     const when=n._deletedAt?fmtMeta(n._deletedAt):'';
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.5;"></div>
-      <div class="note-cat">${esc(safeLabel(n.label||'заметка'))}</div>
+      <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="item-title" style="opacity:0.7;">${esc(n.title)}</div>
         <button class="trash-restore-btn" onclick="restoreNote(${i})">
@@ -2705,7 +2846,7 @@ function loadTrash(){
       const d=document.createElement('div');d.className='hist-item';
       const when=fmtMeta(h.savedAt);
       d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.4;"></div>
-        <div class="note-cat">${esc(safeLabel(sn.label||'заметка'))}</div>
+        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(sn.label)}</span>${esc(safeLabel(sn.label||'заметка'))}</div>
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div style="font-size:14px;color:var(--fg-m);opacity:.8;flex:1;">${esc(sn.title||'')} <span style="font-size:11px;color:var(--fg-l);">· была</span></div>
           <button class="hist-restore-btn" onclick="restoreHistory(${hi})">
@@ -3060,6 +3201,95 @@ function startSheetVoice(){
 }
 function stopSheetVoice(){
   if(sheetRecog)try{sheetRecog.stop();}catch(e){}
+}
+
+// ── AI AUDIO NOTE (inside note sheet) ──
+let sheetAudioRecog=null;
+let sheetAudioRec=false;
+
+function toggleSheetAudioNote(){
+  sheetAudioRec?stopSheetAudioNote():startSheetAudioNote();
+}
+
+function startSheetAudioNote(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Голосовой ввод не поддерживается в этом браузере');return;}
+  let collected='';
+  sheetAudioRecog=new SR();
+  sheetAudioRecog.lang='ru-RU';
+  sheetAudioRecog.continuous=true;
+  sheetAudioRecog.interimResults=false;
+  sheetAudioRecog.onstart=()=>{
+    sheetAudioRec=true;
+    collected='';
+    const btn=document.getElementById('sheet-voice-btn');
+    const lbl=document.getElementById('sheet-voice-lbl');
+    const wr=document.getElementById('sheet-wave-row');
+    if(btn)btn.classList.add('rec');
+    if(lbl)lbl.innerHTML='<span class="sheet-voice-dot"></span> Слушаю…';
+    if(wr){wr.classList.add('show');buildSheetAudioWave(wr,18);}
+  };
+  sheetAudioRecog.onresult=e=>{
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)collected+=(collected?' ':'')+e.results[i][0].transcript;
+    }
+  };
+  sheetAudioRecog.onerror=e=>{
+    if(e.error!=='no-speech')showToast('Ошибка: '+e.error);
+    stopSheetAudioNote();
+  };
+  sheetAudioRecog.onend=()=>{
+    sheetAudioRec=false;
+    sheetAudioRecog=null;
+    const btn=document.getElementById('sheet-voice-btn');
+    const lbl=document.getElementById('sheet-voice-lbl');
+    const wr=document.getElementById('sheet-wave-row');
+    if(btn)btn.classList.remove('rec');
+    if(lbl)lbl.textContent='🎤 Голосовая заметка';
+    if(wr)wr.classList.remove('show');
+    if(!collected.trim())return;
+    const ta=document.getElementById('sh1');
+    if(ta){
+      ta.value+=(ta.value?'\n':'')+collected.trim();
+      ta.dispatchEvent(new Event('input'));
+      ta.scrollTop=ta.scrollHeight;
+    }
+    showAiTranscriptBlock(collected.trim());
+    if(_aiOn){
+      const p=document.getElementById('ai-panel');
+      const t=document.getElementById('sh1')?.value||'';
+      if(p&&p.style.display!=='none'&&t.length>14)runAiAnalysis(t,p);
+    }
+    showToast('Голос записан · AI расшифровал ✓');
+  };
+  sheetAudioRecog.start();
+}
+
+function stopSheetAudioNote(){
+  if(sheetAudioRecog)try{sheetAudioRecog.stop();}catch(e){}
+}
+
+function buildSheetAudioWave(container,n){
+  container.innerHTML='';
+  const hs=[30,55,80,48,70,90,40,65,85,50,75,35,62,88,44,70,55,38];
+  for(let i=0;i<n;i++){
+    const b=document.createElement('div');
+    b.className='vwb';
+    b.style.height=(hs[i%hs.length]*0.5)+'%';
+    b.style.animationDelay=(i*0.05)+'s';
+    b.style.animationDuration=(0.45+Math.random()*0.35)+'s';
+    container.appendChild(b);
+  }
+}
+
+function showAiTranscriptBlock(text){
+  document.querySelector('.ai-transcript-block')?.remove();
+  const sheetBody=document.getElementById('sheet-body');
+  if(!sheetBody)return;
+  const block=document.createElement('div');
+  block.className='ai-transcript-block';
+  block.innerHTML=`<div class="ai-transcript-label"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> ✦ Расшифровка AI</div>${esc(text)}`;
+  sheetBody.parentNode.insertBefore(block,sheetBody);
 }
 
 // ── NEW NOTE BUTTON — hold logic ──
