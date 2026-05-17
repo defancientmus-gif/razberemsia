@@ -302,6 +302,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes bubble-pop{0%{transform:scale(1);opacity:1;filter:blur(0px);}28%{transform:scale(1.07);opacity:0.9;filter:blur(0px);}100%{transform:scale(0.04);opacity:0;filter:blur(12px);}}
 .del-x-svg{animation:del-x-spin 1.3s ease-in-out infinite;transform-origin:center;}
 .bubble-popping{animation:bubble-pop 0.30s cubic-bezier(.55,0,1,.8) forwards !important;pointer-events:none !important;}
+/* Desktop hover-delete */
+.desk-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .12s;z-index:3;-webkit-appearance:none;}
+@media(hover:hover){.bubble-wrap:hover .desk-del,[data-nwrap]:hover .desk-del{opacity:1;}.desk-del:hover{background:oklch(0.76 0.05 15 / 0.18);}.desk-del:active{transform:scale(.88);}}
+@media(hover:none){.desk-del{display:none;}}
 .bubble{
   background:
     radial-gradient(ellipse 80% 50% at 30% 15%, oklch(1 0 0 / 0.58) 0%, transparent 55%),
@@ -1894,7 +1898,7 @@ async function runAiAnalysis(text,panel){
     });
     if(!res.ok){
       const e=await res.json().catch(()=>({}));
-      throw new Error(e.error||res.statusText);
+      throw new Error((e.error||res.statusText)+' ['+res.status+']');
     }
     const {summary,tags,actions}=await res.json();
     let html='<div class="ai-panel-inner">';
@@ -1905,8 +1909,8 @@ async function runAiAnalysis(text,panel){
     panel.innerHTML=html;
   }catch(e){
     console.warn('AI error',e);
-    const msg=String(e?.message||'').includes('no session')?'Войдите в аккаунт для AI-функций.':'AI временно недоступен. Проверьте что Edge Function задеплоена.';
-    panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${msg}</div></div>`;
+    const msg=String(e?.message||'').includes('no session')?'Войдите в аккаунт для AI-функций.':'Ошибка: '+String(e?.message||'неизвестно');
+    panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
   }
 }
 
@@ -2208,7 +2212,11 @@ function loadNotes(){
       <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
     d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
     attachSwipeDelete(d,delBg,null,116);
-    wrap.appendChild(delBg);wrap.appendChild(d);el.appendChild(wrap);
+    const dBtn=document.createElement('button');dBtn.className='desk-del';
+    dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
+    wrap.setAttribute('data-nwrap','1');
+    wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);el.appendChild(wrap);
   });
 }
 
@@ -2811,7 +2819,11 @@ function loadNotepad(){
       <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
     d.onclick=(e)=>{e.stopPropagation();n.id?openNoteSheetById(n.id):openNoteSheet(i);};
     attachSwipeDelete(d,delBg,null,116);
-    wrap.appendChild(delBg);wrap.appendChild(d);el.appendChild(wrap);
+    const dBtn2=document.createElement('button');dBtn2.className='desk-del';
+    dBtn2.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    dBtn2.onclick=(e)=>{e.stopPropagation();n.id?delNoteById(n.id):delNote(i);};
+    wrap.setAttribute('data-nwrap','1');
+    wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn2);el.appendChild(wrap);
   });
   // Тап на пустое место → новая заметка
   el.onclick=(e)=>{
@@ -2917,15 +2929,18 @@ function loadHomeFeed(){
       const bbl=wrap.querySelector('.bubble');
       const bdel=wrap.querySelector('.bubble-swipe-panel');
       attachSwipeBubble(bbl,bdel,116);
+      const dBtnL=document.createElement('button');dBtnL.className='desk-del';
+      dBtnL.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      dBtnL.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
+      wrap.appendChild(dBtnL);
     } else {
-      // Обычная заметка (тап на пузырь не открывает редактор)
       const catHtml=safeLabel(n.label||'заметка')!=='заметка'?`<span class="bubble-cat">${esc(safeLabel(n.label))}</span>`:'';
       const bodyText=n.body||n.title||'';
       const isLong=bodyText.length>90||(bodyText.match(/\n/g)||[]).length>1;
       const bodyPreview=n.body||bodyText||'';
       const expandBtn=isLong?`<button class="bubble-expand-btn" id="bxb-${esc(bId)}" onclick="event.stopPropagation();toggleBubble(${jsAttr(bId)},this)">ещё</button>`:'';
       wrap.innerHTML=`
-        <div class="bubble">
+        <div class="bubble" style="cursor:pointer;">
           <div class="bubble-text" id="bt-${bId}">${esc(bodyPreview)}</div>
           ${expandBtn}
           <div class="bubble-footer">${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
@@ -2934,7 +2949,16 @@ function loadHomeFeed(){
       wrap.prepend(swipePanel);
       const bbl=wrap.querySelector('.bubble');
       const bdel=wrap.querySelector('.bubble-swipe-panel');
+      bbl.onclick=(e)=>{
+        if(_cardSwiping)return;
+        if(e.target.closest('.bubble-expand-btn'))return;
+        n.id?openNoteSheetById(n.id):openNoteSheet(realIdx);
+      };
       attachSwipeBubble(bbl,bdel,116);
+      const dBtnN=document.createElement('button');dBtnN.className='desk-del';
+      dBtnN.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      dBtnN.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
+      wrap.appendChild(dBtnN);
     }
     el.appendChild(wrap);
   });
