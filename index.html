@@ -149,6 +149,62 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sec-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--fg);margin-bottom:4px;letter-spacing:-.4px;}
 .sec-sub{font-size:14px;color:var(--fg-m);margin-bottom:14px;line-height:1.5;}
 
+/* ── NOTES VIEW TOGGLE ── */
+.notes-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.notes-title-row .sec-title{margin-bottom:0;}
+.view-toggle-btn{
+  display:flex;align-items:center;gap:6px;
+  background:
+    radial-gradient(circle at 28% 22%,oklch(1 0 0 / 0.55) 0%,transparent 52%),
+    oklch(0.90 0.06 210 / 0.26);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid oklch(1 0 0 / 0.68);
+  border-radius:50px;padding:7px 13px 7px 10px;
+  font-size:12px;font-weight:700;color:var(--fg-m);
+  cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.85),0 2px 8px oklch(0.52 0.10 210 / 0.08);
+  transition:all .18s ease;white-space:nowrap;
+}
+.view-toggle-btn:active{transform:scale(.90);}
+.view-toggle-btn.grid-on{
+  background:
+    radial-gradient(circle at 28% 22%,oklch(1 0 0 / 0.62) 0%,transparent 52%),
+    oklch(0.78 0.10 210 / 0.38);
+  border-color:oklch(0.72 0.12 210 / 0.55);
+  color:var(--accent-d);
+}
+.view-toggle-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+@keyframes dropReveal{
+  0%{clip-path:ellipse(34% 1.5% at 50% 0%);opacity:.35;}
+  18%{clip-path:ellipse(16% 24% at 50% 12%);opacity:1;}
+  48%{clip-path:ellipse(60% 80% at 50% 42%);}
+  74%{clip-path:ellipse(115% 115% at 50% 50%);}
+  100%{clip-path:ellipse(220% 220% at 50% 50%);}
+}
+#note-list.drop-anim{animation:dropReveal .52s cubic-bezier(.22,1,.36,1) both;}
+.note-grid-mode{display:grid!important;grid-template-columns:repeat(2,1fr);gap:9px;}
+.note-grid-mode>[data-nwrap]{margin-bottom:0!important;border-radius:16px!important;}
+@keyframes cardMorph{
+  0%{opacity:0;transform:scale(.68) translateY(-14px);}
+  62%{transform:scale(1.04) translateY(3px);}
+  100%{opacity:1;transform:scale(1) translateY(0);}
+}
+.note-grid-mode .item-card{animation:cardMorph .30s cubic-bezier(.34,1.56,.64,1) both;padding:11px 11px 10px;}
+.note-grid-mode>[data-nwrap]:nth-child(1) .item-card{animation-delay:.04s;}
+.note-grid-mode>[data-nwrap]:nth-child(2) .item-card{animation-delay:.07s;}
+.note-grid-mode>[data-nwrap]:nth-child(3) .item-card{animation-delay:.10s;}
+.note-grid-mode>[data-nwrap]:nth-child(4) .item-card{animation-delay:.13s;}
+.note-grid-mode>[data-nwrap]:nth-child(5) .item-card{animation-delay:.16s;}
+.note-grid-mode>[data-nwrap]:nth-child(6) .item-card{animation-delay:.19s;}
+.note-grid-mode>[data-nwrap]:nth-child(7) .item-card{animation-delay:.22s;}
+.note-grid-mode>[data-nwrap]:nth-child(8) .item-card{animation-delay:.25s;}
+.note-stripe-top{position:absolute;top:0;left:0;right:0;height:3.5px;border-radius:16px 16px 0 0;}
+.grid-ico{font-size:21px;line-height:1;margin-bottom:5px;display:block;}
+.grid-cat{font-size:10px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.grid-title{font-size:14px;font-weight:600;color:var(--fg);letter-spacing:-.1px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px;}
+.grid-meta{font-size:10px;color:var(--fg-l);}
+.grid-reminder{display:inline-flex;align-items:center;gap:4px;background:oklch(0.52 0.10 210 / 0.10);color:var(--accent-d);font-size:10px;font-weight:600;border-radius:50px;padding:2px 7px;border:1px solid oklch(0.52 0.10 210 / 0.20);margin-bottom:4px;}
+
 /* ── EMERGENCY ── */
 .emg-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
 .emg-opt{
@@ -1399,7 +1455,13 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     <!-- NOTES -->
     <div class="scr" id="s-notes">
       <div class="backrow"><button class="backbtn" onclick="go('home')"><div class="back-ico"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div><div class="back-lbl">Назад</div></button></div>
-      <div class="sec-title">Заметки</div>
+      <div class="notes-title-row">
+        <div class="sec-title">Заметки</div>
+        <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleNoteView()">
+          <svg id="vtb-ico" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span id="vtb-lbl">Сетка</span>
+        </button>
+      </div>
       <div id="notif-banner-el"></div>
       <button class="cal-trigger" onclick="openCal()">
         <div class="cal-trigger-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
@@ -2311,12 +2373,54 @@ function catIcon(label){return ICONS[safeLabel(label||'заметка')]||'📄'
 
 // ── NOTES ──
 let noteFilter=null;
+let noteViewMode=localStorage.getItem('rz_note_view')||'list';
+
+function toggleNoteView(){
+  noteViewMode=noteViewMode==='list'?'grid':'list';
+  localStorage.setItem('rz_note_view',noteViewMode);
+  animateNoteViewSwitch();
+  syncNoteViewBtn();
+  loadNotes();
+}
+
+function syncNoteViewBtn(){
+  const btn=document.getElementById('view-toggle-btn');
+  const ico=document.getElementById('vtb-ico');
+  const lbl=document.getElementById('vtb-lbl');
+  if(!btn)return;
+  if(noteViewMode==='grid'){
+    btn.classList.add('grid-on');
+    if(lbl)lbl.textContent='Список';
+    if(ico){
+      ico.setAttribute('viewBox','0 0 24 24');
+      ico.innerHTML='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="2.5"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="2.5"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="2.5"/>';
+    }
+  } else {
+    btn.classList.remove('grid-on');
+    if(lbl)lbl.textContent='Сетка';
+    if(ico){
+      ico.setAttribute('viewBox','0 0 24 24');
+      ico.innerHTML='<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>';
+    }
+  }
+}
+
+function animateNoteViewSwitch(){
+  const el=document.getElementById('note-list');if(!el)return;
+  el.classList.remove('drop-anim');
+  void el.offsetWidth;
+  el.classList.add('drop-anim');
+  el.addEventListener('animationend',()=>el.classList.remove('drop-anim'),{once:true});
+}
 
 function loadNotes(){
   const all=getNotes();
   renderStatChips(all);
+  syncNoteViewBtn();
   const el=document.getElementById('note-list');if(!el)return;
   el.innerHTML='';
+  if(noteViewMode==='grid')el.classList.add('note-grid-mode');
+  else el.classList.remove('note-grid-mode');
   let filtered=all;
   if(CS)filtered=all.filter(n=>n.reminder&&n.reminder.slice(0,10)===CS);
   if(noteFilter)filtered=filtered.filter(n=>safeLabel(n.label||'заметка')===noteFilter);
@@ -2329,25 +2433,37 @@ function loadNotes(){
     const nid=n.id;const i=all.indexOf(n);
     const displayNum=i>=0?i+1:sorted.indexOf(n)+1;
     const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
-    const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
+    const wrap=document.createElement('div');
+    wrap.setAttribute('data-nwrap','1');
     const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
     const d=document.createElement('div');d.className='item-card';d.style.margin='0';
-    let rHtml='';
-    if(n.reminder){
-      rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
-    }
-    d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
-      <div class="note-num">#${displayNum}</div>
-      <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
-      <div class="item-title">${esc(n.title)}</div>
-      ${rHtml}
-      <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
-    d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
-    attachSwipeDelete(d,delBg,null,116);
     const dBtn=document.createElement('button');dBtn.className='desk-del';
     dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
-    wrap.setAttribute('data-nwrap','1');
+    if(noteViewMode==='grid'){
+      wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;';
+      const gRem=n.reminder?`<div class="grid-reminder">🔔 ${esc(fmtDt(n.reminder))}</div>`:'';
+      d.innerHTML=`<div class="note-stripe-top" style="background:${stripe};"></div>
+        <span class="grid-ico">${catIcon(n.label)}</span>
+        <div class="grid-cat">#${displayNum} · ${esc(safeLabel(n.label||'заметка'))}</div>
+        <div class="grid-title">${esc(n.title)}</div>
+        ${gRem}
+        <div class="grid-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+    } else {
+      wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
+      let rHtml='';
+      if(n.reminder){
+        rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
+      }
+      d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
+        <div class="note-num">#${displayNum}</div>
+        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
+        <div class="item-title">${esc(n.title)}</div>
+        ${rHtml}
+        <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+    }
+    d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
+    attachSwipeDelete(d,delBg,null,116);
     wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);el.appendChild(wrap);
   });
 }
