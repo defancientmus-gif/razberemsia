@@ -303,8 +303,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .del-x-svg{animation:del-x-spin 1.3s ease-in-out infinite;transform-origin:center;}
 .bubble-popping{animation:bubble-pop 0.30s cubic-bezier(.55,0,1,.8) forwards !important;pointer-events:none !important;}
 /* Desktop hover-delete */
-.desk-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .12s;z-index:3;-webkit-appearance:none;}
-@media(hover:hover){.bubble-wrap:hover .desk-del,[data-nwrap]:hover .desk-del{opacity:1;}.desk-del:hover{background:oklch(0.76 0.05 15 / 0.18);}.desk-del:active{transform:scale(.88);}}
+.desk-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s,background .12s;z-index:3;-webkit-appearance:none;}
+@media(hover:hover){.bubble-wrap:hover .desk-del,[data-nwrap]:hover .desk-del{opacity:1;pointer-events:all;}.desk-del:hover{background:oklch(0.76 0.05 15 / 0.18);}.desk-del:active{transform:scale(.88);}}
 @media(hover:none){.desk-del{display:none;}}
 .bubble{
   background:
