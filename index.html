@@ -2284,9 +2284,40 @@ function toggleAiPanel(){
   runAiAnalysis(text,panel);
 }
 
-async function runAiAnalysis(text,panel){
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+function isAiOverloaded(message){
+  return /overloaded|overloaded_error|перегруж/i.test(String(message||''));
+}
+
+function friendlyAiError(message,status){
+  const raw=String(message||'').trim();
+  if(raw==='no session')return 'Войдите в аккаунт для AI-функций.';
+  if(isAiOverloaded(raw)||status===529)return 'AI сейчас перегружен. Попробуйте ещё раз через минуту.';
+  if(/api key|key не настроен/i.test(raw))return 'AI-ключ не настроен на сервере.';
+  if(/invalid json/i.test(raw))return 'AI ответил в неправильном формате. Попробуйте ещё раз.';
+  if(status===401||status===403)return 'Не получилось подтвердить вход. Выйдите и войдите снова.';
+  if(status>=500)return 'AI-сервер временно недоступен. Попробуйте чуть позже.';
+  return raw?'Ошибка AI: '+raw:'Ошибка AI. Попробуйте ещё раз.';
+}
+
+async function readErrorText(res){
+  const text=await res.text().catch(()=>'');
+  if(!text)return res.statusText;
+  try{
+    const data=JSON.parse(text);
+    const err=data?.error;
+    if(typeof err==='string')return err;
+    if(err&&typeof err==='object')return err.message||JSON.stringify(err);
+    return data?.message||text;
+  }catch(e){
+    return text;
+  }
+}
+
+async function runAiAnalysis(text,panel,attempt=0){
   panel.style.display='block';
-  panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Анализирую...</div></div>`;
+  panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>${attempt?'AI занят, пробую ещё раз...':'Анализирую...'}</div></div>`;
   try{
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
@@ -2297,8 +2328,12 @@ async function runAiAnalysis(text,panel){
       body:JSON.stringify({action:'analyze',payload:{text}})
     });
     if(!res.ok){
-      const e=await res.json().catch(()=>({}));
-      throw new Error((e.error||res.statusText)+' ['+res.status+']');
+      const errText=await readErrorText(res);
+      if(attempt<1&&(isAiOverloaded(errText)||res.status===502||res.status===529)){
+        await sleep(1400);
+        return runAiAnalysis(text,panel,attempt+1);
+      }
+      throw new Error(friendlyAiError(errText,res.status));
     }
     const {summary,tags,actions}=await res.json();
     // ── Авто-категория из тегов AI ──
@@ -2324,7 +2359,7 @@ async function runAiAnalysis(text,panel){
     panel.dataset.aiSummary=summary||'';
   }catch(e){
     console.warn('AI error',e);
-    const msg=String(e?.message||'').includes('no session')?'Войдите в аккаунт для AI-функций.':'Ошибка: '+String(e?.message||'неизвестно');
+    const msg=friendlyAiError(e?.message);
     panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
   }
 }
