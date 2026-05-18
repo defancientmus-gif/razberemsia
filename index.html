@@ -248,8 +248,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 /* ── REMINDER DOT (header bell) ── */
 .hbtn-wrap{position:relative;display:inline-flex;}
-.remind-dot{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.18 25);border:1.5px solid var(--bg);pointer-events:none;display:none;animation:dot-pulse 2.2s ease-in-out infinite;}
-@keyframes dot-pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:.7;}}
+.remind-dot{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.18 25);border:1.5px solid var(--bg);pointer-events:none;display:none;animation:remind-dot-pulse 2.2s ease-in-out infinite;}
+@keyframes remind-dot-pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.35);opacity:.65;}}
 
 /* ── REMINDER PANEL ── */
 .remind-overlay{position:fixed;inset:0;z-index:600;display:none;align-items:flex-end;justify-content:center;}
@@ -2416,7 +2416,8 @@ async function runAiAnalysis(text,panel){
     html+=`<div class="ai-section"><div class="ai-label">Раздел</div><div class="ai-cat-row">${CATS.map(c=>`<button class="ai-cat-chip${c===activeCat?' active':''}" data-cat="${c}" onclick="pickAiCat('${c}')">${ICONS[c]||'📄'} ${c}</button>`).join('')}</div></div>`;
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div>`;}
     const settings=getReminderSettings();
-    if(settings.aiSuggest&&hasTimeHint(text)){
+    const reminderAlreadySet=!!(document.getElementById('sheet-reminder-in')?.value);
+    if(settings.aiSuggest&&hasTimeHint(text)&&!reminderAlreadySet){
       html+=`<div class="ai-section"><button class="ai-remind-btn" onclick="applyAiReminder()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>AI замечает время — поставить напоминание?</button></div>`;
     }
     html+='</div>';
@@ -2611,10 +2612,14 @@ function showInAppReminder(note){
   const title=document.getElementById('inapp-remind-title');
   const sub=document.getElementById('inapp-remind-sub');
   const card=document.getElementById('inapp-remind-card');
-  if(!wrap||!title||!sub)return;
+  if(!wrap||!title||!sub||!card)return;
   title.textContent=note.title||'Напоминание';
-  sub.textContent=note.reminder?'Время: '+fmtDt(note.reminder):(note.body||'').slice(0,60);
+  sub.textContent=note.reminder?fmtDt(note.reminder):(note.body||'').slice(0,60);
   card.classList.remove('hiding');
+  // Re-trigger drop animation
+  card.style.animation='none';
+  void card.offsetHeight;
+  card.style.animation='';
   wrap.style.display='flex';
   clearTimeout(_inappDismissTimer);
   _inappDismissTimer=setTimeout(()=>dismissInAppReminder(),8000);
@@ -2719,9 +2724,10 @@ function renderReminderPanel(){
 function relativeTime(ms){
   if(ms<0)return'';
   const m=Math.round(ms/60000);
-  if(m<60)return m+'мин';
-  if(m<1440)return(m/60|0)+'ч';
-  return(m/1440|0)+'д';
+  if(m<2)return'скоро';
+  if(m<60)return m+' мин';
+  if(m<1440)return(m/60|0)+' ч';
+  return(m/1440|0)+' д';
 }
 function cycleAdvance(){
   const s=getReminderSettings();
@@ -2741,6 +2747,7 @@ function removeNoteReminder(id){
   notes[idx]={...notes[idx],reminder:null};
   saveNotes(notes);
   scheduleAll();
+  loadNotes();loadHomeFeed();
   renderReminderPanel();
   showToast('Напоминание удалено');
 }
@@ -2749,10 +2756,8 @@ function removeNoteReminder(id){
 const TIME_WORDS=/завтра|сегодня|вечер|утром|ночь|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье|напомни|не забыть|нужно|надо|до \d|через/i;
 function hasTimeHint(text){return TIME_WORDS.test(text||'');}
 function suggestReminderTime(){
-  // Default: tomorrow 10:00
   const d=new Date();d.setDate(d.getDate()+1);d.setHours(10,0,0,0);
-  const pad2=x=>String(x).padStart(2,'0');
-  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T10:00';
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T10:00';
 }
 function applyAiReminder(){
   const suggested=suggestReminderTime();
@@ -3502,7 +3507,7 @@ function selectCat(label){
 function initSheetReminder(val){
   const row=document.getElementById('sheet-reminder-row');
   const inp=document.getElementById('sheet-reminder-in');
-  if(row)row.style.display='flex';
+  if(row)row.style.display=val?'flex':'none';
   if(inp)inp.value=val||'';
 }
 
