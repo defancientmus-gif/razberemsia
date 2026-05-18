@@ -246,6 +246,66 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .notif-allow-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sys);flex-shrink:0;-webkit-appearance:none;}
 .notif-allow-btn:active{background:var(--accent-d);}
 
+/* ── REMINDER DOT (header bell) ── */
+.hbtn-wrap{position:relative;display:inline-flex;}
+.remind-dot{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.18 25);border:1.5px solid var(--bg);pointer-events:none;display:none;animation:dot-pulse 2.2s ease-in-out infinite;}
+@keyframes dot-pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:.7;}}
+
+/* ── REMINDER PANEL ── */
+.remind-overlay{position:fixed;inset:0;z-index:600;display:none;align-items:flex-end;justify-content:center;}
+.remind-overlay.open{display:flex;}
+.remind-bg{position:absolute;inset:0;background:oklch(0 0 0 / 0.28);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+.remind-sheet{position:relative;z-index:1;background:oklch(0.99 0.005 210 / 0.98);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:80dvh;display:flex;flex-direction:column;box-shadow:0 -4px 40px oklch(0 0 0 / 0.12);animation:sheet-up .26s cubic-bezier(.22,1,.36,1);}
+@keyframes sheet-up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.remind-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;flex-shrink:0;}
+.remind-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--fg);}
+.remind-close-btn{width:32px;height:32px;border-radius:50%;background:oklch(0.92 0.02 210 / 0.6);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.remind-close-btn svg{width:15px;height:15px;stroke:var(--fg-l);stroke-width:2;fill:none;stroke-linecap:round;}
+.remind-scroll{flex:1;overflow-y:auto;padding:0 20px 20px;}
+.remind-scroll::-webkit-scrollbar{display:none;}
+.remind-empty{text-align:center;padding:32px 0;color:var(--fg-l);font-size:14px;line-height:1.8;}
+.remind-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid oklch(0.88 0.02 210 / 0.25);}
+.remind-item:last-child{border-bottom:none;}
+.remind-bell-icon{width:36px;height:36px;border-radius:10px;background:oklch(0.52 0.10 210 / 0.10);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.remind-bell-icon svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.remind-item-body{flex:1;min-width:0;}
+.remind-item-title{font-size:14px;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.remind-item-when{font-size:12px;color:var(--accent-d);margin-top:2px;font-weight:500;}
+.remind-item-del{width:32px;height:32px;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.remind-item-del svg{width:14px;height:14px;stroke:oklch(0.58 0.16 25 / 0.65);stroke-width:2;fill:none;stroke-linecap:round;}
+.remind-item-del:active svg{stroke:oklch(0.58 0.16 25);}
+.remind-section-label{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 6px;}
+.remind-settings{background:oklch(0.95 0.010 210 / 0.60);border-radius:14px;padding:14px 16px;margin-top:6px;}
+.remind-set-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+.remind-set-lbl{font-size:13px;color:var(--fg-m);font-weight:500;}
+.remind-set-val{font-size:13px;color:var(--accent-d);font-weight:600;background:oklch(0.52 0.10 210 / 0.10);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:var(--sys);}
+.remind-set-val:active{background:oklch(0.52 0.10 210 / 0.20);}
+.remind-toggle{position:relative;width:40px;height:24px;cursor:pointer;flex-shrink:0;}
+.remind-toggle input{opacity:0;width:0;height:0;}
+.remind-toggle-track{position:absolute;inset:0;border-radius:12px;background:oklch(0.80 0.02 210);transition:background .2s;}
+.remind-toggle input:checked~.remind-toggle-track{background:var(--accent);}
+.remind-toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px oklch(0 0 0/0.18);}
+.remind-toggle input:checked~.remind-toggle-track~.remind-toggle-thumb{transform:translateX(16px);}
+
+/* ── IN-APP REMINDER BANNER ── */
+.inapp-remind{position:fixed;top:0;left:0;right:0;z-index:800;display:flex;justify-content:center;padding:max(12px, env(safe-area-inset-top, 12px)) 12px 0;pointer-events:none;}
+.inapp-remind-card{background:oklch(0.99 0.005 210 / 0.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid oklch(0.88 0.02 210 / 0.6);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;max-width:440px;width:100%;box-shadow:0 4px 24px oklch(0 0 0 / 0.14);pointer-events:all;animation:banner-drop .3s cubic-bezier(.22,1,.36,1);}
+@keyframes banner-drop{from{transform:translateY(-110%);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.inapp-remind-card.hiding{animation:banner-hide .25s ease forwards;}
+@keyframes banner-hide{to{transform:translateY(-110%);opacity:0;}}
+.inapp-bell{width:38px;height:38px;border-radius:11px;background:oklch(0.58 0.18 25 / 0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.inapp-bell svg{width:18px;height:18px;stroke:oklch(0.58 0.16 25);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.inapp-remind-body{flex:1;min-width:0;}
+.inapp-remind-title{font-size:13px;font-weight:700;color:var(--fg);}
+.inapp-remind-sub{font-size:12px;color:var(--fg-l);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.inapp-remind-close{width:28px;height:28px;border-radius:50%;background:oklch(0.92 0.02 210 / 0.6);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.inapp-remind-close svg{width:12px;height:12px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;}
+
+/* ── AI REMIND BUTTON ── */
+.ai-remind-btn{display:flex;align-items:center;gap:7px;margin-top:10px;padding:9px 12px;border-radius:10px;background:oklch(0.58 0.18 25 / 0.07);border:1px solid oklch(0.58 0.16 25 / 0.18);cursor:pointer;font-size:12px;font-family:var(--sys);color:oklch(0.45 0.14 25);font-weight:600;width:100%;-webkit-appearance:none;transition:background .12s;}
+.ai-remind-btn:active{background:oklch(0.58 0.18 25 / 0.14);}
+.ai-remind-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
 /* ── CALENDAR TRIGGER ── */
 .cal-trigger{display:flex;align-items:center;gap:10px;
   background:oklch(0.99 0.005 210 / 0.72);
@@ -1131,7 +1191,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-lbl{font-size:11px;font-weight:600;color:var(--fg-l);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
 
 /* Reminder row */
-.sheet-reminder-row{display:none!important;}
+.sheet-reminder-row{display:none;}
 .sheet-reminder-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
 .sheet-reminder-in{flex:1;background:transparent;border:none;border-bottom:1px solid oklch(0.88 0.02 210 / 0.25);padding:4px 0;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;-webkit-user-select:text;user-select:text;}
 .sheet-reminder-in:focus{border-bottom-color:oklch(0.52 0.10 210 / 0.45);}
@@ -1520,6 +1580,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       <button class="hbtn" onclick="go('trash')" title="Корзина" id="trash-btn">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
       </button>
+      <div class="hbtn-wrap">
+        <button class="hbtn" id="bell-hbtn" onclick="openReminderPanel()" title="Напоминания">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </button>
+        <div class="remind-dot" id="remind-dot"></div>
+      </div>
       <button class="hbtn" id="hbtn" onclick="toggleMenu(event)">
         <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H15v-5h-6v5H4a1 1 0 01-1-1V10.5z"/></svg>
       </button>
@@ -1779,6 +1845,30 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- IN-APP REMINDER BANNER -->
+<div class="inapp-remind" id="inapp-remind" style="display:none;">
+  <div class="inapp-remind-card" id="inapp-remind-card">
+    <div class="inapp-bell"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+    <div class="inapp-remind-body">
+      <div class="inapp-remind-title" id="inapp-remind-title">Напоминание</div>
+      <div class="inapp-remind-sub" id="inapp-remind-sub"></div>
+    </div>
+    <button class="inapp-remind-close" onclick="dismissInAppReminder()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+</div>
+
+<!-- REMINDERS PANEL -->
+<div class="remind-overlay" id="remind-overlay">
+  <div class="remind-bg" onclick="closeReminderPanel()"></div>
+  <div class="remind-sheet">
+    <div class="remind-hdr">
+      <div class="remind-title">Напоминания</div>
+      <button class="remind-close-btn" onclick="closeReminderPanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="remind-scroll" id="remind-scroll"></div>
+  </div>
+</div>
 
 <!-- INPUT SHEET (home new entry) -->
 <div class="input-sheet-overlay" id="input-sheet-overlay">
@@ -2325,6 +2415,10 @@ async function runAiAnalysis(text,panel){
     const activeCat=autoLabel||'заметка';
     html+=`<div class="ai-section"><div class="ai-label">Раздел</div><div class="ai-cat-row">${CATS.map(c=>`<button class="ai-cat-chip${c===activeCat?' active':''}" data-cat="${c}" onclick="pickAiCat('${c}')">${ICONS[c]||'📄'} ${c}</button>`).join('')}</div></div>`;
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div>`;}
+    const settings=getReminderSettings();
+    if(settings.aiSuggest&&hasTimeHint(text)){
+      html+=`<div class="ai-section"><button class="ai-remind-btn" onclick="applyAiReminder()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>AI замечает время — поставить напоминание?</button></div>`;
+    }
     html+='</div>';
     if(bodyEl){bodyEl.innerHTML=html;bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';}
     panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
@@ -2482,10 +2576,191 @@ function scheduleAll(){
     if(delay<=0||delay>7*24*3600*1000)return;
     const tid=setTimeout(()=>{
       try{new Notification('Разберёмся',{body:n.title,icon:'pwa-feather-192.png'});}catch(e){}
+      showInAppReminder(n);
+      updateReminderDot();
     },delay);
     _NT.push(tid);
   });
+  updateReminderDot();
+}
 
+// ── REMINDER SETTINGS ──
+function getReminderSettings(){
+  try{const r=localStorage.getItem(scopedKey('rz_remind_settings'));return r?JSON.parse(r):{advanceMinutes:60,aiSuggest:true};}catch(e){return{advanceMinutes:60,aiSuggest:true};}
+}
+function saveReminderSettings(s){
+  try{localStorage.setItem(scopedKey('rz_remind_settings'),JSON.stringify(s));}catch(e){}
+}
+
+// ── REMINDER DOT ──
+function updateReminderDot(){
+  const dot=document.getElementById('remind-dot');if(!dot)return;
+  const now=Date.now();
+  const has=getNotes().some(n=>{
+    if(!n.reminder)return false;
+    const dt=parseDt(n.reminder);if(!dt)return false;
+    return dt.getTime()>now&&dt.getTime()-now<7*24*3600*1000;
+  });
+  dot.style.display=has?'block':'none';
+}
+
+// ── IN-APP REMINDER BANNER ──
+let _inappDismissTimer=null;
+function showInAppReminder(note){
+  const wrap=document.getElementById('inapp-remind');
+  const title=document.getElementById('inapp-remind-title');
+  const sub=document.getElementById('inapp-remind-sub');
+  const card=document.getElementById('inapp-remind-card');
+  if(!wrap||!title||!sub)return;
+  title.textContent=note.title||'Напоминание';
+  sub.textContent=note.reminder?'Время: '+fmtDt(note.reminder):(note.body||'').slice(0,60);
+  card.classList.remove('hiding');
+  wrap.style.display='flex';
+  clearTimeout(_inappDismissTimer);
+  _inappDismissTimer=setTimeout(()=>dismissInAppReminder(),8000);
+}
+function dismissInAppReminder(){
+  clearTimeout(_inappDismissTimer);
+  const card=document.getElementById('inapp-remind-card');
+  if(!card)return;
+  card.classList.add('hiding');
+  setTimeout(()=>{const w=document.getElementById('inapp-remind');if(w)w.style.display='none';card.classList.remove('hiding');},280);
+}
+
+// ── PERIODIC IN-APP CHECK ──
+let _shownReminders={};
+function checkDueReminders(){
+  const settings=getReminderSettings();
+  const advMs=settings.advanceMinutes*60*1000;
+  const now=Date.now();
+  getNotes().forEach(n=>{
+    if(!n.reminder)return;
+    const dt=parseDt(n.reminder);if(!dt)return;
+    const diff=dt.getTime()-now;
+    const key=n.id+'_'+n.reminder;
+    if(diff>=0&&diff<=advMs&&!_shownReminders[key]){
+      _shownReminders[key]=true;
+      showInAppReminder(n);
+    }
+    // Clean shown cache for past reminders
+    if(diff<-3600000)delete _shownReminders[key];
+  });
+}
+setInterval(checkDueReminders,60000);
+
+// ── ADVANCE TIME LABEL ──
+function advanceLabel(min){
+  if(min<60)return min+' мин';
+  if(min===60)return '1 час';
+  if(min<1440)return(min/60|0)+' ч';
+  return(min/1440|0)+' д';
+}
+const ADVANCE_OPTIONS=[15,30,60,120,360,1440];
+
+// ── REMINDER PANEL ──
+function openReminderPanel(){
+  const overlay=document.getElementById('remind-overlay');
+  if(overlay)overlay.classList.add('open');
+  renderReminderPanel();
+}
+function closeReminderPanel(){
+  const overlay=document.getElementById('remind-overlay');
+  if(overlay)overlay.classList.remove('open');
+}
+function renderReminderPanel(){
+  const scroll=document.getElementById('remind-scroll');if(!scroll)return;
+  const notes=getNotes();
+  const now=Date.now();
+  const upcoming=notes.filter(n=>{
+    if(!n.reminder)return false;
+    const dt=parseDt(n.reminder);if(!dt)return false;
+    return dt.getTime()>now-3600000;
+  }).sort((a,b)=>{
+    const da=parseDt(a.reminder),db=parseDt(b.reminder);
+    return(da?da.getTime():0)-(db?db.getTime():0);
+  });
+  const settings=getReminderSettings();
+  let html='';
+  if(upcoming.length){
+    html+='<div class="remind-section-label">Предстоящие</div>';
+    upcoming.forEach(n=>{
+      const dt=parseDt(n.reminder);
+      const isPast=dt&&dt.getTime()<now;
+      const whenTxt=dt?(isPast?'Было: ':'Через '+(relativeTime(dt.getTime()-now)+' — '))+fmtDt(n.reminder):fmtDt(n.reminder);
+      html+=`<div class="remind-item">
+        <div class="remind-bell-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+        <div class="remind-item-body">
+          <div class="remind-item-title">${esc(n.title||n.body||'Заметка')}</div>
+          <div class="remind-item-when" style="${isPast?'color:oklch(0.58 0.16 25);':''}">${esc(whenTxt)}</div>
+        </div>
+        <button class="remind-item-del" onclick="removeNoteReminder('${n.id}')" title="Удалить напоминание"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>`;
+    });
+  } else {
+    html+=`<div class="remind-empty">🔔<br>Нет активных напоминаний.<br><span style="font-size:12px;">Откройте заметку и нажмите ✦ AI — помощник предложит поставить напоминание.</span></div>`;
+  }
+  html+='<div class="remind-section-label" style="margin-top:20px;">Настройки</div>';
+  html+=`<div class="remind-settings">
+    <div class="remind-set-row">
+      <span class="remind-set-lbl">Напомнить заранее</span>
+      <button class="remind-set-val" id="remind-adv-btn" onclick="cycleAdvance()">${advanceLabel(settings.advanceMinutes)}</button>
+    </div>
+    <div class="remind-set-row" style="border-top:1px solid oklch(0.88 0.02 210/0.25);margin-top:4px;padding-top:10px;">
+      <span class="remind-set-lbl">AI предлагает время</span>
+      <label class="remind-toggle">
+        <input type="checkbox" id="remind-ai-toggle" ${settings.aiSuggest?'checked':''} onchange="toggleAiSuggest(this.checked)">
+        <div class="remind-toggle-track"></div>
+        <div class="remind-toggle-thumb"></div>
+      </label>
+    </div>
+  </div>`;
+  scroll.innerHTML=html;
+}
+function relativeTime(ms){
+  if(ms<0)return'';
+  const m=Math.round(ms/60000);
+  if(m<60)return m+'мин';
+  if(m<1440)return(m/60|0)+'ч';
+  return(m/1440|0)+'д';
+}
+function cycleAdvance(){
+  const s=getReminderSettings();
+  const idx=ADVANCE_OPTIONS.indexOf(s.advanceMinutes);
+  s.advanceMinutes=ADVANCE_OPTIONS[(idx+1)%ADVANCE_OPTIONS.length];
+  saveReminderSettings(s);
+  const btn=document.getElementById('remind-adv-btn');
+  if(btn)btn.textContent=advanceLabel(s.advanceMinutes);
+}
+function toggleAiSuggest(val){
+  const s=getReminderSettings();s.aiSuggest=val;saveReminderSettings(s);
+}
+function removeNoteReminder(id){
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===id);
+  if(idx<0)return;
+  notes[idx]={...notes[idx],reminder:null};
+  saveNotes(notes);
+  scheduleAll();
+  renderReminderPanel();
+  showToast('Напоминание удалено');
+}
+
+// ── AI REMINDER SUGGESTION ──
+const TIME_WORDS=/завтра|сегодня|вечер|утром|ночь|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье|напомни|не забыть|нужно|надо|до \d|через/i;
+function hasTimeHint(text){return TIME_WORDS.test(text||'');}
+function suggestReminderTime(){
+  // Default: tomorrow 10:00
+  const d=new Date();d.setDate(d.getDate()+1);d.setHours(10,0,0,0);
+  const pad2=x=>String(x).padStart(2,'0');
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T10:00';
+}
+function applyAiReminder(){
+  const suggested=suggestReminderTime();
+  const row=document.getElementById('sheet-reminder-row');
+  const inp=document.getElementById('sheet-reminder-in');
+  if(row)row.style.display='flex';
+  if(inp){inp.value=suggested;inp.focus();}
+  showToast('Выберите удобное время 🔔');
 }
 
 // ── DATE UTILS ──
@@ -3926,9 +4201,9 @@ function loadAll(){
   loadNotepad();
   updTrashBadge();
   if('requestIdleCallback'in window){
-    requestIdleCallback(()=>{scheduleAll();calRender();updCalTrigger();});
+    requestIdleCallback(()=>{scheduleAll();calRender();updCalTrigger();updateReminderDot();checkDueReminders();});
   } else {
-    setTimeout(()=>{scheduleAll();calRender();updCalTrigger();},200);
+    setTimeout(()=>{scheduleAll();calRender();updCalTrigger();updateReminderDot();checkDueReminders();},200);
   }
 }
 
