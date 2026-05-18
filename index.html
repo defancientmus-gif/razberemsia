@@ -1387,6 +1387,36 @@ html.dark img,html.dark video,html.dark canvas{filter:invert(1) hue-rotate(180de
 html.dark .splash-mark svg,html.dark .auth-logo-mark svg{filter:invert(1) hue-rotate(180deg);}
 /* Тёмный скроллбар трека */
 html.dark{color-scheme:dark;}
+html.dark .jarvis-feed{
+  background:oklch(0.99 0.002 210 / 0.10);
+  backdrop-filter:blur(16px) saturate(1.35) brightness(1.02);
+  -webkit-backdrop-filter:blur(16px) saturate(1.35) brightness(1.02);
+}
+html.dark .sheet{
+  background:
+    radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 210 / 0.12), transparent 55%),
+    radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.36) 0%, transparent 36%),
+    oklch(0.975 0.010 210 / 0.72);
+  backdrop-filter:blur(30px) saturate(1.45);
+  -webkit-backdrop-filter:blur(30px) saturate(1.45);
+}
+html.dark .auth-card{
+  background:oklch(1 0 0 / 0.66);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+html.dark .item-card{
+  background:
+    radial-gradient(circle at 20% 20%, oklch(1 0 0 / 0.30) 0%, transparent 55%),
+    oklch(1 0 0 / 0.18);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+html.dark .bubble{
+  background:
+    radial-gradient(ellipse 80% 50% at 30% 15%, oklch(1 0 0 / 0.36) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, oklch(0.75 0.08 210 / 0.10) 0%, transparent 50%),
+    oklch(0.94 0.04 210 / 0.12);
+  backdrop-filter:blur(18px) saturate(1.45);-webkit-backdrop-filter:blur(18px) saturate(1.45);
+}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
@@ -1404,46 +1434,46 @@ html.dark{color-scheme:dark;}
 /* Cloud 1 — большое пухлое, средняя высота */
 .cld1{
   width:220px;height:65px;
-  top:38%;opacity:0.18;
+  top:38%;opacity:0.13;
   filter:blur(18px);
   box-shadow:65px -20px 0 28px oklch(1 0 0/.90), 120px 4px 0 18px oklch(1 0 0/.85), 85px -38px 0 16px oklch(1 0 0/.80);
-  animation:cloud-move 40s linear infinite;
+  animation:cloud-move 96s linear infinite;
   animation-delay:-16s;
 }
 /* Cloud 2 — маленькое, ближе к верху */
 .cld2{
   width:140px;height:42px;
-  top:22%;opacity:0.12;
+  top:22%;opacity:0.08;
   filter:blur(14px);
   box-shadow:42px -13px 0 18px oklch(1 0 0/.90), 75px 3px 0 13px oklch(1 0 0/.85);
-  animation:cloud-move 58s linear infinite;
+  animation:cloud-move 125s linear infinite;
   animation-delay:-28s;
 }
 /* Cloud 3 — среднее, ниже */
 .cld3{
   width:180px;height:55px;
-  top:58%;opacity:0.14;
+  top:58%;opacity:0.10;
   filter:blur(16px);
   box-shadow:54px -16px 0 22px oklch(1 0 0/.90), 100px 5px 0 16px oklch(1 0 0/.85), 70px -30px 0 13px oklch(1 0 0/.75);
-  animation:cloud-move 47s linear infinite;
+  animation:cloud-move 110s linear infinite;
   animation-delay:-5s;
 }
 /* Cloud 4 — крохотное, высоко */
 .cld4{
   width:95px;height:30px;
-  top:15%;opacity:0.10;
+  top:15%;opacity:0.06;
   filter:blur(12px);
   box-shadow:30px -10px 0 13px oklch(1 0 0/.88), 52px 2px 0 10px oklch(1 0 0/.82);
-  animation:cloud-move 70s linear infinite;
+  animation:cloud-move 145s linear infinite;
   animation-delay:-42s;
 }
 /* Cloud 5 — широкое и медленное, внизу */
 .cld5{
   width:260px;height:72px;
-  top:72%;opacity:0.13;
+  top:72%;opacity:0.09;
   filter:blur(20px);
   box-shadow:75px -22px 0 32px oklch(1 0 0/.90), 140px 6px 0 20px oklch(1 0 0/.85), 100px -42px 0 18px oklch(1 0 0/.78);
-  animation:cloud-move 75s linear infinite;
+  animation:cloud-move 160s linear infinite;
   animation-delay:-55s;
 }
 @keyframes cloud-move{
