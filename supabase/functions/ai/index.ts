@@ -69,14 +69,16 @@ Deno.serve(async (req) => {
       return json({ error: 'Text too short' }, 400);
     }
     const safeText = text.trim().slice(0, 6000);
-    const memoryLines = normalizeArray(memoryContext, 7).map((item) => item.slice(0, 200));
-    const memoryBlock = memoryLines.length
-      ? `\nКонтекст прошлых заметок пользователя, только для мягкой ориентации:\n${memoryLines.map((item, index) => `${index + 1}. ${item}`).join('\n')}\n`
+
+    // Формируем блок памяти — что пользователь писал раньше
+    const memLines = normalizeArray(memoryContext, 7).map((s) => s.slice(0, 200));
+    const memoryBlock = memLines.length > 0
+      ? `\nКонтекст — что пользователь записывал раньше:\n${memLines.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n`
       : '';
 
-    const prompt = `Ты помощник приложения «Разберёмся» — спокойный и человечный. 
-Проанализируй новую заметку пользователя. Если есть контекст прошлых заметок, учитывай его мягко, но не выдумывай факты.
-Верни JSON (только JSON, без markdown):
+    const prompt = `Ты помощник приложения «Разберёмся» — спокойный и человечный.
+Анализируй заметку внимательно и учитывай контекст прошлых записей, если он есть.
+Верни только JSON, без markdown и пояснений:
 {
   "summary": "одно предложение — суть заметки по-русски",
   "tags": ["тег1", "тег2", "тег3"],
@@ -117,6 +119,43 @@ ${safeText}`;
     };
 
     return json(result);
+  }
+
+  if (action === 'rewrite') {
+    const { text } = payload ?? {};
+    if (typeof text !== 'string' || text.trim().length < 10) {
+      return json({ error: 'Text too short' }, 400);
+    }
+    const safeText = text.trim().slice(0, 4000);
+
+    const prompt = `Ты помощник приложения «Разберёмся» — спокойный и человечный.
+Улучши текст заметки: исправь ошибки, сделай понятнее, убери лишнее — но сохрани смысл и голос автора.
+Не добавляй ничего от себя. Верни только улучшенный текст, без комментариев и объяснений.
+
+Заметка:
+${safeText}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return json({ error: data?.error?.message || 'Anthropic request failed' }, res.status);
+    }
+    const rewritten = data.content?.[0]?.text?.trim() ?? '';
+    if (!rewritten) return json({ error: 'Empty response from AI' }, 502);
+    return json({ rewritten });
   }
 
   return json({ error: 'Unknown action' }, 400);
