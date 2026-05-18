@@ -35,6 +35,8 @@ git pull
 - `manifest.json` — PWA-настройки.
 - `sw.js` — service worker и кэш.
 - `supabase.sql` — таблица и RLS-правила для облачных заметок Supabase.
+- `supabase/functions/ai/index.ts` — Edge Function для AI-анализа заметок.
+- `Ai Memory/Memory Bank/` — актуальная память проекта, включая AI Memory и ветку продвижения.
 
 ## Supabase
 
@@ -60,3 +62,4 @@ git pull
 - `TODO.md` — ближайшие задачи.
 - `CHANGELOG.md` — история изменений.
 - `Master PROMT/` — мастер-документы и философия проекта.
+- `Ai Memory/Memory Bank/PROJECT_PROMOTION_STRATEGY.md` — отдельная ветка про инвесторов, краудфандинг и публичное позиционирование.

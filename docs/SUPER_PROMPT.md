@@ -43,7 +43,7 @@
 
 Service worker:
 
-- `sw.js`, cache `rz-v50`
+- `sw.js`, cache `rz-v60`
 
 Supabase:
 
@@ -70,7 +70,11 @@ AI:
 - текущий frontend endpoint: `/functions/v1/smooth-processor`;
 - локальный код функции лежит в `supabase/functions/ai/index.ts`;
 - Anthropic API key хранится только в Supabase Secrets как `ANTHROPIC_API_KEY`;
-- AI сейчас анализирует текст заметки и возвращает `summary`, `tags`, `actions`.
+- AI сейчас анализирует текст заметки и возвращает `summary`, `tags`, `actions`;
+- клиент подмешивает `memoryContext` из локальной `rz_ai_memory`;
+- AI-теги кликабельны, а под тегами есть быстрый пикер раздела.
+
+Known issue: в текущей версии после нажатия `✦ AI` может появиться `Can't find variable: autoLabel`. Причина уже найдена: `autoLabel` объявлен внутри блока `if(tags?.length)`, а ниже используется при сборке пикера раздела. Не делать большой рефакторинг ради этого: нужен маленький scoped fix.
 
 ## Пути
 
@@ -101,7 +105,8 @@ Mac-путь и Windows-путь могут отличаться. Это не к
 {
   "action": "analyze",
   "payload": {
-    "text": "текст заметки"
+    "text": "текст заметки",
+    "memoryContext": ["короткая выжимка прошлой заметки"]
   }
 }
 ```

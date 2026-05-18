@@ -1,13 +1,13 @@
 # MASTER.md для проекта «Разберёмся»
 
-Последнее обновление: 2026-05-17  
+Последнее обновление: 2026-05-18  
 Текущий Mac-путь: `/Users/defancient/Documents/Разберемся`  
 Windows-путь может отличаться: например `C:\Users\Kosmos\Desktop\Разберёмся` или папка, куда клонирован repo  
 GitHub repo: `https://github.com/defancientmus-gif/razberemsia`  
 Публичная версия: `https://defancientmus-gif.github.io/razberemsia/`  
 Главный рабочий файл приложения: `index.html`  
 Текущий интерфейс: `v4.13`  
-Service worker cache: `rz-v50`
+Service worker cache: `rz-v60`
 
 ## Одна строка идеи
 
@@ -70,7 +70,7 @@ Service worker cache: `rz-v50`
 - Проект также запускается на Windows из той же GitHub-копии, но с другим абсолютным путём.
 - Интерфейс показывает `v4.13`.
 - PWA подключена через `manifest.json` и `sw.js`.
-- `sw.js` использует cache `rz-v50`.
+- `sw.js` использует cache `rz-v60`.
 - PWA-иконки с пером лежат в `pwa-feather-180.png`, `pwa-feather-192.png`, `pwa-feather-512.png`.
 - Firebase/SMS и публичный dev-вход убраны из рабочего сценария.
 - Авторизация работает через Supabase email OTP: почта -> 6-значный код -> сессия.
@@ -93,13 +93,17 @@ Service worker cache: `rz-v50`
 - Edge Function код лежит в `supabase/functions/ai/index.ts`.
 - AI-поток задуман как анализ заметки: `summary`, `tags`, `actions`.
 - 2026-05-18 впервые заработала полная AI-цепочка: заметка -> `✦ AI` -> Supabase Edge Function -> Anthropic -> блоки «Суть / Теги / Можно сделать» в UI.
+- 2026-05-18 добавлен первый локальный контур AI-памяти: `rz_ai_memory`, `memoryContext` в AI-запрос и мягкий учёт прошлых summaries.
+- AI-теги стали кликабельными, добавлен быстрый пикер раздела в AI-панели.
 
 ## Что сейчас не считать решённым
 
 - Supabase secret `ANTHROPIC_API_KEY` должен быть настроен в Supabase, иначе AI вернёт ошибку `API key не настроен [500]`.
 - В Supabase Dashboard функция может отображаться как `ai`, но опубликованный endpoint фронта сейчас указывает на `/functions/v1/smooth-processor`.
 - Нужно убедиться, что именно функция по endpoint `smooth-processor` содержит актуальный код.
-- AI пока не сохраняет разбор в заметку и не применяет теги/напоминания по кнопке.
+- AI сохраняет `aiSummary` и `aiTags` при сохранении заметки, а короткие summaries попадают в локальную `rz_ai_memory`.
+- Known issue: после последнего слоя кликабельных тегов возможна ошибка `Can't find variable: autoLabel` в AI-панели. Причина известна: `autoLabel` объявлен внутри `if(tags?.length)`, а ниже используется снаружи. Фикс маленький, но пока не применён по просьбе пользователя "проверь, но не чини".
+- AI пока не применяет напоминания и не переписывает текст заметки по кнопке.
 - Нет полноценной модели уровня пользователя и истории принятых/отклонённых подсказок.
 - `index.html` уже большой; крупные изменения требуют осторожности.
 
@@ -126,7 +130,7 @@ Service worker cache: `rz-v50`
 ## Важные файлы от корня repo
 
 - `index.html` — главный интерфейс, auth, заметки, AI UI.
-- `sw.js` — service worker, текущий cache `rz-v50`.
+- `sw.js` — service worker, текущий cache `rz-v60`.
 - `manifest.json` — PWA manifest.
 - `supabase.sql` — таблица `public.user_state` и RLS.
 - `supabase/functions/ai/index.ts` — Supabase Edge Function для AI.

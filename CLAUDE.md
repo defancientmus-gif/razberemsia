@@ -89,3 +89,14 @@ python3 -m http.server 8000
 ```
 
 Then check `http://localhost:8000/`.
+
+## Current known issue
+
+As of 2026-05-18, the latest pushed UI has a known AI panel bug:
+
+- visible error: `Can't find variable: autoLabel`;
+- location: `index.html`, inside `runAiAnalysis()`;
+- cause: `autoLabel` is declared inside `if(tags?.length)` and then used below for the category picker;
+- intended fix: small scoped patch only, declare `autoLabel` before the `if(tags?.length)` block.
+
+Do not rewrite the AI panel or revert clickable tags to fix this.

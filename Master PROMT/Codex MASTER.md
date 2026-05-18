@@ -1,6 +1,6 @@
 # Разберёмся — Codex MASTER
 
-Последнее обновление: 2026-05-15  
+Последнее обновление: 2026-05-18  
 Главный файл приложения: `index.html`  
 Публичный адрес: `https://defancientmus-gif.github.io/razberemsia/`
 
@@ -44,12 +44,16 @@
 - GitHub Pages открывает `/razberemsia/`;
 - PWA-иконка — тонкое перо;
 - текущая видимая версия интерфейса — `v4.13`;
-- service worker cache после последних правок — `rz-v33`;
+- service worker cache после последних правок — `rz-v60`;
 - Firebase/SMS больше не являются рабочим сценарием;
 - публичный локальный/dev-вход не должен возвращаться;
 - авторизация — Supabase email OTP: почта → 6-значный код → вход;
 - данные синхронизируются через Supabase `public.user_state`;
 - RLS должен оставаться включённым.
+- AI-анализ заметки работает через Supabase Edge Function и Anthropic.
+- Добавлен первый локальный контур AI-памяти `rz_ai_memory` и `memoryContext`.
+- AI-теги стали кликабельными, под ними есть быстрый пикер раздела.
+- Known issue: `Can't find variable: autoLabel` после `✦ AI`; причина известна, нужен маленький scoped fix.
 
 ## Supabase
 
@@ -165,4 +169,3 @@ powershell.exe -ExecutionPolicy Bypass -File .\deploy.ps1 "описание из
 ```text
 Текущий вход через Supabase email OTP с 6-значным кодом. Не возвращай Firebase, SMS, magic link или локальный dev-вход.
 ```
-

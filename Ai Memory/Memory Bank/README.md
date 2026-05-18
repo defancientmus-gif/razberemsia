@@ -14,6 +14,7 @@
 - `CLAUDE_MASTER.md` — мастер-контекст Claude.
 - `CLAUDE_PROJECT_MASTER.md` — проектный master от Claude с подробным списком реализованного.
 - `AI_MEMORY_ARCHITECTURE.md` — архитектура памяти AI.
+- `PROJECT_PROMOTION_STRATEGY.md` — ветка `promotion/funding`: инвесторы, краудфандинг, позиционирование и критерии готовности к публичному показу.
 
 ## Будущие файлы
 
