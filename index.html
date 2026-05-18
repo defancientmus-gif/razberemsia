@@ -1150,7 +1150,15 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .ai-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:oklch(0.55 0.12 290 / 0.65);margin-bottom:4px;}
 .ai-text{font-size:13px;line-height:1.55;color:oklch(0.28 0.02 250);}
 .ai-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
-.ai-tag{padding:2px 8px;border-radius:6px;background:oklch(0.55 0.12 290 / 0.12);color:oklch(0.40 0.12 290);font-size:11px;font-weight:500;}
+.ai-tag{padding:3px 10px;border-radius:8px;background:oklch(0.55 0.12 290 / 0.12);color:oklch(0.40 0.12 290);font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:var(--sys);transition:transform .12s cubic-bezier(.34,1.56,.64,1),background .15s;-webkit-tap-highlight-color:transparent;user-select:none;}
+.ai-tag:hover{background:oklch(0.55 0.12 290 / 0.20);}
+.ai-tag:active{transform:scale(.88);}
+.ai-tag.applied{background:oklch(0.52 0.10 210 / 0.18);color:oklch(0.30 0.10 210);font-weight:600;}
+.ai-cat-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.ai-cat-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;border:1px solid oklch(0.88 0.02 210 / 0.30);cursor:pointer;font-size:12px;font-family:var(--sys);color:oklch(0.42 0.04 210);background:oklch(0.96 0.008 210 / 0.80);transition:transform .12s cubic-bezier(.34,1.56,.64,1),background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;}
+.ai-cat-chip:hover{background:oklch(0.92 0.015 210 / 0.90);}
+.ai-cat-chip:active{transform:scale(.92);}
+.ai-cat-chip.active{background:oklch(0.52 0.10 210 / 0.14);border-color:oklch(0.52 0.10 210 / 0.35);color:oklch(0.28 0.10 210);font-weight:600;}
 .ai-actions{display:flex;flex-direction:column;gap:3px;margin-top:2px;}
 .ai-action{font-size:12px;color:oklch(0.35 0.06 250);padding-left:14px;position:relative;}
 .ai-action::before{content:'→';position:absolute;left:0;color:oklch(0.55 0.12 290 / 0.55);}
@@ -2219,7 +2227,9 @@ async function runAiAnalysis(text,panel){
     }
     let html='<div class="ai-panel-inner">';
     if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
-    if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги</div><div class="ai-tags">${tags.map(t=>`<span class="ai-tag">${esc(t)}</span>`).join('')}</div></div>`;}
+    if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги — нажми чтобы добавить в раздел</div><div class="ai-tags">${tags.map(t=>`<button class="ai-tag" onclick="applyAiTagCat('${esc(t)}')">${esc(t)}</button>`).join('')}</div></div>`;}
+    const activeCat=autoLabel||'заметка';
+    html+=`<div class="ai-section"><div class="ai-label">Раздел</div><div class="ai-cat-row">${CATS.map(c=>`<button class="ai-cat-chip${c===activeCat?' active':''}" data-cat="${c}" onclick="pickAiCat('${c}')">${ICONS[c]||'📄'} ${c}</button>`).join('')}</div></div>`;
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map(a=>`<div class="ai-action">${esc(a)}</div>`).join('')}</div></div>`;}
     html+='</div>';
     panel.innerHTML=html;
@@ -3030,6 +3040,23 @@ function updCharCount(f){
 const SHEET_HUES={здоровье:'25',покупки:'250',контакт:'150',событие:'80',идея:'290',рецепт:'60',адрес:'195',заметка:'150'};
 const SHEET_CHROMAS={здоровье:'0.028',покупки:'0.022',контакт:'0.014',событие:'0.026',идея:'0.024',рецепт:'0.024',адрес:'0.020',заметка:'0.010'};
 
+function applyAiTagCat(tag){
+  const cat=tagsToPrimaryLabel([tag]);
+  document.querySelectorAll('.ai-tag').forEach(el=>{
+    if(el.textContent.trim()===tag){
+      el.classList.add('applied');
+      el.style.transform='scale(.88)';
+      setTimeout(()=>el.style.transform='',160);
+    }
+  });
+  if(cat)pickAiCat(cat);
+}
+function pickAiCat(cat){
+  showSheetCat(cat);
+  document.querySelectorAll('.ai-cat-chip').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.cat===cat);
+  });
+}
 function showSheetCat(label){
   const btn=document.getElementById('sheet-cat-btn');
   const dot=document.getElementById('sheet-cat-dot');
