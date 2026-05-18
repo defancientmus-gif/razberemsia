@@ -342,7 +342,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   border:1px solid oklch(0.88 0.02 210 / 0.42);
   box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.80);
   display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;
-  transition:all .14s;
+  transition:background .14s,transform .14s;
 }
 .cal-popup-close:active{background:oklch(0.52 0.10 210 / 0.12);transform:scale(.88);}
 .cal-popup-close svg{width:14px;height:14px;stroke:var(--fg-m);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -355,7 +355,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   border:1px solid oklch(0.88 0.02 210 / 0.42);
   box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.80),0 2px 8px oklch(0 0 0 / 0.04);
   display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;
-  transition:all .14s;
+  transition:background .14s,transform .14s;
 }
 .cal-nav:active{background:oklch(0.52 0.10 210 / 0.12);transform:scale(.90);}
 .cal-nav svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -397,7 +397,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   border-radius:16px;padding:15px;font-size:16px;font-weight:700;
   cursor:pointer;font-family:var(--sys);-webkit-appearance:none;
   box-shadow:inset 0 1.5px 3px oklch(1 0 0 / 0.72),0 3px 14px oklch(0.52 0.10 210 / 0.12);
-  transition:all .15s;
+  transition:background .15s,transform .15s;
 }
 .cal-done-btn:active{background:oklch(0.52 0.10 210 / 0.14);transform:scale(.98);}
 .year-picker{padding:12px 20px 0;max-height:240px;overflow-y:auto;display:none;flex-wrap:wrap;gap:6px;}
@@ -407,18 +407,18 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   background:oklch(1 0 0 / 0.55);border:1px solid oklch(0.88 0.02 210 / 0.42);
   border-radius:11px;padding:9px 4px;font-size:15px;font-weight:600;color:var(--fg);
   cursor:pointer;-webkit-appearance:none;font-family:var(--sys);text-align:center;
-  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.75);transition:all .12s;
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.75);transition:background .12s,border-color .12s,color .12s,box-shadow .12s;
 }
 .year-btn:active,.year-btn.cur{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px oklch(0.52 0.10 210 / 0.30);}
 
 /* ── FOLDER CARDS ── */
 .notes-stat{display:block;margin-bottom:14px;overflow:visible;}
 .stat-chip,.stat-dot,.stat-count{display:none;}
-.folders-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;padding:2px;-webkit-tap-highlight-color:transparent;}
+.folders-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;padding:2px;}
 .folders-hdr .folders-lbl{margin-bottom:0;padding:0;display:flex;align-items:center;gap:6px;font-weight:700;}
 .folders-lbl-feather{font-size:13px;opacity:.55;transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .3s;}
 .folders-collapsed .folders-lbl-feather{transform:rotate(12deg) translateY(-1px);opacity:.9;}
-.folders-chev{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--fg-l);transition:all .3s ease;}
+.folders-chev{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--fg-l);transition:color .3s ease;}
 .folders-chev svg{width:13px;height:13px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s cubic-bezier(.22,1,.36,1);}
 .folders-collapsed .folders-chev svg{transform:rotate(180deg);}
 .folders-peek{
@@ -677,7 +677,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .notepad-mic{width:40px;height:40px;border-radius:50%;
   background:oklch(0.52 0.10 210 / 0.12);
   border:1.5px solid oklch(0.52 0.10 210 / 0.26);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;color:var(--accent-d);flex-shrink:0;transition:all .14s;}
+  display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;color:var(--accent-d);flex-shrink:0;transition:background .14s,border-color .14s,color .14s,transform .14s,box-shadow .14s;}
 .notepad-mic:active{transform:scale(.92);}
 .notepad-mic.rec{background:oklch(0.58 0.16 25 / 0.12);border-color:oklch(0.58 0.16 25 / 0.32);color:var(--rose);animation:pulse-mic 1.2s ease-in-out infinite;}
 @keyframes pulse-mic{0%,100%{box-shadow:0 0 0 0 oklch(0.58 0.16 25 / 0.3)}50%{box-shadow:0 0 0 6px oklch(0.58 0.16 25 / 0)}}
@@ -921,7 +921,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   display:flex;align-items:flex-start;gap:10px;
   padding:5px 0;
   border-bottom:1px solid oklch(0.88 0.02 210 / 0.18);
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  cursor:pointer;
 }
 .list-item:last-child{border-bottom:none;}
 .list-cb{
@@ -2974,7 +2974,7 @@ function loadNotes(){
     const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');
     wrap.setAttribute('data-nwrap','1');
-    const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
+    const delBg=buildNoteSwipePanel(16, ()=>nid?delNoteById(nid):delNote(i));
     const d=document.createElement('div');d.className='item-card';d.style.margin='0';
     const dBtn=document.createElement('button');dBtn.className='desk-del';
     dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -3005,7 +3005,7 @@ function loadNotes(){
         <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
     }
     d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
-    attachSwipeDelete(d,delBg,null,116);
+    attachSwipeDelete(d,delBg);
     wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);el.appendChild(wrap);
   });
 }
@@ -3077,7 +3077,7 @@ function toggleFolders(){
 function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
 
 // ── SWIPE HELPERS ──
-function buildNoteSwipePanel(shape, radius, onDelete){
+function buildNoteSwipePanel(radius, onDelete){
   const r=(radius||16)+'px';
   const el=document.createElement('div');
   el.style.cssText=`position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 ${r} ${r} 0;opacity:0;transition:opacity .15s;pointer-events:none;`;
@@ -3730,7 +3730,7 @@ function loadNotepad(){
     const i=all.length-1-ri;
     const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
-    const delBg=buildNoteSwipePanel('list', 16, ()=>n.id?delNoteById(n.id):delNote(i), ()=>shareNote(n));
+    const delBg=buildNoteSwipePanel(16, ()=>n.id?delNoteById(n.id):delNote(i));
     const d=document.createElement('div');d.className='pad-item';d.style.margin='0';
     d.innerHTML=`<div class="pad-stripe" style="background:${stripe};"></div>
       <div class="pad-cat">${esc(safeLabel(n.label||'заметка'))}</div>
@@ -3738,7 +3738,7 @@ function loadNotepad(){
       <div class="pad-text">${esc(n.body||'')}</div>
       <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
     d.onclick=(e)=>{e.stopPropagation();n.id?openNoteSheetById(n.id):openNoteSheet(i);};
-    attachSwipeDelete(d,delBg,null,116);
+    attachSwipeDelete(d,delBg);
     const dBtn2=document.createElement('button');dBtn2.className='desk-del';
     dBtn2.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     dBtn2.onclick=(e)=>{e.stopPropagation();n.id?delNoteById(n.id):delNote(i);};
@@ -3856,7 +3856,7 @@ function loadHomeFeed(){
       wrap.prepend(swipePanel);
       const bbl=wrap.querySelector('.bubble');
       const bdel=wrap.querySelector('.bubble-swipe-panel');
-      attachSwipeBubble(bbl,bdel,116);
+      attachSwipeBubble(bbl,bdel);
       const dBtnL=document.createElement('button');dBtnL.className='desk-del';
       dBtnL.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       dBtnL.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
@@ -3882,7 +3882,7 @@ function loadHomeFeed(){
         if(e.target.closest('.bubble-expand-btn'))return;
         n.id?openNoteSheetById(n.id):openNoteSheet(realIdx);
       };
-      attachSwipeBubble(bbl,bdel,116);
+      attachSwipeBubble(bbl,bdel);
       const dBtnN=document.createElement('button');dBtnN.className='desk-del';
       dBtnN.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       dBtnN.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
@@ -4168,8 +4168,7 @@ function startHomeVoice(){
   homeRecog.onend=()=>{
     homeIsRec=false;homeRecog=null;
     const lbl=document.getElementById('home-voice-label');if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
-    // Reset button states
-    if(!_nnbHandsfree){nnbStopHandsfree();}else{nnbStopHandsfree();}
+    nnbStopHandsfree();
     const text=collected.trim();
     if(!text)return;
     const{title,label,reminder}=analyzeText(text);
