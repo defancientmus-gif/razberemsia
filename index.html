@@ -512,9 +512,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bact-share svg{stroke:oklch(0.28 0.05 210);stroke-width:1.6;}
 .bact-del{background:oklch(0.76 0.05 15 / 0.38);border-radius:0 22px 5px 0;color:oklch(0.32 0.04 15);}
 .bact-del svg{stroke:oklch(0.32 0.04 15);stroke-width:1.6;}
-@keyframes del-x-spin{0%,100%{transform:rotate(0deg);}50%{transform:rotate(135deg);}}
 @keyframes bubble-pop{0%{transform:scale(1);opacity:1;filter:blur(0px);}28%{transform:scale(1.07);opacity:0.9;filter:blur(0px);}100%{transform:scale(0.04);opacity:0;filter:blur(12px);}}
-.del-x-svg{animation:del-x-spin 1.3s ease-in-out infinite;transform-origin:center;}
+.del-x-btn{width:40px;height:40px;border-radius:50%;background:oklch(0.94 0.05 15 / 0.50);display:flex;align-items:center;justify-content:center;transition:transform .12s cubic-bezier(.34,1.56,.64,1),background .15s;-webkit-tap-highlight-color:transparent;}
+.del-x-btn:active{transform:scale(.84);background:oklch(0.88 0.09 15 / 0.70);}
 .bubble-popping{animation:bubble-pop 0.30s cubic-bezier(.55,0,1,.8) forwards !important;pointer-events:none !important;}
 /* Desktop hover-delete */
 .desk-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s,background .12s;z-index:3;-webkit-appearance:none;}
@@ -1141,7 +1141,18 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-ai-btn.ai-on{background:oklch(0.55 0.12 290 / 0.20);color:oklch(0.38 0.14 290);}
 .sheet-ai-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .ai-panel{margin:0 16px 10px;border-radius:14px;background:oklch(0.97 0.008 290 / 0.85);border:1px solid oklch(0.55 0.12 290 / 0.15);overflow:hidden;animation:splashFadeIn .22s cubic-bezier(.22,1,.36,1);}
+.ai-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px 8px;cursor:pointer;border-bottom:1px solid oklch(0.55 0.12 290 / 0.10);-webkit-tap-highlight-color:transparent;}
+.ai-panel-title{font-size:11px;font-weight:600;color:oklch(0.45 0.12 290);display:flex;align-items:center;gap:5px;letter-spacing:.03em;}
+.ai-collapse-btn{background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;color:oklch(0.55 0.12 290 / 0.55);transition:transform .28s cubic-bezier(.22,1,.36,1);-webkit-tap-highlight-color:transparent;}
+.ai-panel.collapsed .ai-collapse-btn{transform:rotate(180deg);}
+.ai-panel-body{overflow:hidden;transition:max-height .28s cubic-bezier(.22,1,.36,1),opacity .22s ease;}
+.ai-panel.collapsed .ai-panel-body{max-height:0!important;opacity:0;}
 .ai-panel-inner{padding:12px 14px;}
+.ai-edit-btn{display:flex;align-items:center;gap:6px;width:100%;padding:9px 14px;background:oklch(0.55 0.12 290 / 0.06);border:none;border-top:1px solid oklch(0.55 0.12 290 / 0.10);cursor:pointer;font-size:12px;font-family:var(--sys);color:oklch(0.45 0.12 290);font-weight:500;transition:background .15s,transform .12s;-webkit-tap-highlight-color:transparent;}
+.ai-edit-btn:hover{background:oklch(0.55 0.12 290 / 0.12);}
+.ai-edit-btn:active{transform:scale(.98);background:oklch(0.55 0.12 290 / 0.18);}
+.ai-rewrite-preview{margin-top:8px;padding:10px;border-radius:8px;background:oklch(0.93 0.015 210 / 0.70);border:1px solid oklch(0.52 0.10 210 / 0.20);font-size:13px;line-height:1.65;color:var(--fg);}
+.ai-rewrite-btns{display:flex;gap:8px;margin-top:8px;}
 .ai-loading{display:flex;align-items:center;gap:8px;color:oklch(0.50 0.10 290);font-size:13px;}
 .ai-loading svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;fill:none;animation:ai-spin .8s linear infinite;}
 @keyframes ai-spin{to{transform:rotate(360deg);}}
@@ -1159,9 +1170,20 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .ai-cat-chip:hover{background:oklch(0.92 0.015 210 / 0.90);}
 .ai-cat-chip:active{transform:scale(.92);}
 .ai-cat-chip.active{background:oklch(0.52 0.10 210 / 0.14);border-color:oklch(0.52 0.10 210 / 0.35);color:oklch(0.28 0.10 210);font-weight:600;}
-.ai-actions{display:flex;flex-direction:column;gap:3px;margin-top:2px;}
-.ai-action{font-size:12px;color:oklch(0.35 0.06 250);padding-left:14px;position:relative;}
-.ai-action::before{content:'→';position:absolute;left:0;color:oklch(0.55 0.12 290 / 0.55);}
+.ai-actions{display:flex;flex-direction:column;gap:0;margin-top:4px;}
+.ai-action-card{padding:8px 0;border-bottom:1px solid oklch(0.88 0.02 210 / 0.14);overflow:hidden;transition:max-height .28s ease,opacity .2s ease,padding .25s ease;}
+.ai-action-card:last-child{border-bottom:none;}
+.ai-action-text{font-size:13px;color:oklch(0.35 0.06 250);padding-left:16px;position:relative;margin-bottom:7px;line-height:1.5;}
+.ai-action-text::before{content:'→';position:absolute;left:0;color:oklch(0.55 0.12 290 / 0.55);}
+.ai-action-btns{display:flex;gap:6px;padding-left:16px;}
+.ai-accept-btn{padding:4px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-family:var(--sys);font-weight:500;background:oklch(0.52 0.10 210 / 0.12);color:oklch(0.30 0.10 210);transition:transform .12s cubic-bezier(.34,1.56,.64,1),background .15s;-webkit-tap-highlight-color:transparent;}
+.ai-accept-btn:hover{background:oklch(0.52 0.10 210 / 0.22);}
+.ai-accept-btn:active{transform:scale(.90);}
+.ai-reject-btn{padding:4px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-family:var(--sys);background:transparent;color:oklch(0.55 0.015 210 / 0.55);transition:transform .12s,background .15s;-webkit-tap-highlight-color:transparent;}
+.ai-reject-btn:hover{background:oklch(0 0 0 / 0.04);}
+.ai-reject-btn:active{transform:scale(.90);}
+.ai-action-card.accepted .ai-action-btns{pointer-events:none;}
+.ai-action-done{font-size:11px;color:oklch(0.48 0.12 160);display:flex;align-items:center;gap:4px;padding-left:16px;}
 .ai-err{font-size:12px;color:oklch(0.50 0.15 25);}
 
 /* Footer — "0 символов  |  Cmd Enter  сохранить" */
@@ -1392,7 +1414,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 </div>
 
 <!-- AUTH -->
-<div id="auth-screen">
+<div id="auth-screen" style="display:none;opacity:0">
   <div class="auth-logo">
     <div class="auth-logo-mark">
       <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
@@ -1723,7 +1745,17 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     <div class="sheet-scroll-area" id="sheet-scroll-area">
       <div class="sheet-body-wrap" id="sheet-body"></div>
       <!-- AI Panel (появляется при включении) -->
-      <div id="ai-panel" style="display:none;"></div>
+      <div id="ai-panel" style="display:none;">
+        <div class="ai-panel-hdr" onclick="toggleAiCollapse()">
+          <span class="ai-panel-title"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Анализ AI</span>
+          <button class="ai-collapse-btn" id="ai-collapse-btn" onpointerdown="event.preventDefault()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+        </div>
+        <div class="ai-panel-body" id="ai-panel-body"></div>
+        <button class="ai-edit-btn" id="ai-edit-btn" onclick="requestAiEdit()" style="display:none;">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Улучшить текст с AI
+        </button>
+      </div>
     </div>
     <!-- Reminder -->
     <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">
@@ -1916,16 +1948,20 @@ function hideSplash(){
 }
 async function initAuth(){
   if(!sbConfigured){
+    showAuthScr();
     showAuthErr('Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
+  showSplash();
   try{
     const {data}=await sb.auth.getSession();
     if(data?.session?.user){
-      showSplash();
       await enterUser(data.session.user);
+    } else {
+      hideSplash();
+      showAuthScr();
     }
-  }catch(e){console.warn('session check failed',e);}
+  }catch(e){console.warn('session check failed',e);hideSplash();showAuthScr();}
   // Регистрируем после getSession — избегаем двойного enterUser через INITIAL_SESSION
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session?.user){
@@ -2185,22 +2221,81 @@ function toggleAiPanel(){
   if(!_aiOn){panel.style.display='none';return;}
   const f=document.getElementById('sh1');
   const text=(f?.value||'').trim();
+  panel.style.display='block';
+  const bodyEl=document.getElementById('ai-panel-body');
+  const editBtn=document.getElementById('ai-edit-btn');
   if(text.length<15){
-    panel.style.display='block';
-    panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
+    if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
+    if(editBtn)editBtn.style.display='none';
     _scrollToAiPanel();
     return;
   }
   runAiAnalysis(text,panel);
 }
+function toggleAiCollapse(){
+  const panel=document.getElementById('ai-panel');
+  if(!panel)return;
+  const body=document.getElementById('ai-panel-body');
+  if(body&&!panel.classList.contains('collapsed'))body.style.maxHeight=body.scrollHeight+'px';
+  panel.classList.toggle('collapsed');
+  if(!panel.classList.contains('collapsed')&&body){
+    requestAnimationFrame(()=>{body.style.maxHeight=body.scrollHeight+'px';});
+  }
+}
 
+async function requestAiEdit(){
+  const f=document.getElementById('sh1');
+  const text=f?.value?.trim();
+  if(!text||text.length<15){showToast('Напишите больше текста');return;}
+  const bodyEl=document.getElementById('ai-panel-body');
+  const editBtn=document.getElementById('ai-edit-btn');
+  if(!bodyEl)return;
+  let area=document.getElementById('ai-edit-area');
+  if(!area){area=document.createElement('div');area.id='ai-edit-area';area.className='ai-panel-inner';bodyEl.appendChild(area);}
+  area.innerHTML=`<div class="ai-loading"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Улучшаю текст...</div>`;
+  if(editBtn)editBtn.style.display='none';
+  if(bodyEl)bodyEl.style.maxHeight=bodyEl.scrollHeight+200+'px';
+  _scrollToAiPanel();
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)throw new Error('no session');
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'rewrite',payload:{text}})
+    });
+    if(!res.ok)throw new Error('rewrite ['+res.status+']');
+    const {rewritten}=await res.json();
+    area.dataset.rewritten=rewritten;
+    area.innerHTML=`<div class="ai-label" style="margin-bottom:6px;">Улучшенный вариант</div><div class="ai-rewrite-preview">${esc(rewritten)}</div><div class="ai-rewrite-btns"><button class="ai-accept-btn" onclick="applyAiRewrite()">✓ Применить</button><button class="ai-reject-btn" onclick="document.getElementById('ai-edit-area')?.remove();const eb=document.getElementById('ai-edit-btn');if(eb)eb.style.display='flex';">Не надо</button></div>`;
+    if(bodyEl)bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';
+    _scrollToAiPanel();
+  }catch(e){
+    area.innerHTML=`<div class="ai-err">Не удалось улучшить текст: ${esc(String(e?.message||''))}</div>`;
+    if(editBtn)editBtn.style.display='flex';
+  }
+}
+function applyAiRewrite(){
+  const area=document.getElementById('ai-edit-area');
+  const text=area?.dataset.rewritten;
+  if(!text)return;
+  const f=document.getElementById('sh1');
+  if(f){f.value=text;autoGrowTA(f);onSheetInput();}
+  area?.remove();
+  const eb=document.getElementById('ai-edit-btn');
+  if(eb)eb.style.display='flex';
+  showToast('Текст обновлён ✓');
+}
 function _scrollToAiPanel(){
   const sa=document.getElementById('sheet-scroll-area');
   if(sa)sa.scrollTo({top:sa.scrollHeight,behavior:'smooth'});
 }
 async function runAiAnalysis(text,panel){
-  panel.style.display='block';
-  panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Анализирую...</div></div>`;
+  const bodyEl=document.getElementById('ai-panel-body');
+  const editBtn=document.getElementById('ai-edit-btn');
+  if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Анализирую...</div></div>`;
+  if(editBtn)editBtn.style.display='none';
   _scrollToAiPanel();
   try{
     const session=await sb.auth.getSession();
@@ -2220,27 +2315,26 @@ async function runAiAnalysis(text,panel){
     const autoLabel=tagsToPrimaryLabel(tags||[]);
     if(autoLabel){
       const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
-      if(curCat==='заметка'){
-        showSheetCat(autoLabel);
-        showCatHint(autoLabel);
-      }
+      if(curCat==='заметка'){showSheetCat(autoLabel);showCatHint(autoLabel);}
     }
     let html='<div class="ai-panel-inner">';
     if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
     if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги — нажми чтобы добавить в раздел</div><div class="ai-tags">${tags.map(t=>`<button class="ai-tag" onclick="applyAiTagCat('${esc(t)}')">${esc(t)}</button>`).join('')}</div></div>`;}
     const activeCat=autoLabel||'заметка';
     html+=`<div class="ai-section"><div class="ai-label">Раздел</div><div class="ai-cat-row">${CATS.map(c=>`<button class="ai-cat-chip${c===activeCat?' active':''}" data-cat="${c}" onclick="pickAiCat('${c}')">${ICONS[c]||'📄'} ${c}</button>`).join('')}</div></div>`;
-    if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map(a=>`<div class="ai-action">${esc(a)}</div>`).join('')}</div></div>`;}
+    if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div>`;}
     html+='</div>';
-    panel.innerHTML=html;
+    if(bodyEl){bodyEl.innerHTML=html;bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';}
     panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
     panel.dataset.aiSummary=summary||'';
+    if(editBtn)editBtn.style.display='flex';
     addToAiMemory(summary,tags,EI);
     _scrollToAiPanel();
   }catch(e){
     console.warn('AI error',e);
     const msg=String(e?.message||'').includes('no session')?'Войдите в аккаунт для AI-функций.':'Ошибка: '+String(e?.message||'неизвестно');
-    panel.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
+    if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
+    if(editBtn)editBtn.style.display='none';
     _scrollToAiPanel();
   }
 }
@@ -2725,7 +2819,7 @@ function buildNoteSwipePanel(shape, radius, onDelete){
   const r=(radius||16)+'px';
   const el=document.createElement('div');
   el.style.cssText=`position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 ${r} ${r} 0;opacity:0;transition:opacity .15s;pointer-events:none;`;
-  el.innerHTML=`<svg class="del-x-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="oklch(0.52 0.20 15)" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  el.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
   el._onDelete=onDelete;
   return el;
 }
@@ -2734,42 +2828,46 @@ function buildBubbleSwipePanel(onDelete){
   const el=document.createElement('div');
   el.className='bubble-swipe-panel';
   el.style.cssText='position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 22px 5px 0;opacity:0;transition:opacity .15s;pointer-events:none;';
-  el.innerHTML=`<svg class="del-x-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="oklch(0.52 0.20 15)" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  el.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
   el._onDelete=onDelete;
   return el;
 }
 
-function attachSwipeDelete(card,xEl,_legacy,_W){
+function _makeSwipeAttach(card,xEl){
   const W=64;
-  const onDelete=xEl?xEl._onDelete:null;
-  const reset=()=>{card.style.transform='';card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';if(xEl)xEl.style.opacity='0';card.style.pointerEvents='';};
+  const onDelete=xEl?._onDelete;
+  let isOpen=false;
+  const reset=()=>{
+    isOpen=false;
+    card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';
+    card.style.transform='';
+    card.style.pointerEvents='';
+    if(xEl){xEl.style.opacity='0';xEl.style.pointerEvents='none';}
+  };
+  const openConfirm=()=>{
+    isOpen=true;
+    card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';
+    card.style.transform=`translateX(-${W}px)`;
+    if(xEl){xEl.style.opacity='1';xEl.style.pointerEvents='auto';xEl.style.cursor='pointer';}
+  };
+  if(xEl) xEl.onclick=(e)=>{
+    e.stopPropagation();
+    xEl.style.pointerEvents='none';
+    card.classList.add('bubble-popping');
+    card.style.pointerEvents='none';
+    setTimeout(()=>onDelete?.(),280);
+  };
   let sx=0,triggered=false;
   card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;triggered=false;card.style.transition='none';},{passive:true});
   card.addEventListener('touchmove',e=>{
     const dx=e.touches[0].clientX-sx;
     if(dx<-6){_cardSwiping=true;const shift=Math.max(dx,-W*1.4);card.style.transform=`translateX(${shift}px)`;if(xEl)xEl.style.opacity=String(Math.min(-shift/(W*0.5),1));triggered=-shift>W*0.55;}
   },{passive:true});
-  card.addEventListener('touchend',()=>{
-    if(triggered){if(xEl)xEl.style.opacity='0';card.classList.add('bubble-popping');card.style.pointerEvents='none';setTimeout(()=>onDelete&&onDelete(),280);}
-    else{reset();}
-  },{passive:true});
+  card.addEventListener('touchend',()=>{if(triggered)openConfirm();else reset();},{passive:true});
+  card.addEventListener('click',e=>{if(isOpen&&!e.target.closest('.del-x-btn')){e.stopPropagation();reset();}});
 }
-
-function attachSwipeBubble(card,xEl,_W){
-  const W=64;
-  const onDelete=xEl?xEl._onDelete:null;
-  const reset=()=>{card.style.transform='';card.style.transition='transform .22s cubic-bezier(.4,0,.2,1)';if(xEl)xEl.style.opacity='0';card.style.pointerEvents='';};
-  let sx=0,triggered=false;
-  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;triggered=false;card.style.transition='none';},{passive:true});
-  card.addEventListener('touchmove',e=>{
-    const dx=e.touches[0].clientX-sx;
-    if(dx<-6){_cardSwiping=true;const shift=Math.max(dx,-W*1.4);card.style.transform=`translateX(${shift}px)`;if(xEl)xEl.style.opacity=String(Math.min(-shift/(W*0.5),1));triggered=-shift>W*0.55;}
-  },{passive:true});
-  card.addEventListener('touchend',()=>{
-    if(triggered){if(xEl)xEl.style.opacity='0';card.classList.add('bubble-popping');card.style.pointerEvents='none';setTimeout(()=>onDelete&&onDelete(),280);}
-    else{reset();}
-  },{passive:true});
-}
+function attachSwipeDelete(card,xEl){_makeSwipeAttach(card,xEl);}
+function attachSwipeBubble(card,xEl){_makeSwipeAttach(card,xEl);}
 
 
 function shareNote(n){
@@ -3040,6 +3138,32 @@ function updCharCount(f){
 const SHEET_HUES={здоровье:'25',покупки:'250',контакт:'150',событие:'80',идея:'290',рецепт:'60',адрес:'195',заметка:'150'};
 const SHEET_CHROMAS={здоровье:'0.028',покупки:'0.022',контакт:'0.014',событие:'0.026',идея:'0.024',рецепт:'0.024',адрес:'0.020',заметка:'0.010'};
 
+function acceptAiAction(idx){
+  const cards=document.querySelectorAll('.ai-action-card');
+  const card=cards[idx];if(!card)return;
+  const text=card.querySelector('.ai-action-text')?.textContent?.trim()||'';
+  const btns=card.querySelector('.ai-action-btns');
+  if(btns)btns.innerHTML='<span class="ai-action-done"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Отмечено</span>';
+  card.classList.add('accepted');
+  recordActionFeedback(text,true);
+}
+function rejectAiAction(idx){
+  const cards=document.querySelectorAll('.ai-action-card');
+  const card=cards[idx];if(!card)return;
+  const text=card.querySelector('.ai-action-text')?.textContent?.trim()||'';
+  card.style.maxHeight=card.scrollHeight+'px';
+  requestAnimationFrame(()=>{
+    card.style.maxHeight='0';card.style.opacity='0';
+    card.style.paddingTop='0';card.style.paddingBottom='0';
+  });
+  recordActionFeedback(text,false);
+}
+function recordActionFeedback(actionText,accepted){
+  const mem=getAiMemory();
+  mem.push({id:'mem_'+Date.now(),note_id:EI||null,cluster:'feedback',summary:(accepted?'[принято] ':'[отклонено] ')+actionText.slice(0,150),importance:accepted?3:2,accepted,tags:[],created_at:new Date().toISOString()});
+  if(mem.length>30)mem.shift();
+  _saveAiMemoryRaw(mem);
+}
 function applyAiTagCat(tag){
   const cat=tagsToPrimaryLabel([tag]);
   document.querySelectorAll('.ai-tag').forEach(el=>{

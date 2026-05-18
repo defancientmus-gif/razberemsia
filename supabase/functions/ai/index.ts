@@ -121,5 +121,42 @@ ${safeText}`;
     return json(result);
   }
 
+  if (action === 'rewrite') {
+    const { text } = payload ?? {};
+    if (typeof text !== 'string' || text.trim().length < 10) {
+      return json({ error: 'Text too short' }, 400);
+    }
+    const safeText = text.trim().slice(0, 4000);
+
+    const prompt = `Ты помощник приложения «Разберёмся» — спокойный и человечный.
+Улучши текст заметки: исправь ошибки, сделай понятнее, убери лишнее — но сохрани смысл и голос автора.
+Не добавляй ничего от себя. Верни только улучшенный текст, без комментариев и объяснений.
+
+Заметка:
+${safeText}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return json({ error: data?.error?.message || 'Anthropic request failed' }, res.status);
+    }
+    const rewritten = data.content?.[0]?.text?.trim() ?? '';
+    if (!rewritten) return json({ error: 'Empty response from AI' }, 502);
+    return json({ rewritten });
+  }
+
   return json({ error: 'Unknown action' }, 400);
 });
