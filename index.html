@@ -981,7 +981,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* ── FLOATING NOTE MODAL (центрированная карточка как на скрине) ── */
 .overlay{
   position:fixed;top:var(--vvtop);left:0;right:0;bottom:auto;height:var(--vvh);z-index:300;
-  display:none;align-items:center;justify-content:center;padding:14px 8px;
+  display:none;align-items:flex-start;justify-content:center;
+  padding:max(12px, env(safe-area-inset-top, 12px)) 8px 0;
 }
 .overlay.open{display:flex;}
 .overlay-bg{
@@ -995,8 +996,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   position:relative;z-index:1;
   width:min(430px, calc(100vw - 16px));
   max-width:430px;
-  height:min(76dvh, 680px);
-  max-height:calc(var(--vvh) - 28px);
+  height:min(92dvh, 820px);
+  max-height:calc(var(--vvh) - 12px);
   margin-bottom:0;
   display:flex;flex-direction:column;
   background:
@@ -2292,6 +2293,7 @@ function _scrollToAiPanel(){
   if(sa)sa.scrollTo({top:sa.scrollHeight,behavior:'smooth'});
 }
 async function runAiAnalysis(text,panel){
+  let autoLabel=null;
   const bodyEl=document.getElementById('ai-panel-body');
   const editBtn=document.getElementById('ai-edit-btn');
   if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Анализирую...</div></div>`;
@@ -2312,7 +2314,7 @@ async function runAiAnalysis(text,panel){
       throw new Error((e.error||res.statusText)+' ['+res.status+']');
     }
     const {summary,tags,actions}=await res.json();
-    const autoLabel=tagsToPrimaryLabel(tags||[]);
+    autoLabel=tagsToPrimaryLabel(tags||[]);
     if(autoLabel){
       const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
       if(curCat==='заметка'){showSheetCat(autoLabel);showCatHint(autoLabel);}
