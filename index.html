@@ -149,7 +149,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sec-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--fg);margin-bottom:4px;letter-spacing:-.4px;}
 .sec-sub{font-size:14px;color:var(--fg-m);margin-bottom:14px;line-height:1.5;}
 
-/* ── NOTES VIEW TOGGLE ── */
+/* ── VIEW TOGGLE — кнопка список/сетка ── */
 .notes-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .notes-title-row .sec-title{margin-bottom:0;}
 .view-toggle-btn{
@@ -174,22 +174,35 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   color:var(--accent-d);
 }
 .view-toggle-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
+/* ── DROP ANIMATION (капля) — смена вида ── */
 @keyframes dropReveal{
-  0%{clip-path:ellipse(34% 1.5% at 50% 0%);opacity:.35;}
-  18%{clip-path:ellipse(16% 24% at 50% 12%);opacity:1;}
-  48%{clip-path:ellipse(60% 80% at 50% 42%);}
-  74%{clip-path:ellipse(115% 115% at 50% 50%);}
+  0%  {clip-path:ellipse(34% 1.5% at 50% 0%);opacity:.35;}
+  18% {clip-path:ellipse(16% 24% at 50% 12%);opacity:1;}
+  48% {clip-path:ellipse(60% 80% at 50% 42%);}
+  74% {clip-path:ellipse(115% 115% at 50% 50%);}
   100%{clip-path:ellipse(220% 220% at 50% 50%);}
 }
 #note-list.drop-anim{animation:dropReveal .52s cubic-bezier(.22,1,.36,1) both;}
-.note-grid-mode{display:grid!important;grid-template-columns:repeat(2,1fr);gap:9px;}
+
+/* ── GRID MODE — сетка ── */
+.note-grid-mode{
+  display:grid!important;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
 .note-grid-mode>[data-nwrap]{margin-bottom:0!important;border-radius:16px!important;}
+
+/* Grid карточки — компактные с анимацией */
 @keyframes cardMorph{
-  0%{opacity:0;transform:scale(.68) translateY(-14px);}
-  62%{transform:scale(1.04) translateY(3px);}
+  0%  {opacity:0;transform:scale(.68) translateY(-14px);}
+  62% {transform:scale(1.04) translateY(3px);}
   100%{opacity:1;transform:scale(1) translateY(0);}
 }
-.note-grid-mode .item-card{animation:cardMorph .30s cubic-bezier(.34,1.56,.64,1) both;padding:11px 11px 10px;}
+.note-grid-mode .item-card{
+  animation:cardMorph .30s cubic-bezier(.34,1.56,.64,1) both;
+  padding:11px 11px 10px;
+}
 .note-grid-mode>[data-nwrap]:nth-child(1) .item-card{animation-delay:.04s;}
 .note-grid-mode>[data-nwrap]:nth-child(2) .item-card{animation-delay:.07s;}
 .note-grid-mode>[data-nwrap]:nth-child(3) .item-card{animation-delay:.10s;}
@@ -198,6 +211,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .note-grid-mode>[data-nwrap]:nth-child(6) .item-card{animation-delay:.19s;}
 .note-grid-mode>[data-nwrap]:nth-child(7) .item-card{animation-delay:.22s;}
 .note-grid-mode>[data-nwrap]:nth-child(8) .item-card{animation-delay:.25s;}
+/* Цветная шапка вместо левой полоски */
 .note-stripe-top{position:absolute;top:0;left:0;right:0;height:3.5px;border-radius:16px 16px 0 0;}
 .grid-ico{font-size:21px;line-height:1;margin-bottom:5px;display:block;}
 .grid-cat{font-size:10px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
@@ -279,6 +293,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   box-shadow:0 -10px 50px oklch(0 0 0 / 0.11),inset 0 1.5px 0 oklch(1 0 0 / 0.88);
   animation:sUp .26s cubic-bezier(.22,1,.36,1);overflow:hidden;
 }
+/* Ручка-дёргалка */
 .cal-handle{width:38px;height:4px;border-radius:2px;background:oklch(0.72 0.025 210 / 0.38);margin:10px auto 0;}
 .cal-popup-head{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;}
 .cal-popup-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--fg);letter-spacing:-.3px;}
@@ -292,8 +307,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .cal-popup-close:active{background:oklch(0.52 0.10 210 / 0.12);transform:scale(.88);}
 .cal-popup-close svg{width:14px;height:14px;stroke:var(--fg-m);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* Месяц + навигация */
 .cal-month-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;}
-.cal-month-label{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:var(--fg);cursor:pointer;letter-spacing:-.2px;transition:color .14s;}
+.cal-month-label{
+  font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:var(--fg);
+  cursor:pointer;letter-spacing:-.2px;transition:color .14s;
+}
 .cal-month-label:active{color:var(--accent-d);}
 .cal-nav{
   width:38px;height:38px;border-radius:50%;
@@ -305,8 +324,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .cal-nav:active{background:oklch(0.52 0.10 210 / 0.12);transform:scale(.90);}
 .cal-nav svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* Заголовки дней */
 .cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);padding:0 14px;margin-bottom:2px;}
 .cal-day-name{text-align:center;font-size:11px;font-weight:700;color:var(--fg-l);padding:4px 0;letter-spacing:.03em;}
+/* Сетка дней */
 .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 10px;}
 .cal-day{
   height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -316,15 +337,18 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .cal-day:active{background:oklch(0.52 0.10 210 / 0.12);transform:scale(.88);}
 .cal-day.other{color:oklch(0.52 0.012 210 / 0.32);}
+/* Выходные */
 .cal-day:nth-child(7n+6),.cal-day:nth-child(7n){color:oklch(0.45 0.08 25);}
 .cal-day.other:nth-child(7n+6),.cal-day.other:nth-child(7n){color:oklch(0.45 0.08 25 / 0.35);}
-.cal-day.today{font-weight:700;color:var(--accent-d);}
+/* Сегодня */
+.cal-day.today{font-weight:800;color:var(--accent-d);}
 .cal-day.today::after{
   content:'';position:absolute;inset:2px;border-radius:11px;
   border:2px solid var(--accent-d);
   box-shadow:0 0 0 3px oklch(0.52 0.10 210 / 0.12);
   pointer-events:none;
 }
+/* Выбранный */
 .cal-day.sel{
   background:
     radial-gradient(circle at 35% 30%,oklch(1 0 0 / 0.32) 0%,transparent 55%),
@@ -334,8 +358,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .cal-day.sel::after{display:none;}
 .cal-day.sel.today::after{display:none;}
+/* Точка-заметка */
 .cal-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);margin-top:2px;box-shadow:0 0 5px oklch(0.68 0.12 80 / 0.55);}
 .cal-day.sel .cal-dot{background:oklch(1 0 0 / 0.85);box-shadow:0 0 4px oklch(1 0 0 / 0.5);}
+/* Кнопка Готово */
 .cal-done-btn{
   display:block;margin:16px 20px 0;width:calc(100% - 40px);
   background:oklch(1 0 0 / 0.62);
@@ -346,6 +372,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   transition:all .15s;
 }
 .cal-done-btn:active{background:oklch(0.52 0.10 210 / 0.14);transform:scale(.98);}
+/* Выбор года */
 .year-picker{padding:12px 20px 0;max-height:240px;overflow-y:auto;display:none;flex-wrap:wrap;gap:6px;}
 .year-picker.open{display:flex;}
 .year-btn{
@@ -357,18 +384,44 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .year-btn:active,.year-btn.cur{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px oklch(0.52 0.10 210 / 0.30);}
 
-/* ── FOLDER CARDS ── */
+/* ── FILTER CHIPS (legacy, kept for fallback) ── */
 .notes-stat{display:block;margin-bottom:14px;overflow:visible;}
-.stat-chip,.stat-dot,.stat-count{display:none;}
-.folders-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;padding:2px;-webkit-tap-highlight-color:transparent;}
-.folders-hdr .folders-lbl{margin-bottom:0;padding:0;display:flex;align-items:center;gap:6px;font-weight:700;}
-.folders-lbl-feather{font-size:13px;opacity:.55;transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .3s;}
-.folders-collapsed .folders-lbl-feather{transform:rotate(12deg) translateY(-1px);opacity:.9;}
-.folders-chev{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--fg-l);transition:all .3s ease;}
-.folders-chev svg{width:13px;height:13px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s cubic-bezier(.22,1,.36,1);}
-.folders-collapsed .folders-chev svg{transform:rotate(180deg);}
+.stat-chip{display:none;}
+.stat-dot{display:none;}
+.stat-count{display:none;}
+
+/* ── FOLDER COLLAPSE — логика сворачивания ── */
+/* Заголовок-триггер */
+.folders-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;cursor:pointer;padding:2px 2px;
+  -webkit-tap-highlight-color:transparent;
+}
+.folders-lbl{
+  font-size:11px;font-weight:700;color:var(--fg-l);
+  text-transform:uppercase;letter-spacing:.09em;
+  display:flex;align-items:center;gap:6px;
+}
+.folders-lbl-feather{
+  font-size:13px;opacity:.55;
+  transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .3s;
+}
+/* Шеврон */
+.folders-chev{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;color:var(--fg-l);
+  transition:all .3s ease;
+}
+.folders-chev svg{
+  width:13px;height:13px;stroke:var(--fg-l);stroke-width:2.2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .35s cubic-bezier(.22,1,.36,1);
+}
+
+/* Компактная строка-заглушка (свёрнуто) */
+/* display управляется inline из JS — не через CSS-класс */
 .folders-peek{
-  display:none;align-items:center;gap:10px;
+  align-items:center;gap:10px;
   background:
     radial-gradient(circle at 25% 20%,oklch(1 0 0 / 0.45) 0%,transparent 52%),
     oklch(0.88 0.07 210 / 0.26);
@@ -379,14 +432,27 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.80),0 3px 12px oklch(0.52 0.10 210 / 0.07);
   animation:featherDown .32s cubic-bezier(.22,1,.36,1) both;
 }
-.folders-collapsed~.folders-peek{display:flex;}
-.folders-collapsed~.folders-grid{display:none;}
+/* display:flex задаётся inline из JS при isCollapsed=true */
 .peek-ico{font-size:18px;line-height:1;}
 .peek-name{font-size:14px;font-weight:700;color:var(--fg);flex:1;}
-.peek-count{background:oklch(0.52 0.10 210 / 0.12);border:1px solid oklch(0.52 0.10 210 / 0.20);border-radius:50px;padding:2px 9px;font-size:11px;font-weight:700;color:var(--accent-d);}
+.peek-count{
+  background:oklch(0.52 0.10 210 / 0.12);
+  border:1px solid oklch(0.52 0.10 210 / 0.20);
+  border-radius:50px;padding:2px 9px;
+  font-size:11px;font-weight:700;color:var(--accent-d);
+}
 .peek-expand{font-size:11px;color:var(--fg-l);font-weight:600;white-space:nowrap;}
-@keyframes featherUp{from{opacity:1;transform:translateY(0) scale(1);filter:blur(0px);}to{opacity:0;transform:translateY(-20px) scale(0.88);filter:blur(1.5px);}}
-@keyframes featherDown{from{opacity:0;transform:translateY(-18px) scale(0.90);filter:blur(1.5px);}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0px);}}
+
+/* Анимации пёрышки */
+@keyframes featherUp{
+  from{opacity:1;transform:translateY(0) scale(1);filter:blur(0px);}
+  to{opacity:0;transform:translateY(-20px) scale(0.88);filter:blur(1.5px);}
+}
+@keyframes featherDown{
+  from{opacity:0;transform:translateY(-18px) scale(0.90);filter:blur(1.5px);}
+  to{opacity:1;transform:translateY(0) scale(1);filter:blur(0px);}
+}
+/* Сетка при разворачивании — каждая папка прилетает */
 .folders-grid.unfolding .folder-card{animation:featherDown .32s cubic-bezier(.22,1,.36,1) both;}
 .folders-grid.unfolding .folder-card:nth-child(1){animation-delay:.02s;}
 .folders-grid.unfolding .folder-card:nth-child(2){animation-delay:.05s;}
@@ -395,12 +461,16 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .folders-grid.unfolding .folder-card:nth-child(5){animation-delay:.14s;}
 .folders-grid.unfolding .folder-card:nth-child(6){animation-delay:.17s;}
 .folders-grid.unfolding .folder-card:nth-child(7){animation-delay:.20s;}
+
+/* ── FOLDER CARDS — стеклянные папки ── */
 .folders-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px;padding:0 2px;display:block;}
 .folders-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+/* Папка «Все» — растянута на всю ширину */
 .folder-card.folder-all{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:12px 16px 11px;}
 .folder-card.folder-all .folder-ico{margin-bottom:0;font-size:22px;}
 .folder-card.folder-all .folder-body{flex:1;}
 .folder-card.folder-all .folder-name{font-size:15px;font-weight:700;}
+/* Основная папка */
 .folder-card{
   position:relative;
   background:
@@ -418,6 +488,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     inset 0 -1px 0 oklch(0.70 0.08 210 / 0.12),
     0 4px 18px oklch(0.52 0.10 210 / 0.09);
 }
+/* Ярлык-ушко папки сверху */
 .folder-card::before{
   content:'';
   position:absolute;top:-1px;left:14px;
@@ -427,6 +498,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   border:1px solid oklch(1 0 0 / 0.75);
   border-bottom:none;
 }
+/* Внутренний блик */
 .folder-card::after{
   content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 25% 15%,oklch(1 0 0 / 0.32) 0%,transparent 52%);
@@ -1208,8 +1280,11 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .keyboard-open .input-sheet-overlay.open{justify-content:flex-end;padding:8px 8px 0;}
 .input-sheet-bg{position:absolute;inset:0;background:oklch(0.25 0.02 210 / 0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 
-/* ── AUDIO NOTE IN SHEET ── */
-.sheet-voice-row{display:flex;align-items:center;gap:10px;padding:10px 18px 0;flex-shrink:0;}
+/* ── AI AUDIO NOTE — кнопка записи в шапке листа ── */
+.sheet-voice-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 18px 0;flex-shrink:0;
+}
 .sheet-voice-btn{
   display:flex;align-items:center;gap:8px;
   background:
@@ -1235,10 +1310,15 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-voice-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .sheet-voice-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;animation:blink .9s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
-.voice-wave-row{display:none;align-items:center;justify-content:center;gap:3px;padding:6px 18px 0;height:28px;}
+/* Полоска волн при записи */
+.voice-wave-row{
+  display:none;align-items:center;justify-content:center;gap:3px;
+  padding:6px 18px 0;height:28px;
+}
 .voice-wave-row.show{display:flex;}
 .vwb{width:3px;border-radius:2px;background:var(--rose);opacity:.6;animation:vwa .6s ease-in-out infinite alternate;}
 @keyframes vwa{from{transform:scaleY(.25);}to{transform:scaleY(1);}}
+/* AI аудио-транскрипция в заметке */
 .ai-transcript-block{
   margin:10px 18px 4px;
   padding:11px 13px;
@@ -1252,6 +1332,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
   color:oklch(0.55 0.12 290 / 0.65);margin-bottom:5px;display:flex;align-items:center;gap:5px;
 }
+/* Бейдж 🎤 на карточке заметки */
 .note-audio-badge{
   display:inline-flex;align-items:center;gap:4px;
   background:oklch(0.52 0.10 210 / 0.09);
@@ -1296,6 +1377,16 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 @keyframes fIn{from{opacity:0}to{opacity:1}}
 @keyframes sUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 ::-webkit-scrollbar{display:none;}
+
+/* ── DARK THEME — filter trick: 4 строки, ноль лишнего кода ── */
+html{transition:filter .35s ease;}
+html.dark{filter:invert(1) hue-rotate(180deg);}
+/* Картинки и видео двойной инверт → выглядят нормально */
+html.dark img,html.dark video,html.dark canvas{filter:invert(1) hue-rotate(180deg);}
+/* Иконки PWA на splash — вернуть в нормальный цвет */
+html.dark .splash-mark svg,html.dark .auth-logo-mark svg{filter:invert(1) hue-rotate(180deg);}
+/* Тёмный скроллбар трека */
+html.dark{color-scheme:dark;}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
@@ -1465,6 +1556,11 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   <button class="hmenu-item" onclick="go('settings');closeMenu()">
     <div class="hmenu-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
     <div><div class="hmenu-t">Настройки</div><div class="hmenu-s">Имя, аккаунт</div></div>
+  </button>
+  <div class="hmenu-sep"></div>
+  <button class="hmenu-item" onclick="toggleTheme();closeMenu();" id="theme-menu-item">
+    <div class="hmenu-ico" id="theme-menu-ico"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+    <div><div class="hmenu-t" id="theme-menu-t">Тёмная тема</div><div class="hmenu-s">Переключить вид</div></div>
   </button>
   <div class="hmenu-sep"></div>
   <button class="hmenu-item danger" onclick="doSignOut()">
@@ -1703,13 +1799,15 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
       </div>
     </div>
     <div class="sheet-hdr-line"></div>
+    <!-- AI Аудио-заметка: кнопка записи + полоска волн -->
     <div class="sheet-voice-row">
       <button class="sheet-voice-btn" id="sheet-voice-btn" onclick="toggleSheetAudioNote()">
         <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
         <span id="sheet-voice-lbl">🎤 Голосовая заметка</span>
       </button>
     </div>
-    <div class="voice-wave-row" id="sheet-wave-row" style="gap:3px;"></div>
+    <div class="voice-wave-row" id="sheet-wave-row" style="gap:3px;">
+    </div>
     <!-- Body textarea -->
     <div class="sheet-body-wrap" id="sheet-body"></div>
     <!-- Reminder -->
@@ -2094,11 +2192,32 @@ function skipToCode(){
   const oi=document.getElementById('otp-input');
   if(oi){oi.value='';oi.focus();}
 }
+// ── DARK THEME ──
+(function initTheme(){
+  if(localStorage.getItem('rz_dark')==='1')document.documentElement.classList.add('dark');
+})();
+
+function toggleTheme(){
+  const isDark=document.documentElement.classList.toggle('dark');
+  localStorage.setItem('rz_dark',isDark?'1':'0');
+  _syncThemeMenu();
+}
+
+function _syncThemeMenu(){
+  const isDark=document.documentElement.classList.contains('dark');
+  const ico=document.getElementById('theme-menu-ico');
+  const lbl=document.getElementById('theme-menu-t');
+  if(ico)ico.innerHTML=isDark
+    ?'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+    :'<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  if(lbl)lbl.textContent=isDark?'Светлая тема':'Тёмная тема';
+}
+
 // ── MENU ──
 function toggleMenu(e){
   e.stopPropagation();
   const m=document.getElementById('hmenu'),b=document.getElementById('hbtn');
-  m.classList.contains('open')?closeMenu():(m.classList.add('open'),b.classList.add('open'));
+  m.classList.contains('open')?closeMenu():(m.classList.add('open'),b.classList.add('open'),_syncThemeMenu());
 }
 function closeMenu(){
   document.getElementById('hmenu').classList.remove('open');
@@ -2182,12 +2301,16 @@ async function runAiAnalysis(text,panel){
       throw new Error((e.error||res.statusText)+' ['+res.status+']');
     }
     const {summary,tags,actions}=await res.json();
-    const autoLabel=tagsToPrimaryLabel(tags||[]);
-    if(autoLabel){
-      const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
-      if(curCat==='заметка'){
-        showSheetCat(autoLabel);
-        showCatHint(autoLabel);
+    // ── Авто-категория из тегов AI ──
+    if(tags?.length){
+      const autoLabel=tagsToPrimaryLabel(tags);
+      if(autoLabel){
+        const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
+        if(curCat==='заметка'){
+          // Применяем только если пользователь не выбрал категорию вручную
+          showSheetCat(autoLabel);
+          _showCatHint(autoLabel);
+        }
       }
     }
     let html='<div class="ai-panel-inner">';
@@ -2196,7 +2319,8 @@ async function runAiAnalysis(text,panel){
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map(a=>`<div class="ai-action">${esc(a)}</div>`).join('')}</div></div>`;}
     html+='</div>';
     panel.innerHTML=html;
-    panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
+    // Сохранить теги во временное хранилище для saveSheet
+    panel.dataset.aiTags=JSON.stringify(tags||[]);
     panel.dataset.aiSummary=summary||'';
   }catch(e){
     console.warn('AI error',e);
@@ -2469,6 +2593,8 @@ const STRIPES={
   заметка:'oklch(0.70 0.04 210)'
 };
 const CATS=Object.keys(STRIPES);
+
+// ── ICONS для папок ──
 const ICONS={
   здоровье:'🏥',
   покупки:'🛒',
@@ -2479,54 +2605,64 @@ const ICONS={
   адрес:'📍',
   заметка:'📝'
 };
-function catIcon(label){return ICONS[safeLabel(label||'заметка')]||'📄';}
 
+// ── TAG → CATEGORY (приоритет по весу) ──
+// Один тег = одна категория. Победитель — категория с наибольшим счётом.
 const TAG_TO_CAT={
+  // здоровье
   здоровье:'здоровье',врач:'здоровье',доктор:'здоровье',давление:'здоровье',
   таблетки:'здоровье',лекарства:'здоровье',аптека:'здоровье',больница:'здоровье',
   анализы:'здоровье',поликлиника:'здоровье',симптом:'здоровье',лечение:'здоровье',
   медицина:'здоровье',диагноз:'здоровье',температура:'здоровье',процедура:'здоровье',
+  // покупки
   покупки:'покупки',магазин:'покупки',список:'покупки',продукты:'покупки',
   еда:'покупки',заказ:'покупки',доставка:'покупки',рынок:'покупки',
+  // контакт / семья
   семья:'контакт',мама:'контакт',папа:'контакт',дети:'контакт',внуки:'контакт',
   родители:'контакт',позвонить:'контакт',написать:'контакт',связаться:'контакт',
   контакт:'контакт',друг:'контакт',родственник:'контакт',перезвонить:'контакт',
+  // событие
   событие:'событие',встреча:'событие',собрание:'событие',поездка:'событие',
   праздник:'событие',день_рождения:'событие',отпуск:'событие',дата:'событие',
   расписание:'событие',запись:'событие',планирование:'событие',
+  // идея
   идея:'идея',мысль:'идея',план:'идея',желание:'идея',
   мечта:'идея',проект:'идея',концепция:'идея',придумал:'идея',
+  // рецепт
   рецепт:'рецепт',готовить:'рецепт',блюдо:'рецепт',кулинария:'рецепт',
   ингредиенты:'рецепт',приготовить:'рецепт',
-  адрес:'адрес',улица:'адрес',место:'адрес',навигатор:'адрес',маршрут:'адрес'
+  // адрес
+  адрес:'адрес',улица:'адрес',место:'адрес',навигатор:'адрес',маршрут:'адрес',
 };
 
+// Получить primary label из массива тегов AI
 function tagsToPrimaryLabel(tags){
-  if(!Array.isArray(tags)||!tags.length)return null;
+  if(!tags||!tags.length)return null;
   const score={};
   tags.forEach(rawTag=>{
-    const t=String(rawTag).replace(/^#/,'').toLowerCase().trim().replace(/\s+/g,'_');
+    // Нормализуем: убрать #, привести к нижнему регистру
+    const t=rawTag.replace(/^#/,'').toLowerCase().trim();
     const cat=TAG_TO_CAT[t];
     if(cat)score[cat]=(score[cat]||0)+1;
   });
   if(!Object.keys(score).length)return null;
+  // Победитель — наибольший счёт; при ничье — первый встреченный
   return Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0];
 }
 
 // ── NOTES ──
 let noteFilter=null;
 let noteViewMode=localStorage.getItem('rz_note_view')||'list';
-let foldersCollapsed=localStorage.getItem('rz_folders_col')==='1';
 
 function toggleNoteView(){
   noteViewMode=noteViewMode==='list'?'grid':'list';
   localStorage.setItem('rz_note_view',noteViewMode);
-  animateNoteViewSwitch();
-  syncNoteViewBtn();
+  _animateDropSwitch();
+  _syncViewBtn();
   loadNotes();
 }
 
-function syncNoteViewBtn(){
+function _syncViewBtn(){
   const btn=document.getElementById('view-toggle-btn');
   const ico=document.getElementById('vtb-ico');
   const lbl=document.getElementById('vtb-lbl');
@@ -2534,21 +2670,15 @@ function syncNoteViewBtn(){
   if(noteViewMode==='grid'){
     btn.classList.add('grid-on');
     if(lbl)lbl.textContent='Список';
-    if(ico){
-      ico.setAttribute('viewBox','0 0 24 24');
-      ico.innerHTML='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="2.5"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="2.5"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="2.5"/>';
-    }
+    if(ico)ico.setAttribute('viewBox','0 0 24 24'),ico.innerHTML='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="2.5"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="2.5"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="2.5"/>';
   } else {
     btn.classList.remove('grid-on');
     if(lbl)lbl.textContent='Сетка';
-    if(ico){
-      ico.setAttribute('viewBox','0 0 24 24');
-      ico.innerHTML='<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>';
-    }
+    if(ico)ico.setAttribute('viewBox','0 0 24 24'),ico.innerHTML='<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>';
   }
 }
 
-function animateNoteViewSwitch(){
+function _animateDropSwitch(){
   const el=document.getElementById('note-list');if(!el)return;
   el.classList.remove('drop-anim');
   void el.offsetWidth;
@@ -2559,9 +2689,10 @@ function animateNoteViewSwitch(){
 function loadNotes(){
   const all=getNotes();
   renderStatChips(all);
-  syncNoteViewBtn();
+  _syncViewBtn();
   const el=document.getElementById('note-list');if(!el)return;
   el.innerHTML='';
+  // Применить/снять класс сетки
   if(noteViewMode==='grid')el.classList.add('note-grid-mode');
   else el.classList.remove('note-grid-mode');
   let filtered=all;
@@ -2576,41 +2707,58 @@ function loadNotes(){
     const nid=n.id;const i=all.indexOf(n);
     const displayNum=i>=0?i+1:sorted.indexOf(n)+1;
     const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
+    const ico=ICONS[safeLabel(n.label||'заметка')]||'📄';
     const wrap=document.createElement('div');
     wrap.setAttribute('data-nwrap','1');
-    const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
-    const d=document.createElement('div');d.className='item-card';d.style.margin='0';
-    const dBtn=document.createElement('button');dBtn.className='desk-del';
-    dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-    dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
+
     if(noteViewMode==='grid'){
+      // ── СЕТКА: компактная карточка ──
       wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;';
-      const gRem=n.reminder?`<div class="grid-reminder">🔔 ${esc(fmtDt(n.reminder))}</div>`:'';
+      const delBg=buildNoteSwipePanel('list',16,()=>nid?delNoteById(nid):delNote(i),()=>shareNote(n));
+      const d=document.createElement('div');d.className='item-card';d.style.margin='0';
+      let gRem='';
+      if(n.reminder){gRem=`<div class="grid-reminder">🔔 ${esc(fmtDt(n.reminder))}</div>`;}
       d.innerHTML=`<div class="note-stripe-top" style="background:${stripe};"></div>
-        <span class="grid-ico">${catIcon(n.label)}</span>
-        <div class="grid-cat">#${displayNum} · ${esc(safeLabel(n.label||'заметка'))}</div>
+        <span class="grid-ico">${ico}</span>
+        <div class="grid-cat">${esc(safeLabel(n.label||'заметка'))}</div>
         <div class="grid-title">${esc(n.title)}</div>
         ${gRem}
         <div class="grid-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+      d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
+      attachSwipeDelete(d,delBg,null,116);
+      const dBtn=document.createElement('button');dBtn.className='desk-del';
+      dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
+      wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);
     } else {
+      // ── СПИСОК: обычная карточка ──
       wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
+      const delBg=buildNoteSwipePanel('list',16,()=>nid?delNoteById(nid):delNote(i),()=>shareNote(n));
+      const d=document.createElement('div');d.className='item-card';d.style.margin='0';
       let rHtml='';
       if(n.reminder){
         rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
       }
-      const tagsHtml=Array.isArray(n.aiTags)&&n.aiTags.length
-        ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">${n.aiTags.slice(0,2).map(t=>`<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:oklch(0.55 0.12 290 / 0.09);color:oklch(0.40 0.12 290);border:1px solid oklch(0.55 0.12 290 / 0.16);">${esc(t)}</span>`).join('')}</div>`
-        : '';
+      // AI теги — максимум 2, только если есть
+      let tagsHtml='';
+      if(n.aiTags&&n.aiTags.length){
+        const top=n.aiTags.slice(0,2);
+        tagsHtml=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">${top.map(t=>`<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:oklch(0.55 0.12 290 / 0.09);color:oklch(0.40 0.12 290);border:1px solid oklch(0.55 0.12 290 / 0.16);">${esc(t)}</span>`).join('')}</div>`;
+      }
       d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
         <div class="note-num">#${displayNum}</div>
-        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
+        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${ico}</span>${esc(safeLabel(n.label||'заметка'))}</div>
         <div class="item-title">${esc(n.title)}</div>
         ${rHtml}${tagsHtml}
         <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+      d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
+      attachSwipeDelete(d,delBg,null,116);
+      const dBtn=document.createElement('button');dBtn.className='desk-del';
+      dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
+      wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);
     }
-    d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
-    attachSwipeDelete(d,delBg,null,116);
-    wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);el.appendChild(wrap);
+    el.appendChild(wrap);
   });
 }
 
@@ -2618,28 +2766,39 @@ function renderStatChips(all){
   const el=document.getElementById('notes-stat');if(!el)return;
   const counts={};
   all.forEach(n=>{const l=safeLabel(n.label||'заметка');counts[l]=(counts[l]||0)+1;});
+
   const activeL=noteFilter||null;
-  const activeIco=activeL?catIcon(activeL):'📋';
+  const activeIco=activeL?(ICONS[activeL]||'📄'):'📋';
   const activeName=activeL?activeL:'Все заметки';
   const activeCount=activeL?(counts[activeL]||0):all.length;
   const totalGroups=Object.keys(counts).length;
-  let html=`<div class="folders-hdr${foldersCollapsed?' folders-collapsed':''}" id="folders-hdr" onclick="toggleFolders()">
+  const isCollapsed=foldersCollapsed;
+
+  // peek и grid показываем/скрываем inline — CSS-селекторы по siblings ненадёжны
+  const peekDisplay=isCollapsed?'flex':'none';
+  const gridDisplay=isCollapsed?'none':'';   // '' = grid из CSS-класса
+
+  let html=`
+  <div class="folders-hdr" id="folders-hdr" onclick="toggleFolders()">
     <span class="folders-lbl">
-      <span class="folders-lbl-feather">𓅭</span>
+      <span class="folders-lbl-feather" style="${isCollapsed?'transform:rotate(12deg) translateY(-1px);opacity:.9':''}">𓅭</span>
       Разделы
     </span>
-    <span class="folders-chev">
-      ${foldersCollapsed?totalGroups+' папок':'свернуть'}
-      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+    <span class="folders-chev" style="${isCollapsed?'':''}">
+      ${isCollapsed?totalGroups+' папок':'свернуть'}
+      <svg viewBox="0 0 24 24" style="transform:${isCollapsed?'rotate(180deg)':'rotate(0deg)'}"><polyline points="18 15 12 9 6 15"/></svg>
     </span>
   </div>
-  <div class="folders-peek" onclick="toggleFolders()">
+
+  <div class="folders-peek" style="display:${peekDisplay};" onclick="toggleFolders()">
     <span class="peek-ico">${activeIco}</span>
     <span class="peek-name">${esc(activeName)}</span>
     <span class="peek-count">${activeCount}</span>
     <span class="peek-expand">↓ показать</span>
   </div>
-  <div class="folders-grid${foldersCollapsed?'':' unfolding'}" id="folders-grid">`;
+
+  <div class="folders-grid${!isCollapsed?' unfolding':''}" id="folders-grid" style="display:${gridDisplay};">`;
+
   html+=`<button class="folder-card folder-all${!noteFilter?' active':''}" onclick="setFilter(null)">
     <span class="folder-ico">📋</span>
     <div class="folder-body">
@@ -2647,37 +2806,53 @@ function renderStatChips(all){
       <span class="folder-pill">${all.length}</span>
     </div>
   </button>`;
+
   Object.entries(counts).forEach(([l,c])=>{
+    const ico=ICONS[l]||'📄';
     html+=`<button class="folder-card${noteFilter===l?' active':''}" onclick="setFilter(${jsAttr(l)})">
-      <span class="folder-ico">${catIcon(l)}</span>
+      <span class="folder-ico">${ico}</span>
       <span class="folder-name">${esc(l)}</span>
       <span class="folder-pill">${c}</span>
     </button>`;
   });
+
   html+='</div>';
   el.innerHTML=html;
 }
 
+let foldersCollapsed=localStorage.getItem('rz_folders_col')==='1';
+let _foldersAnimating=false;
+
 function toggleFolders(){
-  const grid=document.getElementById('folders-grid');
-  if(!foldersCollapsed&&grid){
-    const cards=grid.querySelectorAll('.folder-card');
-    cards.forEach((c,i)=>{c.style.animation=`featherUp .24s cubic-bezier(.4,0,1,1) ${i*0.04}s both`;});
+  if(_foldersAnimating)return;
+  if(!foldersCollapsed){
+    // Сворачиваем: анимация улетания, потом перерисовка
+    _foldersAnimating=true;
+    const grid=document.getElementById('folders-grid');
+    const cards=grid?grid.querySelectorAll('.folder-card'):[];
+    cards.forEach((c,i)=>{
+      c.style.transition='none';
+      c.style.animation=`featherUp .22s cubic-bezier(.4,0,1,1) ${i*0.035}s both`;
+    });
+    const delay=Math.max(cards.length*35+180,180);
     setTimeout(()=>{
       foldersCollapsed=true;
       localStorage.setItem('rz_folders_col','1');
       renderStatChips(getNotes());
-    },cards.length*40+220);
-    return;
+      _foldersAnimating=false;
+    },delay);
+  } else {
+    // Разворачиваем: сразу показать
+    foldersCollapsed=false;
+    localStorage.setItem('rz_folders_col','0');
+    renderStatChips(getNotes());
+    setTimeout(()=>{
+      const g=document.getElementById('folders-grid');
+      if(g){g.classList.add('unfolding');setTimeout(()=>g.classList.remove('unfolding'),600);}
+    },10);
   }
-  foldersCollapsed=false;
-  localStorage.setItem('rz_folders_col','0');
-  renderStatChips(getNotes());
-  setTimeout(()=>{
-    const g=document.getElementById('folders-grid');
-    if(g){g.classList.add('unfolding');setTimeout(()=>g.classList.remove('unfolding'),600);}
-  },10);
 }
+
 function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
 
 // ── SWIPE HELPERS ──
@@ -2943,8 +3118,6 @@ function onSheetPaste(e){
 function closeSheet(){
   stopNoteSheetVoice();
   stopSheetVoice();
-  stopSheetAudioNote();
-  document.querySelector('.ai-transcript-block')?.remove();
   document.getElementById('overlay')?.classList.remove('list-mode');
   const dd=document.getElementById('cat-dropdown');
   if(dd)dd.classList.remove('open');
@@ -3049,13 +3222,14 @@ document.getElementById('overlay-bg').addEventListener('click',()=>{
   closeSheet();
 });
 
-function showCatHint(label){
+// Мягкая подсказка под кнопкой категории
+function _showCatHint(label){
   const wrap=document.getElementById('sheet-cat-wrap');if(!wrap)return;
   const old=document.getElementById('ai-cat-hint');if(old)old.remove();
   const hint=document.createElement('div');
   hint.id='ai-cat-hint';
   hint.style.cssText='font-size:11px;color:oklch(0.55 0.12 290);margin-top:4px;padding:0 2px;animation:splashFadeIn .2s ease;display:flex;align-items:center;gap:4px;';
-  hint.innerHTML=`<svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>✦ AI предложил: ${esc(catIcon(label))} ${esc(label)}`;
+  hint.innerHTML=`<svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>✦ AI предложил: ${esc(ICONS[label]||'')} ${esc(label)}`;
   wrap.appendChild(hint);
   setTimeout(()=>hint.remove(),5000);
 }
@@ -3069,23 +3243,18 @@ function saveSheet(){
   const reminderEl=document.getElementById('sheet-reminder-in');
   const v2=reminderEl?reminderEl.value:'';
   if(!v1.trim()){showToast('Напишите текст');return;}
-  const list=getNotes();
-  const existingIdx=EI!==null?list.findIndex(n=>n.id===EI):-1;
-  const prev=existingIdx>=0?list[existingIdx]:null;
+  // Собрать AI теги и summary если были
   const aiPanel=document.getElementById('ai-panel');
-  let aiTags=Array.isArray(prev?.aiTags)?prev.aiTags:[];
-  let aiSummary=prev?.aiSummary||'';
-  if(aiPanel?.dataset.aiTags){
-    try{const parsed=JSON.parse(aiPanel.dataset.aiTags);if(Array.isArray(parsed))aiTags=parsed.filter(t=>typeof t==='string').slice(0,8);}catch(e){}
-  }
-  if(aiPanel?.dataset.aiSummary)aiSummary=aiPanel.dataset.aiSummary;
+  const aiTags=aiPanel?.dataset.aiTags?JSON.parse(aiPanel.dataset.aiTags):[];
+  const aiSummary=aiPanel?.dataset.aiSummary||'';
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
+  const list=getNotes();
+  const existingIdx=EI!==null?list.findIndex(n=>n.id===EI):-1;
   const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary};
   if(existingIdx>=0){
     item.createdAt=list[existingIdx].createdAt||ts;
-    // Save version history
     const oldSnap={...list[existingIdx]};
     const hist=getHistory();
     hist.unshift({hid:genId(),noteId:oldSnap.id,snapshot:oldSnap,savedAt:ts});
@@ -3145,7 +3314,7 @@ function loadTrash(){
     const d=document.createElement('div');d.className='trash-item';
     const when=n._deletedAt?fmtMeta(n._deletedAt):'';
     d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.5;"></div>
-      <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
+      <div class="note-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="item-title" style="opacity:0.7;">${esc(n.title)}</div>
         <button class="trash-restore-btn" onclick="restoreNote(${i})">
@@ -3169,7 +3338,7 @@ function loadTrash(){
       const d=document.createElement('div');d.className='hist-item';
       const when=fmtMeta(h.savedAt);
       d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.4;"></div>
-        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(sn.label)}</span>${esc(safeLabel(sn.label||'заметка'))}</div>
+        <div class="note-cat">${esc(safeLabel(sn.label||'заметка'))}</div>
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div style="font-size:14px;color:var(--fg-m);opacity:.8;flex:1;">${esc(sn.title||'')} <span style="font-size:11px;color:var(--fg-l);">· была</span></div>
           <button class="hist-restore-btn" onclick="restoreHistory(${hi})">
@@ -3302,15 +3471,19 @@ function loadNotepad(){
 
 function analyzeText(text){
   const t=text.toLowerCase();
+  // Собрать теги по ключевым словам
   const rawTags=[];
   if(/таблетк|лекарств|врач|аптек|давлени|болит|больниц|анализ/.test(t))rawTags.push('здоровье');
   if(/купить|магазин|заказать|продукт|список/.test(t))rawTags.push('покупки');
   if(/позвонить|написать|связаться|перезвонить|мама|папа|семья|внук/.test(t))rawTags.push('позвонить');
-  if(/встреча|собрание|поехать|праздник|запись/.test(t))rawTags.push('событие');
+  if(/встреча|собрание|поехать|праздник/.test(t))rawTags.push('событие');
   if(/идея|думаю|мысль|план/.test(t))rawTags.push('идея');
   if(/рецепт|приготовить|варить/.test(t))rawTags.push('рецепт');
-  if(/адрес|улица|дом №|маршрут/.test(t))rawTags.push('адрес');
-  let label=tagsToPrimaryLabel(rawTags)||'заметка';
+  if(/адрес|улица|дом №/.test(t))rawTags.push('адрес');
+  if(/срочно|важно|дедлайн|оплат|банк|деньги/.test(t))rawTags.push('срочно');
+  // Определить label через TAG_TO_CAT
+  const autoLabel=tagsToPrimaryLabel(rawTags);
+  let label=autoLabel||'заметка';
   let reminder=null;
   const now=new Date();
   const timeM=text.match(/в\s+(\d{1,2})[:\.](\d{2})/);
@@ -3527,44 +3700,35 @@ function stopSheetVoice(){
   if(sheetRecog)try{sheetRecog.stop();}catch(e){}
 }
 
-// ── AI AUDIO NOTE (inside note sheet) ──
-let sheetAudioRecog=null;
-let sheetAudioRec=false;
+// ── AI AUDIO NOTE (в листе заметки) ──
+let _sheetAudioRecog=null,_sheetAudioRec=false,_sheetAudioWaveInt=null;
 
 function toggleSheetAudioNote(){
-  sheetAudioRec?stopSheetAudioNote():startSheetAudioNote();
+  _sheetAudioRec?_stopSheetAudio():_startSheetAudio();
 }
 
-function startSheetAudioNote(){
+function _startSheetAudio(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голосовой ввод не поддерживается в этом браузере');return;}
   let collected='';
-  sheetAudioRecog=new SR();
-  sheetAudioRecog.lang='ru-RU';
-  sheetAudioRecog.continuous=true;
-  sheetAudioRecog.interimResults=false;
-  sheetAudioRecog.onstart=()=>{
-    sheetAudioRec=true;
-    collected='';
+  _sheetAudioRecog=new SR();
+  _sheetAudioRecog.lang='ru-RU';_sheetAudioRecog.continuous=true;_sheetAudioRecog.interimResults=false;
+  _sheetAudioRecog.onstart=()=>{
+    _sheetAudioRec=true;collected='';
     const btn=document.getElementById('sheet-voice-btn');
     const lbl=document.getElementById('sheet-voice-lbl');
     const wr=document.getElementById('sheet-wave-row');
     if(btn)btn.classList.add('rec');
-    if(lbl)lbl.innerHTML='<span class="sheet-voice-dot"></span> Слушаю…';
-    if(wr){wr.classList.add('show');buildSheetAudioWave(wr,18);}
+    if(lbl){lbl.innerHTML='<span class="sheet-voice-dot"></span> Слушаю…';}
+    if(wr){wr.classList.add('show');_buildWaveBars(wr,18);}
   };
-  sheetAudioRecog.onresult=e=>{
-    for(let i=e.resultIndex;i<e.results.length;i++){
+  _sheetAudioRecog.onresult=e=>{
+    for(let i=e.resultIndex;i<e.results.length;i++)
       if(e.results[i].isFinal)collected+=(collected?' ':'')+e.results[i][0].transcript;
-    }
   };
-  sheetAudioRecog.onerror=e=>{
-    if(e.error!=='no-speech')showToast('Ошибка: '+e.error);
-    stopSheetAudioNote();
-  };
-  sheetAudioRecog.onend=()=>{
-    sheetAudioRec=false;
-    sheetAudioRecog=null;
+  _sheetAudioRecog.onerror=e=>{if(e.error!=='no-speech')showToast('Ошибка: '+e.error);_stopSheetAudio();};
+  _sheetAudioRecog.onend=()=>{
+    _sheetAudioRec=false;_sheetAudioRecog=null;
     const btn=document.getElementById('sheet-voice-btn');
     const lbl=document.getElementById('sheet-voice-lbl');
     const wr=document.getElementById('sheet-wave-row');
@@ -3572,33 +3736,31 @@ function startSheetAudioNote(){
     if(lbl)lbl.textContent='🎤 Голосовая заметка';
     if(wr)wr.classList.remove('show');
     if(!collected.trim())return;
+    // Вставить расшифровку в текстовое поле
     const ta=document.getElementById('sh1');
     if(ta){
       ta.value+=(ta.value?'\n':'')+collected.trim();
       ta.dispatchEvent(new Event('input'));
       ta.scrollTop=ta.scrollHeight;
     }
-    showAiTranscriptBlock(collected.trim());
-    if(_aiOn){
-      const p=document.getElementById('ai-panel');
-      const t=document.getElementById('sh1')?.value||'';
-      if(p&&p.style.display!=='none'&&t.length>14)runAiAnalysis(t,p);
-    }
+    // Показать AI-транскрипт блок
+    _showAiTranscriptBlock(collected.trim());
+    // Если AI панель открыта — перезапустить анализ
+    if(_aiOn){const p=document.getElementById('ai-panel');if(p&&p.style.display!=='none'){const t=document.getElementById('sh1')?.value||'';if(t.length>14)runAiAnalysis(t,p);}}
     showToast('Голос записан · AI расшифровал ✓');
   };
-  sheetAudioRecog.start();
+  _sheetAudioRecog.start();
 }
 
-function stopSheetAudioNote(){
-  if(sheetAudioRecog)try{sheetAudioRecog.stop();}catch(e){}
+function _stopSheetAudio(){
+  if(_sheetAudioRecog)try{_sheetAudioRecog.stop();}catch(e){}
 }
 
-function buildSheetAudioWave(container,n){
+function _buildWaveBars(container,n){
   container.innerHTML='';
   const hs=[30,55,80,48,70,90,40,65,85,50,75,35,62,88,44,70,55,38];
   for(let i=0;i<n;i++){
-    const b=document.createElement('div');
-    b.className='vwb';
+    const b=document.createElement('div');b.className='vwb';
     b.style.height=(hs[i%hs.length]*0.5)+'%';
     b.style.animationDelay=(i*0.05)+'s';
     b.style.animationDuration=(0.45+Math.random()*0.35)+'s';
@@ -3606,8 +3768,9 @@ function buildSheetAudioWave(container,n){
   }
 }
 
-function showAiTranscriptBlock(text){
-  document.querySelector('.ai-transcript-block')?.remove();
+function _showAiTranscriptBlock(text){
+  // Удалить старый блок если есть
+  const old=document.querySelector('.ai-transcript-block');if(old)old.remove();
   const sheetBody=document.getElementById('sheet-body');
   if(!sheetBody)return;
   const block=document.createElement('div');
