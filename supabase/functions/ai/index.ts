@@ -64,21 +64,28 @@ Deno.serve(async (req) => {
   const { action, payload } = body ?? {};
 
   if (action === 'analyze') {
-    const { text } = payload ?? {};
+    const { text, memoryContext } = payload ?? {};
     if (typeof text !== 'string' || text.trim().length < 10) {
       return json({ error: 'Text too short' }, 400);
     }
     const safeText = text.trim().slice(0, 6000);
 
-    const prompt = `Ты помощник приложения «Разберёмся» — спокойный и человечный. 
-Проанализируй заметку пользователя и верни JSON (только JSON, без markdown):
+    // Формируем блок памяти — что пользователь писал раньше
+    const memLines = normalizeArray(memoryContext, 7).map((s) => s.slice(0, 200));
+    const memoryBlock = memLines.length > 0
+      ? `\nКонтекст — что пользователь записывал раньше:\n${memLines.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n`
+      : '';
+
+    const prompt = `Ты помощник приложения «Разберёмся» — спокойный и человечный.
+Анализируй заметку внимательно и учитывай контекст прошлых записей, если он есть.
+Верни только JSON, без markdown и пояснений:
 {
   "summary": "одно предложение — суть заметки по-русски",
   "tags": ["тег1", "тег2", "тег3"],
   "actions": ["что можно сделать 1", "что можно сделать 2"]
 }
-
-Заметка:
+${memoryBlock}
+Новая заметка:
 ${safeText}`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -90,7 +97,7 @@ ${safeText}`;
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: 300,
+        max_tokens: 350,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
