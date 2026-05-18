@@ -664,6 +664,14 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .new-note-btn.handsfree .nnb-lock{display:flex;}
 .nnb-lock svg{width:13px;height:13px;stroke:oklch(0.45 0.18 25 / 0.80);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .nnb-lock-txt{font-size:11px;color:oklch(0.45 0.14 25 / 0.80);}
+
+/* Подсказка «потяни вверх» во время записи */
+.nnb-up-arrow{display:none;align-items:center;gap:3px;font-size:11px;font-weight:600;color:oklch(0.45 0.14 25 / 0.85);}
+.new-note-btn.holding .nnb-up-arrow{display:flex;animation:swipe-up-bounce .55s ease-in-out infinite;}
+.new-note-btn.handsfree .nnb-up-arrow{display:none;}
+.nnb-up-arrow svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+@keyframes swipe-up-bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+
 .home-voice-label{font-size:11px;color:var(--fg-l);text-align:center;margin-top:5px;letter-spacing:.01em;transition:color .3s;min-height:16px;}
 .home-voice-label.rec{color:oklch(0.50 0.16 25 / 0.70);}
 
@@ -1615,12 +1623,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
             oncontextmenu="return false"
             onpointerdown="nnbPointerDown(event)"
             onpointerup="nnbPointerUp(event)"
-            onpointerleave="nnbPointerLeave(event)"
+            onpointercancel="nnbPointerCancel(event)"
             onpointermove="nnbPointerMove(event)">
             <span class="nnb-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
             <span class="nnb-text">Новая заметка</span>
-            <span class="nnb-hint">или зажми</span>
-            <span class="nnb-mic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span>
+            <span class="nnb-hint">или зажми 🎤</span>
+            <span class="nnb-up-arrow"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>замок</span>
             <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
           </button>
           <button class="list-quick-btn" onclick="openListSheet()">
@@ -4089,57 +4097,66 @@ function showAiTranscriptBlock(text){
 }
 
 // ── NEW NOTE BUTTON — hold logic ──
-let _nnbHoldTimer=null, _nnbHolding=false, _nnbHandsfree=false;
-let _nnbStartY=0; // for swipe-up detection
+let _nnbHoldTimer=null, _nnbHolding=false, _nnbHandsfree=false, _nnbJustLocked=false;
+let _nnbStartY=0;
 
 function nnbPointerDown(e){
-  _nnbStartY = e.clientY;
-  _nnbHolding=false;
-  _nnbHoldTimer=setTimeout(()=>{
-    _nnbHolding=true;
-    const btn=document.getElementById('new-note-btn');
-    if(btn)btn.classList.add('holding');
-    startHomeVoice();
-  },220);
-}
-
-function nnbPointerMove(e){
-  if(!_nnbHolding)return;
-  const dy=_nnbStartY-e.clientY;
-  // Swipe up 40px = handsfree lock
-  if(dy>40&&!_nnbHandsfree){
-    _nnbHandsfree=true;
-    const btn=document.getElementById('new-note-btn');
-    if(btn){btn.classList.remove('holding');btn.classList.add('handsfree');}
-    const lbl=document.getElementById('home-voice-label');
-    if(lbl)lbl.textContent='🔒 Хендсфри — говорите';
-    // Release pointer — keep recording
-  }
-}
-
-function nnbPointerUp(e){
-  clearTimeout(_nnbHoldTimer);
+  // Если уже в хендсфри — этот тап останавливает
   if(_nnbHandsfree){
-    // Второй тап на кнопку — останавливаем хэндсфри
     stopHomeVoice();
     nnbStopHandsfree();
     const lbl=document.getElementById('home-voice-label');
     if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
     return;
   }
+  // Захватываем pointer — события продолжают идти даже если палец ушёл с кнопки
+  try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}
+  _nnbStartY=e.clientY;
+  _nnbHolding=false;
+  _nnbJustLocked=false;
+  _nnbHoldTimer=setTimeout(()=>{
+    _nnbHolding=true;
+    const btn=document.getElementById('new-note-btn');
+    if(btn)btn.classList.add('holding');
+    startHomeVoice();
+  },200);
+}
+
+function nnbPointerMove(e){
+  if(!_nnbHolding||_nnbHandsfree)return;
+  const dy=_nnbStartY-e.clientY;
+  // Свайп вверх 30px = замок хендсфри
+  if(dy>30){
+    _nnbHandsfree=true;
+    _nnbJustLocked=true;
+    const btn=document.getElementById('new-note-btn');
+    if(btn){btn.classList.remove('holding');btn.classList.add('handsfree');}
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl){lbl.textContent='🔒 Хендсфри — говорите';lbl.classList.add('rec');}
+  }
+}
+
+function nnbPointerUp(e){
+  clearTimeout(_nnbHoldTimer);
+  if(_nnbHandsfree&&_nnbJustLocked){
+    // Отпустили палец после свайпа вверх — хендсфри остаётся активным
+    _nnbJustLocked=false;
+    _nnbHolding=false;
+    return;
+  }
   if(_nnbHolding){
-    // Держали — отпустили — останавливаем
+    // Держали — отпустили без свайпа — останавливаем
     _nnbHolding=false;
     const btn=document.getElementById('new-note-btn');
     if(btn)btn.classList.remove('holding');
     stopHomeVoice();
-  } else {
+  } else if(!_nnbHandsfree){
     // Короткий тап — открываем заметку
     openSheet('note');
   }
 }
 
-function nnbPointerLeave(e){
+function nnbPointerCancel(e){
   clearTimeout(_nnbHoldTimer);
   if(_nnbHolding&&!_nnbHandsfree){
     _nnbHolding=false;
@@ -4150,7 +4167,7 @@ function nnbPointerLeave(e){
 }
 
 function nnbStopHandsfree(){
-  _nnbHandsfree=false;_nnbHolding=false;
+  _nnbHandsfree=false;_nnbHolding=false;_nnbJustLocked=false;
   const btn=document.getElementById('new-note-btn');
   if(btn){btn.classList.remove('holding');btn.classList.remove('handsfree');}
 }
