@@ -3,9 +3,13 @@ create table if not exists public.user_state (
   notes jsonb not null default '[]'::jsonb,
   trash jsonb not null default '[]'::jsonb,
   history jsonb not null default '[]'::jsonb,
+  ai_memory jsonb not null default '[]'::jsonb,
   name text not null default '',
   updated_at timestamptz not null default now()
 );
+
+alter table public.user_state
+add column if not exists ai_memory jsonb not null default '[]'::jsonb;
 
 alter table public.user_state enable row level security;
 

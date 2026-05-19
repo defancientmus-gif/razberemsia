@@ -1,7 +1,8 @@
-const CACHE = 'rz-v63';
+const CACHE = 'rz-v65';
 const ASSETS = [
   './',
   'index.html',
+  'js/app.js',
   'manifest.json',
   'pwa-feather-180.png',
   'pwa-feather-192.png',
