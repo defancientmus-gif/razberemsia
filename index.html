@@ -540,6 +540,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .jq-emer svg{stroke:var(--rose);}
 .jq-emer .jq-label{color:var(--rose);}
 .jq-emer:active{background:oklch(0.58 0.16 25 / 0.12);}
+.jq-feedback{background:oklch(0.55 0.12 290 / 0.06);border-color:oklch(0.55 0.12 290 / 0.15);}
+.jq-feedback svg{stroke:oklch(0.45 0.12 290);}
+.jq-feedback .jq-label{color:oklch(0.45 0.12 290);}
+.jq-feedback:active{background:oklch(0.55 0.12 290 / 0.12);}
 
 /* ── HOME FEED ── */
 .jarvis-feed{
@@ -732,6 +736,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .btn-danger{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;-webkit-appearance:none;background:none;border:none;width:100%;font-family:var(--sys);transition:background .1s;}
 .btn-danger:active{background:oklch(0.58 0.16 25 / 0.06);}
 .btn-danger .set-label{color:var(--rose);}
+.btn-primary{padding:10px 20px;background:oklch(0.50 0.13 260);color:#fff;border:none;border-radius:10px;font-size:14px;font-family:var(--sys);font-weight:600;cursor:pointer;transition:background .15s,transform .1s;}
+.btn-primary:active{background:oklch(0.43 0.13 260);transform:scale(.97);}
+.btn-secondary{padding:10px 18px;background:oklch(0.93 0.01 260);color:oklch(0.40 0.08 260);border:none;border-radius:10px;font-size:14px;font-family:var(--sys);font-weight:500;cursor:pointer;transition:background .15s;}
+.btn-secondary:active{background:oklch(0.88 0.02 260);}
+#feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;opacity:0;transition:opacity .2s;}
+#feedback-panel{position:fixed;bottom:0;left:0;right:0;z-index:901;background:var(--card);border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(16px);
@@ -1758,6 +1768,10 @@ html.dark .bubble{
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               Заметки<span id="notes-count-badge" style="opacity:.5;font-weight:500;margin-left:3px;"></span>
             </button>
+            <button class="jq-btn jq-feedback" onclick="openFeedbackSheet()">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <span class="jq-label">Помочь проекту</span>
+            </button>
           </div>
         </div>
         <div class="jarvis-feed" id="home-feed"></div>
@@ -1872,6 +1886,14 @@ html.dark .bubble{
       <div class="set-group">
         <div class="set-row"><div class="set-info">Авторизация через Supabase. Заметки синхронизируются с вашим аккаунтом и доступны только после входа по вашей почте.</div></div>
       </div>
+      <div class="set-group-title">Помочь разработчику</div>
+      <div class="set-group">
+        <button class="set-row" type="button" onclick="openFeedbackSheet()" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
+          <div class="set-ico">💌</div>
+          <div><div class="set-label">Отправить идею или пожелание</div><div class="set-value">Расскажи что понравилось или что улучшить</div></div>
+          <div class="set-arr">›</div>
+        </button>
+      </div>
       <div class="set-group-title">Выход</div>
       <div class="set-group">
         <button class="btn-danger" type="button" onclick="doSignOut(event)">
@@ -1879,6 +1901,23 @@ html.dark .bubble{
           <div><div class="set-label">Выйти из аккаунта</div><div class="set-value">Потребуется снова войти по почте</div></div>
           <div class="set-arr">›</div>
         </button>
+      </div>
+    </div>
+
+    <!-- FEEDBACK SHEET -->
+    <div class="sheet-overlay" id="feedback-overlay" style="display:none;" onclick="closeFeedbackSheet()"></div>
+    <div class="sheet-panel" id="feedback-panel" style="display:none;max-height:80vh;overflow-y:auto;">
+      <div class="sheet-hdr" style="border-bottom:1px solid oklch(0.88 0.01 260);">
+        <div class="sheet-title">💌 Идея или пожелание</div>
+        <button class="sheet-close" type="button" onclick="closeFeedbackSheet()">✕</button>
+      </div>
+      <div style="padding:16px;">
+        <div style="font-size:13px;color:oklch(0.45 0.05 260);margin-bottom:12px;line-height:1.5;">Напиши что угодно — что понравилось, что мешает, чего не хватает. Это попадёт прямо к разработчику.</div>
+        <textarea id="feedback-ta" class="sheet-in" placeholder="Например: удобно что AI сразу анализирует, но хочу чтобы..." style="min-height:140px;resize:none;width:100%;box-sizing:border-box;" maxlength="2000"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+          <button class="btn-secondary" type="button" onclick="closeFeedbackSheet()">Отмена</button>
+          <button class="btn-primary" type="button" onclick="submitFeedback()">Отправить</button>
+        </div>
       </div>
     </div>
 

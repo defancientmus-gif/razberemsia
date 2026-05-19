@@ -669,6 +669,59 @@ async function _saveIdeaToRepo({text,summary,tags,actions,noteId}){
   }
 }
 
+// ── FEEDBACK / ПОМОЧЬ РАЗРАБОТЧИКУ ──
+function openFeedbackSheet(){
+  const ov=document.getElementById('feedback-overlay');
+  const pn=document.getElementById('feedback-panel');
+  const ta=document.getElementById('feedback-ta');
+  if(!ov||!pn)return;
+  ov.style.display='block';
+  pn.style.display='block';
+  requestAnimationFrame(()=>{
+    ov.style.opacity='1';
+    pn.style.transform='translateY(0)';
+  });
+  if(ta){ta.value='';ta.focus();}
+}
+function closeFeedbackSheet(){
+  const ov=document.getElementById('feedback-overlay');
+  const pn=document.getElementById('feedback-panel');
+  if(ov)ov.style.display='none';
+  if(pn)pn.style.display='none';
+}
+async function submitFeedback(){
+  const ta=document.getElementById('feedback-ta');
+  const text=(ta?.value||'').trim();
+  if(text.length<5){showToast('Напиши хоть немного :)');return;}
+  const name=readText('rz_name')||'Друг';
+  const fullText=`Фидбек от ${name}:\n\n${text}`;
+  const summary=`Фидбек: ${text.slice(0,80)}`;
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token){showToast('Нужно войти в аккаунт');return;}
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'save_idea',payload:{
+        text:fullText,
+        summary,
+        tags:['фидбек','от-друга'],
+        actions:[],
+        noteId:'fb_'+Date.now().toString(36)
+      }})
+    });
+    if(res.ok){
+      showToast('💌 Спасибо! Я обязательно прочитаю');
+      closeFeedbackSheet();
+    } else {
+      showToast('Не получилось отправить, попробуй позже');
+    }
+  }catch(e){
+    showToast('Ошибка: '+String(e?.message||''));
+  }
+}
+
 // ── SWIPE BACK ──
 (function(){
   let sx=0,sy=0,st=0;
