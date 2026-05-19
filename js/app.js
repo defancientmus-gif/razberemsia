@@ -481,10 +481,19 @@ function toggleAiCollapse(){
   const panel=document.getElementById('ai-panel');
   if(!panel)return;
   const body=document.getElementById('ai-panel-body');
-  if(body&&!panel.classList.contains('collapsed'))body.style.maxHeight=body.scrollHeight+'px';
+  const btn=document.getElementById('ai-collapse-btn');
+  const isCollapsed=panel.classList.contains('collapsed');
+  if(!isCollapsed&&body){
+    body.style.maxHeight=body.scrollHeight+'px';
+    requestAnimationFrame(()=>{body.style.maxHeight='0px';});
+  }
   panel.classList.toggle('collapsed');
-  if(!panel.classList.contains('collapsed')&&body){
-    requestAnimationFrame(()=>{body.style.maxHeight=body.scrollHeight+'px';});
+  if(btn)btn.style.transform=isCollapsed?'rotate(0deg)':'rotate(180deg)';
+  if(isCollapsed&&body){
+    requestAnimationFrame(()=>{
+      body.style.maxHeight=body.scrollHeight+'px';
+      setTimeout(()=>{body.style.maxHeight='';},320);
+    });
   }
 }
 
@@ -598,9 +607,14 @@ async function runAiAnalysis(text,panel,attempt=0){
     }
     let html='<div class="ai-panel-inner">';
     if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
-    if(tags?.length){html+=`<div class="ai-section"><div class="ai-label">Теги — нажми чтобы добавить в раздел</div><div class="ai-tags">${tags.map(t=>`<button type="button" class="ai-tag" onclick="applyAiTagCat(${jsAttr(t)})">${esc(t)}</button>`).join('')}</div></div>`;}
+    if(tags?.length){
+      const tagBtns=tags.map(t=>{
+        const exists=typeof tagFolderExists==='function'&&tagFolderExists(t);
+        return `<button type="button" class="ai-tag${exists?' ai-tag--active':''}" data-tag="${esc(t)}" onclick="toggleTagFolder(${jsAttr(t)})" title="${exists?'Открыть папку':'Создать папку в Заметках'}">${esc(t)}</button>`;
+      }).join('');
+      html+=`<div class="ai-section"><div class="ai-label-row"><span class="ai-label">Теги — нажми чтобы создать папку</span><button type="button" class="ai-tag-add-btn" onclick="promptNewTag()">+ тег</button></div><div class="ai-tags">${tagBtns}</div></div>`;
+    }
     const activeCat=autoLabel||'заметка';
-    html+=`<div class="ai-section"><div class="ai-label">Раздел</div><div class="ai-cat-row">${CATS.map(c=>`<button type="button" class="ai-cat-chip${c===activeCat?' active':''}" data-cat="${esc(c)}" onclick="pickAiCat(${jsAttr(c)})">${esc(ICONS[c]||'📄')} ${esc(c)}</button>`).join('')}</div></div>`;
     if(actions?.length){html+=`<div class="ai-section"><div class="ai-label">Можно сделать</div><div class="ai-actions">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div>`;}
     const settings=getReminderSettings();
     const reminderAlreadySet=!!(document.getElementById('sheet-reminder-in')?.value);

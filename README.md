@@ -31,12 +31,13 @@ git pull
 
 ## Основные файлы
 
-- `index.html` — главный прототип.
+- `index.html` — HTML-оболочка приложения.
+- `js/app.js` — основной runtime приложения.
 - `manifest.json` — PWA-настройки.
 - `sw.js` — service worker и кэш.
 - `supabase.sql` — таблица и RLS-правила для облачных заметок Supabase.
-- `supabase/functions/ai/index.ts` — Edge Function для AI-анализа заметок.
-- `Ai Memory/Memory Bank/` — актуальная память проекта, включая AI Memory и ветку продвижения.
+- `supabase/functions/smooth-processor/index.ts` — текущая Edge Function для AI-анализа заметок.
+- `project-memory/` — каноническая папка промтов, памяти, правил, TODO и архивов.
 
 ## Supabase
 
@@ -58,8 +59,9 @@ git pull
 
 ## Документы проекта
 
-- `PROJECT_CONTEXT.md` — краткий контекст проекта.
-- `TODO.md` — ближайшие задачи.
-- `CHANGELOG.md` — история изменений.
-- `Master PROMT/` — мастер-документы и философия проекта.
-- `Ai Memory/Memory Bank/PROJECT_PROMOTION_STRATEGY.md` — отдельная ветка про инвесторов, краудфандинг и публичное позиционирование.
+- `project-memory/README.md` — карта актуальных документов и архива.
+- `project-memory/current/2026-05-19_PROJECT_BRIEF.md` — краткий контекст проекта.
+- `project-memory/current/2026-05-19_TODO.md` — ближайшие задачи.
+- `project-memory/current/2026-05-19_AGENT_RULES.md` — правила работы для AI/разработки.
+- `project-memory/current/2026-05-19_CHANGELOG.md` — история изменений.
+- `MASTER.md`, `PROJECT_CONTEXT.md`, `TODO.md`, `CLAUDE.md` — короткие указатели на `project-memory/current/`.
