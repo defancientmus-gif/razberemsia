@@ -454,7 +454,7 @@ function go(id){
 }
 
 // ── AI PANEL ──
-const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/smooth-processor';
+const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/ai';
 let _aiOn=false;
 
 function toggleAiPanel(){
@@ -468,10 +468,8 @@ function toggleAiPanel(){
   const text=(f?.value||'').trim();
   panel.style.display='block';
   const bodyEl=document.getElementById('ai-panel-body');
-  const editBtn=document.getElementById('ai-edit-btn');
   if(text.length<15){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
-    if(editBtn)editBtn.style.display='none';
     _scrollToAiPanel();
     return;
   }
@@ -497,49 +495,57 @@ function toggleAiCollapse(){
   }
 }
 
-async function requestAiEdit(){
+// ── ИСПРАВЛЕНИЕ ТЕКСТА (кнопка-карандаш в шапке) ──
+// Первое нажатие: отправляет rewrite, применяет результат, подсвечивает кнопку
+// Повторное нажатие: возвращает исходный текст, гасит кнопку
+let _spellOriginal=null;   // оригинальный текст до исправления
+let _spellLoading=false;   // идёт запрос
+
+async function toggleSpellFix(){
+  if(_spellLoading)return;
+  const btn=document.getElementById('sheet-spell-btn');
   const f=document.getElementById('sh1');
-  const text=f?.value?.trim();
-  if(!text||text.length<15){showToast('Напишите больше текста');return;}
-  const bodyEl=document.getElementById('ai-panel-body');
-  const editBtn=document.getElementById('ai-edit-btn');
-  if(!bodyEl)return;
-  let area=document.getElementById('ai-edit-area');
-  if(!area){area=document.createElement('div');area.id='ai-edit-area';area.className='ai-panel-inner';bodyEl.appendChild(area);}
-  area.innerHTML=`<div class="ai-loading"><svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>Улучшаю текст...</div>`;
-  if(editBtn)editBtn.style.display='none';
-  if(bodyEl)bodyEl.style.maxHeight=bodyEl.scrollHeight+200+'px';
-  _scrollToAiPanel();
+  if(!f)return;
+
+  // ── Если исправление уже активно — откатываем ──
+  if(_spellOriginal!==null){
+    f.value=_spellOriginal;
+    _spellOriginal=null;
+    autoGrowTA(f);onSheetInput();
+    if(btn){btn.classList.remove('spell-on');btn.title='Исправить орфографию и пунктуацию';}
+    showToast('Вернули исходный текст');
+    return;
+  }
+
+  const text=f.value.trim();
+  if(text.length<15){showToast('Напишите больше текста');return;}
+
+  // ── Запрос ──
+  _spellLoading=true;
+  if(btn){btn.classList.add('spell-loading');btn.disabled=true;}
   try{
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
-    if(!token)throw new Error('no session');
+    if(!token)throw new Error('Войдите в аккаунт');
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({action:'rewrite',payload:{text}})
     });
-    if(!res.ok)throw new Error(friendlyAiError(await readErrorText(res),res.status));
+    if(!res.ok)throw new Error(await readErrorText(res));
     const {rewritten}=await res.json();
-    area.dataset.rewritten=rewritten;
-    area.innerHTML=`<div class="ai-label" style="margin-bottom:6px;">Улучшенный вариант</div><div class="ai-rewrite-preview">${esc(rewritten)}</div><div class="ai-rewrite-btns"><button class="ai-accept-btn" onclick="applyAiRewrite()">✓ Применить</button><button class="ai-reject-btn" onclick="document.getElementById('ai-edit-area')?.remove();const eb=document.getElementById('ai-edit-btn');if(eb)eb.style.display='flex';">Не надо</button></div>`;
-    if(bodyEl)bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';
-    _scrollToAiPanel();
+    if(!rewritten)throw new Error('Пустой ответ от AI');
+    _spellOriginal=f.value;          // сохраняем оригинал
+    f.value=rewritten;
+    autoGrowTA(f);onSheetInput();
+    if(btn){btn.classList.add('spell-on');btn.title='Нажми ещё раз — вернуть исходный текст';}
+    showToast('✓ Текст исправлен — нажми ✏️ снова чтобы вернуть');
   }catch(e){
-    area.innerHTML=`<div class="ai-err">${esc(String(e?.message||'Не удалось улучшить текст'))}</div>`;
-    if(editBtn)editBtn.style.display='flex';
+    showToast('Не получилось: '+String(e?.message||''));
+  }finally{
+    _spellLoading=false;
+    if(btn){btn.classList.remove('spell-loading');btn.disabled=false;}
   }
-}
-function applyAiRewrite(){
-  const area=document.getElementById('ai-edit-area');
-  const text=area?.dataset.rewritten;
-  if(!text)return;
-  const f=document.getElementById('sh1');
-  if(f){f.value=text;autoGrowTA(f);onSheetInput();}
-  area?.remove();
-  const eb=document.getElementById('ai-edit-btn');
-  if(eb)eb.style.display='flex';
-  showToast('Текст обновлён ✓');
 }
 function _scrollToAiPanel(){
   const sa=document.getElementById('sheet-scroll-area');
@@ -555,7 +561,7 @@ function friendlyAiError(message,status){
   if(raw==='no session')return 'Войдите в аккаунт для AI-функций.';
   if(isAiOverloaded(raw)||status===529)return 'AI сейчас перегружен. Попробуйте ещё раз через минуту.';
   if(/api key|key не настроен/i.test(raw))return 'AI-ключ не настроен на сервере.';
-  if(/unknown action/i.test(raw))return 'Автоисправление ещё не обновлено на сервере. Нужно задеплоить Edge Function smooth-processor.';
+  if(/unknown action/i.test(raw))return 'Неизвестное действие — проверь версию Edge Function.';
   if(/invalid json/i.test(raw))return 'AI ответил в неправильном формате. Попробуйте ещё раз.';
   if(status===401||status===403)return 'Не получилось подтвердить вход. Выйдите и войдите снова.';
   if(status>=500)return 'AI-сервер временно недоступен. Попробуйте чуть позже.';
@@ -577,9 +583,7 @@ async function readErrorText(res){
 async function runAiAnalysis(text,panel,attempt=0){
   let autoLabel=null;
   const bodyEl=document.getElementById('ai-panel-body');
-  const editBtn=document.getElementById('ai-edit-btn');
   if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>${attempt?'AI занят, пробую ещё раз...':'Анализирую...'}</div></div>`;
-  if(editBtn)editBtn.style.display='flex';
   _scrollToAiPanel();
   try{
     const session=await sb.auth.getSession();
@@ -1512,8 +1516,11 @@ function openSheet(type){
 function _openSheet(){
   syncViewportForKeyboard();
   sheetListMode=false;
-  // ── Сбросить AI-панель — чтобы не показывало снимок прошлой заметки ──
+  // ── Сбросить AI-панель и spell-fix при открытии нового листа ──
   _aiOn=false;
+  _spellOriginal=null;
+  const spellBtn=document.getElementById('sheet-spell-btn');
+  if(spellBtn){spellBtn.classList.remove('spell-on','spell-loading');spellBtn.disabled=false;}
   const aiBtn=document.getElementById('sheet-ai-btn');
   if(aiBtn)aiBtn.classList.remove('ai-on');
   const aiPanel=document.getElementById('ai-panel');
@@ -1526,8 +1533,6 @@ function _openSheet(){
   const aiBody=document.getElementById('ai-panel-body');
   if(aiBody)aiBody.innerHTML='';
   document.getElementById('ai-edit-area')?.remove();
-  const aiEditBtn=document.getElementById('ai-edit-btn');
-  if(aiEditBtn)aiEditBtn.style.display='none';
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
   document.getElementById('overlay').classList.add('open');
