@@ -64,11 +64,20 @@ function getAiMemoryContext(){
   return mem.slice(0,7);
 }
 function cloudAllowed(){return !!(sb&&CU&&CU.id);}
+function isMissingAiMemoryColumn(error){
+  const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
+  return msg.includes('ai_memory')&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
+}
 async function loadCloudData(){
   if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
   try{
-    const {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,name').eq('user_id',CU.id).maybeSingle();
+    let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,name').eq('user_id',CU.id).maybeSingle();
+    if(error&&isMissingAiMemoryColumn(error)){
+      console.warn('ai_memory column is not ready yet, loading cloud state without it');
+      const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
+      data=fallback.data;error=fallback.error;
+    }
     if(error)throw error;
     if(data){
       if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
@@ -88,7 +97,13 @@ async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
     const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),ai_memory:getAiMemory(),name:readText('rz_name'),updated_at:new Date().toISOString()};
-    const {error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
+    let {error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
+    if(error&&isMissingAiMemoryColumn(error)){
+      console.warn('ai_memory column is not ready yet, saving cloud state without it');
+      const {ai_memory,...fallbackPayload}=payload;
+      const fallback=await sb.from('user_state').upsert(fallbackPayload,{onConflict:'user_id'});
+      error=fallback.error;
+    }
     if(error)throw error;
   }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
 }
