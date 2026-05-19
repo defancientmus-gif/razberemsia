@@ -626,7 +626,8 @@ async function runAiAnalysis(text,panel,attempt=0){
     panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
     panel.dataset.aiSummary=summary||'';
     // ── Авто-сохранение идей в репозиторий ──
-    const isIdea=(tags||[]).some(t=>/^идеи?$|^ideas?$/i.test(t.trim()));
+    const isIdea=(tags||[]).some(t=>/^идеи?$|^ideas?$/i.test(t.trim()))
+      || /^идея\b/i.test(text.trim());
     if(isIdea){
       const nid=document.getElementById('sheet-wrap')?.dataset.noteId||'';
       _saveIdeaToRepo({text,summary:summary||'',tags:tags||[],actions:actions||[],noteId:nid})
