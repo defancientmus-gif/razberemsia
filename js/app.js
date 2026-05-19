@@ -615,7 +615,7 @@ async function runAiAnalysis(text,panel,attempt=0){
       html+=`<div class="ai-section"><div class="ai-label-row"><span class="ai-label">Теги — нажми чтобы создать папку</span><button type="button" class="ai-tag-add-btn" onclick="promptNewTag()">+ тег</button></div><div class="ai-tags">${tagBtns}</div></div>`;
     }
     const activeCat=autoLabel||'заметка';
-    if(actions?.length){html+=`<div class="ai-section ai-actions-section"><button type="button" class="ai-actions-toggle" onclick="(function(btn){const s=btn.closest('.ai-actions-section');s.classList.toggle('open');const b=s.querySelector('.ai-actions-body');if(s.classList.contains('open')){b.style.maxHeight=b.scrollHeight+'px';}else{b.style.maxHeight='0';}})(this)"><span class="ai-label">Можно сделать <span class="ai-actions-hint">(${actions.length})</span></span><svg class="ai-actions-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button><div class="ai-actions-body"><div class="ai-actions" style="margin-top:8px;">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div></div>`;}
+    if(actions?.length){html+=`<div class="ai-section ai-actions-section"><button type="button" class="ai-actions-toggle" onclick="(function(btn){const s=btn.closest('.ai-actions-section');const b=s.querySelector('.ai-actions-body');const open=s.classList.toggle('open');if(open){b.style.maxHeight='none';const h=b.scrollHeight;b.style.maxHeight='0';requestAnimationFrame(()=>{b.style.maxHeight=h+'px';setTimeout(()=>{b.style.maxHeight='none';},320);});}else{b.style.maxHeight=b.scrollHeight+'px';requestAnimationFrame(()=>{b.style.maxHeight='0';});}})(this)"><span class="ai-label">Можно сделать <span class="ai-actions-hint">(${actions.length})</span></span><svg class="ai-actions-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button><div class="ai-actions-body"><div class="ai-actions" style="margin-top:8px;">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div></div>`;}
     const settings=getReminderSettings();
     const reminderAlreadySet=!!(document.getElementById('sheet-reminder-in')?.value);
     if(settings.aiSuggest&&hasTimeHint(text)&&!reminderAlreadySet){
@@ -1432,6 +1432,8 @@ function openNoteSheetById(id){
   _openNoteWith(n);
 }
 function _openNoteWith(n){
+  // Список открывается своим редактором
+  if(n.type==='list'){openListSheet(n.id);return;}
   ST='note';EI=n.id||null;
   document.getElementById('sheet-title').textContent='Заметка';
   document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
@@ -1456,6 +1458,22 @@ function openSheet(type){
 function _openSheet(){
   syncViewportForKeyboard();
   sheetListMode=false;
+  // ── Сбросить AI-панель — чтобы не показывало снимок прошлой заметки ──
+  _aiOn=false;
+  const aiBtn=document.getElementById('sheet-ai-btn');
+  if(aiBtn)aiBtn.classList.remove('ai-on');
+  const aiPanel=document.getElementById('ai-panel');
+  if(aiPanel){
+    aiPanel.style.display='none';
+    aiPanel.classList.remove('collapsed');
+    aiPanel.dataset.aiTags='';
+    aiPanel.dataset.aiSummary='';
+  }
+  const aiBody=document.getElementById('ai-panel-body');
+  if(aiBody)aiBody.innerHTML='';
+  document.getElementById('ai-edit-area')?.remove();
+  const aiEditBtn=document.getElementById('ai-edit-btn');
+  if(aiEditBtn)aiEditBtn.style.display='none';
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
   document.getElementById('overlay').classList.add('open');
@@ -2102,9 +2120,8 @@ function loadHomeFeed(){
     const bId=n.id||('b'+i);
 
     if(n.type==='list'){
-      // Список — рендерим как чеклист (тап на пузырь не открывает редактор)
       wrap.innerHTML=`
-        <div class="bubble" style="cursor:default;">
+        <div class="bubble" style="cursor:pointer;">
           <div id="list-inner-${esc(bId)}">${buildListInner(n)}</div>
           <div class="bubble-footer">
             <span class="bubble-num">#${displayNum}</span>
@@ -2117,6 +2134,8 @@ function loadHomeFeed(){
       const bbl=wrap.querySelector('.bubble');
       const bdel=wrap.querySelector('.bubble-swipe-panel');
       attachSwipeBubble(bbl,bdel,116);
+      // Клик по пузырю — открыть список на редактирование
+      bbl.addEventListener('click',()=>openListSheet(n.id));
       const dBtnL=document.createElement('button');dBtnL.className='desk-del';
       dBtnL.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
       dBtnL.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
