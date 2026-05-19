@@ -625,6 +625,13 @@ async function runAiAnalysis(text,panel,attempt=0){
     if(bodyEl){bodyEl.innerHTML=html;bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';}
     panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
     panel.dataset.aiSummary=summary||'';
+    // ── Авто-сохранение идей в репозиторий ──
+    const isIdea=(tags||[]).some(t=>/^идеи?$|^ideas?$/i.test(t.trim()));
+    if(isIdea){
+      const nid=document.getElementById('sheet-wrap')?.dataset.noteId||'';
+      _saveIdeaToRepo({text,summary:summary||'',tags:tags||[],actions:actions||[],noteId:nid})
+        .catch(e=>console.warn('save_idea failed',e));
+    }
     if(editBtn)editBtn.style.display='flex';
     _scrollToAiPanel();
   }catch(e){
@@ -633,6 +640,30 @@ async function runAiAnalysis(text,panel,attempt=0){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
     if(editBtn)editBtn.style.display='flex';
     _scrollToAiPanel();
+  }
+}
+
+// ── SAVE IDEA TO REPO ──
+async function _saveIdeaToRepo({text,summary,tags,actions,noteId}){
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)return;
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'save_idea',payload:{text,summary,tags,actions,noteId}})
+    });
+    if(!res.ok){
+      const err=await res.text();
+      console.warn('save_idea error',res.status,err);
+      return;
+    }
+    const {saved,file}=await res.json();
+    if(saved){showToast('✦ Идея сохранена в репозиторий');}
+    console.info('idea saved:',file);
+  }catch(e){
+    console.warn('_saveIdeaToRepo failed',e);
   }
 }
 
