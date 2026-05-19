@@ -536,14 +536,54 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   border-radius:50px;padding:8px 14px;font-size:14px;font-weight:600;color:var(--fg);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;transition:background .12s;white-space:nowrap;}
 .jq-btn:active{background:oklch(0.52 0.10 210 / 0.10);transform:scale(.97);}
 .jq-btn svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.jq-emer{background:oklch(0.58 0.16 25 / 0.06);border-color:oklch(0.58 0.16 25 / 0.15);}
-.jq-emer svg{stroke:var(--rose);}
+.jq-emer{background:oklch(0.58 0.16 25 / 0.06);border-color:oklch(0.58 0.16 25 / 0.15);padding:6px 11px;font-size:12px;}
+.jq-emer svg{stroke:var(--rose);width:13px;height:13px;}
 .jq-emer .jq-label{color:var(--rose);}
 .jq-emer:active{background:oklch(0.58 0.16 25 / 0.12);}
-.jq-feedback{background:oklch(0.55 0.12 290 / 0.06);border-color:oklch(0.55 0.12 290 / 0.15);}
-.jq-feedback svg{stroke:oklch(0.45 0.12 290);}
-.jq-feedback .jq-label{color:oklch(0.45 0.12 290);}
-.jq-feedback:active{background:oklch(0.55 0.12 290 / 0.12);}
+/* ── Кнопка «Помочь проекту» — мультяшная, заметная ── */
+.jq-feedback{
+  background:linear-gradient(135deg,oklch(0.62 0.22 300),oklch(0.55 0.20 260));
+  border-color:transparent;
+  color:#fff;
+  font-size:13px;
+  padding:7px 14px;
+  box-shadow:0 3px 12px -2px oklch(0.55 0.20 280 / 0.45),0 0 0 2px oklch(0.75 0.10 290 / 0.25);
+  animation:fbWiggle 3.5s ease-in-out infinite;
+}
+.jq-feedback svg{stroke:#fff;opacity:.9;}
+.jq-feedback .jq-label{color:#fff;font-weight:700;}
+.jq-feedback:active{transform:scale(.94);box-shadow:0 1px 6px -2px oklch(0.55 0.20 280 / 0.4);}
+@keyframes fbWiggle{
+  0%,100%{transform:rotate(0deg);}
+  92%{transform:rotate(0deg);}
+  94%{transform:rotate(-4deg);}
+  96%{transform:rotate(4deg);}
+  98%{transform:rotate(-3deg);}
+  99%{transform:rotate(2deg);}
+}
+/* ── Feedback bottom sheet ── */
+#feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;transition:opacity .22s;opacity:0;pointer-events:none;}
+#feedback-overlay.fb-open{opacity:1;pointer-events:auto;}
+#feedback-panel{
+  position:fixed;bottom:0;left:0;right:0;z-index:901;
+  background:oklch(0.985 0.008 260);
+  border-radius:22px 22px 0 0;
+  border-top:1px solid oklch(0.88 0.03 260);
+  box-shadow:0 -8px 40px -8px oklch(0 0 0 / 0.18);
+  transform:translateY(100%);
+  transition:transform .28s cubic-bezier(.22,1,.36,1);
+  max-height:85vh;overflow-y:auto;
+}
+#feedback-panel.fb-open{transform:translateY(0);}
+.fb-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid oklch(0.90 0.02 260);}
+.fb-title{font-size:16px;font-weight:700;color:oklch(0.25 0.05 260);}
+.fb-close{width:30px;height:30px;border-radius:50%;background:oklch(0.92 0.01 260);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:oklch(0.45 0.05 260);}
+.fb-close:active{background:oklch(0.86 0.02 260);}
+.fb-body{padding:14px 18px 24px;}
+.fb-hint{font-size:13px;color:oklch(0.50 0.05 260);margin-bottom:12px;line-height:1.55;}
+.fb-ta{width:100%;box-sizing:border-box;min-height:130px;resize:none;border:1.5px solid oklch(0.85 0.03 260);border-radius:14px;padding:12px 14px;font-size:15px;font-family:var(--sys);background:oklch(1 0 0 / 0.7);color:oklch(0.20 0.03 260);outline:none;transition:border-color .15s;}
+.fb-ta:focus{border-color:oklch(0.55 0.14 290);}
+.fb-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;}
 
 /* ── HOME FEED ── */
 .jarvis-feed{
@@ -1908,18 +1948,18 @@ html.dark .bubble{
     </div>
 
     <!-- FEEDBACK SHEET -->
-    <div class="sheet-overlay" id="feedback-overlay" style="display:none;" onclick="closeFeedbackSheet()"></div>
-    <div class="sheet-panel" id="feedback-panel" style="display:none;max-height:80vh;overflow-y:auto;">
-      <div class="sheet-hdr" style="border-bottom:1px solid oklch(0.88 0.01 260);">
-        <div class="sheet-title">💌 Идея или пожелание</div>
-        <button class="sheet-close" type="button" onclick="closeFeedbackSheet()">✕</button>
+    <div id="feedback-overlay" onclick="closeFeedbackSheet()"></div>
+    <div id="feedback-panel">
+      <div class="fb-hdr">
+        <div class="fb-title">💌 Помочь проекту</div>
+        <button class="fb-close" type="button" onclick="closeFeedbackSheet()">✕</button>
       </div>
-      <div style="padding:16px;">
-        <div style="font-size:13px;color:oklch(0.45 0.05 260);margin-bottom:12px;line-height:1.5;">Напиши что угодно — что понравилось, что мешает, чего не хватает. Это попадёт прямо к разработчику.</div>
-        <textarea id="feedback-ta" class="sheet-in" placeholder="Например: удобно что AI сразу анализирует, но хочу чтобы..." style="min-height:140px;resize:none;width:100%;box-sizing:border-box;" maxlength="2000"></textarea>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+      <div class="fb-body">
+        <div class="fb-hint">Напиши что угодно — что понравилось, что мешает, чего не хватает. Попадёт прямо к разработчику 🙌</div>
+        <textarea id="feedback-ta" class="fb-ta" placeholder="Например: удобно что AI анализирует, но хочу чтобы..." maxlength="2000"></textarea>
+        <div class="fb-footer">
           <button class="btn-secondary" type="button" onclick="closeFeedbackSheet()">Отмена</button>
-          <button class="btn-primary" type="button" onclick="submitFeedback()">Отправить</button>
+          <button class="btn-primary" type="button" onclick="submitFeedback()">Отправить ✦</button>
         </div>
       </div>
     </div>

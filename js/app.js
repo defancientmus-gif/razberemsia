@@ -679,19 +679,17 @@ function openFeedbackSheet(){
   const pn=document.getElementById('feedback-panel');
   const ta=document.getElementById('feedback-ta');
   if(!ov||!pn)return;
-  ov.style.display='block';
-  pn.style.display='block';
   requestAnimationFrame(()=>{
-    ov.style.opacity='1';
-    pn.style.transform='translateY(0)';
+    ov.classList.add('fb-open');
+    pn.classList.add('fb-open');
   });
-  if(ta){ta.value='';ta.focus();}
+  if(ta){ta.value='';setTimeout(()=>ta.focus(),320);}
 }
 function closeFeedbackSheet(){
   const ov=document.getElementById('feedback-overlay');
   const pn=document.getElementById('feedback-panel');
-  if(ov)ov.style.display='none';
-  if(pn)pn.style.display='none';
+  if(ov)ov.classList.remove('fb-open');
+  if(pn)pn.classList.remove('fb-open');
 }
 async function submitFeedback(){
   const ta=document.getElementById('feedback-ta');
