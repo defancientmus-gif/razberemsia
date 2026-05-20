@@ -629,13 +629,13 @@ async function runAiAnalysis(text,panel,attempt=0){
       _saveIdeaToRepo({text,summary:summary||'',tags:tags||[],actions:actions||[],noteId:nid})
         .catch(e=>console.warn('save_idea failed',e));
     }
-    if(editBtn)editBtn.style.display='flex';
+    // editBtn removed
     _scrollToAiPanel();
   }catch(e){
     console.warn('AI error',e);
     const msg=String(e?.message||'').startsWith('Ошибка AI:')||String(e?.message||'').startsWith('AI ')||String(e?.message||'').startsWith('Войдите')||String(e?.message||'').startsWith('Не получилось')?String(e?.message):friendlyAiError(e?.message);
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
-    if(editBtn)editBtn.style.display='flex';
+    // editBtn removed
     _scrollToAiPanel();
   }
 }
