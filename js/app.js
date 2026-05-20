@@ -2574,7 +2574,7 @@ function saveSheet(){
   saveNotes(list);
   if(aiSummary)addToAiMemory(aiSummary,aiTags,item.id);
   clearSheetDraft();
-  if(v2) _autoExportIcs(title,v1.trim(),v2,item.id); // авто .ics до закрытия шита
+  // .ics автоэкспорт убран — теперь работает VAPID push через сервер
   const wasNew=(EI===null); // запомнить ДО closeSheet(), который обнуляет EI
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
@@ -2989,7 +2989,7 @@ function saveHome(){
   const notes=getNotes();
   notes.push({id:nid,title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
   saveNotes(notes);
-  if(reminder) _autoExportIcs(title,text,reminder,nid);
+  // .ics убран — VAPID push через сервер
   closeInputSheet();
   loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
