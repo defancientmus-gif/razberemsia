@@ -142,13 +142,14 @@ window.addEventListener('resize',syncViewportForKeyboard);
     const n=new Date();
     const hd=document.getElementById('hdate');
     if(hd)hd.textContent=D[n.getDay()]+', '+n.getDate()+' '+MG[n.getMonth()];
-  }
-  function updC(){
-    const n=new Date();
+    // Часы без секунд — обновляем раз в минуту (было каждую секунду)
     const el=document.getElementById('hclock');
-    if(el)el.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+    if(el)el.textContent=pad(n.getHours())+':'+pad(n.getMinutes());
   }
-  upd();updC();setInterval(upd,60000);setInterval(updC,1000);
+  upd();
+  // Синхронизируем с началом следующей минуты, потом раз в 60с
+  const now=new Date();
+  setTimeout(()=>{upd();setInterval(upd,60000);}, (60-now.getSeconds())*1000);
 })();
 
 // ── AUTH ──
