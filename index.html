@@ -1259,6 +1259,9 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-reminder-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
 .sheet-reminder-in{flex:1;background:transparent;border:none;border-bottom:1px solid oklch(0.88 0.02 210 / 0.25);padding:4px 0;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;-webkit-user-select:text;user-select:text;}
 .sheet-reminder-in:focus{border-bottom-color:oklch(0.52 0.10 210 / 0.45);}
+.sheet-cal-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;border:1px solid oklch(0.52 0.10 210 / 0.30);background:oklch(0.52 0.10 210 / 0.08);color:oklch(0.40 0.12 210);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sys);flex-shrink:0;transition:background .15s,transform .12s;-webkit-appearance:none;}
+.sheet-cal-btn:active{background:oklch(0.52 0.10 210 / 0.18);transform:scale(.95);}
+.sheet-cal-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ── AI PANEL ── */
 .sheet-ai-btn{display:flex;align-items:center;gap:5px;padding:0 10px;height:32px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:oklch(0.55 0.12 290 / 0.10);color:oklch(0.45 0.12 290);transition:background .18s,transform .12s;}
@@ -2065,7 +2068,11 @@ html.dark .bubble{
     <!-- Reminder -->
     <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">
       <span class="sheet-reminder-lbl">Напомнить</span>
-      <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local">
+      <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local" onchange="onReminderChange()">
+      <button class="sheet-cal-btn" id="sheet-cal-btn" type="button" onclick="exportToCalendar()" title="Добавить в Календарь Apple" style="display:none;">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Добавить
+      </button>
     </div>
     <!-- Tools row — раскрывается из кнопки в футере -->
     <div class="tools-row" id="tools-row" style="display:none;">

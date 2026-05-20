@@ -1871,8 +1871,73 @@ function selectCat(label){
 function initSheetReminder(val){
   const row=document.getElementById('sheet-reminder-row');
   const inp=document.getElementById('sheet-reminder-in');
+  const calBtn=document.getElementById('sheet-cal-btn');
   if(row)row.style.display=val?'flex':'none';
   if(inp)inp.value=val||'';
+  if(calBtn)calBtn.style.display=val?'flex':'none';
+}
+
+function onReminderChange(){
+  const inp=document.getElementById('sheet-reminder-in');
+  const calBtn=document.getElementById('sheet-cal-btn');
+  if(calBtn)calBtn.style.display=inp&&inp.value?'flex':'none';
+}
+
+function exportToCalendar(){
+  const inp=document.getElementById('sheet-reminder-in');
+  if(!inp||!inp.value){showToast('Сначала укажите дату напоминания');return;}
+
+  // Собираем данные текущей заметки
+  const f=document.getElementById('sh1');
+  const rawText=f?f.value.trim():'';
+  const words=rawText.split(/\s+/);
+  const title=words.slice(0,8).join(' ')+(words.length>8?'…':'');
+  const desc=rawText.slice(0,200).replace(/\n/g,' ');
+  const noteId=EI||('rz-'+Date.now().toString(36));
+
+  // Парсим дату из datetime-local (локальное время)
+  const dt=new Date(inp.value);
+  if(isNaN(dt.getTime())){showToast('Некорректная дата');return;}
+  const dtEnd=new Date(dt.getTime()+60000); // +1 минута
+
+  function icsDate(d){
+    const pad=n=>String(n).padStart(2,'0');
+    return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z';
+  }
+  function icsEscape(s){return(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+
+  const now=new Date();
+  const ics=[
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Разберёмся//RU',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${noteId}@razberemsia`,
+    `DTSTAMP:${icsDate(now)}`,
+    `DTSTART:${icsDate(dt)}`,
+    `DTEND:${icsDate(dtEnd)}`,
+    `SUMMARY:${icsEscape(title||'Напоминание')}`,
+    `DESCRIPTION:${icsEscape(desc)}`,
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Напоминание',
+    'TRIGGER:PT0S',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`razberemsia-${noteId}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  showToast('📅 Открой файл — добавь в Календарь');
 }
 
 // Tap on overlay-bg to close (not on sheet itself)
