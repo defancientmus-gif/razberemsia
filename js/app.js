@@ -89,7 +89,36 @@ async function loadCloudData(){
       await saveCloudNow();
     }
     CLOUD_READY_UID=CU.id;
-  }catch(e){console.warn('cloud load failed',e);showToast('Не удалось загрузить облако, работаем локально');}
+  }catch(e){
+    console.warn('cloud load failed (attempt 1)',e);
+    CLOUD_LOADING=false;
+    // Сеть при старте PWA может ещё не быть готова — ждём 3 сек и тихо пробуем снова
+    setTimeout(async()=>{
+      if(CLOUD_READY_UID===CU?.id)return; // уже загрузилось
+      try{
+        CLOUD_LOADING=true;
+        let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,name').eq('user_id',CU.id).maybeSingle();
+        if(error&&isMissingAiMemoryColumn(error)){
+          const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
+          data=fallback.data;error=fallback.error;
+        }
+        if(error)throw error;
+        if(data){
+          if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
+          if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+          if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
+          if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
+          if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
+          loadAll(); // обновляем UI с данными из облака
+        }
+        CLOUD_READY_UID=CU?.id;
+      }catch(e2){
+        console.warn('cloud load failed (attempt 2)',e2);
+        // Только теперь говорим пользователю — и то без тоста, данные есть локально
+      }finally{CLOUD_LOADING=false;}
+    },3000);
+    return; // данные локальные уже в localStorage — приложение работает
+  }
   finally{CLOUD_LOADING=false;}
 }
 function queueCloudSave(){if(CLOUD_LOADING||!cloudAllowed())return;clearTimeout(CLOUD_SAVE_TIMER);CLOUD_SAVE_TIMER=setTimeout(saveCloudNow,700);}
