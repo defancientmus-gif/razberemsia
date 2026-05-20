@@ -2354,14 +2354,22 @@ function onReminderChange(){}
 let _rmpTarget=null,_rmpDate=new Date();
 const _RMP_DAYS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const _RMP_MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const _RMP_REPS=5;   // повторений в колесе (зацикливание)
+const _RMP_IH=44;    // высота одного элемента px
+const _RMP_PADS=2;   // padding-заглушки сверху
 
 function openRmp(target){
   _rmpTarget=target;
   const id=target==='sheet'?'sheet-reminder-in':'home-input-reminder';
   const cur=document.getElementById(id)?.value;
-  _rmpDate=cur?new Date(cur):new Date();
-  if(!cur||_rmpDate<=new Date()){
-    _rmpDate=new Date();_rmpDate.setDate(_rmpDate.getDate()+1);_rmpDate.setHours(10,0,0,0);
+  _rmpDate=cur?new Date(cur):null;
+  // Дефолт: текущее время + 1 час, округлённое до 15 минут
+  if(!_rmpDate||_rmpDate<=new Date()){
+    const now=new Date();
+    const nextMins=Math.ceil((now.getMinutes()+1)/15)*15;
+    now.setMinutes(nextMins,0,0);
+    now.setTime(now.getTime()+60*60*1000); // +1 час
+    _rmpDate=now;
   }
   _rmpBuild();
   _rmpRefreshDate();
@@ -2369,19 +2377,34 @@ function openRmp(target){
   const ov=document.getElementById('rmp-ov');
   ov.style.display='flex';
 }
+
+function _rmpScrollFor(wheel,count,value){
+  // Позиция среднего повторения (rep 2 из 5)
+  wheel.scrollTop=(_RMP_PADS+count*2+value)*_RMP_IH;
+}
+
 function _rmpBuild(){
   const pad=n=>String(n).padStart(2,'0');
   const ph='<div class="rmp-wi pad">·</div>';
   const wh=document.getElementById('rmp-wh');
   const wm=document.getElementById('rmp-wm');
-  wh.innerHTML=ph+ph+Array.from({length:24},(_,i)=>`<div class="rmp-wi">${pad(i)}</div>`).join('')+ph+ph;
-  wm.innerHTML=ph+ph+Array.from({length:60},(_,i)=>`<div class="rmp-wi">${pad(i)}</div>`).join('')+ph+ph;
-  // Scroll после рендера
+  if(!wh||!wm)return;
+  // _RMP_REPS повторений + 2 пада сверху и снизу
+  const hItems=Array.from({length:24*_RMP_REPS},(_,i)=>`<div class="rmp-wi">${pad(i%24)}</div>`).join('');
+  const mItems=Array.from({length:60*_RMP_REPS},(_,i)=>`<div class="rmp-wi">${pad(i%60)}</div>`).join('');
+  wh.innerHTML=ph+ph+hItems+ph+ph;
+  wm.innerHTML=ph+ph+mItems+ph+ph;
   setTimeout(()=>{
-    wh.scrollTop=_rmpDate.getHours()*44;
-    wm.scrollTop=_rmpDate.getMinutes()*44;
+    _rmpScrollFor(wh,24,_rmpDate.getHours());
+    _rmpScrollFor(wm,60,_rmpDate.getMinutes());
   },30);
 }
+
+function _rmpReadWheel(wheel,count){
+  const raw=Math.round(wheel.scrollTop/_RMP_IH)-_RMP_PADS;
+  return((raw%count)+count)%count;
+}
+
 function _rmpRefreshDate(){
   const d=_rmpDate;
   document.getElementById('rmp-datelbl').textContent=`${_RMP_DAYS[d.getDay()]}, ${d.getDate()} ${_RMP_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
@@ -2395,6 +2418,16 @@ function _rmpHighlightChips(){
 function rmpSetDay(offset){
   const d=new Date();d.setDate(d.getDate()+offset);
   _rmpDate.setFullYear(d.getFullYear(),d.getMonth(),d.getDate());
+  // Если выбрали сегодня и время уже прошло — добавляем час
+  if(offset===0&&_rmpDate<=new Date()){
+    const now=new Date();
+    now.setTime(now.getTime()+3600000);
+    _rmpDate.setHours(now.getHours(),now.getMinutes(),0,0);
+    const wh=document.getElementById('rmp-wh');
+    const wm=document.getElementById('rmp-wm');
+    if(wh)_rmpScrollFor(wh,24,_rmpDate.getHours());
+    if(wm)_rmpScrollFor(wm,60,_rmpDate.getMinutes());
+  }
   _rmpRefreshDate();_rmpHighlightChips();
 }
 function rmpClose(){
@@ -2406,8 +2439,8 @@ function rmpClose(){
 function rmpConfirm(){
   const wh=document.getElementById('rmp-wh');
   const wm=document.getElementById('rmp-wm');
-  const h=Math.min(Math.max(Math.round(wh.scrollTop/44),0),23);
-  const m=Math.min(Math.max(Math.round(wm.scrollTop/44),0),59);
+  const h=_rmpReadWheel(wh,24);
+  const m=_rmpReadWheel(wm,60);
   _rmpDate.setHours(h,m,0,0);
   const pad=n=>String(n).padStart(2,'0');
   const d=_rmpDate;
