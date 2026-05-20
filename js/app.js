@@ -152,32 +152,22 @@ window.addEventListener('resize',syncViewportForKeyboard);
 })();
 
 // ── AUTH ──
-function showSplash(){
-  const s=document.getElementById('splash');
-  if(!s)return;s.style.display='flex';s.style.opacity='1';s.classList.remove('hidden');
-}
-function hideSplash(){
-  const s=document.getElementById('splash');
-  if(!s)return;
-  s.style.opacity='0';
-  setTimeout(()=>{s.style.display='none';s.classList.add('hidden');},380);
-}
+// Splash удалён — auth-screen является заставкой. Он виден сразу при загрузке.
 async function initAuth(){
   if(!sb){
-    showAuthScr();
+    setAuthChecking(false);
     showAuthErr(sbConfigured?'Не удалось загрузить облачное подключение. Проверьте интернет и обновите страницу.':'Supabase ещё не настроен. Добавьте URL и anon key.');
     return;
   }
-  showSplash();
+  // auth-card уже в checking-состоянии по HTML — ждём сессию
   try{
     const {data}=await sb.auth.getSession();
     if(data?.session?.user){
       await enterUser(data.session.user);
     } else {
-      hideSplash();
-      showAuthScr();
+      setAuthChecking(false); // показываем поле почты
     }
-  }catch(e){console.warn('session check failed',e);hideSplash();showAuthScr();}
+  }catch(e){console.warn('session check failed',e);setAuthChecking(false);}
   // Регистрируем после getSession — избегаем двойного enterUser через INITIAL_SESSION
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session?.user){
@@ -205,18 +195,19 @@ async function enterUser(user){
   CU=user;migrateLegacyLocal();await loadCloudData();showApp();updUI(user);loadAll();
 }
 function showApp(){
-  hideSplash();
   const a=document.getElementById('auth-screen');
-  a.style.opacity='0';
-  setTimeout(()=>{a.style.display='none';a.classList.add('hidden');},360);
+  if(a){
+    a.classList.add('hidden');
+    setTimeout(()=>a.classList.add('gone'),420);
+  }
   const m=document.getElementById('main-app');
   if(m)m.style.display='flex';
 }
 function showAuthScr(){
+  // auth-screen всегда виден — просто снимаем checking с карточки
+  setAuthChecking(false);
   const a=document.getElementById('auth-screen');
-  a.style.display='flex';
-  a.style.opacity='1';
-  a.classList.remove('hidden');
+  if(a){a.classList.remove('hidden','gone');a.style.opacity='1';}
 }
 function updUI(u){
   const email=u&&u.email?u.email:'—';
