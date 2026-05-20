@@ -750,17 +750,26 @@ function _renderReplyBubble(noteId){
   if(!n?.aiReply){el.style.display='none';return;}
   el.style.display='block';
   el.innerHTML=_buildReplyHTML(n);
+  // Прокручиваем чат вниз чтобы ответ был виден
+  const feed=document.getElementById('home-feed');
+  if(feed)requestAnimationFrame(()=>{feed.scrollTop=feed.scrollHeight;});
 }
 
 function _buildReplyHTML(n){
   const like=n.aiReplyLike||0;
-  return `<div class="ai-reply-bubble">
+  const nId=esc(n.id);
+  // Клик по пузырю — открывает заметку. Кнопки оценки — только оценка (stopPropagation).
+  return `<div class="ai-reply-bubble" onclick="openNoteSheetById('${nId}')" title="Открыть заметку">
     <div class="ai-reply-icon">✦</div>
     <div class="ai-reply-content">
       <div class="ai-reply-text">${esc(n.aiReply)}</div>
       <div class="ai-reply-actions">
-        <button class="ai-reply-rate ${like===1?'active':''}" onclick="rateReply('${esc(n.id)}',${like===1?0:1})" title="Понравилось">👍</button>
-        <button class="ai-reply-rate ${like===-1?'active':''}" onclick="rateReply('${esc(n.id)}',${like===-1?0:-1})" title="Не то">👎</button>
+        <button class="ai-reply-rate ${like===1?'active':''}" onclick="event.stopPropagation();rateReply('${nId}',${like===1?0:1})" title="Полезно">
+          <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+        <button class="ai-reply-rate ${like===-1?'active':''}" onclick="event.stopPropagation();rateReply('${nId}',${like===-1?0:-1})" title="Не то">
+          <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
       </div>
     </div>
   </div>`;

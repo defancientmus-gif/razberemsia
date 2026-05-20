@@ -677,26 +677,30 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .ai-reply-wrap{padding:0 16px 18px 28px;margin-top:-8px;}
 .ai-reply-bubble{
   display:flex;align-items:flex-start;gap:8px;
-  background:oklch(0.97 0.010 290 / 0.75);
-  border:1px solid oklch(0.55 0.12 290 / 0.15);
-  border-radius:6px 18px 18px 18px;
+  background:oklch(0.97 0.006 260 / 0.80);
+  border:1px solid oklch(0.88 0.02 260 / 0.60);
+  border-radius:6px 16px 16px 16px;
   padding:10px 13px;
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   max-width:86%;
+  cursor:pointer;
   animation:splashFadeIn .30s cubic-bezier(.22,1,.36,1);
+  transition:background .15s;
 }
-.ai-reply-icon{font-size:14px;flex-shrink:0;margin-top:1px;opacity:.7;}
-.ai-reply-content{display:flex;flex-direction:column;gap:7px;min-width:0;}
-.ai-reply-text{font-size:13px;color:oklch(0.30 0.06 260);line-height:1.55;word-break:break-word;}
-.ai-reply-actions{display:flex;gap:6px;}
+.ai-reply-bubble:active{background:oklch(0.94 0.006 260 / 0.90);}
+.ai-reply-icon{font-size:13px;flex-shrink:0;margin-top:2px;opacity:.5;color:oklch(0.45 0.08 260);}
+.ai-reply-content{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.ai-reply-text{font-size:13px;color:oklch(0.32 0.04 260);line-height:1.58;word-break:break-word;}
+.ai-reply-actions{display:flex;gap:5px;}
 .ai-reply-rate{
-  background:none;border:1px solid oklch(0.85 0.03 260);
-  border-radius:20px;padding:3px 9px;font-size:13px;cursor:pointer;
-  transition:background .15s,transform .1s,border-color .15s;
+  display:flex;align-items:center;justify-content:center;
+  width:24px;height:24px;
+  background:none;border:1px solid oklch(0.88 0.02 260 / 0.70);
+  border-radius:7px;cursor:pointer;color:oklch(0.55 0.05 260);
+  transition:background .15s,transform .1s,border-color .15s,color .15s;
   -webkit-appearance:none;
 }
-.ai-reply-rate:active{transform:scale(.90);}
-.ai-reply-rate.active{background:oklch(0.55 0.12 290 / 0.15);border-color:oklch(0.55 0.12 290 / 0.40);}
+.ai-reply-rate:active{transform:scale(.88);}
+.ai-reply-rate.active{background:oklch(0.52 0.10 210 / 0.10);border-color:oklch(0.52 0.10 210 / 0.35);color:oklch(0.40 0.10 210);}
 
 /* ── HOME BAR ── */
 .home-bar{padding:8px 14px 28px;flex-shrink:0;}
