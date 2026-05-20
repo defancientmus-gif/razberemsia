@@ -562,28 +562,45 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   99%{transform:rotate(2deg);}
 }
 /* ── Feedback bottom sheet ── */
-#feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;transition:opacity .22s;opacity:0;pointer-events:none;}
+#feedback-overlay{position:fixed;inset:0;background:oklch(0 0 0 / 0.40);z-index:900;transition:opacity .22s;opacity:0;pointer-events:none;}
 #feedback-overlay.fb-open{opacity:1;pointer-events:auto;}
 #feedback-panel{
   position:fixed;bottom:0;left:0;right:0;z-index:901;
-  background:oklch(0.985 0.008 260);
+  background:var(--bg);
   border-radius:22px 22px 0 0;
-  border-top:1px solid oklch(0.88 0.03 260);
-  box-shadow:0 -8px 40px -8px oklch(0 0 0 / 0.18);
+  border-top:1px solid oklch(0.88 0.03 260 / 0.6);
+  box-shadow:0 -6px 32px -4px oklch(0 0 0 / 0.14);
   transform:translateY(100%);
   transition:transform .28s cubic-bezier(.22,1,.36,1);
-  max-height:85vh;overflow-y:auto;
+  max-height:88vh;overflow-y:auto;
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 #feedback-panel.fb-open{transform:translateY(0);}
-.fb-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid oklch(0.90 0.02 260);}
-.fb-title{font-size:16px;font-weight:700;color:oklch(0.25 0.05 260);}
-.fb-close{width:30px;height:30px;border-radius:50%;background:oklch(0.92 0.01 260);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:oklch(0.45 0.05 260);}
-.fb-close:active{background:oklch(0.86 0.02 260);}
-.fb-body{padding:14px 18px 24px;}
-.fb-hint{font-size:13px;color:oklch(0.50 0.05 260);margin-bottom:12px;line-height:1.55;}
-.fb-ta{width:100%;box-sizing:border-box;min-height:130px;resize:none;border:1.5px solid oklch(0.85 0.03 260);border-radius:14px;padding:12px 14px;font-size:15px;font-family:var(--sys);background:oklch(1 0 0 / 0.7);color:oklch(0.20 0.03 260);outline:none;transition:border-color .15s;}
-.fb-ta:focus{border-color:oklch(0.55 0.14 290);}
-.fb-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;}
+.fb-drag{width:36px;height:4px;border-radius:2px;background:oklch(0.82 0.01 260);margin:10px auto 0;}
+/* Кому — строка адресата */
+.fb-to-row{display:flex;align-items:center;gap:12px;padding:14px 18px 12px;}
+.fb-avatar{width:38px;height:38px;border-radius:12px;background:oklch(0.55 0.14 290 / 0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fb-avatar svg{width:18px;height:18px;stroke:oklch(0.45 0.14 290);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.fb-to-info{flex:1;min-width:0;}
+.fb-to-label{font-size:10px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;}
+.fb-to-name{font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fb-to-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:oklch(0.45 0.14 290);background:oklch(0.55 0.14 290 / 0.10);border-radius:6px;padding:2px 7px;margin-top:3px;}
+.fb-close{width:32px;height:32px;border-radius:50%;background:oklch(0.91 0.01 260);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fb-close svg{width:14px;height:14px;stroke:oklch(0.45 0.05 260);stroke-width:2.2;fill:none;stroke-linecap:round;}
+.fb-close:active{background:oklch(0.84 0.02 260);}
+/* Разделитель */
+.fb-sep{height:1px;background:oklch(0.90 0.015 260 / 0.7);margin:0 18px;}
+/* Поле — как тело заметки */
+.fb-body{padding:14px 18px 10px;}
+.fb-ta{width:100%;box-sizing:border-box;min-height:140px;resize:none;border:none;background:transparent;font-size:15.5px;font-family:var(--sys);color:var(--fg);outline:none;line-height:1.6;-webkit-user-select:text;user-select:text;}
+.fb-ta::placeholder{color:var(--fg-l);}
+/* Футер */
+.fb-footer{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 16px;border-top:1px solid oklch(0.90 0.015 260 / 0.6);margin-top:4px;}
+.fb-meta{font-size:11px;color:var(--fg-l);display:flex;align-items:center;gap:5px;}
+.fb-meta svg{width:12px;height:12px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.7;}
+.fb-send{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:12px;border:none;background:oklch(0.52 0.14 290);color:#fff;font-size:14px;font-weight:600;font-family:var(--sys);cursor:pointer;transition:background .15s,transform .12s;}
+.fb-send:active{background:oklch(0.44 0.14 290);transform:scale(.96);}
+.fb-send svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ── HOME FEED ── */
 .jarvis-feed{
@@ -805,9 +822,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .btn-primary:active{background:oklch(0.43 0.13 260);transform:scale(.97);}
 .btn-secondary{padding:10px 18px;background:oklch(0.93 0.01 260);color:oklch(0.40 0.08 260);border:none;border-radius:10px;font-size:14px;font-family:var(--sys);font-weight:500;cursor:pointer;transition:background .15s;}
 .btn-secondary:active{background:oklch(0.88 0.02 260);}
-#feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;opacity:0;transition:opacity .2s;}
-#feedback-panel{position:fixed;bottom:0;left:0;right:0;z-index:901;background:var(--card);border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);}
-
 /* ── TOAST ── */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(16px);
   background:oklch(0.18 0.02 210 / 0.90);
@@ -1958,17 +1972,39 @@ html.dark .bubble{
     <!-- FEEDBACK SHEET -->
     <div id="feedback-overlay" onclick="closeFeedbackSheet()"></div>
     <div id="feedback-panel">
-      <div class="fb-hdr">
-        <div class="fb-title">💌 Помочь проекту</div>
-        <button class="fb-close" type="button" onclick="closeFeedbackSheet()">✕</button>
-      </div>
-      <div class="fb-body">
-        <div class="fb-hint">Напиши что угодно — что понравилось, что мешает, чего не хватает. Попадёт прямо к разработчику 🙌</div>
-        <textarea id="feedback-ta" class="fb-ta" placeholder="Например: удобно что AI анализирует, но хочу чтобы..." maxlength="2000"></textarea>
-        <div class="fb-footer">
-          <button class="btn-secondary" type="button" onclick="closeFeedbackSheet()">Отмена</button>
-          <button class="btn-primary" type="button" onclick="submitFeedback()">Отправить ✦</button>
+      <div class="fb-drag"></div>
+      <!-- Кому -->
+      <div class="fb-to-row">
+        <div class="fb-avatar">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
+        <div class="fb-to-info">
+          <div class="fb-to-label">Кому</div>
+          <div class="fb-to-name">Разработчику</div>
+          <div class="fb-to-badge">
+            <svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            попадёт в репозиторий
+          </div>
+        </div>
+        <button class="fb-close" type="button" onclick="closeFeedbackSheet()">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="fb-sep"></div>
+      <!-- Тело -->
+      <div class="fb-body">
+        <textarea id="feedback-ta" class="fb-ta" placeholder="Что понравилось, что мешает, чего не хватает — всё важно" maxlength="2000"></textarea>
+      </div>
+      <!-- Футер -->
+      <div class="fb-footer">
+        <span class="fb-meta">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Анонимно · только разработчику
+        </span>
+        <button class="fb-send" type="button" onclick="submitFeedback()">
+          Отправить
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
     </div>
 
