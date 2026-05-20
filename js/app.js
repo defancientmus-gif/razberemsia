@@ -1270,6 +1270,20 @@ function _fmtIso(d){
 }
 const _WNUM={один:1,одну:1,два:2,две:2,три:3,четыре:4,пять:5,шесть:6,семь:7,восемь:8,девять:9,десять:10,одиннадцать:11,двенадцать:12,тринадцать:13,четырнадцать:14,пятнадцать:15,шестнадцать:16,семнадцать:17,восемнадцать:18,девятнадцать:19,двадцать:20,полдень:12,полночь:0};
 const _DAYS={понедельник:1,вторник:2,среда:2,среду:3,четверг:4,пятница:5,пятницу:5,суббота:6,субботу:6,воскресенье:0,воскресенью:0};
+// Убирает команду напоминания из текста заметки
+function stripReminderCommand(text){
+  if(!text)return text;
+  // Фразы вида "поставь/поставить уведомление/напоминание на ..."
+  // "напомни в ...", "напомни через ..."
+  // Удаляем всё что идёт после ключевого слова напоминания до конца или до точки
+  return text
+    .replace(/[,.]?\s*(?:поставь|поставить|поставь мне|добавь|создай)\s+(?:уведомление|напоминание|напомни?)\s+(?:на|в|через)[^\n.]*/gi,'')
+    .replace(/[,.]?\s*напомни(?:те)?\s+(?:мне\s+)?(?:в|на|через|завтра|сегодня|послезавтра)[^\n.]*/gi,'')
+    .replace(/[,.]?\s*(?:поставь|поставить)\s+напоминание[^\n.]*/gi,'')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
+
 function parseVoiceReminder(text){
   if(!text)return null;
   const t=text.toLowerCase();
@@ -1313,17 +1327,21 @@ function parseVoiceReminder(text){
   else if(t.match(/\bвечером\b/)){h=19;}
   else if(t.match(/\bночью\b/)){h=22;}
 
-  // ── «в N (часов/часа)» числом ──
-  const digitM=t.match(/в\s+(\d{1,2})(?::(\d{2}))?\s*(?:час|утра|дня|вечера|ночи)?/);
+  // ── «в/на N:MM» или «в/на N часов» числом ──
+  const digitM=t.match(/(?:в|на)\s+(\d{1,2})(?::(\d{2}))?\s*(?:час|утра|дня|вечера|ночи)?/);
   if(digitM){
     let hh=parseInt(digitM[1]);const mm=parseInt(digitM[2]||'0');
-    // Если < 8 — скорее всего вечер (в 3 = 15:00)
-    if(hh<8)hh+=12;
+    if(hh<8)hh+=12; // «на 3» → 15:00
     h=hh;m=mm;
   }
+  // ── Голое HH:MM без предлога (напр. «14:30») ──
+  if(h===null){
+    const bareM=t.match(/\b(\d{1,2}):(\d{2})\b/);
+    if(bareM){let hh=parseInt(bareM[1]);if(hh<8)hh+=12;h=hh;m=parseInt(bareM[2]);}
+  }
 
-  // ── «в [слово] часов» ──
-  const wordM=t.match(/в\s+(один|одну|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|одиннадцать|двенадцать|полдень|полночь)/);
+  // ── «в/на [слово] часов» ──
+  const wordM=t.match(/(?:в|на)\s+(один|одну|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|одиннадцать|двенадцать|полдень|полночь)/);
   if(wordM&&h===null){
     let hh=_WNUM[wordM[1]]||10;
     if(hh<8)hh+=12;
@@ -2699,17 +2717,17 @@ function startSheetVoice(){
     sheetIsRec=false;sheetRecog=null;
     const btn=document.getElementById('input-sheet-mic-btn');if(btn)btn.classList.remove('rec');
     if(collected.trim()){
+      const vReminder=parseVoiceReminder(collected);
+      const cleanText=vReminder?stripReminderCommand(collected.trim()):collected.trim();
       const inp=document.getElementById('home-input');
       if(inp){
-        inp.value+=(inp.value?' ':'')+collected.trim();
+        inp.value+=(inp.value?' ':'')+cleanText;
         document.getElementById('input-sheet-char-count').textContent=inp.value.length+' симв';
       }
-      // Умное определение напоминания
-      const vReminder=parseVoiceReminder(collected);
       if(vReminder){
         const r=document.getElementById('home-input-reminder');
         if(r)r.value=vReminder;
-        showToast('🔔 '+fmtDt(vReminder));
+        showToast('🔔 Напоминание: '+fmtDt(vReminder));
       }
     }
   };
@@ -2764,15 +2782,15 @@ function startSheetAudioNote(){
     if(lbl)lbl.textContent='🎤 Голосовая заметка';
     if(wr)wr.classList.remove('show');
     if(!collected.trim())return;
+    const vReminder=parseVoiceReminder(collected);
+    const cleanText=vReminder?stripReminderCommand(collected.trim()):collected.trim();
     const ta=document.getElementById('sh1');
     if(ta){
-      ta.value+=(ta.value?'\n':'')+collected.trim();
+      ta.value+=(ta.value?'\n':'')+cleanText;
       ta.dispatchEvent(new Event('input'));
       ta.scrollTop=ta.scrollHeight;
     }
-    showAiTranscriptBlock(collected.trim());
-    // Умное определение напоминания из голоса
-    const vReminder=parseVoiceReminder(collected);
+    showAiTranscriptBlock(cleanText);
     if(vReminder){
       const row=document.getElementById('sheet-reminder-row');
       const inp=document.getElementById('sheet-reminder-in');
@@ -2780,7 +2798,7 @@ function startSheetAudioNote(){
       if(row)row.style.display='flex';
       if(inp)inp.value=vReminder;
       if(calBtn)calBtn.style.display='flex';
-      showToast('🔔 Поставил напоминание на '+fmtDt(vReminder));
+      showToast('🔔 Напоминание: '+fmtDt(vReminder));
     } else {
       showToast('Голос записан ✓');
     }
@@ -2933,13 +2951,13 @@ function startHomeVoice(){
     const lbl=document.getElementById('home-voice-label');if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
     const text=collected.trim();
     if(text){
-      const auto=analyzeText(text);
-      // Умный парсер времени поверх базового
       const voiceReminder=parseVoiceReminder(text);
+      const cleanBody=voiceReminder?stripReminderCommand(text):text;
+      const auto=analyzeText(cleanBody);
       const reminder=voiceReminder||auto.reminder||null;
       const ts=Date.now();
       const notes=getNotes();
-      notes.push({id:genId(),title:auto.title,body:text,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+      notes.push({id:genId(),title:auto.title,body:cleanBody,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
       saveNotes(notes);
       loadHomeFeed();loadNotes();loadNotepad();
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
