@@ -1487,17 +1487,20 @@ function _fmtIso(d){
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
 }
 const _WNUM={один:1,одну:1,два:2,две:2,три:3,четыре:4,пять:5,шесть:6,семь:7,восемь:8,девять:9,десять:10,одиннадцать:11,двенадцать:12,тринадцать:13,четырнадцать:14,пятнадцать:15,шестнадцать:16,семнадцать:17,восемнадцать:18,девятнадцать:19,двадцать:20,полдень:12,полночь:0};
-const _DAYS={понедельник:1,вторник:2,среда:2,среду:3,четверг:4,пятница:5,пятницу:5,суббота:6,субботу:6,воскресенье:0,воскресенью:0};
-// Убирает команду напоминания из текста заметки
+const _DAYS={понедельник:1,вторник:2,среда:3,среду:3,четверг:4,пятница:5,пятницу:5,суббота:6,субботу:6,воскресенье:0,воскресенью:0};
+// Убирает команду напоминания из текста заметки, оставляя суть
 function stripReminderCommand(text){
   if(!text)return text;
-  // Фразы вида "поставь/поставить уведомление/напоминание на ..."
-  // "напомни в ...", "напомни через ..."
-  // Удаляем всё что идёт после ключевого слова напоминания до конца или до точки
   return text
-    .replace(/[,.]?\s*(?:поставь|поставить|поставь мне|добавь|создай)\s+(?:уведомление|напоминание|напомни?)\s+(?:на|в|через)[^\n.]*/gi,'')
+    // "поставь/добавь уведомление/напоминание в/на/через..."
+    .replace(/[,.]?\s*(?:поставь(?:\s+мне)?|поставить|добавь|создай)\s+(?:уведомление|напоминание)[^\n.]*/gi,'')
+    // "напомни в/на/через/завтра/..."
     .replace(/[,.]?\s*напомни(?:те)?\s+(?:мне\s+)?(?:в|на|через|завтра|сегодня|послезавтра)[^\n.]*/gi,'')
-    .replace(/[,.]?\s*(?:поставь|поставить)\s+напоминание[^\n.]*/gi,'')
+    // "каждый час напоминай [мне]", "каждые 2 часа напоминай [мне]"
+    .replace(/[,.]?\s*каждый\s+\S+\s+напоминай(?:\s+мне)?\s*/gi,'')
+    .replace(/[,.]?\s*каждые?\s+\S+\s+\S+\s+напоминай(?:\s+мне)?\s*/gi,'')
+    // "напоминай [мне] [каждый X]" — убираем только команду, оставляем суть
+    .replace(/[,.]?\s*напоминай(?:\s+каждый\s+\S+)?(?:\s+мне)?\s+/gi,'')
     .replace(/\s{2,}/g,' ')
     .trim();
 }
@@ -1519,6 +1522,20 @@ function parseVoiceReminder(text){
     else{d.setHours(d.getHours()+amount);}
     // Округляем до 5 минут
     d.setSeconds(0);d.setMinutes(Math.ceil(d.getMinutes()/5)*5);
+    return _fmtIso(d);
+  }
+
+  // ── «каждый час/день», «каждые N минут/часов» ──
+  const evM=t.match(/каждый\s+(час|день)|каждые?\s+(\d+|[\wа-яё]+)\s*(час[а-яё]*|минут[а-яё]*|ден[ьёя]|дн[яей])/);
+  if(evM){
+    const unit=(evM[1]||evM[3]||'час').toLowerCase();
+    const rawAmt=evM[2];
+    const amount=rawAmt?(parseInt(rawAmt)||_WNUM[rawAmt]||1):1;
+    const d=new Date(now);
+    if(unit.startsWith('мин'))d.setMinutes(d.getMinutes()+amount);
+    else if(unit.startsWith('ден')||unit.startsWith('дн'))d.setDate(d.getDate()+amount);
+    else d.setHours(d.getHours()+amount);
+    d.setSeconds(0);d.setMilliseconds(0);
     return _fmtIso(d);
   }
 
@@ -1566,7 +1583,14 @@ function parseVoiceReminder(text){
     h=hh;
   }
 
-  if(!base&&h===null)return null; // ничего не нашли
+  // "напоминай [что]" без явного времени → через час
+  if(!base&&h===null){
+    if(/напоминай/i.test(t)){
+      const d=new Date(now);d.setHours(d.getHours()+1);d.setSeconds(0);d.setMilliseconds(0);
+      return _fmtIso(d);
+    }
+    return null; // ничего не нашли
+  }
 
   // Если день не определён, но время есть — сегодня если ещё не прошло, иначе завтра
   if(!base){
@@ -3301,7 +3325,9 @@ function startHomeVoice(){
     const text=collected.trim();
     if(text){
       const voiceReminder=parseVoiceReminder(text);
-      const cleanBody=voiceReminder?stripReminderCommand(text):text;
+      let cleanBody=voiceReminder?stripReminderCommand(text):text;
+      // Если команда была вида "поставь уведомление в X" — тело пустое, создаём минимальную заметку
+      if(!cleanBody&&voiceReminder)cleanBody='🔔 '+fmtDt(voiceReminder);
       const auto=analyzeText(cleanBody);
       const reminder=voiceReminder||auto.reminder||null;
       const ts=Date.now();

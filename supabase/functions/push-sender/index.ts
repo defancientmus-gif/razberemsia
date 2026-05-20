@@ -32,33 +32,18 @@ function encodeJson(obj: unknown): string {
 }
 
 async function importPrivateKey(privB64u: string): Promise<CryptoKey> {
-  const privBytes = base64urlToBytes(privB64u);
-  // Build PKCS8 DER for P-256 private key
-  const pkcs8 = buildPkcs8(privBytes);
-  return crypto.subtle.importKey('pkcs8', pkcs8, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
-}
-
-function buildPkcs8(privBytes: Uint8Array): ArrayBuffer {
-  // PKCS8 wrapper for EC P-256 private key
-  const oidP256 = new Uint8Array([0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07]);
-  const ecPrivKey = concat([
-    new Uint8Array([0x30]), tlv(concat([
-      new Uint8Array([0x02, 0x01, 0x01]), // version = 1
-      new Uint8Array([0x04, 0x20]), privBytes // privateKey OCTET STRING
-    ]))
-  ]);
-  const algId = concat([
-    new Uint8Array([0x30]), tlv(concat([
-      new Uint8Array([0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01]),
-      new Uint8Array([0x06, 0x08]), oidP256
-    ]))
-  ]);
-  const outer = concat([
-    new Uint8Array([0x02, 0x01, 0x00]), // version = 0
-    algId,
-    new Uint8Array([0x04]), tlv(ecPrivKey)
-  ]);
-  return concat([new Uint8Array([0x30]), tlv(outer)]).buffer;
+  // Извлекаем x и y из публичного ключа (uncompressed: 0x04 + 32b x + 32b y)
+  const pubBytes = base64urlToBytes(VAPID_PUBLIC);
+  const x = bytesToBase64url(pubBytes.slice(1, 33));
+  const y = bytesToBase64url(pubBytes.slice(33, 65));
+  // Импортируем через JWK — надёжнее ручного PKCS8
+  return crypto.subtle.importKey(
+    'jwk',
+    { kty: 'EC', crv: 'P-256', d: privB64u, x, y },
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign']
+  );
 }
 function tlv(data: Uint8Array): Uint8Array {
   if (data.length < 128) return concat([new Uint8Array([data.length]), data]);
@@ -79,12 +64,8 @@ async function makeVapidJwt(audience: string): Promise<string> {
   const payload = encodeJson({ aud: audience, exp: now + 43200, sub: VAPID_SUBJECT });
   const sigInput = new TextEncoder().encode(`${header}.${payload}`);
   const privKey  = await importPrivateKey(VAPID_PRIVATE);
-  const sigDer   = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privKey, sigInput));
-  // DER → raw r||s (64 bytes)
-  const r = sigDer.slice(4, 4 + sigDer[3]);
-  const s = sigDer.slice(4 + sigDer[3] + 2);
-  const pad = (b: Uint8Array) => { const a = new Uint8Array(32); a.set(b.slice(-32), 32 - Math.min(32, b.length)); return a; };
-  const sig = concat([pad(r), pad(s)]);
+  // Web Crypto API возвращает IEEE P1363 (raw r||s, 64 байта для P-256) — DER конвертация не нужна
+  const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privKey, sigInput));
   return `${header}.${payload}.${bytesToBase64url(sig)}`;
 }
 
@@ -109,11 +90,11 @@ async function encryptPayload(
   // ECDH shared secret
   const sharedBits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: recvKey }, ephem.privateKey, 256));
 
-  // HKDF-SHA256 PRK
-  const hkdfKey = await crypto.subtle.importKey('raw', authSecret, 'HKDF', false, ['deriveBits']);
+  // HKDF-SHA256 PRK — RFC 8291: IKM=ecdh_secret, salt=auth_secret (не наоборот!)
+  const hkdfKey = await crypto.subtle.importKey('raw', sharedBits, 'HKDF', false, ['deriveBits']);
   const prkInfo = concat([new TextEncoder().encode('WebPush: info\x00'), receiverPub, ephemPubRaw]);
   const prk = new Uint8Array(await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt: sharedBits, info: prkInfo }, hkdfKey, 256
+    { name: 'HKDF', hash: 'SHA-256', salt: authSecret, info: prkInfo }, hkdfKey, 256
   ));
 
   const prkKey = await crypto.subtle.importKey('raw', prk, 'HKDF', false, ['deriveBits']);
@@ -164,6 +145,8 @@ async function sendPush(sub: { endpoint: string; p256dh: string; auth: string },
       },
       body: bodyBytes,
     });
+    const resText = await res.text().catch(() => '');
+    console.log(`push → ${url.host} status=${res.status} body=${resText.slice(0,200)}`);
     return res.status === 201;
   } catch (e) {
     console.warn('push failed', e);
@@ -203,8 +186,10 @@ Deno.serve(async () => {
 
     if (!subs?.length) { sentIds.push(reminder.id); continue; }
 
-    const title = '🔔 Разберёмся';
-    const body  = reminder.note_title || reminder.note_body?.slice(0, 80) || 'Напоминание';
+    // Используем содержимое заметки как заголовок уведомления —
+    // iOS показывает «[app name] + title», поэтому не дублируем «Разберёмся» в title
+    const title = reminder.note_title || reminder.note_body?.slice(0, 80) || 'Напоминание';
+    const body  = '';
 
     for (const sub of subs) {
       const ok = await sendPush(sub, title, body);

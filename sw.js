@@ -1,4 +1,4 @@
-const CACHE = 'rz-v110';
+const CACHE = 'rz-v111';
 const ASSETS = [
   './',
   'index.html',
@@ -56,8 +56,10 @@ self.addEventListener('message', e => {
     const delay = dt - now;
     if (delay <= 0 || delay > 7 * 24 * 3600 * 1000) return;
     const tid = setTimeout(() => {
-      self.registration.showNotification('Разберёмся', {
-        body: n.title || n.body?.slice(0, 80) || 'Напоминание',
+      // Используем содержимое как title — iOS сам показывает имя приложения
+      const notifTitle = n.title || n.body?.slice(0, 80) || 'Напоминание';
+      self.registration.showNotification(notifTitle, {
+        body: '',
         icon: 'pwa-feather-192.png',
         badge: 'pwa-feather-192.png',
         tag: n.id || String(dt), // tag prevents duplicates
@@ -69,7 +71,7 @@ self.addEventListener('message', e => {
 
 // ── VAPID Web Push — серверный пуш (работает когда приложение закрыто) ──
 self.addEventListener('push', e => {
-  let data = { title: 'Разберёмся', body: 'Напоминание' };
+  let data = { title: 'Напоминание', body: '' };
   try { if (e.data) data = { ...data, ...e.data.json() }; } catch (_) {}
   e.waitUntil(
     self.registration.showNotification(data.title, {
