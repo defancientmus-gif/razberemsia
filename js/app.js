@@ -2420,8 +2420,12 @@ function openRmp(target){
 }
 
 function _rmpScrollFor(wheel,count,value){
-  // Позиция среднего повторения (rep 2 из 5)
-  wheel.scrollTop=(_RMP_PADS+count*2+value)*_RMP_IH;
+  // scroll-snap-align:center: чтобы элемент оказался в центре,
+  // scrollTop = (content_index - viewport_half_items) * IH
+  // content_index = _RMP_PADS + count*2 + value
+  // viewport_half_items = _RMP_PADS (= viewportHeight/2 - IH/2) / IH = 2
+  // → scrollTop = (count*2 + value) * IH
+  wheel.scrollTop=(count*2+value)*_RMP_IH;
 }
 
 function _rmpBuild(){
@@ -2442,7 +2446,9 @@ function _rmpBuild(){
 }
 
 function _rmpReadWheel(wheel,count){
-  const raw=Math.round(wheel.scrollTop/_RMP_IH)-_RMP_PADS;
+  // scrollTop = (count*2 + value) * IH  →  raw = scrollTop/IH = count*2 + value
+  // value = raw % count
+  const raw=Math.round(wheel.scrollTop/_RMP_IH);
   return((raw%count)+count)%count;
 }
 
