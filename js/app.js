@@ -1307,10 +1307,12 @@ function calRender(){
   const notes=getNotes();
   const dots=new Set();
   notes.forEach(n=>{
-    if(n.reminder){
-      const p=n.reminder.slice(0,10).split('-').map(Number);
+    // Точки на датах создания И напоминания
+    const dates=[n.reminder, n.createdAt?new Date(n.createdAt).toISOString().slice(0,10):null].filter(Boolean);
+    dates.forEach(s=>{
+      const p=s.slice(0,10).split('-').map(Number);
       if(p[0]===CY&&p[1]-1===CM)dots.add(p[2]);
-    }
+    });
   });
   document.getElementById('cal-month-label').textContent=MRU[CM]+' '+CY;
   const grid=document.getElementById('cal-days');grid.innerHTML='';
@@ -1438,17 +1440,31 @@ function animateNoteViewSwitch(){
 
 function loadNotes(){
   const all=getNotes();
-  renderStatChips(all);
   syncNoteViewBtn();
   const el=document.getElementById('note-list');if(!el)return;
   el.innerHTML='';
   if(noteViewMode==='grid')el.classList.add('note-grid-mode');
   else el.classList.remove('note-grid-mode');
   let filtered=all;
-  if(CS)filtered=all.filter(n=>n.reminder&&n.reminder.slice(0,10)===CS);
+  if(CS){
+    // Фильтруем по дате создания ИЛИ напоминанию — не только по напоминанию
+    filtered=all.filter(n=>{
+      const remMatch=n.reminder&&n.reminder.slice(0,10)===CS;
+      const createdMatch=n.createdAt&&new Date(n.createdAt).toISOString().slice(0,10)===CS;
+      const updatedMatch=n.updatedAt&&new Date(n.updatedAt).toISOString().slice(0,10)===CS;
+      return remMatch||createdMatch||updatedMatch;
+    });
+  }
+  // Передаём уже cs-отфильтрованный список в чипы — счётчики папок будут точными
+  renderStatChips(filtered,!!CS);
   if(noteFilter)filtered=filtered.filter(n=>safeLabel(n.label||'заметка')===noteFilter);
   if(!filtered.length){
-    el.innerHTML='<div style="text-align:center;color:var(--fg-l);font-size:15px;padding:28px 0;">'+(CS||noteFilter?'Ничего не найдено':'Заметок пока нет')+'<br><span style="font-size:13px;display:block;margin-top:5px;">Нажмите «＋» чтобы добавить</span></div>';
+    const hasFilter=CS||noteFilter;
+    el.innerHTML=`<div style="text-align:center;color:var(--fg-l);font-size:15px;padding:28px 0;">
+      ${hasFilter?'Нет заметок за этот день':'Заметок пока нет'}
+      <br><span style="font-size:13px;display:block;margin-top:5px;">${hasFilter?'':'Нажмите «＋» чтобы добавить'}</span>
+      ${CS?`<button onclick="CS=null;loadNotes();calRender();" style="margin-top:12px;padding:8px 18px;border-radius:10px;border:1px solid oklch(0.85 0.03 260);background:none;font-size:13px;color:var(--fg-m);cursor:pointer;font-family:var(--sys);">Показать все заметки</button>`:''}
+    </div>`;
     return;
   }
   const sorted=[...filtered].sort((a,b)=>(b.createdAt||b.updatedAt||0)-(a.createdAt||a.updatedAt||0));
@@ -1494,7 +1510,7 @@ function loadNotes(){
   });
 }
 
-function renderStatChips(all){
+function renderStatChips(all,csActive){
   const el=document.getElementById('notes-stat');if(!el)return;
   const counts={};
   all.forEach(n=>{const l=safeLabel(n.label||'заметка');counts[l]=(counts[l]||0)+1;});
@@ -1502,6 +1518,17 @@ function renderStatChips(all){
   const activeIco=activeL?catIcon(activeL):'📋';
   const activeName=activeL?activeL:'Все заметки';
   const activeCount=activeL?(counts[activeL]||0):all.length;
+  // Если активен фильтр по дате — баннер с крестиком над папками
+  let dateBanner='';
+  if(csActive&&CS){
+    const d=new Date(CS+'T12:00');
+    const dateStr=d.getDate()+' '+MGN[d.getMonth()];
+    dateBanner=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;margin-bottom:8px;border-radius:10px;background:oklch(0.52 0.10 210 / 0.08);border:1px solid oklch(0.52 0.10 210 / 0.20);font-size:12px;color:oklch(0.40 0.10 210);">
+      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Заметки за ${dateStr}</span>
+      <button onclick="CS=null;loadNotes();calRender();" style="margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;font-size:16px;line-height:1;padding:0 4px;opacity:.6;">×</button>
+    </div>`;
+  }
   const totalGroups=Object.keys(counts).length;
   let html=`<div class="folders-hdr${foldersCollapsed?' folders-collapsed':''}" id="folders-hdr" onclick="toggleFolders()">
     <span class="folders-lbl">
@@ -1535,7 +1562,7 @@ function renderStatChips(all){
     </button>`;
   });
   html+='</div>';
-  el.innerHTML=html;
+  el.innerHTML=dateBanner+html;
 }
 
 function toggleFolders(){
@@ -1546,7 +1573,7 @@ function toggleFolders(){
     setTimeout(()=>{
       foldersCollapsed=true;
       localStorage.setItem('rz_folders_col','1');
-      renderStatChips(getNotes());
+      renderStatChips(getNotes(),!!CS);
     },cards.length*40+220);
     return;
   }
