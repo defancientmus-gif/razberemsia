@@ -1359,7 +1359,7 @@ function renderReminderPanel(){
       </div>`;
     });
   } else {
-    html+=`<div class="remind-empty">🔔<br>Нет активных напоминаний.<br><span style="font-size:12px;">Откройте заметку и нажмите ✦ AI — помощник предложит поставить напоминание.</span></div>`;
+    html+=`<div class="remind-empty">🔔<br>Нет активных напоминаний.<br><span style="font-size:12px;">Нажмите кнопку выше — поставим напоминание прямо сейчас.</span></div>`;
   }
   html+='<div class="remind-section-label" style="margin-top:20px;">Настройки</div>';
   html+=`<div class="remind-settings">
@@ -1431,10 +1431,8 @@ function openInputSheetWithReminder(){
   closeReminderPanel();
   setTimeout(()=>{
     openInputSheet();
-    setTimeout(()=>{
-      const r=document.getElementById('home-input-reminder');
-      if(r){r.focus();r.click();}
-    },400);
+    // Открываем пикер времени сразу после открытия шита
+    setTimeout(()=>openRmp('home'),350);
   },200);
 }
 
