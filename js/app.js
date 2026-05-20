@@ -2222,16 +2222,118 @@ function selectCat(label){
 function initSheetReminder(val){
   const row=document.getElementById('sheet-reminder-row');
   const inp=document.getElementById('sheet-reminder-in');
-  const calBtn=document.getElementById('sheet-cal-btn');
+  const btn=document.getElementById('sheet-reminder-btn');
   if(row)row.style.display=val?'flex':'none';
   if(inp)inp.value=val||'';
-  if(calBtn)calBtn.style.display=val?'flex':'none';
+  if(btn)btn.textContent=val?fmtDt(val):'Выбрать время';
+}
+function clearSheetReminder(){
+  initSheetReminder('');
+  document.getElementById('sheet-reminder-row').style.display='none';
+}
+function onReminderChange(){}
+
+// ── REMINDER PICKER ──
+let _rmpTarget=null,_rmpDate=new Date();
+const _RMP_DAYS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const _RMP_MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+function openRmp(target){
+  _rmpTarget=target;
+  const id=target==='sheet'?'sheet-reminder-in':'home-input-reminder';
+  const cur=document.getElementById(id)?.value;
+  _rmpDate=cur?new Date(cur):new Date();
+  if(!cur||_rmpDate<=new Date()){
+    _rmpDate=new Date();_rmpDate.setDate(_rmpDate.getDate()+1);_rmpDate.setHours(10,0,0,0);
+  }
+  _rmpBuild();
+  _rmpRefreshDate();
+  _rmpHighlightChips();
+  const ov=document.getElementById('rmp-ov');
+  ov.style.display='flex';
+}
+function _rmpBuild(){
+  const pad=n=>String(n).padStart(2,'0');
+  const ph='<div class="rmp-wi pad">·</div>';
+  const wh=document.getElementById('rmp-wh');
+  const wm=document.getElementById('rmp-wm');
+  wh.innerHTML=ph+ph+Array.from({length:24},(_,i)=>`<div class="rmp-wi">${pad(i)}</div>`).join('')+ph+ph;
+  wm.innerHTML=ph+ph+Array.from({length:60},(_,i)=>`<div class="rmp-wi">${pad(i)}</div>`).join('')+ph+ph;
+  // Scroll после рендера
+  setTimeout(()=>{
+    wh.scrollTop=_rmpDate.getHours()*44;
+    wm.scrollTop=_rmpDate.getMinutes()*44;
+  },30);
+}
+function _rmpRefreshDate(){
+  const d=_rmpDate;
+  document.getElementById('rmp-datelbl').textContent=`${_RMP_DAYS[d.getDay()]}, ${d.getDate()} ${_RMP_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+function _rmpHighlightChips(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const sel=new Date(_rmpDate);sel.setHours(0,0,0,0);
+  const diff=Math.round((sel-today)/86400000);
+  document.querySelectorAll('.rmp-chip').forEach((b,i)=>b.classList.toggle('active',i===diff));
+}
+function rmpSetDay(offset){
+  const d=new Date();d.setDate(d.getDate()+offset);
+  _rmpDate.setFullYear(d.getFullYear(),d.getMonth(),d.getDate());
+  _rmpRefreshDate();_rmpHighlightChips();
+}
+function rmpClose(){
+  const ov=document.getElementById('rmp-ov');
+  if(!ov)return;
+  ov.style.opacity='0';ov.style.transition='opacity .22s';
+  setTimeout(()=>{ov.style.display='none';ov.style.opacity='';ov.style.transition='';},240);
+}
+function rmpConfirm(){
+  const wh=document.getElementById('rmp-wh');
+  const wm=document.getElementById('rmp-wm');
+  const h=Math.min(Math.max(Math.round(wh.scrollTop/44),0),23);
+  const m=Math.min(Math.max(Math.round(wm.scrollTop/44),0),59);
+  _rmpDate.setHours(h,m,0,0);
+  const pad=n=>String(n).padStart(2,'0');
+  const d=_rmpDate;
+  const val=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(h)}:${pad(m)}`;
+  if(_rmpTarget==='sheet'){
+    const inp=document.getElementById('sheet-reminder-in');
+    const row=document.getElementById('sheet-reminder-row');
+    const btn=document.getElementById('sheet-reminder-btn');
+    if(inp)inp.value=val;
+    if(row)row.style.display='flex';
+    if(btn)btn.textContent=fmtDt(val);
+  } else {
+    const inp=document.getElementById('home-input-reminder');
+    const btn=document.getElementById('home-reminder-btn');
+    if(inp)inp.value=val;
+    if(btn){btn.textContent=fmtDt(val);btn.classList.add('has-val');}
+  }
+  rmpClose();
 }
 
-function onReminderChange(){
-  const inp=document.getElementById('sheet-reminder-in');
-  const calBtn=document.getElementById('sheet-cal-btn');
-  if(calBtn)calBtn.style.display=inp&&inp.value?'flex':'none';
+// ── Авто .ics при сохранении заметки с напоминанием ──
+function _autoExportIcs(noteTitle,noteBody,reminderVal,noteId){
+  try{
+    const dt=new Date(reminderVal);if(isNaN(dt.getTime()))return;
+    const dtEnd=new Date(dt.getTime()+60000);
+    const pad=n=>String(n).padStart(2,'0');
+    const icsDate=d=>d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z';
+    const icsEsc=s=>(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+    const title=icsEsc((noteTitle||'Напоминание').slice(0,80));
+    const desc=icsEsc((noteBody||'').slice(0,200).replace(/\n/g,' '));
+    const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Разберёмся//RU','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+      'BEGIN:VEVENT',`UID:${noteId||Date.now()}@razberemsia`,`DTSTAMP:${icsDate(new Date())}`,
+      `DTSTART:${icsDate(dt)}`,`DTEND:${icsDate(dtEnd)}`,`SUMMARY:${title}`,`DESCRIPTION:${desc}`,
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Напоминание','TRIGGER:PT0S','END:VALARM',
+      'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    const a=document.createElement('a');
+    a.download=`rz-${String(noteId||Date.now()).slice(-6)}.ics`;
+    a.href=isIOS?'data:text/calendar;charset=utf-8,'+encodeURIComponent(ics)
+      :URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);if(!isIOS)URL.revokeObjectURL(a.href);},600);
+  }catch(e){}
 }
 
 function exportToCalendar(){
@@ -2355,6 +2457,7 @@ function saveSheet(){
   saveNotes(list);
   if(aiSummary)addToAiMemory(aiSummary,aiTags,item.id);
   clearSheetDraft();
+  if(v2) _autoExportIcs(title,v1.trim(),v2,item.id); // авто .ics до закрытия шита
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
   showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
@@ -2764,9 +2867,11 @@ function saveHome(){
   const reminder=(reminderEl&&reminderEl.value)||auto.reminder;
   const title=auto.title;
   const ts=Date.now();
+  const nid=genId();
   const notes=getNotes();
-  notes.push({id:genId(),title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
+  notes.push({id:nid,title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
   saveNotes(notes);
+  if(reminder) _autoExportIcs(title,text,reminder,nid);
   closeInputSheet();
   loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v5.5</title>
+<title>Разберёмся v5.6</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
@@ -1333,13 +1333,49 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-lbl{font-size:11px;font-weight:600;color:var(--fg-l);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
 
 /* Reminder row */
-.sheet-reminder-row{display:none;}
+.sheet-reminder-row{display:none;align-items:center;gap:8px;padding:6px 0;}
 .sheet-reminder-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
-.sheet-reminder-in{flex:1;background:transparent;border:none;border-bottom:1px solid oklch(0.88 0.02 210 / 0.25);padding:4px 0;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;-webkit-user-select:text;user-select:text;}
-.sheet-reminder-in:focus{border-bottom-color:oklch(0.52 0.10 210 / 0.45);}
-.sheet-cal-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;border:1px solid oklch(0.52 0.10 210 / 0.30);background:oklch(0.52 0.10 210 / 0.08);color:oklch(0.40 0.12 210);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sys);flex-shrink:0;transition:background .15s,transform .12s;-webkit-appearance:none;}
-.sheet-cal-btn:active{background:oklch(0.52 0.10 210 / 0.18);transform:scale(.95);}
-.sheet-cal-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.sheet-reminder-btn{flex:1;background:oklch(0.93 0.04 210 / 0.36);border:1px solid oklch(0.94 0.020 210 / 0.70);border-radius:12px;padding:7px 12px;font-size:13px;font-weight:600;color:oklch(0.38 0.12 270);font-family:var(--sys);cursor:pointer;text-align:left;transition:background .15s;-webkit-appearance:none;}
+.sheet-reminder-btn:active{background:oklch(0.88 0.04 210 / 0.5);}
+.sheet-reminder-del{background:none;border:none;color:var(--fg-l);font-size:16px;cursor:pointer;padding:4px;line-height:1;-webkit-appearance:none;opacity:.6;}
+.home-reminder-btn{background:oklch(0.93 0.04 210 / 0.36);border:1px solid oklch(0.94 0.020 210 / 0.70);border-radius:12px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--fg-m);font-family:var(--sys);cursor:pointer;width:100%;text-align:left;transition:background .15s;-webkit-appearance:none;}
+.home-reminder-btn.has-val{color:oklch(0.38 0.12 270);font-weight:600;}
+.home-reminder-btn:active{background:oklch(0.88 0.04 210 / 0.5);}
+
+/* ── REMINDER PICKER ── */
+#rmp-ov{position:fixed;inset:0;z-index:9200;background:oklch(0 0 0 / 0.30);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+#rmp{
+  width:100%;max-width:480px;
+  background:radial-gradient(ellipse 90% 55% at 28% 8%, oklch(1 0 0 / 0.88) 0%, transparent 52%), oklch(0.97 0.006 210 / 0.97);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid oklch(0.92 0.02 210 / 0.7);
+  border-radius:28px 28px 0 0;
+  padding:22px 22px calc(24px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 40px oklch(0 0 0 / 0.10),inset 0 1.5px 4px oklch(1 0 0 / 0.9);
+  animation:sheet-up .30s cubic-bezier(.22,1,.36,1);
+}
+.rmp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.rmp-title{font-size:16px;font-weight:700;color:var(--fg);display:flex;align-items:center;gap:7px;}
+.rmp-close-btn{background:oklch(0.88 0.02 210 / 0.45);border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:var(--fg-m);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;}
+.rmp-chips{display:flex;gap:7px;margin-bottom:14px;}
+.rmp-chip{flex:1;padding:8px 6px;border-radius:12px;border:1px solid oklch(0.88 0.02 210 / 0.5);background:oklch(0.93 0.03 210 / 0.35);font-size:13px;font-weight:600;color:var(--fg-m);cursor:pointer;font-family:var(--sys);transition:all .15s;-webkit-appearance:none;}
+.rmp-chip.active{background:oklch(0.40 0.14 270 / 0.10);border-color:oklch(0.40 0.14 270 / 0.38);color:oklch(0.35 0.14 270);}
+.rmp-chip:active{transform:scale(.96);}
+.rmp-datelbl{text-align:center;font-size:14px;font-weight:600;color:var(--fg-m);margin-bottom:18px;letter-spacing:.01em;}
+.rmp-wheels{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:22px;}
+.rmp-wrapw{position:relative;width:88px;height:220px;overflow:hidden;border-radius:16px;background:oklch(0.92 0.03 210 / 0.30);}
+.rmp-wrapw::before,.rmp-wrapw::after{content:'';position:absolute;left:0;right:0;height:80px;z-index:2;pointer-events:none;}
+.rmp-wrapw::before{top:0;background:linear-gradient(to bottom,oklch(0.96 0.006 210 / 0.97) 0%,transparent 100%);}
+.rmp-wrapw::after{bottom:0;background:linear-gradient(to top,oklch(0.96 0.006 210 / 0.97) 0%,transparent 100%);}
+.rmp-sel{position:absolute;left:8px;right:8px;top:88px;height:44px;background:oklch(0.40 0.14 270 / 0.09);border:1.5px solid oklch(0.40 0.14 270 / 0.22);border-radius:12px;z-index:1;pointer-events:none;}
+.rmp-wheel{height:220px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0;}
+.rmp-wheel::-webkit-scrollbar{display:none;}
+.rmp-wi{height:44px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:24px;font-weight:700;color:var(--fg);font-family:var(--sys);font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.rmp-wi.pad{color:transparent;pointer-events:none;}
+.rmp-colon{font-size:30px;font-weight:700;color:var(--fg-m);padding-bottom:2px;}
+.rmp-lbl{font-size:10px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-top:4px;}
+.rmp-ok{width:100%;padding:15px;border:none;border-radius:18px;background:oklch(0.40 0.14 270);color:#fff;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 18px oklch(0.40 0.14 270 / 0.28);transition:transform .12s,opacity .12s;-webkit-appearance:none;}
+.rmp-ok:active{transform:scale(.97);opacity:.9;}
 
 /* ── AI PANEL ── */
 .sheet-ai-btn{display:flex;align-items:center;gap:5px;padding:0 10px;height:32px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:oklch(0.55 0.12 290 / 0.10);color:oklch(0.45 0.12 290);transition:background .18s,transform .12s;}
@@ -1761,7 +1797,7 @@ html.dark .bubble{
     <span class="auth-logo-text">Разберёмся</span>
   </div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v5.5 · бета</div>
+  <div class="auth-ver">v5.6 · бета</div>
 
   <div class="auth-card checking" id="auth-card">
 
@@ -1856,6 +1892,43 @@ html.dark .bubble{
   </button>
 </div>
 
+<!-- REMINDER PICKER -->
+<div id="rmp-ov">
+  <div id="rmp">
+    <div class="rmp-hdr">
+      <span class="rmp-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Напомнить
+      </span>
+      <button class="rmp-close-btn" onclick="rmpClose()">✕</button>
+    </div>
+    <div class="rmp-chips">
+      <button class="rmp-chip" onclick="rmpSetDay(0)">Сегодня</button>
+      <button class="rmp-chip" onclick="rmpSetDay(1)">Завтра</button>
+      <button class="rmp-chip" onclick="rmpSetDay(2)">Послезавтра</button>
+    </div>
+    <div class="rmp-datelbl" id="rmp-datelbl">Пн, 20 мая</div>
+    <div class="rmp-wheels">
+      <div>
+        <div class="rmp-wrapw">
+          <div class="rmp-sel"></div>
+          <div class="rmp-wheel" id="rmp-wh"></div>
+        </div>
+        <div class="rmp-lbl">часы</div>
+      </div>
+      <div class="rmp-colon">:</div>
+      <div>
+        <div class="rmp-wrapw">
+          <div class="rmp-sel"></div>
+          <div class="rmp-wheel" id="rmp-wm"></div>
+        </div>
+        <div class="rmp-lbl">минуты</div>
+      </div>
+    </div>
+    <button class="rmp-ok" onclick="rmpConfirm()">Готово</button>
+  </div>
+</div>
+
 <!-- ONBOARDING -->
 <div id="onboard-overlay" style="display:none;position:fixed;inset:0;z-index:9000;display:none;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);">
   <div id="onboard-sheet" style="width:100%;max-width:480px;">
@@ -1881,7 +1954,7 @@ html.dark .bubble{
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.5</span></span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v5.6</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
@@ -2196,10 +2269,10 @@ html.dark .bubble{
     </div>
     <!-- Reminder -->
     <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">
-      <span class="sheet-reminder-lbl">Напомнить</span>
-      <input class="sheet-reminder-in" id="sheet-reminder-in" type="datetime-local" onchange="onReminderChange()">
-      <!-- cal-btn скрыт — используется только как запасной вариант если уведомления заблокированы -->
-      <button class="sheet-cal-btn" id="sheet-cal-btn" type="button" onclick="exportToCalendar()" style="display:none;"></button>
+      <span class="sheet-reminder-lbl">🔔</span>
+      <button class="sheet-reminder-btn" id="sheet-reminder-btn" type="button" onclick="openRmp('sheet')">Выбрать время</button>
+      <button class="sheet-reminder-del" type="button" onclick="clearSheetReminder()" title="Убрать напоминание">×</button>
+      <input type="hidden" id="sheet-reminder-in">
     </div>
     <!-- Tools row — раскрывается из кнопки в футере -->
     <div class="tools-row" id="tools-row" style="display:none;">
@@ -2323,7 +2396,8 @@ html.dark .bubble{
         </div>
         <div style="flex:1;">
           <div class="sheet-lbl">Напоминание</div>
-          <input class="sheet-in" id="home-input-reminder" type="datetime-local" style="min-height:auto;padding:8px 0;font-size:14px;">
+          <button class="home-reminder-btn" id="home-reminder-btn" onclick="openRmp('home')">+ Добавить</button>
+          <input type="hidden" id="home-input-reminder">
         </div>
       </div>
     </div>
