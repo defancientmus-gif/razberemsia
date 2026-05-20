@@ -222,7 +222,53 @@ function showAuthErr(msg){
   if(errEl){errEl.textContent=msg;errEl.style.display='block';}
 }
 async function enterUser(user){
-  CU=user;migrateLegacyLocal();await loadCloudData();showApp();updUI(user);loadAll();
+  CU=user;migrateLegacyLocal();await loadCloudData();
+  showApp();updUI(user);loadAll();
+  _maybeOnboard();
+}
+
+// ── ONBOARDING — один раз при первом входе ──
+function _onbKey(){return'rz_onboarded_'+(CU?.id||'guest');}
+function _maybeOnboard(){
+  if(localStorage.getItem(_onbKey()))return;
+  // Пропускаем если оба разрешения уже есть
+  const notifOk=notifGranted();
+  const micOk=localStorage.getItem('rz_mic_granted')==='1';
+  if(notifOk&&micOk){localStorage.setItem(_onbKey(),'1');return;}
+  // Показываем нужный шаг первым
+  setTimeout(()=>{
+    const ov=document.getElementById('onboard-overlay');
+    if(!ov)return;
+    ov.style.display='flex';
+    if(notifOk){onbNext(1);}// уведомления есть — сразу микрофон
+  },600);
+}
+function onbNext(step){
+  document.getElementById('onb-step-0').style.display=step===0?'flex':'none';
+  document.getElementById('onb-step-1').style.display=step===1?'flex':'none';
+}
+function onbNotif(){
+  if(!notifSupp()){onbNext(1);return;}
+  Notification.requestPermission().then(p=>{
+    renderNotifBanner();
+    if(p==='granted')scheduleAll();
+    onbNext(1);
+  });
+}
+function onbMic(){
+  navigator.mediaDevices?.getUserMedia({audio:true}).then(stream=>{
+    stream.getTracks().forEach(t=>t.stop());
+    localStorage.setItem('rz_mic_granted','1');
+    onbDone();
+  }).catch(()=>onbDone());
+}
+function onbDone(){
+  localStorage.setItem(_onbKey(),'1');
+  const ov=document.getElementById('onboard-overlay');
+  if(!ov)return;
+  ov.style.opacity='0';
+  ov.style.transition='opacity .3s';
+  setTimeout(()=>{ov.style.display='none';ov.style.opacity='';ov.style.transition='';},320);
 }
 function showApp(){
   const a=document.getElementById('auth-screen');
