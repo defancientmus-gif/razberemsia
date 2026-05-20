@@ -715,6 +715,66 @@ async function submitFeedback(){
   }
 }
 
+// ── AI CHAT REPLY ──
+async function _fetchChatReply(noteId, text){
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)return;
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'chat_reply',payload:{text}})
+    });
+    if(!res.ok)return;
+    const {reply}=await res.json();
+    if(!reply)return;
+    // Сохраняем ответ в заметку
+    const notes=getNotes();
+    const n=notes.find(x=>x.id===noteId);
+    if(!n)return;
+    n.aiReply=reply;
+    n.aiReplyTs=Date.now();
+    n.aiReplyLike=0; // 0=нет оценки, 1=👍, -1=👎
+    saveNotes(notes);
+    // Перерисовываем только этот пузырь в чате
+    _renderReplyBubble(noteId);
+  }catch(e){console.warn('chat reply failed',e);}
+}
+
+function _renderReplyBubble(noteId){
+  const el=document.getElementById('ai-reply-'+noteId);
+  if(!el)return;
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n?.aiReply){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML=_buildReplyHTML(n);
+}
+
+function _buildReplyHTML(n){
+  const like=n.aiReplyLike||0;
+  return `<div class="ai-reply-bubble">
+    <div class="ai-reply-icon">✦</div>
+    <div class="ai-reply-content">
+      <div class="ai-reply-text">${esc(n.aiReply)}</div>
+      <div class="ai-reply-actions">
+        <button class="ai-reply-rate ${like===1?'active':''}" onclick="rateReply('${esc(n.id)}',${like===1?0:1})" title="Понравилось">👍</button>
+        <button class="ai-reply-rate ${like===-1?'active':''}" onclick="rateReply('${esc(n.id)}',${like===-1?0:-1})" title="Не то">👎</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function rateReply(noteId, val){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n)return;
+  n.aiReplyLike=val;
+  saveNotes(notes);
+  _renderReplyBubble(noteId);
+}
+
 // ── SWIPE BACK ──
 (function(){
   let sx=0,sy=0,st=0;
@@ -1877,6 +1937,10 @@ function saveSheet(){
   closeSheet();
   showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
   if(v2&&notifGranted())scheduleAll();
+  // AI-ответ в чат — только для новых заметок (не редактирование)
+  if(EI===null&&v1.trim().length>=15){
+    _fetchChatReply(item.id, v1.trim());
+  }
 }
 
 function editNote(i){openNoteSheet(i);}
@@ -2216,6 +2280,15 @@ function loadHomeFeed(){
       wrap.appendChild(dBtnN);
     }
     el.appendChild(wrap);
+    // AI-ответ под обычной заметкой
+    if(n.type!=='list'){
+      const replyEl=document.createElement('div');
+      replyEl.id='ai-reply-'+bId;
+      replyEl.className='ai-reply-wrap';
+      if(n.aiReply){replyEl.innerHTML=_buildReplyHTML(n);}
+      else{replyEl.style.display='none';}
+      el.appendChild(replyEl);
+    }
   });
   el.scrollTop=el.scrollHeight;
 }

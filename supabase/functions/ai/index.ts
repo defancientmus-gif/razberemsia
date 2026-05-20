@@ -214,5 +214,34 @@ _Сохранено автоматически приложением «Разб
     return json({ saved: true, url: result.url, file: filename });
   }
 
+  // ── CHAT_REPLY ──
+  // Короткий живой ответ AI на заметку — отображается в чате под пузырём
+  if (action === 'chat_reply') {
+    const { text } = payload ?? {};
+    if (typeof text !== 'string' || text.trim().length < 5) return json({ error: 'Text too short' }, 400);
+    const safeText = text.trim().slice(0, 800);
+
+    const prompt = `Ты живой и тёплый помощник приложения «Разберёмся».
+Пользователь написал заметку — дай короткий живой отклик (1-2 предложения максимум).
+Будь человечным, иногда с лёгким юмором. Не анализируй занудно — реагируй как умный друг.
+Не повторяй текст заметки. Не начинай с «Я», «Понятно», «Отлично».
+Отвечай только по-русски. Без вводных слов, сразу по делу.
+
+Заметка:
+${safeText}`;
+
+    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: ANTHROPIC_MODEL, max_tokens: 100, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) return json({ error: data?.error?.message || 'Anthropic request failed' }, res.status);
+
+    const reply = data.content?.[0]?.text?.trim() ?? '';
+    if (!reply) return json({ error: 'Empty response' }, 502);
+    return json({ reply });
+  }
+
   return json({ error: 'Unknown action' }, 400);
 });

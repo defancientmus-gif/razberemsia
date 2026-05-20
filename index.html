@@ -536,8 +536,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   border-radius:50px;padding:8px 14px;font-size:14px;font-weight:600;color:var(--fg);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;transition:background .12s;white-space:nowrap;}
 .jq-btn:active{background:oklch(0.52 0.10 210 / 0.10);transform:scale(.97);}
 .jq-btn svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.jq-emer{background:oklch(0.58 0.16 25 / 0.06);border-color:oklch(0.58 0.16 25 / 0.15);padding:6px 11px;font-size:12px;}
-.jq-emer svg{stroke:var(--rose);width:13px;height:13px;}
+.jq-emer{background:oklch(0.58 0.16 25 / 0.06);border-color:oklch(0.58 0.16 25 / 0.15);padding:7px 10px;font-size:12px;}
+.jq-emer svg{stroke:var(--rose);width:15px;height:15px;}
 .jq-emer .jq-label{color:var(--rose);}
 .jq-emer:active{background:oklch(0.58 0.16 25 / 0.12);}
 /* ── Кнопка «Помочь проекту» — мультяшная, заметная ── */
@@ -655,6 +655,31 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .bubble-num{font-size:10px;font-weight:800;color:var(--fg-l);background:oklch(1 0 0 / 0.42);border:1px solid oklch(0.88 0.02 210 / 0.28);border-radius:999px;padding:2px 7px;letter-spacing:.02em;}
 .bubble-cat{font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210 / 0.11);border-radius:50px;padding:2px 8px;text-transform:uppercase;letter-spacing:.06em;}
 .bubble-time{font-size:10px;color:var(--fg-l);}
+
+/* ── AI REPLY BUBBLE ── */
+.ai-reply-wrap{padding:0 16px 18px 28px;margin-top:-8px;}
+.ai-reply-bubble{
+  display:flex;align-items:flex-start;gap:8px;
+  background:oklch(0.97 0.010 290 / 0.75);
+  border:1px solid oklch(0.55 0.12 290 / 0.15);
+  border-radius:6px 18px 18px 18px;
+  padding:10px 13px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  max-width:86%;
+  animation:splashFadeIn .30s cubic-bezier(.22,1,.36,1);
+}
+.ai-reply-icon{font-size:14px;flex-shrink:0;margin-top:1px;opacity:.7;}
+.ai-reply-content{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.ai-reply-text{font-size:13px;color:oklch(0.30 0.06 260);line-height:1.55;word-break:break-word;}
+.ai-reply-actions{display:flex;gap:6px;}
+.ai-reply-rate{
+  background:none;border:1px solid oklch(0.85 0.03 260);
+  border-radius:20px;padding:3px 9px;font-size:13px;cursor:pointer;
+  transition:background .15s,transform .1s,border-color .15s;
+  -webkit-appearance:none;
+}
+.ai-reply-rate:active{transform:scale(.90);}
+.ai-reply-rate.active{background:oklch(0.55 0.12 290 / 0.15);border-color:oklch(0.55 0.12 290 / 0.40);}
 
 /* ── HOME BAR ── */
 .home-bar{padding:8px 14px 28px;flex-shrink:0;}
@@ -813,14 +838,10 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   margin-bottom:10px;
 }
 .auth-logo-mark{
-  width:64px;height:64px;border-radius:20px;
-  background:oklch(1 0 0 / 0.72);
-  border:1px solid oklch(0.90 0.02 210 / 0.55);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 24px oklch(0.54 0.13 210 / 0.18),inset 0 1px 0 oklch(1 0 0 / 0.9);
   animation:feather-fly 3.4s ease-in-out infinite;
 }
-.auth-logo-mark svg{width:30px;height:30px;stroke:var(--accent-d);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.auth-logo-mark svg{width:52px;height:52px;stroke:var(--accent-d);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 4px 12px oklch(0.54 0.13 210 / 0.30));}
 .auth-logo-text{
   font-family:'Playfair Display',serif;
   font-size:36px;color:var(--fg);letter-spacing:-.5px;line-height:1;
@@ -1788,9 +1809,8 @@ html.dark .bubble{
       <div style="height:100%;display:flex;flex-direction:column;">
         <div class="jarvis-top">
           <div class="jarvis-quick">
-            <button class="jq-btn jq-emer" onclick="go('emergency')">
+            <button class="jq-btn jq-emer" onclick="go('emergency')" title="Что-то случилось?">
               <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span class="jq-label">Что-то случилось?</span>
             </button>
             <button class="jq-btn" onclick="go('notes')">
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
