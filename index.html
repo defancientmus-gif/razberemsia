@@ -678,17 +678,63 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .ai-reply-icon{font-size:12px;flex-shrink:0;margin-top:2px;opacity:.45;color:oklch(0.42 0.10 270);}
 .ai-reply-content{display:flex;flex-direction:column;gap:7px;min-width:0;}
 .ai-reply-text{font-size:13px;color:var(--fg-m);line-height:1.55;word-break:break-word;}
-.ai-reply-actions{display:flex;gap:5px;}
-.ai-reply-rate{
+.ai-reply-actions{display:flex;align-items:center;gap:7px;margin-left:auto;}
+.ai-reply-thread{font-size:10px;color:oklch(0.55 0.06 270);opacity:.7;white-space:nowrap;}
+.ai-reply-heart{
   display:flex;align-items:center;justify-content:center;
-  width:22px;height:22px;
-  background:oklch(1 0 0 / 0.38);border:1px solid oklch(0.86 0.03 270 / 0.50);
-  border-radius:7px;cursor:pointer;color:oklch(0.50 0.06 270);
-  transition:background .15s,transform .1s,border-color .15s,color .15s;
-  -webkit-appearance:none;
+  width:26px;height:26px;background:none;border:none;
+  cursor:pointer;color:oklch(0.65 0.05 270);padding:0;
+  transition:color .18s,transform .12s;-webkit-appearance:none;
 }
-.ai-reply-rate:active{transform:scale(.86);}
-.ai-reply-rate.active{background:oklch(0.52 0.10 210 / 0.12);border-color:oklch(0.52 0.10 210 / 0.35);color:oklch(0.38 0.10 210);}
+.ai-reply-heart:active{transform:scale(.82);}
+.ai-reply-heart.liked{color:oklch(0.58 0.18 15);}
+
+/* ── ЧАТ ВНУТРИ ЗАМЕТКИ (микроблог) ── */
+.note-chat{
+  margin:10px 16px 0;border-top:1px solid oklch(0.88 0.02 260 / 0.35);
+  padding-top:10px;display:flex;flex-direction:column;gap:8px;
+  max-height:240px;overflow-y:auto;
+}
+.note-chat::-webkit-scrollbar{display:none;}
+.nc-msg{display:flex;align-items:flex-start;gap:6px;animation:splashFadeIn .22s ease;}
+.nc-msg-ai{justify-content:flex-start;}
+.nc-msg-user{justify-content:flex-end;}
+.nc-icon{font-size:11px;flex-shrink:0;margin-top:3px;opacity:.4;color:oklch(0.42 0.10 270);}
+.nc-text{
+  font-size:13px;line-height:1.52;word-break:break-word;
+  padding:7px 11px;border-radius:12px;max-width:85%;
+}
+.nc-msg-ai .nc-text{
+  background:oklch(0.95 0.015 270 / 0.55);
+  border:1px solid oklch(0.88 0.03 270 / 0.40);
+  color:var(--fg-m);border-radius:4px 12px 12px 12px;
+}
+.nc-msg-user .nc-text{
+  background:oklch(0.92 0.04 210 / 0.50);
+  border:1px solid oklch(0.88 0.03 210 / 0.40);
+  color:var(--fg-m);border-radius:12px 4px 12px 12px;
+}
+.note-chat-input-row{
+  display:flex;align-items:center;gap:8px;
+  margin:8px 16px 4px;
+  border:1px solid oklch(0.88 0.02 260 / 0.40);
+  border-radius:14px;padding:6px 8px 6px 14px;
+  background:oklch(0.98 0.004 260 / 0.6);
+}
+.note-chat-in{
+  flex:1;background:none;border:none;outline:none;
+  font-size:14px;font-family:var(--sys);color:var(--fg);
+  -webkit-user-select:text;user-select:text;
+}
+.note-chat-in::placeholder{color:var(--fg-l);}
+.note-chat-send{
+  width:30px;height:30px;border-radius:9px;border:none;
+  background:oklch(0.52 0.10 210 / 0.12);
+  color:oklch(0.40 0.10 210);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .15s,transform .12s;-webkit-appearance:none;
+}
+.note-chat-send:active{background:oklch(0.52 0.10 210 / 0.22);transform:scale(.90);}
 
 /* ── HOME BAR ── */
 .home-bar{padding:8px 14px 28px;flex-shrink:0;}
@@ -2087,6 +2133,15 @@ html.dark .bubble{
         </div>
         <div class="ai-panel-body" id="ai-panel-body"></div>
       </div>
+    </div>
+    <!-- Chat inside note (микроблог) -->
+    <div id="note-chat" class="note-chat" style="display:none;"></div>
+    <div id="note-chat-input-row" class="note-chat-input-row" style="display:none;">
+      <input id="note-chat-in" class="note-chat-in" type="text" placeholder="Продолжить разговор…" maxlength="500"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();sendNoteChat();}">
+      <button id="note-chat-send" class="note-chat-send" type="button" onclick="sendNoteChat()">
+        <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
     </div>
     <!-- Reminder -->
     <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">

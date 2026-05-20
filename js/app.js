@@ -729,17 +729,27 @@ async function _fetchChatReply(noteId, text){
     if(!res.ok)return;
     const {reply}=await res.json();
     if(!reply)return;
-    // Сохраняем ответ в заметку
     const notes=getNotes();
     const n=notes.find(x=>x.id===noteId);
     if(!n)return;
+    // Сохраняем в aiChat-массив (микроблог)
+    if(!Array.isArray(n.aiChat))n.aiChat=[];
+    n.aiChat.push({role:'ai',text:reply,ts:Date.now()});
+    n.aiReplyLike=n.aiReplyLike||0;
+    // Обратная совместимость
     n.aiReply=reply;
-    n.aiReplyTs=Date.now();
-    n.aiReplyLike=0; // 0=нет оценки, 1=👍, -1=👎
     saveNotes(notes);
-    // Перерисовываем только этот пузырь в чате
     _renderReplyBubble(noteId);
   }catch(e){console.warn('chat reply failed',e);}
+}
+
+function _firstAiMsg(n){
+  // Первое AI-сообщение из aiChat или старый aiReply
+  if(Array.isArray(n.aiChat)&&n.aiChat.length){
+    const m=n.aiChat.find(m=>m.role==='ai');
+    if(m)return m.text;
+  }
+  return n.aiReply||null;
 }
 
 function _renderReplyBubble(noteId){
@@ -747,28 +757,28 @@ function _renderReplyBubble(noteId){
   if(!el)return;
   const notes=getNotes();
   const n=notes.find(x=>x.id===noteId);
-  if(!n?.aiReply){el.style.display='none';return;}
+  const firstMsg=n?_firstAiMsg(n):null;
+  if(!firstMsg){el.style.display='none';return;}
   el.style.display='block';
-  el.innerHTML=_buildReplyHTML(n);
-  // Прокручиваем чат вниз чтобы ответ был виден
+  el.innerHTML=_buildReplyHTML(n,firstMsg);
   const feed=document.getElementById('home-feed');
   if(feed)requestAnimationFrame(()=>{feed.scrollTop=feed.scrollHeight;});
 }
 
-function _buildReplyHTML(n){
+function _buildReplyHTML(n,firstMsg){
   const like=n.aiReplyLike||0;
   const nId=esc(n.id);
-  // Клик по пузырю — открывает заметку. Кнопки оценки — только оценка (stopPropagation).
-  return `<div class="ai-reply-bubble" onclick="openNoteSheetById('${nId}')" title="Открыть заметку">
+  const text=firstMsg||_firstAiMsg(n)||'';
+  const chatCount=Array.isArray(n.aiChat)?n.aiChat.length:0;
+  const liked=like===1;
+  return `<div class="ai-reply-bubble" onclick="openNoteSheetById('${nId}')" title="Открыть — продолжить диалог">
     <div class="ai-reply-icon">✦</div>
     <div class="ai-reply-content">
-      <div class="ai-reply-text">${esc(n.aiReply)}</div>
+      <div class="ai-reply-text">${esc(text)}</div>
       <div class="ai-reply-actions">
-        <button class="ai-reply-rate ${like===1?'active':''}" onclick="event.stopPropagation();rateReply('${nId}',${like===1?0:1})" title="Полезно">
-          <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-        </button>
-        <button class="ai-reply-rate ${like===-1?'active':''}" onclick="event.stopPropagation();rateReply('${nId}',${like===-1?0:-1})" title="Не то">
-          <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        ${chatCount>1?`<span class="ai-reply-thread">${chatCount} сообщ.</span>`:''}
+        <button class="ai-reply-heart ${liked?'liked':''}" onclick="event.stopPropagation();rateReply('${nId}',${liked?0:1})" title="${liked?'Убрать лайк':'Нравится'}">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="${liked?'currentColor':'none'}"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
         </button>
       </div>
     </div>
@@ -782,6 +792,82 @@ function rateReply(noteId, val){
   n.aiReplyLike=val;
   saveNotes(notes);
   _renderReplyBubble(noteId);
+}
+
+// ── ЧАТ ВНУТРИ ЗАМЕТКИ ──
+let _chatNoteId=null;
+let _chatSending=false;
+
+function renderNoteChat(n){
+  const wrap=document.getElementById('note-chat');
+  const inputRow=document.getElementById('note-chat-input-row');
+  if(!wrap)return;
+  const msgs=Array.isArray(n.aiChat)?n.aiChat:[];
+  _chatNoteId=n.id;
+  if(!msgs.length){wrap.style.display='none';if(inputRow)inputRow.style.display='none';return;}
+  wrap.style.display='block';
+  if(inputRow)inputRow.style.display='flex';
+  wrap.innerHTML=msgs.map(m=>{
+    const isAi=m.role==='ai';
+    return `<div class="nc-msg nc-msg-${isAi?'ai':'user'}">
+      ${isAi?'<div class="nc-icon">✦</div>':''}
+      <div class="nc-text">${esc(m.text)}</div>
+    </div>`;
+  }).join('');
+  // Прокрутить к последнему сообщению
+  requestAnimationFrame(()=>{wrap.scrollTop=wrap.scrollHeight;});
+}
+
+async function sendNoteChat(){
+  if(_chatSending)return;
+  const inp=document.getElementById('note-chat-in');
+  const text=(inp?.value||'').trim();
+  if(!text){inp?.focus();return;}
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===_chatNoteId);
+  if(!n)return;
+  if(!Array.isArray(n.aiChat))n.aiChat=[];
+  // Добавляем сообщение пользователя
+  n.aiChat.push({role:'user',text,ts:Date.now()});
+  saveNotes(notes);
+  if(inp)inp.value='';
+  renderNoteChat(n);
+  // Блокируем кнопку
+  _chatSending=true;
+  const btn=document.getElementById('note-chat-send');
+  if(btn){btn.disabled=true;btn.style.opacity='.4';}
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)throw new Error('no token');
+    // Строим контекст: последние 6 сообщений для более умного ответа
+    const ctx=n.aiChat.slice(-6).map(m=>(m.role==='user'?'Пользователь: ':'AI: ')+m.text).join('\n');
+    const prompt=n.body+'\n\n---\n'+ctx+'\n\nПользователь: '+text;
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'chat_reply',payload:{text:prompt}})
+    });
+    if(res.ok){
+      const {reply}=await res.json();
+      if(reply){
+        const notes2=getNotes();
+        const n2=notes2.find(x=>x.id===_chatNoteId);
+        if(n2){
+          if(!Array.isArray(n2.aiChat))n2.aiChat=[];
+          n2.aiChat.push({role:'ai',text:reply,ts:Date.now()});
+          saveNotes(notes2);
+          renderNoteChat(n2);
+          // Обновить счётчик на главном экране
+          _renderReplyBubble(_chatNoteId);
+        }
+      }
+    }
+  }catch(e){showToast('Не удалось отправить');}
+  finally{
+    _chatSending=false;
+    if(btn){btn.disabled=false;btn.style.opacity='';}
+  }
 }
 
 // ── SWIPE BACK ──
@@ -1691,7 +1777,6 @@ function openNoteSheetById(id){
   _openNoteWith(n);
 }
 function _openNoteWith(n){
-  // Список открывается своим редактором
   if(n.type==='list'){openListSheet(n.id);return;}
   ST='note';EI=n.id||null;
   document.getElementById('sheet-title').textContent='Заметка';
@@ -1700,17 +1785,21 @@ function _openNoteWith(n){
   showSheetCat(safeLabel(n.label||'заметка'));
   initSheetReminder(n.reminder||'');
   initSheetUndo(n.body||n.title||'');
+  // Рендерим чат внутри заметки
+  renderNoteChat(n);
   _openSheet();
 }
 
 function openSheet(type){
-  ST=type;EI=null;
+  ST=type;EI=null;_chatNoteId=null;
   document.getElementById('sheet-title').textContent='Новая заметка';
   document.getElementById('sheet-body').innerHTML=noteForm('');
   document.getElementById('sheet-char-count').textContent='0 символов';
   showSheetCat('заметка');
   initSheetReminder('');
   initSheetUndo('');
+  const cw=document.getElementById('note-chat');if(cw)cw.style.display='none';
+  const cr=document.getElementById('note-chat-input-row');if(cr)cr.style.display='none';
   _openSheet();
 }
 
