@@ -3360,9 +3360,32 @@ function loadAll(){
 
 // ── SERVICE WORKER ──
 window.addEventListener('load',()=>{
-  if('serviceWorker'in navigator){
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  }
+  if(!('serviceWorker'in navigator))return;
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    // Принудительно проверяем обновление SW при каждом запуске
+    // Это критично для iOS PWA — иначе кэш может не обновляться сутками
+    reg.update().catch(()=>{});
+
+    // Если новый SW ожидает активации — сразу активируем
+    reg.addEventListener('updatefound',()=>{
+      const sw=reg.installing;
+      if(!sw)return;
+      sw.addEventListener('statechange',()=>{
+        if(sw.state==='installed'&&navigator.serviceWorker.controller){
+          // Новый SW установлен — перезагружаем страницу чтобы подхватить
+          window.location.reload();
+        }
+      });
+    });
+  }).catch(()=>{});
+
+  // Если контроллер сменился (другой SW взял управление) — перезагружаем
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(refreshing)return;
+    refreshing=true;
+    window.location.reload();
+  });
 });
 
 // ── INIT ──
