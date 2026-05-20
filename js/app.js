@@ -2397,90 +2397,67 @@ function onReminderChange(){}
 
 // ── REMINDER PICKER ──
 let _rmpTarget=null,_rmpDate=new Date();
-const _RMP_DAYS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-const _RMP_MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-const _RMP_REPS=5;   // повторений в колесе (зацикливание)
-const _RMP_IH=44;    // высота одного элемента px
-const _RMP_PADS=2;   // padding-заглушки сверху
 
 function openRmp(target){
   _rmpTarget=target;
   const id=target==='sheet'?'sheet-reminder-in':'home-input-reminder';
   const cur=document.getElementById(id)?.value;
   _rmpDate=cur?new Date(cur):null;
-  // Дефолт: текущее время + 1 час, округлённое до 15 минут
-  if(!_rmpDate||_rmpDate<=new Date()){
-    const now=new Date();
-    const nextMins=Math.ceil((now.getMinutes()+1)/15)*15;
-    now.setMinutes(nextMins,0,0);
-    now.setTime(now.getTime()+60*60*1000); // +1 час
-    _rmpDate=now;
+  if(!_rmpDate||isNaN(_rmpDate.getTime())||_rmpDate<=new Date()){
+    _rmpDate=new Date(Date.now()+3600000);
   }
-  _rmpBuild();
-  _rmpRefreshDate();
+  _rmpSyncInput();
   _rmpHighlightChips();
   const ov=document.getElementById('rmp-ov');
   ov.style.display='flex';
 }
 
-function _rmpScrollFor(wheel,count,value){
-  // scroll-snap-align:center: чтобы элемент оказался в центре,
-  // scrollTop = (content_index - viewport_half_items) * IH
-  // content_index = _RMP_PADS + count*2 + value
-  // viewport_half_items = _RMP_PADS (= viewportHeight/2 - IH/2) / IH = 2
-  // → scrollTop = (count*2 + value) * IH
-  wheel.scrollTop=(count*2+value)*_RMP_IH;
-}
-
-function _rmpBuild(){
+function _rmpLocalStr(d){
   const pad=n=>String(n).padStart(2,'0');
-  const ph='<div class="rmp-wi pad">·</div>';
-  const wh=document.getElementById('rmp-wh');
-  const wm=document.getElementById('rmp-wm');
-  if(!wh||!wm)return;
-  // _RMP_REPS повторений + 2 пада сверху и снизу
-  const hItems=Array.from({length:24*_RMP_REPS},(_,i)=>`<div class="rmp-wi">${pad(i%24)}</div>`).join('');
-  const mItems=Array.from({length:60*_RMP_REPS},(_,i)=>`<div class="rmp-wi">${pad(i%60)}</div>`).join('');
-  wh.innerHTML=ph+ph+hItems+ph+ph;
-  wm.innerHTML=ph+ph+mItems+ph+ph;
-  setTimeout(()=>{
-    _rmpScrollFor(wh,24,_rmpDate.getHours());
-    _rmpScrollFor(wm,60,_rmpDate.getMinutes());
-  },30);
+  return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
-function _rmpReadWheel(wheel,count){
-  // scrollTop = (count*2 + value) * IH  →  raw = scrollTop/IH = count*2 + value
-  // value = raw % count
-  const raw=Math.round(wheel.scrollTop/_RMP_IH);
-  return((raw%count)+count)%count;
-}
-
-function _rmpRefreshDate(){
-  const d=_rmpDate;
-  document.getElementById('rmp-datelbl').textContent=`${_RMP_DAYS[d.getDay()]}, ${d.getDate()} ${_RMP_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+function _rmpSyncInput(){
+  const inp=document.getElementById('rmp-dt-input');
+  if(inp&&_rmpDate)inp.value=_rmpLocalStr(_rmpDate);
 }
 function _rmpHighlightChips(){
-  const today=new Date();today.setHours(0,0,0,0);
-  const sel=new Date(_rmpDate);sel.setHours(0,0,0,0);
-  const diff=Math.round((sel-today)/86400000);
-  document.querySelectorAll('.rmp-chip').forEach((b,i)=>b.classList.toggle('active',i===diff));
+  // Clear all — chip highlight set on pick
+  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
 }
-function rmpSetDay(offset){
-  const d=new Date();d.setDate(d.getDate()+offset);
-  _rmpDate.setFullYear(d.getFullYear(),d.getMonth(),d.getDate());
-  // Если выбрали сегодня и время уже прошло — добавляем час
-  if(offset===0&&_rmpDate<=new Date()){
-    const now=new Date();
-    now.setTime(now.getTime()+3600000);
-    _rmpDate.setHours(now.getHours(),now.getMinutes(),0,0);
-    const wh=document.getElementById('rmp-wh');
-    const wm=document.getElementById('rmp-wm');
-    if(wh)_rmpScrollFor(wh,24,_rmpDate.getHours());
-    if(wm)_rmpScrollFor(wm,60,_rmpDate.getMinutes());
-  }
-  _rmpRefreshDate();_rmpHighlightChips();
+
+// Quick picks: offset in minutes from now
+function rmpPickQuick(minutes,btn){
+  _rmpDate=new Date(Date.now()+minutes*60000);
+  _rmpSyncInput();
+  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
 }
+// Today at given hour:minute (if in past → tomorrow)
+function rmpPickToday(h,m,btn){
+  const d=new Date();d.setHours(h,m,0,0);
+  if(d<=new Date())d.setDate(d.getDate()+1);
+  _rmpDate=d;
+  _rmpSyncInput();
+  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+// Tomorrow at given hour:minute
+function rmpPickTomorrow(h,m,btn){
+  const d=new Date();d.setDate(d.getDate()+1);d.setHours(h,m,0,0);
+  _rmpDate=d;
+  _rmpSyncInput();
+  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+// Native datetime-local input changed
+function rmpPickNative(val){
+  if(!val)return;
+  const d=new Date(val);
+  if(isNaN(d.getTime()))return;
+  _rmpDate=d;
+  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
+}
+
 function rmpClose(){
   const ov=document.getElementById('rmp-ov');
   if(!ov)return;
@@ -2488,14 +2465,8 @@ function rmpClose(){
   setTimeout(()=>{ov.style.display='none';ov.style.opacity='';ov.style.transition='';},240);
 }
 function rmpConfirm(){
-  const wh=document.getElementById('rmp-wh');
-  const wm=document.getElementById('rmp-wm');
-  const h=_rmpReadWheel(wh,24);
-  const m=_rmpReadWheel(wm,60);
-  _rmpDate.setHours(h,m,0,0);
-  const pad=n=>String(n).padStart(2,'0');
-  const d=_rmpDate;
-  const val=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(h)}:${pad(m)}`;
+  if(!_rmpDate||isNaN(_rmpDate.getTime()))return rmpClose();
+  const val=_rmpLocalStr(_rmpDate);
   if(_rmpTarget==='sheet'){
     const inp=document.getElementById('sheet-reminder-in');
     const row=document.getElementById('sheet-reminder-row');
