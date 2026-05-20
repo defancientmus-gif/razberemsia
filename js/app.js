@@ -670,10 +670,9 @@ function openFeedbackSheet(){
   const pn=document.getElementById('feedback-panel');
   const ta=document.getElementById('feedback-ta');
   if(!ov||!pn)return;
-  requestAnimationFrame(()=>{
-    ov.classList.add('fb-open');
-    pn.classList.add('fb-open');
-  });
+  // Без rAF — классы сразу, иначе первый тап уходит в оверлей во время анимации
+  ov.classList.add('fb-open');
+  pn.classList.add('fb-open');
   if(ta){ta.value='';setTimeout(()=>ta.focus(),320);}
 }
 function closeFeedbackSheet(){
@@ -919,6 +918,8 @@ function scheduleAll(){
   _NT.forEach(t=>clearTimeout(t));_NT=[];
   if(!notifGranted())return;
   const notes=getNotes();
+
+  // ── 1. setTimeout в странице (работает пока вкладка открыта) ──
   notes.forEach(n=>{
     if(!n.reminder||!n.title)return;
     const dt=parseDt(n.reminder);if(!dt)return;
@@ -931,8 +932,25 @@ function scheduleAll(){
     },delay);
     _NT.push(tid);
   });
+
+  // ── 2. Дублируем в Service Worker (работает в фоне и без сети) ──
+  // SW сам ставит setTimeout через showNotification — не зависит от страницы
+  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({
+      type:'SCHEDULE',
+      notes:notes.filter(n=>n.reminder&&n.title).map(n=>({
+        id:n.id,title:n.title,body:n.body?.slice(0,100)||'',reminder:n.reminder
+      }))
+    });
+  }
+
   updateReminderDot();
 }
+
+// Пересылаем в SW при каждом возвращении в приложение
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&notifGranted())scheduleAll();
+});
 
 // ── REMINDER SETTINGS ──
 function getReminderSettings(){
