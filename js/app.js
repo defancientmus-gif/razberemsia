@@ -897,11 +897,8 @@ function renderNoteChat(n){
       <div class="nc-text">${esc(m.text)}</div>
     </div>`;
   }).join('');
-  // Прокрутить sheet-scroll-area к низу (чат теперь внутри scroll-area)
-  requestAnimationFrame(()=>{
-    const sa=document.getElementById('sheet-scroll-area');
-    if(sa)sa.scrollTop=sa.scrollHeight;
-  });
+  // scrollTop устанавливается в _openSheet() после autoGrowTA,
+  // чтобы рост textarea не сбивал позицию. Здесь не скроллим.
 }
 
 async function sendNoteChat(){
@@ -944,6 +941,11 @@ async function sendNoteChat(){
           n2.aiChat.push({role:'ai',text:reply,ts:Date.now()});
           saveNotes(notes2);
           renderNoteChat(n2);
+          // Прокрутить вниз после ответа AI
+          requestAnimationFrame(()=>{
+            const sa=document.getElementById('sheet-scroll-area');
+            if(sa)sa.scrollTop=sa.scrollHeight;
+          });
           // Обновить счётчик на главном экране
           _renderReplyBubble(_chatNoteId);
         }
@@ -1961,10 +1963,19 @@ function _openSheet(){
     }
     const rem=document.getElementById('sheet-reminder-in');
     if(rem)rem.onchange=saveSheetDraft;
+    const sa=document.getElementById('sheet-scroll-area');
+    if(sa){
+      sa.onclick=(e)=>{if(e.target===sa){const ta=document.getElementById('sh1');if(ta)ta.focus();}};
+      // Если есть чат — прокрутить вниз ПОСЛЕ autoGrowTA (иначе рост textarea сбивает скролл)
+      const chat=document.getElementById('note-chat');
+      if(chat&&chat.style.display!=='none'){
+        sa.scrollTop=sa.scrollHeight;
+      } else {
+        sa.scrollTop=0; // новая заметка — сверху
+      }
+    }
     const bw=document.getElementById('sheet-body');
     if(bw)bw.onclick=(e)=>{if(e.target===bw){const ta=document.getElementById('sh1');if(ta)ta.focus();}};
-    const sa=document.getElementById('sheet-scroll-area');
-    if(sa)sa.onclick=(e)=>{if(e.target===sa){const ta=document.getElementById('sh1');if(ta)ta.focus();}};
   },120);
 }
 
