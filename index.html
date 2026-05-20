@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v5.8</title>
+<title>Разберёмся v5.9</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
@@ -697,7 +697,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .note-chat{
   margin:10px 16px 0;border-top:1px solid oklch(0.88 0.02 260 / 0.35);
   padding-top:10px;display:flex;flex-direction:column;gap:8px;
-  max-height:240px;overflow-y:auto;
+  /* max-height убран — теперь внутри sheet-scroll-area, скроллится вместе с заметкой */
 }
 .note-chat::-webkit-scrollbar{display:none;}
 .nc-msg{display:flex;align-items:flex-start;gap:6px;animation:splashFadeIn .22s ease;}
@@ -720,10 +720,11 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 }
 .note-chat-input-row{
   display:flex;align-items:center;gap:8px;
-  margin:8px 16px 4px;
+  margin:8px 16px 12px;
   border:1px solid oklch(0.88 0.02 260 / 0.40);
   border-radius:14px;padding:6px 8px 6px 14px;
   background:oklch(0.98 0.004 260 / 0.6);
+  flex-shrink:0;
 }
 .note-chat-in{
   flex:1;background:none;border:none;outline:none;
@@ -1797,7 +1798,7 @@ html.dark .bubble{
     <span class="auth-logo-text">Разберёмся</span>
   </div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v5.8 · бета</div>
+  <div class="auth-ver">v5.9 · бета</div>
 
   <div class="auth-card checking" id="auth-card">
 
@@ -1954,7 +1955,7 @@ html.dark .bubble{
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.8</span></span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v5.9</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
@@ -2249,7 +2250,6 @@ html.dark .bubble{
     <div class="sheet-scroll-area" id="sheet-scroll-area">
       <div class="sheet-body-wrap" id="sheet-body"></div>
       <!-- AI Panel (появляется при включении) -->
-      <!-- AI Panel -->
       <div id="ai-panel" class="ai-panel" style="display:none;">
         <div class="ai-panel-hdr">
           <span class="ai-panel-title"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Анализ AI</span>
@@ -2257,15 +2257,15 @@ html.dark .bubble{
         </div>
         <div class="ai-panel-body" id="ai-panel-body"></div>
       </div>
-    </div>
-    <!-- Chat inside note (микроблог) -->
-    <div id="note-chat" class="note-chat" style="display:none;"></div>
-    <div id="note-chat-input-row" class="note-chat-input-row" style="display:none;">
-      <input id="note-chat-in" class="note-chat-in" type="text" placeholder="Продолжить разговор…" maxlength="500"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();sendNoteChat();}">
-      <button id="note-chat-send" class="note-chat-send" type="button" onclick="sendNoteChat()">
-        <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
+      <!-- Chat inside note (микроблог) — внутри scroll-area, прокручивается вместе с заметкой -->
+      <div id="note-chat" class="note-chat" style="display:none;"></div>
+      <div id="note-chat-input-row" class="note-chat-input-row" style="display:none;">
+        <input id="note-chat-in" class="note-chat-in" type="text" placeholder="Продолжить разговор…" maxlength="500"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();sendNoteChat();}">
+        <button id="note-chat-send" class="note-chat-send" type="button" onclick="sendNoteChat()">
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
     </div>
     <!-- Reminder -->
     <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">

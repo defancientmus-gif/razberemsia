@@ -814,7 +814,15 @@ async function _fetchChatReply(noteId, text){
     // Обратная совместимость
     n.aiReply=reply;
     saveNotes(notes);
-    _renderReplyBubble(noteId);
+    // Обновить пузырь — если элемент ещё в DOM, обновить его;
+    // если нет (пользователь переключил вкладку и назад) — пересобрать весь фид
+    const bubbleEl=document.getElementById('ai-reply-'+noteId);
+    if(bubbleEl){
+      _renderReplyBubble(noteId);
+    } else {
+      loadHomeFeed();
+    }
+    showToast('✦ ИИ ответил');
   }catch(e){console.warn('chat reply failed',e);}
 }
 
@@ -889,8 +897,11 @@ function renderNoteChat(n){
       <div class="nc-text">${esc(m.text)}</div>
     </div>`;
   }).join('');
-  // Прокрутить к последнему сообщению
-  requestAnimationFrame(()=>{wrap.scrollTop=wrap.scrollHeight;});
+  // Прокрутить sheet-scroll-area к низу (чат теперь внутри scroll-area)
+  requestAnimationFrame(()=>{
+    const sa=document.getElementById('sheet-scroll-area');
+    if(sa)sa.scrollTop=sa.scrollHeight;
+  });
 }
 
 async function sendNoteChat(){
@@ -2456,12 +2467,13 @@ function saveSheet(){
   if(aiSummary)addToAiMemory(aiSummary,aiTags,item.id);
   clearSheetDraft();
   if(v2) _autoExportIcs(title,v1.trim(),v2,item.id); // авто .ics до закрытия шита
+  const wasNew=(EI===null); // запомнить ДО closeSheet(), который обнуляет EI
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
-  showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
+  showToast(wasNew?'Сохранено ✓':'Изменено ✓');
   if(v2) _handleReminderAfterSave(v2);
-  // AI-ответ в чат — только для новых заметок (не редактирование)
-  if(EI===null&&v1.trim().length>=15){
+  // AI-ответ — только для новых заметок (не редактирование)
+  if(wasNew&&v1.trim().length>=15){
     _fetchChatReply(item.id, v1.trim());
   }
 }
