@@ -2324,6 +2324,7 @@ function _autoExportIcs(noteTitle,noteBody,reminderVal,noteId){
     const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Разберёмся//RU','CALSCALE:GREGORIAN','METHOD:PUBLISH',
       'BEGIN:VEVENT',`UID:${noteId||Date.now()}@razberemsia`,`DTSTAMP:${icsDate(new Date())}`,
       `DTSTART:${icsDate(dt)}`,`DTEND:${icsDate(dtEnd)}`,`SUMMARY:${title}`,`DESCRIPTION:${desc}`,
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Напоминание','TRIGGER:-PT1M','END:VALARM',
       'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Напоминание','TRIGGER:PT0S','END:VALARM',
       'END:VEVENT','END:VCALENDAR'].join('\r\n');
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -2373,11 +2374,8 @@ function exportToCalendar(){
     `DTEND:${icsDate(dtEnd)}`,
     `SUMMARY:${icsEscape(title||'Напоминание')}`,
     `DESCRIPTION:${icsEscape(desc)}`,
-    'BEGIN:VALARM',
-    'ACTION:DISPLAY',
-    'DESCRIPTION:Напоминание',
-    'TRIGGER:PT0S',
-    'END:VALARM',
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Напоминание','TRIGGER:-PT1M','END:VALARM',
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Напоминание','TRIGGER:PT0S','END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR'
   ].join('\r\n');
