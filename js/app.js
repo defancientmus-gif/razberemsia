@@ -1006,30 +1006,28 @@ function scheduleAll(){
   if(!notifGranted())return;
   const notes=getNotes();
 
-  // ── 1. setTimeout в странице (работает пока вкладка открыта) ──
+  // ── 1. SW — системные уведомления (работает в фоне, без сети) ──
+  // SW показывает системный попап. Страница его НЕ дублирует.
+  const swNotes=notes.filter(n=>n.reminder&&n.title).map(n=>({
+    id:n.id,title:n.title,body:n.body?.slice(0,100)||'',reminder:n.reminder
+  }));
+  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:'SCHEDULE',notes:swNotes});
+  }
+
+  // ── 2. setTimeout в странице — только внутренний баннер (без system Notification) ──
+  // Если страница открыта в момент напоминания — показываем карточку поверх контента
   notes.forEach(n=>{
     if(!n.reminder||!n.title)return;
     const dt=parseDt(n.reminder);if(!dt)return;
     const delay=dt.getTime()-Date.now();
     if(delay<=0||delay>7*24*3600*1000)return;
     const tid=setTimeout(()=>{
-      try{new Notification('Разберёмся',{body:n.title,icon:'pwa-feather-192.png'});}catch(e){}
-      showInAppReminder(n);
+      showInAppReminder(n); // только внутренний баннер, SW уже показал системное
       updateReminderDot();
     },delay);
     _NT.push(tid);
   });
-
-  // ── 2. Дублируем в Service Worker (работает в фоне и без сети) ──
-  // SW сам ставит setTimeout через showNotification — не зависит от страницы
-  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
-    navigator.serviceWorker.controller.postMessage({
-      type:'SCHEDULE',
-      notes:notes.filter(n=>n.reminder&&n.title).map(n=>({
-        id:n.id,title:n.title,body:n.body?.slice(0,100)||'',reminder:n.reminder
-      }))
-    });
-  }
 
   updateReminderDot();
 }

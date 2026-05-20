@@ -1,4 +1,4 @@
-const CACHE = 'rz-v86';
+const CACHE = 'rz-v87';
 const ASSETS = [
   './',
   'index.html',
@@ -40,7 +40,8 @@ self.addEventListener('fetch', e => {
 });
 
 // ── Уведомления через SW (один источник, без дублей) ──
-// Используется только если страница закрыта — иначе работает setTimeout из app
+// SW — единственный источник системных уведомлений.
+// Страница (app.js) показывает только внутренний баннер, чтобы не было дублей.
 let scheduled = [];
 
 self.addEventListener('message', e => {
