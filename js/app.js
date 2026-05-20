@@ -2817,13 +2817,14 @@ function saveNotepad(){
   const text=inp.value.trim();if(!text){showToast('Напишите что-нибудь');return;}
   const{title,label,reminder}=analyzeText(text);
   const ts=Date.now();
+  const nidPad=genId();
   const notes=getNotes();
-  notes.push({id:genId(),title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+  notes.push({id:nidPad,title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
   saveNotes(notes);
   inp.value='';inp.style.height='auto';
   loadNotepad();loadNotes();loadHomeFeed();
   showToast(reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`);
-  if(reminder) _handleReminderAfterSave(reminder);
+  if(reminder) _handleReminderAfterSave(reminder,nidPad,title,text.slice(0,200));
 }
 
 function npResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
@@ -2989,11 +2990,10 @@ function saveHome(){
   const notes=getNotes();
   notes.push({id:nid,title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
   saveNotes(notes);
-  // .ics убран — VAPID push через сервер
   closeInputSheet();
   loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
-  if(reminder) _handleReminderAfterSave(reminder);
+  if(reminder) _handleReminderAfterSave(reminder,nid,title,text.slice(0,200));
 }
 
 function toggleSheetVoice(){sheetIsRec?stopSheetVoice():startSheetVoice();}
@@ -3250,11 +3250,12 @@ function startHomeVoice(){
       const reminder=voiceReminder||auto.reminder||null;
       const ts=Date.now();
       const notes=getNotes();
-      notes.push({id:genId(),title:auto.title,body:cleanBody,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+      const nidVoice=genId();
+      notes.push({id:nidVoice,title:auto.title,body:cleanBody,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
       saveNotes(notes);
       loadHomeFeed();loadNotes();loadNotepad();
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
-      if(reminder) _handleReminderAfterSave(reminder);
+      if(reminder) _handleReminderAfterSave(reminder,nidVoice,auto.title,cleanBody.slice(0,200));
     }
     if(_nnbHandsfree&&!_nnbManualStop){
       setTimeout(()=>{if(_nnbHandsfree&&!homeRecog)startHomeVoice();},260);
