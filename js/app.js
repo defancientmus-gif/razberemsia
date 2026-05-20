@@ -1066,6 +1066,36 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&notifGranted())scheduleAll();
 });
 
+// ── Умная обработка напоминания после сохранения заметки ──
+function _handleReminderAfterSave(reminderVal){
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+
+  if(notifGranted()){
+    scheduleAll();
+    if(isIOS&&!isPWA){
+      // iOS браузер — SW-уведомления не работают без PWA, советуем календарь
+      setTimeout(()=>showToast('Совет: добавь в Календарь кнопкой 📅 — надёжнее на iPhone'),1200);
+    }
+    return;
+  }
+  if(!notifSupp()||Notification.permission==='denied'){
+    // Уведомления недоступны — сразу предлагаем календарь
+    setTimeout(()=>showToast('Уведомления заблокированы. Добавь в Календарь кнопкой 📅'),800);
+    return;
+  }
+  // Разрешение ещё не запрашивалось — просим прямо сейчас
+  Notification.requestPermission().then(p=>{
+    renderNotifBanner();
+    if(p==='granted'){
+      scheduleAll();
+      showToast('Уведомления включены — напомним вовремя ✓');
+    } else {
+      showToast('Нет разрешения. Добавь в Календарь кнопкой 📅');
+    }
+  });
+}
+
 // ── REMINDER SETTINGS ──
 function getReminderSettings(){
   try{const r=localStorage.getItem(scopedKey('rz_remind_settings'));return r?JSON.parse(r):{advanceMinutes:60,aiSuggest:true};}catch(e){return{advanceMinutes:60,aiSuggest:true};}
@@ -2215,14 +2245,20 @@ function exportToCalendar(){
     'END:VCALENDAR'
   ].join('\r\n');
 
-  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const a=document.createElement('a');
-  a.href=url;
   a.download=`razberemsia-${noteId}.ics`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  if(isIOS){
+    // iOS Safari не поддерживает download у blob — используем data URI
+    a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+  }else{
+    const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    a.href=url;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  }
   showToast('📅 Открой файл — добавь в Календарь');
 }
 
@@ -2287,7 +2323,7 @@ function saveSheet(){
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
   showToast(EI!==null?'Изменено ✓':'Сохранено ✓');
-  if(v2&&notifGranted())scheduleAll();
+  if(v2) _handleReminderAfterSave(v2);
   // AI-ответ в чат — только для новых заметок (не редактирование)
   if(EI===null&&v1.trim().length>=15){
     _fetchChatReply(item.id, v1.trim());
@@ -2531,7 +2567,7 @@ function saveNotepad(){
   inp.value='';inp.style.height='auto';
   loadNotepad();loadNotes();loadHomeFeed();
   showToast(reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`);
-  if(reminder&&notifGranted())scheduleAll();
+  if(reminder) _handleReminderAfterSave(reminder);
 }
 
 function npResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
@@ -2699,7 +2735,7 @@ function saveHome(){
   closeInputSheet();
   loadHomeFeed();loadNotes();loadNotepad();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
-  if(reminder&&notifGranted())scheduleAll();
+  if(reminder) _handleReminderAfterSave(reminder);
 }
 
 function toggleSheetVoice(){sheetIsRec?stopSheetVoice():startSheetVoice();}
@@ -2961,7 +2997,7 @@ function startHomeVoice(){
       saveNotes(notes);
       loadHomeFeed();loadNotes();loadNotepad();
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
-      if(reminder&&notifGranted())scheduleAll();
+      if(reminder) _handleReminderAfterSave(reminder);
     }
     if(_nnbHandsfree&&!_nnbManualStop){
       setTimeout(()=>{if(_nnbHandsfree&&!homeRecog)startHomeVoice();},260);
