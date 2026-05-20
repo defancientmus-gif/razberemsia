@@ -542,6 +542,16 @@ function toggleAiPanel(){
     _scrollToAiPanel();
     return;
   }
+  // ── Кэш: если заметка уже анализировалась и текст не менялся — показать без API ──
+  if(EI){
+    const list=getNotes();
+    const note=list.find(n=>n.id===EI);
+    if(note?.aiCache&&note.aiCache.bodyKey===text.slice(0,80)){
+      _renderAiResult(note.aiCache.summary,note.aiCache.tags,note.aiCache.actions,panel,text);
+      _scrollToAiPanel();
+      return;
+    }
+  }
   runAiAnalysis(text,panel);
 }
 function toggleAiCollapse(){
@@ -618,7 +628,9 @@ async function toggleSpellFix(){
 }
 function _scrollToAiPanel(){
   const sa=document.getElementById('sheet-scroll-area');
-  if(sa)sa.scrollTo({top:sa.scrollHeight,behavior:'smooth'});
+  if(!sa)return;
+  // Instant jump — smooth scroll causes panel to appear stuck in middle of screen
+  sa.scrollTop=sa.scrollHeight;
 }
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function isAiOverloaded(message){
@@ -678,28 +690,17 @@ async function runAiAnalysis(text,panel,attempt=0){
       const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
       if(curCat==='заметка'){showSheetCat(autoLabel);showCatHint(autoLabel);}
     }
-    let html='<div class="ai-panel-inner">';
-    if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
-    if(tags?.length){
-      const tagBtns=tags.map(t=>{
-        const exists=typeof tagFolderExists==='function'&&tagFolderExists(t);
-        return `<button type="button" class="ai-tag${exists?' ai-tag--active':''}" data-tag="${esc(t)}" onclick="toggleTagFolder(${jsAttr(t)})" title="${exists?'Открыть папку':'Создать папку в Заметках'}">${esc(t)}</button>`;
-      }).join('');
-      html+=`<div class="ai-section"><div class="ai-label-row"><span class="ai-label">Теги — нажми чтобы создать папку</span><button type="button" class="ai-tag-add-btn" onclick="promptNewTag()">+ тег</button></div><div class="ai-tags">${tagBtns}</div></div>`;
+    _renderAiResult(summary,tags,actions,panel,text);
+    // ── Сохранить кэш анализа в заметку ──
+    if(EI){
+      const list=getNotes();
+      const idx=list.findIndex(n=>n.id===EI);
+      if(idx>=0){
+        list[idx].aiCache={summary:summary||'',tags:tags||[],actions:actions||[],bodyKey:text.slice(0,80)};
+        saveNotes(list);
+      }
     }
-    const activeCat=autoLabel||'заметка';
-    if(actions?.length){html+=`<div class="ai-section ai-actions-section"><button type="button" class="ai-actions-toggle" onclick="(function(btn){const s=btn.closest('.ai-actions-section');const b=s.querySelector('.ai-actions-body');const open=s.classList.toggle('open');if(open){b.style.maxHeight='none';const h=b.scrollHeight;b.style.maxHeight='0';requestAnimationFrame(()=>{b.style.maxHeight=h+'px';setTimeout(()=>{b.style.maxHeight='none';},320);});}else{b.style.maxHeight=b.scrollHeight+'px';requestAnimationFrame(()=>{b.style.maxHeight='0';});}})(this)"><span class="ai-label">Можно сделать <span class="ai-actions-hint">(${actions.length})</span></span><svg class="ai-actions-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button><div class="ai-actions-body"><div class="ai-actions" style="margin-top:8px;">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div></div></div>`;}
-    const settings=getReminderSettings();
-    const reminderAlreadySet=!!(document.getElementById('sheet-reminder-in')?.value);
-    if(settings.aiSuggest&&hasTimeHint(text)&&!reminderAlreadySet){
-      html+=`<div class="ai-section"><button class="ai-remind-btn" onclick="applyAiReminder()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>AI замечает время — поставить напоминание?</button></div>`;
-    }
-    html+='</div>';
-    if(bodyEl){bodyEl.innerHTML=html;bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';}
-    panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
-    panel.dataset.aiSummary=summary||'';
     // ── Авто-сохранение идей в репозиторий ──
-    // \b не работает с кириллицей — проверяем: после "идея" не идёт буква
     const isIdea=(tags||[]).some(t=>/^идеи?$|^ideas?$/i.test(t.trim()))
       || /^идея([^а-яёА-ЯЁa-zA-Z]|$)/i.test(text.trim());
     if(isIdea){
@@ -707,7 +708,6 @@ async function runAiAnalysis(text,panel,attempt=0){
       _saveIdeaToRepo({text,summary:summary||'',tags:tags||[],actions:actions||[],noteId:nid})
         .catch(e=>console.warn('save_idea failed',e));
     }
-    // editBtn removed
     _scrollToAiPanel();
   }catch(e){
     console.warn('AI error',e);
@@ -715,6 +715,43 @@ async function runAiAnalysis(text,panel,attempt=0){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
     // editBtn removed
     _scrollToAiPanel();
+  }
+}
+
+// ── RENDER AI RESULT (used both from runAiAnalysis and from cache) ──
+function _renderAiResult(summary,tags,actions,panel,text){
+  const bodyEl=document.getElementById('ai-panel-body');
+  let html='<div class="ai-panel-inner">';
+  if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
+  if(tags?.length){
+    const tagBtns=tags.map(t=>{
+      const exists=typeof tagFolderExists==='function'&&tagFolderExists(t);
+      return `<button type="button" class="ai-tag${exists?' ai-tag--active':''}" data-tag="${esc(t)}" onclick="toggleTagFolder(${jsAttr(t)})" title="${exists?'Открыть папку':'Создать папку в Заметках'}">${esc(t)}</button>`;
+    }).join('');
+    html+=`<div class="ai-section"><div class="ai-label-row"><span class="ai-label">Теги — нажми чтобы создать папку</span><button type="button" class="ai-tag-add-btn" onclick="promptNewTag()">+ тег</button></div><div class="ai-tags">${tagBtns}</div></div>`;
+  }
+  if(actions?.length){
+    // Простой toggle — CSS transition обрабатывает анимацию через .open класс
+    html+=`<div class="ai-section ai-actions-section">
+      <button type="button" class="ai-actions-toggle" onclick="this.closest('.ai-actions-section').classList.toggle('open')">
+        <span class="ai-label">Можно сделать <span class="ai-actions-hint">(${actions.length})</span></span>
+        <svg class="ai-actions-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="ai-actions-body">
+        <div class="ai-actions" style="margin-top:8px;">${actions.map((a,i)=>`<div class="ai-action-card"><div class="ai-action-text">${esc(a)}</div><div class="ai-action-btns"><button class="ai-accept-btn" onclick="acceptAiAction(${i})">✓ Сделаю</button><button class="ai-reject-btn" onclick="rejectAiAction(${i})">Не надо</button></div></div>`).join('')}</div>
+      </div>
+    </div>`;
+  }
+  const settings=getReminderSettings();
+  const reminderAlreadySet=!!(document.getElementById('sheet-reminder-in')?.value);
+  if(settings.aiSuggest&&hasTimeHint(text||'')&&!reminderAlreadySet){
+    html+=`<div class="ai-section"><button class="ai-remind-btn" onclick="applyAiReminder()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>AI замечает время — поставить напоминание?</button></div>`;
+  }
+  html+='</div>';
+  if(bodyEl){bodyEl.innerHTML=html;bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';}
+  if(panel){
+    panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
+    panel.dataset.aiSummary=summary||'';
   }
 }
 
@@ -2583,6 +2620,7 @@ function saveSheet(){
   const aiPanel=document.getElementById('ai-panel');
   let aiTags=Array.isArray(prev?.aiTags)?prev.aiTags:[];
   let aiSummary=prev?.aiSummary||'';
+  let aiCache=prev?.aiCache||null;
   if(aiPanel?.dataset.aiTags){
     try{const parsed=JSON.parse(aiPanel.dataset.aiTags);if(Array.isArray(parsed))aiTags=parsed.filter(t=>typeof t==='string').slice(0,8);}catch(e){}
   }
@@ -2590,7 +2628,9 @@ function saveSheet(){
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
-  const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary};
+  // Если текст изменился — сбросить кэш анализа
+  if(aiCache&&aiCache.bodyKey!==v1.trim().slice(0,80))aiCache=null;
+  const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary,aiCache};
   if(existingIdx>=0){
     item.createdAt=list[existingIdx].createdAt||ts;
     // Save version history

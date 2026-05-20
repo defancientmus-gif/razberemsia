@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v5.15</title>
+<title>Разберёмся v5.16</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
@@ -1383,7 +1383,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sheet-ai-btn:active{transform:scale(.95);}
 .sheet-ai-btn.ai-on{background:oklch(0.55 0.12 290 / 0.20);color:oklch(0.38 0.14 290);}
 .sheet-ai-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.ai-panel{margin:0 16px 10px;border-radius:14px;background:oklch(0.97 0.008 290 / 0.85);border:1px solid oklch(0.55 0.12 290 / 0.15);overflow:hidden;animation:splashFadeIn .22s cubic-bezier(.22,1,.36,1);}
+.ai-panel{margin:0 16px 10px;border-radius:14px;background:oklch(0.97 0.008 290 / 0.85);border:1px solid oklch(0.55 0.12 290 / 0.15);overflow:hidden;animation:aiPanelIn .26s cubic-bezier(.22,1,.36,1);}
+@keyframes aiPanelIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 .ai-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px 8px;cursor:pointer;border-bottom:1px solid oklch(0.55 0.12 290 / 0.10);}
 .ai-panel-title{font-size:11px;font-weight:600;color:oklch(0.45 0.12 290);display:flex;align-items:center;gap:5px;letter-spacing:.03em;}
 .ai-collapse-btn{background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;color:oklch(0.55 0.12 290 / 0.55);transition:transform .28s cubic-bezier(.22,1,.36,1);}
@@ -1765,10 +1766,12 @@ html.dark .bubble{
 .ai-actions-section.open .ai-actions-chevron { transform: rotate(180deg); }
 .ai-actions-body {
   overflow: hidden; max-height: 0;
-  transition: max-height .28s cubic-bezier(.22,1,.36,1), opacity .22s ease;
+  transition: max-height .30s cubic-bezier(.22,1,.36,1), opacity .24s ease;
   opacity: 0;
 }
-.ai-actions-section.open .ai-actions-body { max-height: 600px; opacity: 1; }
+.ai-actions-section.open .ai-actions-body {
+  max-height: 800px; opacity: 1; overflow-y: auto;
+}
 .ai-actions-hint {
   font-size: 11px; color: oklch(0.55 0.12 290 / 0.55);
   margin-left: 6px; font-weight: 400;
@@ -1798,7 +1801,7 @@ html.dark .bubble{
     <span class="auth-logo-text">Разберёмся</span>
   </div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v5.15 · бета</div>
+  <div class="auth-ver">v5.16 · бета</div>
 
   <div class="auth-card checking" id="auth-card">
 
@@ -1955,7 +1958,7 @@ html.dark .bubble{
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.15</span></span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v5.16</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
