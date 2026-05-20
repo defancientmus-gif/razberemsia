@@ -1114,31 +1114,21 @@ document.addEventListener('visibilitychange',()=>{
 
 // ── Умная обработка напоминания после сохранения заметки ──
 function _handleReminderAfterSave(reminderVal){
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-
   if(notifGranted()){
-    scheduleAll();
-    if(isIOS&&!isPWA){
-      // iOS браузер — SW-уведомления не работают без PWA, советуем календарь
-      setTimeout(()=>showToast('Совет: добавь в Календарь кнопкой 📅 — надёжнее на iPhone'),1200);
-    }
+    scheduleAll(); // тихо — пользователь уже разрешил на онбординге
     return;
   }
   if(!notifSupp()||Notification.permission==='denied'){
-    // Уведомления недоступны — сразу предлагаем календарь
-    setTimeout(()=>showToast('Уведомления заблокированы. Добавь в Календарь кнопкой 📅'),800);
+    // Уведомления заблокированы системно — тихо показываем скрытую кнопку-запасник
+    const calBtn=document.getElementById('sheet-cal-btn');
+    if(calBtn)calBtn.style.display='flex';
+    setTimeout(()=>showToast('Уведомления недоступны — зайди в Настройки → Разберёмся'),800);
     return;
   }
-  // Разрешение ещё не запрашивалось — просим прямо сейчас
+  // Разрешение не выдано — запрашиваем (если онбординг был пропущен)
   Notification.requestPermission().then(p=>{
     renderNotifBanner();
-    if(p==='granted'){
-      scheduleAll();
-      showToast('Уведомления включены — напомним вовремя ✓');
-    } else {
-      showToast('Нет разрешения. Добавь в Календарь кнопкой 📅');
-    }
+    if(p==='granted'){scheduleAll();}
   });
 }
 
@@ -1323,7 +1313,6 @@ function applyAiReminder(){
   const calBtn=document.getElementById('sheet-cal-btn');
   if(row)row.style.display='flex';
   if(inp){inp.value=suggested;inp.focus();}
-  if(calBtn)calBtn.style.display='flex';
   showToast('Выберите удобное время 🔔');
 }
 
@@ -2305,7 +2294,7 @@ function exportToCalendar(){
     document.body.appendChild(a);a.click();
     setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
   }
-  showToast('📅 Открой файл — добавь в Календарь');
+  showToast('📅 Открой скачанный файл');
 }
 
 // Tap on overlay-bg to close (not on sheet itself)
@@ -2879,7 +2868,6 @@ function startSheetAudioNote(){
       const calBtn=document.getElementById('sheet-cal-btn');
       if(row)row.style.display='flex';
       if(inp)inp.value=vReminder;
-      if(calBtn)calBtn.style.display='flex';
       showToast('🔔 Напоминание: '+fmtDt(vReminder));
     } else {
       showToast('Голос записан ✓');
