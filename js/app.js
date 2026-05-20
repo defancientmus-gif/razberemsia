@@ -225,6 +225,8 @@ async function enterUser(user){
   CU=user;migrateLegacyLocal();await loadCloudData();
   showApp();updUI(user);loadAll();
   _maybeOnboard();
+  // Восстановить push-подписку при каждом логине (endpoint может смениться)
+  if(notifGranted())_ensurePushSubscription();
 }
 
 // ── ONBOARDING — один раз при первом входе ──
@@ -251,7 +253,7 @@ function onbNotif(){
   if(!notifSupp()){onbNext(1);return;}
   Notification.requestPermission().then(p=>{
     renderNotifBanner();
-    if(p==='granted')scheduleAll();
+    if(p==='granted'){scheduleAll();_ensurePushSubscription();}
     onbNext(1);
   });
 }
@@ -1126,9 +1128,12 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 // ── Умная обработка напоминания после сохранения заметки ──
-function _handleReminderAfterSave(reminderVal){
+function _handleReminderAfterSave(reminderVal,noteId,noteTitle,noteBody){
+  // Сохраняем на сервер всегда (VAPID cron будет стрелять независимо от SW)
+  if(noteId&&reminderVal)_saveReminderToServer(noteId,noteTitle||'',noteBody||'',reminderVal);
   if(notifGranted()){
-    scheduleAll(); // тихо — пользователь уже разрешил на онбординге
+    scheduleAll();
+    _ensurePushSubscription(); // гарантируем подписку
     return;
   }
   if(!notifSupp()||Notification.permission==='denied'){
@@ -1141,8 +1146,100 @@ function _handleReminderAfterSave(reminderVal){
   // Разрешение не выдано — запрашиваем (если онбординг был пропущен)
   Notification.requestPermission().then(p=>{
     renderNotifBanner();
-    if(p==='granted'){scheduleAll();}
+    if(p==='granted'){scheduleAll();_ensurePushSubscription();}
   });
+}
+
+// ── VAPID WEB PUSH ────────────────────────────────────────────────────────────
+const VAPID_PUBLIC_KEY='BOZyP-dj5nQQogwdMgUtSWwWcEa6yAuNm2dCwVbhSFfHq7xvVcyoUNQA226AT0OlrOVqX3MOERBsZsnjllKqjKo';
+
+function _vapidB64toUint8(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=window.atob(base64);
+  return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+
+async function _getPushSubscription(){
+  if(!('serviceWorker'in navigator)||!('PushManager'in window))return null;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    return await reg.pushManager.getSubscription();
+  }catch(e){return null;}
+}
+
+async function _subscribePush(){
+  if(!('serviceWorker'in navigator)||!('PushManager'in window))return null;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:_vapidB64toUint8(VAPID_PUBLIC_KEY)
+    });
+    // Сохраняем на сервер
+    await _syncPushSubToServer(sub);
+    return sub;
+  }catch(e){
+    console.warn('push subscribe failed',e);
+    return null;
+  }
+}
+
+async function _syncPushSubToServer(sub){
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token||!sub)return;
+    const k=sub.getKey('p256dh');
+    const a=sub.getKey('auth');
+    if(!k||!a)return;
+    const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'push_subscribe',payload:{
+        endpoint:sub.endpoint,
+        p256dh:b64u(k),
+        auth:b64u(a),
+        userAgent:navigator.userAgent.slice(0,200)
+      }})
+    });
+  }catch(e){console.warn('sync push sub failed',e);}
+}
+
+// Вызывается после выдачи разрешения на уведомления
+async function _ensurePushSubscription(){
+  if(!notifGranted())return;
+  let sub=await _getPushSubscription();
+  if(!sub)sub=await _subscribePush();
+  else await _syncPushSubToServer(sub); // обновить на случай если endpoint изменился
+}
+
+// Сохранить напоминание на сервер (чтоб cron мог отправить push)
+async function _saveReminderToServer(noteId,noteTitle,noteBody,remindAt){
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)return;
+    await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'save_reminder',payload:{noteId,noteTitle,noteBody,remindAt}})
+    });
+  }catch(e){console.warn('save reminder to server failed',e);}
+}
+
+async function _deleteReminderFromServer(noteId){
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)return;
+    await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'delete_reminder',payload:{noteId}})
+    });
+  }catch(e){}
 }
 
 // ── REMINDER SETTINGS ──
@@ -2482,7 +2579,7 @@ function saveSheet(){
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
   showToast(wasNew?'Сохранено ✓':'Изменено ✓');
-  if(v2) _handleReminderAfterSave(v2);
+  if(v2) _handleReminderAfterSave(v2,item.id,title,v1.trim().slice(0,200));
   // AI-ответ — только для новых заметок (не редактирование)
   if(wasNew&&v1.trim().length>=15){
     _fetchChatReply(item.id, v1.trim());

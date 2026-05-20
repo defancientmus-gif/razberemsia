@@ -1,4 +1,4 @@
-const CACHE = 'rz-v99';
+const CACHE = 'rz-v100';
 const ASSETS = [
   './',
   'index.html',
@@ -65,6 +65,22 @@ self.addEventListener('message', e => {
     }, delay);
     scheduled.push(tid);
   });
+});
+
+// ── VAPID Web Push — серверный пуш (работает когда приложение закрыто) ──
+self.addEventListener('push', e => {
+  let data = { title: 'Разберёмся', body: 'Напоминание' };
+  try { if (e.data) data = { ...data, ...e.data.json() }; } catch (_) {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:  data.body,
+      icon:  'pwa-feather-192.png',
+      badge: 'pwa-feather-192.png',
+      tag:   data.tag || 'rz-push',
+      renotify: false,
+      data:  { url: './' },
+    })
+  );
 });
 
 self.addEventListener('notificationclick', e => {

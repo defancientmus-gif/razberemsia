@@ -243,5 +243,54 @@ ${safeText}`;
     return json({ reply });
   }
 
+  // ── PUSH SUBSCRIBE — сохранить подписку браузера ──
+  if (action === 'push_subscribe') {
+    const { endpoint, p256dh, auth: authKey, userAgent } = payload ?? {};
+    if (!endpoint || !p256dh || !authKey) return json({ error: 'Missing subscription fields' }, 400);
+    const { error: dbErr } = await sb.from('push_subscriptions').upsert(
+      { user_id: user.id, endpoint, p256dh, auth: authKey, user_agent: userAgent ?? null },
+      { onConflict: 'user_id,endpoint' }
+    );
+    if (dbErr) return json({ error: dbErr.message }, 500);
+    return json({ ok: true });
+  }
+
+  // ── PUSH UNSUBSCRIBE — удалить подписку ──
+  if (action === 'push_unsubscribe') {
+    const { endpoint } = payload ?? {};
+    if (!endpoint) return json({ error: 'Missing endpoint' }, 400);
+    await sb.from('push_subscriptions').delete().eq('user_id', user.id).eq('endpoint', endpoint);
+    return json({ ok: true });
+  }
+
+  // ── SAVE REMINDER — сохранить напоминание на сервере ──
+  if (action === 'save_reminder') {
+    const { noteId, noteTitle, noteBody, remindAt } = payload ?? {};
+    if (!noteId || !remindAt) return json({ error: 'Missing noteId or remindAt' }, 400);
+    const dt = new Date(remindAt);
+    if (isNaN(dt.getTime())) return json({ error: 'Invalid remindAt' }, 400);
+    // Удаляем старое напоминание для этой заметки (если было)
+    await sb.from('reminders').delete().eq('user_id', user.id).eq('note_id', noteId).eq('sent', false);
+    // Сохраняем новое
+    const { error: dbErr } = await sb.from('reminders').insert({
+      user_id:    user.id,
+      note_id:    noteId,
+      note_title: noteTitle?.slice(0, 200) ?? null,
+      note_body:  noteBody?.slice(0, 300)  ?? null,
+      remind_at:  dt.toISOString(),
+      sent:       false,
+    });
+    if (dbErr) return json({ error: dbErr.message }, 500);
+    return json({ ok: true });
+  }
+
+  // ── DELETE REMINDER ──
+  if (action === 'delete_reminder') {
+    const { noteId } = payload ?? {};
+    if (!noteId) return json({ error: 'Missing noteId' }, 400);
+    await sb.from('reminders').delete().eq('user_id', user.id).eq('note_id', noteId);
+    return json({ ok: true });
+  }
+
   return json({ error: 'Unknown action' }, 400);
 });
