@@ -1327,7 +1327,10 @@ function dismissInAppReminder(){
 }
 
 // ── PERIODIC IN-APP CHECK ──
-let _shownReminders={};
+// Persisted in sessionStorage: survives page refresh, resets when tab is closed
+let _shownReminders=(()=>{try{return JSON.parse(sessionStorage.getItem('rz_shown_rem')||'{}');}catch(e){return{};}})();
+function _persistShownRem(){try{sessionStorage.setItem('rz_shown_rem',JSON.stringify(_shownReminders));}catch(e){}}
+
 function checkDueReminders(){
   const settings=getReminderSettings();
   const advMs=settings.advanceMinutes*60*1000;
@@ -1339,10 +1342,11 @@ function checkDueReminders(){
     const key=n.id+'_'+n.reminder;
     if(diff>=0&&diff<=advMs&&!_shownReminders[key]){
       _shownReminders[key]=true;
+      _persistShownRem();
       showInAppReminder(n);
     }
-    // Clean shown cache for past reminders
-    if(diff<-3600000)delete _shownReminders[key];
+    // Clean shown cache for reminders more than 1h past
+    if(diff<-3600000){delete _shownReminders[key];_persistShownRem();}
   });
 }
 setInterval(checkDueReminders,60000);
