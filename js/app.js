@@ -1102,19 +1102,116 @@ function removeNoteReminder(id){
 }
 
 // ── AI REMINDER SUGGESTION ──
-const TIME_WORDS=/завтра|сегодня|вечер|утром|ночь|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье|напомни|не забыть|нужно|надо|до \d|через/i;
+const TIME_WORDS=/завтра|сегодня|вечер|утром|ночью?|понедельник|вторник|среду?|четверг|пятниц|суббот|воскресень|напомни|не забыть|нужно|надо|до \d|через/i;
 function hasTimeHint(text){return TIME_WORDS.test(text||'');}
 function suggestReminderTime(){
   const d=new Date();d.setDate(d.getDate()+1);d.setHours(10,0,0,0);
-  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T10:00';
+  return _fmtIso(d);
 }
 function applyAiReminder(){
   const suggested=suggestReminderTime();
   const row=document.getElementById('sheet-reminder-row');
   const inp=document.getElementById('sheet-reminder-in');
+  const calBtn=document.getElementById('sheet-cal-btn');
   if(row)row.style.display='flex';
   if(inp){inp.value=suggested;inp.focus();}
+  if(calBtn)calBtn.style.display='flex';
   showToast('Выберите удобное время 🔔');
+}
+
+// ── КНОПКА «Установить напоминание» в панели колокольчика ──
+function openInputSheetWithReminder(){
+  closeReminderPanel();
+  setTimeout(()=>{
+    openInputSheet();
+    setTimeout(()=>{
+      const r=document.getElementById('home-input-reminder');
+      if(r){r.focus();r.click();}
+    },400);
+  },200);
+}
+
+// ── УМНЫЙ ПАРСЕР ВРЕМЕНИ ИЗ ГОЛОСА ──
+// Понимает: "завтра в три", "через час", "в пятницу вечером", "сегодня в 18:00", "напомни в понедельник"
+function _fmtIso(d){
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+const _WNUM={один:1,одну:1,два:2,две:2,три:3,четыре:4,пять:5,шесть:6,семь:7,восемь:8,девять:9,десять:10,одиннадцать:11,двенадцать:12,тринадцать:13,четырнадцать:14,пятнадцать:15,шестнадцать:16,семнадцать:17,восемнадцать:18,девятнадцать:19,двадцать:20,полдень:12,полночь:0};
+const _DAYS={понедельник:1,вторник:2,среда:2,среду:3,четверг:4,пятница:5,пятницу:5,суббота:6,субботу:6,воскресенье:0,воскресенью:0};
+function parseVoiceReminder(text){
+  if(!text)return null;
+  const t=text.toLowerCase();
+  const now=new Date();
+  let base=null; // base date (без времени)
+  let h=null,m=0; // час и минуты
+
+  // ── «через N часов/минут» ──
+  const thruM=t.match(/через\s+(\d+|полчаса|час|[\wа-яё]+)\s*(часа?|час(ов)?|минут[ыа]?|мин\.?)?/);
+  if(thruM){
+    const raw=thruM[1];const unit=thruM[2]||'';
+    let amount=parseInt(raw)||_WNUM[raw]||(raw==='полчаса'?0.5:1);
+    const d=new Date(now);
+    if(raw==='полчаса'||unit.startsWith('мин')){d.setMinutes(d.getMinutes()+Math.round(amount*60));}
+    else{d.setHours(d.getHours()+amount);}
+    // Округляем до 5 минут
+    d.setSeconds(0);d.setMinutes(Math.ceil(d.getMinutes()/5)*5);
+    return _fmtIso(d);
+  }
+
+  // ── День недели ──
+  for(const[word,dow]of Object.entries(_DAYS)){
+    if(t.includes(word)){
+      const today=now.getDay();
+      let diff=(dow-today+7)%7||7; // следующий такой день (не сегодня)
+      base=new Date(now);base.setDate(base.getDate()+diff);base.setHours(10,0,0,0);
+      break;
+    }
+  }
+
+  // ── Сегодня / завтра / послезавтра ──
+  if(!base){
+    if(t.includes('послезавтра')){base=new Date(now);base.setDate(base.getDate()+2);base.setHours(10,0,0,0);}
+    else if(t.includes('завтра')){base=new Date(now);base.setDate(base.getDate()+1);base.setHours(10,0,0,0);}
+    else if(t.includes('сегодня')){base=new Date(now);base.setHours(20,0,0,0);}
+  }
+
+  // ── «утром» «днём» «вечером» «ночью» ──
+  if(t.match(/\bутром\b/)){h=8;}
+  else if(t.match(/\bднём\b|в обед/)){h=13;}
+  else if(t.match(/\bвечером\b/)){h=19;}
+  else if(t.match(/\bночью\b/)){h=22;}
+
+  // ── «в N (часов/часа)» числом ──
+  const digitM=t.match(/в\s+(\d{1,2})(?::(\d{2}))?\s*(?:час|утра|дня|вечера|ночи)?/);
+  if(digitM){
+    let hh=parseInt(digitM[1]);const mm=parseInt(digitM[2]||'0');
+    // Если < 8 — скорее всего вечер (в 3 = 15:00)
+    if(hh<8)hh+=12;
+    h=hh;m=mm;
+  }
+
+  // ── «в [слово] часов» ──
+  const wordM=t.match(/в\s+(один|одну|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять|одиннадцать|двенадцать|полдень|полночь)/);
+  if(wordM&&h===null){
+    let hh=_WNUM[wordM[1]]||10;
+    if(hh<8)hh+=12;
+    h=hh;
+  }
+
+  if(!base&&h===null)return null; // ничего не нашли
+
+  // Если день не определён, но время есть — сегодня если ещё не прошло, иначе завтра
+  if(!base){
+    base=new Date(now);
+    base.setHours(h,m,0,0);
+    if(base<=now){base.setDate(base.getDate()+1);}
+  } else if(h!==null){
+    base.setHours(h,m,0,0);
+    // Если «сегодня» + время уже прошло — сдвигаем на следующий день
+    if(base<=now&&t.includes('сегодня')){base.setDate(base.getDate()+1);}
+  }
+
+  return _fmtIso(base);
 }
 
 // ── DATE UTILS ──
@@ -2445,6 +2542,13 @@ function startSheetVoice(){
         inp.value+=(inp.value?' ':'')+collected.trim();
         document.getElementById('input-sheet-char-count').textContent=inp.value.length+' симв';
       }
+      // Умное определение напоминания
+      const vReminder=parseVoiceReminder(collected);
+      if(vReminder){
+        const r=document.getElementById('home-input-reminder');
+        if(r)r.value=vReminder;
+        showToast('🔔 '+fmtDt(vReminder));
+      }
     }
   };
   sheetRecog.start();
@@ -2505,12 +2609,24 @@ function startSheetAudioNote(){
       ta.scrollTop=ta.scrollHeight;
     }
     showAiTranscriptBlock(collected.trim());
+    // Умное определение напоминания из голоса
+    const vReminder=parseVoiceReminder(collected);
+    if(vReminder){
+      const row=document.getElementById('sheet-reminder-row');
+      const inp=document.getElementById('sheet-reminder-in');
+      const calBtn=document.getElementById('sheet-cal-btn');
+      if(row)row.style.display='flex';
+      if(inp)inp.value=vReminder;
+      if(calBtn)calBtn.style.display='flex';
+      showToast('🔔 Поставил напоминание на '+fmtDt(vReminder));
+    } else {
+      showToast('Голос записан ✓');
+    }
     if(_aiOn){
       const p=document.getElementById('ai-panel');
       const t=document.getElementById('sh1')?.value||'';
       if(p&&p.style.display!=='none'&&t.length>14)runAiAnalysis(t,p);
     }
-    showToast('Голос записан · AI расшифровал ✓');
   };
   sheetAudioRecog.start();
 }
@@ -2655,10 +2771,13 @@ function startHomeVoice(){
     const lbl=document.getElementById('home-voice-label');if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
     const text=collected.trim();
     if(text){
-      const{title,label,reminder}=analyzeText(text);
+      const auto=analyzeText(text);
+      // Умный парсер времени поверх базового
+      const voiceReminder=parseVoiceReminder(text);
+      const reminder=voiceReminder||auto.reminder||null;
       const ts=Date.now();
       const notes=getNotes();
-      notes.push({id:genId(),title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+      notes.push({id:genId(),title:auto.title,body:text,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
       saveNotes(notes);
       loadHomeFeed();loadNotes();loadNotepad();
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
