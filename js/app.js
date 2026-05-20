@@ -1258,10 +1258,14 @@ async function _saveReminderToServer(noteId,noteTitle,noteBody,remindAt){
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
     if(!token)return;
+    // Конвертируем в UTC ISO — браузер парсит как локальное время, сервер должен получить UTC
+    const dt=new Date(remindAt);
+    if(isNaN(dt.getTime()))return;
+    const remindAtUtc=dt.toISOString();
     await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'save_reminder',payload:{noteId,noteTitle,noteBody,remindAt}})
+      body:JSON.stringify({action:'save_reminder',payload:{noteId,noteTitle,noteBody,remindAt:remindAtUtc}})
     });
   }catch(e){console.warn('save reminder to server failed',e);}
 }
