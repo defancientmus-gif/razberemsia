@@ -190,7 +190,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .note-grid-mode>[data-nwrap]:nth-child(6) .item-card{animation-delay:.19s;}
 .note-grid-mode>[data-nwrap]:nth-child(7) .item-card{animation-delay:.22s;}
 .note-grid-mode>[data-nwrap]:nth-child(8) .item-card{animation-delay:.25s;}
-.note-stripe-top{position:absolute;top:0;left:0;right:0;height:3.5px;border-radius:16px 16px 0 0;}
+.note-stripe-top{display:none;}
 .grid-ico{display:none;}
 .grid-cat{display:none;}
 .grid-title{font-size:14px;font-weight:600;color:var(--fg);letter-spacing:-.1px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1;}
@@ -220,13 +220,13 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
     oklch(1 0 0 / 0.28);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border:1px solid oklch(1 0 0 / 0.55);
-  border-radius:var(--r);padding:13px 16px 13px 20px;margin-bottom:8px;
+  border-radius:var(--r);padding:13px 16px;margin-bottom:8px;
   position:relative;overflow:hidden;word-break:break-word;
   box-shadow:inset 0 1px 3px oklch(1 0 0 / 0.55), 0 4px 16px oklch(0 0 0 / 0.04);
   cursor:pointer;transition:transform .12s,box-shadow .12s;
 }
 .item-card:active{transform:scale(.98);}
-.note-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
+.note-stripe{display:none;}
 .note-num{display:none;}
 .note-cat{display:none;}
 .item-title{font-size:16px;font-weight:600;color:var(--fg);letter-spacing:-.1px;line-height:1.4;}
@@ -867,7 +867,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border:1px solid oklch(0.90 0.02 210 / 0.48);
   border-radius:var(--r);padding:12px 16px 12px 20px;margin-bottom:8px;position:relative;overflow:hidden;word-break:break-word;}
-.pad-stripe{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
+.pad-stripe{display:none;}
 .pad-cat{font-size:10px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
 .pad-title{font-size:16px;font-weight:600;color:var(--fg);letter-spacing:-.1px;margin-bottom:2px;}
 .pad-text{font-size:14px;color:var(--fg-m);line-height:1.6;}
@@ -2073,7 +2073,7 @@ html.dark .bubble{
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.27</span></span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v5.28</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>

@@ -1855,7 +1855,6 @@ function loadNotes(){
   sorted.forEach(n=>{
     const nid=n.id;const i=all.indexOf(n);
     const displayNum=i>=0?i+1:sorted.indexOf(n)+1;
-    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');
     wrap.setAttribute('data-nwrap','1');
     const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
@@ -1867,8 +1866,7 @@ function loadNotes(){
       wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;';
       const gBell=n.reminder?`<span class="nc-badge nc-badge-bell" title="${esc(fmtDt(n.reminder))}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
       const gAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length))?`<span class="nc-badge nc-badge-ai">✦ AI</span>`:'';
-      d.innerHTML=`<div class="note-stripe-top" style="background:${stripe};"></div>
-        <div class="grid-title">${esc(n.title)}</div>
+      d.innerHTML=`<div class="grid-title">${esc(n.title)}</div>
         <div class="note-card-foot" style="margin-top:auto;padding-top:6px;">
           <span class="nc-cat-lbl"><span class="nc-ico">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</span>
           <div class="nc-badges">${gBell}${gAi}</div>
@@ -1880,8 +1878,7 @@ function loadNotes(){
       const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
       const bellBadge=hasReminder?`<span class="nc-badge nc-badge-bell" title="${esc(fmtDt(n.reminder))}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
       const aiBadge=hasAi?`<span class="nc-badge nc-badge-ai">✦ AI</span>`:'';
-      d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
-        <div class="item-title">${esc(n.title)}</div>
+      d.innerHTML=`<div class="item-title">${esc(n.title)}</div>
         <div class="note-card-foot">
           <span class="nc-cat-lbl"><span class="nc-ico">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</span>
           <div class="nc-badges">${bellBadge}${aiBadge}</div>
@@ -2702,11 +2699,9 @@ function loadTrash(){
     return;
   }
   trash.forEach((n,i)=>{
-    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const d=document.createElement('div');d.className='trash-item';
     const when=n._deletedAt?fmtMeta(n._deletedAt):'';
-    d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.5;"></div>
-      <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
+    d.innerHTML=`<div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="item-title" style="opacity:0.7;">${esc(n.title)}</div>
         <button class="trash-restore-btn" onclick="restoreNote(${i})">
@@ -2726,11 +2721,9 @@ function loadTrash(){
     el.appendChild(htitle);
     recentHist.forEach((h,hi)=>{
       const sn=h.snapshot||{};
-      const stripe=STRIPES[safeLabel(sn.label||'заметка')]||STRIPES.заметка;
       const d=document.createElement('div');d.className='hist-item';
       const when=fmtMeta(h.savedAt);
-      d.innerHTML=`<div class="note-stripe" style="background:${stripe};opacity:0.4;"></div>
-        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(sn.label)}</span>${esc(safeLabel(sn.label||'заметка'))}</div>
+      d.innerHTML=`<div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(sn.label)}</span>${esc(safeLabel(sn.label||'заметка'))}</div>
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div style="font-size:14px;color:var(--fg-m);opacity:.8;flex:1;">${esc(sn.title||'')} <span style="font-size:11px;color:var(--fg-l);">· была</span></div>
           <button class="hist-restore-btn" onclick="restoreHistory(${hi})">
@@ -2837,12 +2830,10 @@ function loadNotepad(){
   }
   list.forEach((n,ri)=>{
     const i=all.length-1-ri;
-    const stripe=STRIPES[safeLabel(n.label||'заметка')]||STRIPES.заметка;
     const wrap=document.createElement('div');wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
     const delBg=buildNoteSwipePanel('list', 16, ()=>n.id?delNoteById(n.id):delNote(i), ()=>shareNote(n));
     const d=document.createElement('div');d.className='pad-item';d.style.margin='0';
-    d.innerHTML=`<div class="pad-stripe" style="background:${stripe};"></div>
-      <div class="pad-cat">${esc(safeLabel(n.label||'заметка'))}</div>
+    d.innerHTML=`<div class="pad-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div class="pad-title">${esc(n.title)}</div>
       <div class="pad-text">${esc(n.body||'')}</div>
       <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
