@@ -1865,13 +1865,15 @@ function loadNotes(){
     dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
     if(noteViewMode==='grid'){
       wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;';
-      const gRem=n.reminder?`<div class="grid-reminder">🔔 ${esc(fmtDt(n.reminder))}</div>`:'';
+      const gBell=n.reminder?`<span class="nc-badge nc-badge-bell" title="${esc(fmtDt(n.reminder))}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
+      const gAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length))?`<span class="nc-badge nc-badge-ai">✦ AI</span>`:'';
       d.innerHTML=`<div class="note-stripe-top" style="background:${stripe};"></div>
-        <span class="grid-ico">${catIcon(n.label)}</span>
-        <div class="grid-cat">#${displayNum} · ${esc(safeLabel(n.label||'заметка'))}</div>
         <div class="grid-title">${esc(n.title)}</div>
-        ${gRem}
-        <div class="grid-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+        <div class="note-card-foot" style="margin-top:auto;padding-top:6px;">
+          <span class="nc-cat-lbl"><span class="nc-ico">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</span>
+          <div class="nc-badges">${gBell}${gAi}</div>
+          <span class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
+        </div>`;
     } else {
       wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
       const hasReminder=!!n.reminder;
@@ -1909,31 +1911,40 @@ function renderStatChips(all,csActive){
     </div>`;
   }
 
-  // Finder-style папки со сворачиванием
+  // «Все заметки» — всегда видна
   const fc=localStorage.getItem('rz_finder_col')==='1';
-  const totalFolders=Object.keys(counts).length+1;
-  let html=`<div class="finder-folders-wrap${fc?' fc-collapsed':''}">
-    <div class="finder-hdr" onclick="toggleFinderFolders()">
-      <span class="finder-hdr-lbl">Папки</span>
+  const catEntries=Object.entries(counts);
+  const totalCats=catEntries.length;
+  let html=`<div class="finder-folders-wrap">
+    <div class="finder-folders">
+      <div class="finder-row${!noteFilter?' fr-active':''}" onclick="setFilter(null)">
+        <span class="finder-row-ico">📋</span>
+        <span class="finder-row-name">Все заметки</span>
+        <span class="finder-row-count">${all.length}</span>
+      </div>
+    </div>`;
+  // Категории — сворачиваемые
+  if(totalCats>0){
+    html+=`<div class="finder-cats-hdr" onclick="toggleFinderFolders()">
+      <span class="finder-hdr-lbl">Разделы</span>
       <span class="finder-hdr-chev">
-        ${fc?totalFolders+' папок':'свернуть'}
+        ${fc?totalCats+' папок':'свернуть'}
         <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
       </span>
-    </div>
-    <div class="finder-folders">`;
-  html+=`<div class="finder-row${!noteFilter?' fr-active':''}" onclick="setFilter(null)">
-    <span class="finder-row-ico">📋</span>
-    <span class="finder-row-name">Все заметки</span>
-    <span class="finder-row-count">${all.length}</span>
-  </div>`;
-  Object.entries(counts).forEach(([l,c])=>{
-    html+=`<div class="finder-row${noteFilter===l?' fr-active':''}" onclick="setFilter(${jsAttr(l)})">
-      <span class="finder-row-ico">${catIcon(l)}</span>
-      <span class="finder-row-name">${esc(l)}</span>
-      <span class="finder-row-count">${c}</span>
     </div>`;
-  });
-  html+='</div></div>';
+    if(!fc){
+      html+=`<div class="finder-folders">`;
+      catEntries.forEach(([l,c])=>{
+        html+=`<div class="finder-row${noteFilter===l?' fr-active':''}" onclick="setFilter(${jsAttr(l)})">
+          <span class="finder-row-ico">${catIcon(l)}</span>
+          <span class="finder-row-name">${esc(l)}</span>
+          <span class="finder-row-count">${c}</span>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+  }
+  html+='</div>';
   el.innerHTML=dateBanner+html;
 }
 
