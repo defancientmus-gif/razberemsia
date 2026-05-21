@@ -748,7 +748,14 @@ function _renderAiResult(summary,tags,actions,panel,text){
     html+=`<div class="ai-section"><button class="ai-remind-btn" onclick="applyAiReminder()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>AI замечает время — поставить напоминание?</button></div>`;
   }
   html+='</div>';
-  if(bodyEl){bodyEl.innerHTML=html;bodyEl.style.maxHeight=bodyEl.scrollHeight+'px';}
+  if(bodyEl){
+    bodyEl.innerHTML=html;
+    // Сбрасываем inline max-height — пусть CSS управляет высотой.
+    // Фиксированное значение до рендера блокирует раскрытие внутренних секций.
+    bodyEl.style.maxHeight='';
+    // Скролл после того как браузер отрисовал контент
+    requestAnimationFrame(()=>{ _scrollToAiPanel(); });
+  }
   if(panel){
     panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
     panel.dataset.aiSummary=summary||'';
@@ -838,7 +845,7 @@ async function _fetchChatReply(noteId, text){
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'chat_reply',payload:{text}})
+      body:JSON.stringify({action:'chat_reply',payload:{text,mode:'note'}})
     });
     if(!res.ok)return;
     const {reply}=await res.json();
@@ -962,13 +969,13 @@ async function sendNoteChat(){
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
     if(!token)throw new Error('no token');
-    // Строим контекст: последние 6 сообщений для более умного ответа
-    const ctx=n.aiChat.slice(-6).map(m=>(m.role==='user'?'Пользователь: ':'AI: ')+m.text).join('\n');
-    const prompt=n.body+'\n\n---\n'+ctx+'\n\nПользователь: '+text;
+    // Передаём историю диалога как массив (Edge Function строит multi-turn messages)
+    // n.aiChat уже содержит текущее сообщение пользователя — передаём всё кроме него
+    const history=n.aiChat.slice(0,-1).slice(-12);
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'chat_reply',payload:{text:prompt}})
+      body:JSON.stringify({action:'chat_reply',payload:{text,history,mode:'chat'}})
     });
     if(res.ok){
       const {reply}=await res.json();
@@ -1888,11 +1895,8 @@ function renderStatChips(all,csActive){
   const el=document.getElementById('notes-stat');if(!el)return;
   const counts={};
   all.forEach(n=>{const l=safeLabel(n.label||'заметка');counts[l]=(counts[l]||0)+1;});
-  const activeL=noteFilter||null;
-  const activeIco=activeL?catIcon(activeL):'📋';
-  const activeName=activeL?activeL:'Все заметки';
-  const activeCount=activeL?(counts[activeL]||0):all.length;
-  // Если активен фильтр по дате — баннер с крестиком над папками
+
+  // Баннер фильтра по дате
   let dateBanner='';
   if(csActive&&CS){
     const d=new Date(CS+'T12:00');
@@ -1903,62 +1907,25 @@ function renderStatChips(all,csActive){
       <button onclick="CS=null;loadNotes();calRender();" style="margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;font-size:16px;line-height:1;padding:0 4px;opacity:.6;">×</button>
     </div>`;
   }
-  const totalGroups=Object.keys(counts).length;
-  let html=`<div class="folders-hdr${foldersCollapsed?' folders-collapsed':''}" id="folders-hdr" onclick="toggleFolders()">
-    <span class="folders-lbl">
-      <span class="folders-lbl-feather">𓅭</span>
-      Разделы
-    </span>
-    <span class="folders-chev">
-      ${foldersCollapsed?totalGroups+' папок':'свернуть'}
-      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-    </span>
-  </div>
-  <div class="folders-peek" onclick="toggleFolders()">
-    <span class="peek-ico">${activeIco}</span>
-    <span class="peek-name">${esc(activeName)}</span>
-    <span class="peek-count">${activeCount}</span>
-    <span class="peek-expand">↓ показать</span>
-  </div>
-  <div class="folders-grid${foldersCollapsed?'':' unfolding'}" id="folders-grid">`;
-  html+=`<button class="folder-card folder-all${!noteFilter?' active':''}" onclick="setFilter(null)">
-    <span class="folder-ico">📋</span>
-    <div class="folder-body">
-      <span class="folder-name">Все заметки</span>
-      <span class="folder-pill">${all.length}</span>
-    </div>
-  </button>`;
+
+  // Finder-style папки — всегда раскрыты, без кнопки свернуть
+  let html='<div class="finder-folders">';
+  html+=`<div class="finder-row${!noteFilter?' fr-active':''}" onclick="setFilter(null)">
+    <span class="finder-row-ico">📋</span>
+    <span class="finder-row-name">Все заметки</span>
+    <span class="finder-row-count">${all.length}</span>
+  </div>`;
   Object.entries(counts).forEach(([l,c])=>{
-    html+=`<button class="folder-card${noteFilter===l?' active':''}" onclick="setFilter(${jsAttr(l)})">
-      <span class="folder-ico">${catIcon(l)}</span>
-      <span class="folder-name">${esc(l)}</span>
-      <span class="folder-pill">${c}</span>
-    </button>`;
+    html+=`<div class="finder-row${noteFilter===l?' fr-active':''}" onclick="setFilter(${jsAttr(l)})">
+      <span class="finder-row-ico">${catIcon(l)}</span>
+      <span class="finder-row-name">${esc(l)}</span>
+      <span class="finder-row-count">${c}</span>
+    </div>`;
   });
   html+='</div>';
   el.innerHTML=dateBanner+html;
 }
 
-function toggleFolders(){
-  const grid=document.getElementById('folders-grid');
-  if(!foldersCollapsed&&grid){
-    const cards=grid.querySelectorAll('.folder-card');
-    cards.forEach((c,i)=>{c.style.animation=`featherUp .24s cubic-bezier(.4,0,1,1) ${i*0.04}s both`;});
-    setTimeout(()=>{
-      foldersCollapsed=true;
-      localStorage.setItem('rz_folders_col','1');
-      renderStatChips(getNotes(),!!CS);
-    },cards.length*40+220);
-    return;
-  }
-  foldersCollapsed=false;
-  localStorage.setItem('rz_folders_col','0');
-  renderStatChips(getNotes());
-  setTimeout(()=>{
-    const g=document.getElementById('folders-grid');
-    if(g){g.classList.add('unfolding');setTimeout(()=>g.classList.remove('unfolding'),600);}
-  },10);
-}
 function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
 
 // ── SWIPE HELPERS ──
