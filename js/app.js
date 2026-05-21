@@ -295,6 +295,9 @@ function updUI(u){
   document.getElementById('set-account-disp').textContent=email;
   document.getElementById('set-name-disp').textContent=name||'—';
   const ni=document.getElementById('name-input');if(ni)ni.value=name;
+  // Счётчик корзины в меню
+  const trashS=document.getElementById('hmenu-trash-s');
+  if(trashS){const tc=getTrash().length;trashS.textContent=tc?`${tc} удалённых заметок`:'Удалённые заметки';}
 }
 let _otpEmail='';
 let _resendTimer=null;
