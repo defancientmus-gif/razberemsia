@@ -309,13 +309,7 @@ async function sendEmailLink(){
   if(!sb){showAuthErr(sbConfigured?'Не удалось загрузить облачное подключение. Обновите страницу.':'Supabase ещё не настроен');return;}
   if(!/^\S+@\S+\.\S{2,}$/.test(email)){showAuthErr('Введите почту полностью, например: name@gmail.com');return;}
   btn.disabled=true;
-
-  // Анимация ожидания на кнопке
-  let dots=0;
-  const ticker=setInterval(()=>{
-    dots=(dots+1)%4;
-    btn.textContent='Отправляем'+'.'.repeat(dots||1);
-  },400);
+  btn.textContent='Отправляем…';
 
   try{
     // Таймаут 10 секунд — если Supabase не ответил, показываем ошибку
@@ -351,7 +345,6 @@ async function sendEmailLink(){
     if(dbg)text+=' ['+String(e?.message||e).slice(0,120)+']';
     showAuthErr(text);
   }finally{
-    clearInterval(ticker);
     btn.disabled=false;
     btn.textContent='Получить код';
   }
@@ -1780,179 +1773,175 @@ function tagsToPrimaryLabel(tags){
 }
 
 // ── NOTES ──
-let noteFilter=null;
-let noteViewMode=localStorage.getItem('rz_note_view')||'list';
-let foldersCollapsed=localStorage.getItem('rz_folders_col')==='1';
+// ── DRILL-DOWN NAVIGATION ──
+let drillLevel=0;
+let drillCategory=null;
+let drillNoteId=null;
+let _drillTouchX=0;
+let _drillSwipeInited=false;
 
-function toggleNoteView(){
-  noteViewMode=noteViewMode==='list'?'grid':'list';
-  localStorage.setItem('rz_note_view',noteViewMode);
-  animateNoteViewSwitch();
-  syncNoteViewBtn();
-  loadNotes();
-}
-
-function syncNoteViewBtn(){
-  const btn=document.getElementById('view-toggle-btn');
-  const ico=document.getElementById('vtb-ico');
-  const lbl=document.getElementById('vtb-lbl');
-  if(!btn)return;
-  if(noteViewMode==='grid'){
-    btn.classList.add('grid-on');
-    if(lbl)lbl.textContent='Список';
-    if(ico){
-      ico.setAttribute('viewBox','0 0 24 24');
-      ico.innerHTML='<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="2.5"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="2.5"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="2.5"/>';
-    }
-  } else {
-    btn.classList.remove('grid-on');
-    if(lbl)lbl.textContent='Сетка';
-    if(ico){
-      ico.setAttribute('viewBox','0 0 24 24');
-      ico.innerHTML='<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>';
-    }
-  }
-}
-
-function animateNoteViewSwitch(){
-  const el=document.getElementById('note-list');if(!el)return;
-  el.classList.remove('drop-anim');
-  void el.offsetWidth;
-  el.classList.add('drop-anim');
-  el.addEventListener('animationend',()=>el.classList.remove('drop-anim'),{once:true});
+function _notePreview(n){
+  const body=(n.body||n.title||'');
+  const lines=body.split('\n').filter(l=>l.trim());
+  if(lines.length>1)return lines.slice(1).join(' ').trim().slice(0,120);
+  return '';
 }
 
 function loadNotes(){
-  const all=getNotes();
-  syncNoteViewBtn();
-  const el=document.getElementById('note-list');if(!el)return;
-  el.innerHTML='';
-  if(noteViewMode==='grid')el.classList.add('note-grid-mode');
-  else el.classList.remove('note-grid-mode');
-  let filtered=all;
-  if(CS){
-    // Фильтруем по дате создания ИЛИ напоминанию — не только по напоминанию
-    filtered=all.filter(n=>{
-      const remMatch=n.reminder&&n.reminder.slice(0,10)===CS;
-      const createdMatch=n.createdAt&&new Date(n.createdAt).toISOString().slice(0,10)===CS;
-      const updatedMatch=n.updatedAt&&new Date(n.updatedAt).toISOString().slice(0,10)===CS;
-      return remMatch||createdMatch||updatedMatch;
-    });
-  }
-  // Передаём уже cs-отфильтрованный список в чипы — счётчики папок будут точными
-  renderStatChips(filtered,!!CS);
-  if(noteFilter)filtered=filtered.filter(n=>safeLabel(n.label||'заметка')===noteFilter);
-  if(!filtered.length){
-    const hasFilter=CS||noteFilter;
-    el.innerHTML=`<div style="text-align:center;color:var(--fg-l);font-size:15px;padding:28px 0;">
-      ${hasFilter?'Нет заметок за этот день':'Заметок пока нет'}
-      <br><span style="font-size:13px;display:block;margin-top:5px;">${hasFilter?'':'Нажмите «＋» чтобы добавить'}</span>
-      ${CS?`<button onclick="CS=null;loadNotes();calRender();" style="margin-top:12px;padding:8px 18px;border-radius:10px;border:1px solid oklch(0.85 0.03 260);background:none;font-size:13px;color:var(--fg-m);cursor:pointer;font-family:var(--sys);">Показать все заметки</button>`:''}
-    </div>`;
-    return;
-  }
-  const sorted=[...filtered].sort((a,b)=>(b.createdAt||b.updatedAt||0)-(a.createdAt||a.updatedAt||0));
-  sorted.forEach(n=>{
-    const nid=n.id;const i=all.indexOf(n);
-    const displayNum=i>=0?i+1:sorted.indexOf(n)+1;
-    const wrap=document.createElement('div');
-    wrap.setAttribute('data-nwrap','1');
-    const delBg=buildNoteSwipePanel('list', 16, ()=>nid?delNoteById(nid):delNote(i), ()=>shareNote(n));
-    const d=document.createElement('div');d.className='item-card';d.style.margin='0';
-    const dBtn=document.createElement('button');dBtn.className='desk-del';
-    dBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-    dBtn.onclick=(e)=>{e.stopPropagation();nid?delNoteById(nid):delNote(i);};
-    if(noteViewMode==='grid'){
-      wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;';
-      const gBell=n.reminder?`<span class="nc-badge nc-badge-bell" title="${esc(fmtDt(n.reminder))}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
-      const gAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length))?`<span class="nc-badge nc-badge-ai">✦ AI</span>`:'';
-      d.innerHTML=`<div class="grid-title">${esc(n.title)}</div>
-        <div class="note-card-foot" style="margin-top:auto;padding-top:6px;">
-          <span class="nc-cat-lbl"><span class="nc-ico">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</span>
-          <div class="nc-badges">${gBell}${gAi}</div>
-          <span class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
-        </div>`;
-    } else {
-      wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
-      const hasReminder=!!n.reminder;
-      const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
-      const bellBadge=hasReminder?`<span class="nc-badge nc-badge-bell" title="${esc(fmtDt(n.reminder))}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
-      const aiBadge=hasAi?`<span class="nc-badge nc-badge-ai">✦ AI</span>`:'';
-      d.innerHTML=`<div class="item-title">${esc(n.title)}</div>
-        <div class="note-card-foot">
-          <span class="nc-cat-lbl"><span class="nc-ico">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</span>
-          <div class="nc-badges">${bellBadge}${aiBadge}</div>
-          <span class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
-        </div>`;
+  drillLevel=0;drillCategory=null;drillNoteId=null;
+  _drillRender(0);
+  _drillNav();
+  _drillSeek(0);
+  if(!_drillSwipeInited){_drillInitSwipe();_drillSwipeInited=true;}
+}
+
+function drillGo(level,data){
+  if(data&&data.category!==undefined)drillCategory=data.category;
+  if(data&&data.noteId!==undefined)drillNoteId=data.noteId;
+  drillLevel=level;
+  _drillRender(level);
+  _drillNav();
+  _drillSeek(level);
+}
+
+function drillBack(){
+  if(drillLevel===0){go('home');return;}
+  drillGo(drillLevel-1,{});
+}
+
+function drillJump(level){
+  if(level===drillLevel)return;
+  if(level<drillLevel){drillGo(level,{});return;}
+  // Вперёд: только уровень 1 доступен с уровня 0 (все заметки)
+  if(level===1&&drillLevel===0){drillGo(1,{category:null});return;}
+}
+
+function _drillSeek(level){
+  const track=document.getElementById('drill-track');
+  if(track)track.style.transform=`translateX(-${level*100/3}%)`;
+  const panel=document.getElementById('drill-p'+level);
+  if(panel)panel.scrollTop=0;
+}
+
+function _drillNav(){
+  const backBtn=document.getElementById('drill-back-btn');
+  const crumbs=document.getElementById('drill-crumbs');
+  if(backBtn){backBtn.style.opacity='1';backBtn.style.pointerEvents='all';}
+  if(crumbs){
+    let h='';
+    const cat=drillCategory?esc(drillCategory):'Все заметки';
+    const note=drillNoteId?getNotes().find(n=>n.id===drillNoteId):null;
+    if(drillLevel===0){
+      h=`<span class="drill-crumb drill-crumb-cur">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span>`;
+    }else if(drillLevel===1){
+      h=`<span class="drill-crumb" onclick="drillJump(0)">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span><span class="drill-sep">&rsaquo;</span><span class="drill-crumb drill-crumb-cur">${cat}</span>`;
+    }else{
+      const noteTitle=note?(note.title||'\u0417\u0430\u043c\u0435\u0442\u043a\u0430').slice(0,22):'\u0417\u0430\u043c\u0435\u0442\u043a\u0430';
+      h=`<span class="drill-crumb" onclick="drillJump(0)">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span><span class="drill-sep">&rsaquo;</span><span class="drill-crumb" onclick="drillJump(1)">${cat}</span><span class="drill-sep">&rsaquo;</span><span class="drill-crumb drill-crumb-cur">${esc(noteTitle)}</span>`;
     }
-    d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
-    attachSwipeDelete(d,delBg,null,116);
-    wrap.appendChild(delBg);wrap.appendChild(d);wrap.appendChild(dBtn);el.appendChild(wrap);
+    crumbs.innerHTML=h;
+  }
+  ['dseg0','dseg1','dseg2'].forEach((id,i)=>{
+    const s=document.getElementById(id);if(!s)return;
+    const isNext=i===drillLevel+1&&i===1; // только сегмент 1 доступен вперёд с уровня 0
+    s.className='drill-seg'+(i<drillLevel?' done':i===drillLevel?' cur':isNext?' next':'');
+    s.style.cursor=(i<drillLevel||isNext)?'pointer':'default';
   });
 }
 
-function renderStatChips(all,csActive){
-  const el=document.getElementById('notes-stat');if(!el)return;
+function _drillRender(level){
+  if(level===0)_drillP0();
+  if(level===1)_drillP1();
+  if(level===2)_drillP2();
+}
+
+function _drillP0(){
+  const el=document.getElementById('drill-p0');if(!el)return;
+  const notes=getNotes();
   const counts={};
-  all.forEach(n=>{const l=safeLabel(n.label||'заметка');counts[l]=(counts[l]||0)+1;});
-
-  // Баннер фильтра по дате
-  let dateBanner='';
-  if(csActive&&CS){
-    const d=new Date(CS+'T12:00');
-    const dateStr=d.getDate()+' '+MGN[d.getMonth()];
-    dateBanner=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;margin-bottom:8px;border-radius:10px;background:oklch(0.52 0.10 210 / 0.08);border:1px solid oklch(0.52 0.10 210 / 0.20);font-size:12px;color:oklch(0.40 0.10 210);">
-      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span>Заметки за ${dateStr}</span>
-      <button onclick="CS=null;loadNotes();calRender();" style="margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;font-size:16px;line-height:1;padding:0 4px;opacity:.6;">×</button>
-    </div>`;
-  }
-
-  // «Все заметки» — всегда видна, отдельный блок
-  const fc=localStorage.getItem('rz_finder_col')==='1';
-  const catEntries=Object.entries(counts);
-  const totalCats=catEntries.length;
-
-  let html=`<div class="finder-folders-wrap">
-    <div class="finder-folders">
-      <div class="finder-row${!noteFilter?' fr-active':''}" onclick="setFilter(null)">
-        <span class="finder-row-ico">📋</span>
-        <span class="finder-row-name">Все заметки</span>
-        <span class="finder-row-count">${all.length}</span>
-      </div>
-    </div>`;
-
-  // Категории — отдельный сворачиваемый блок
-  if(totalCats>0){
-    html+=`<div class="finder-cats-section${fc?' fc-collapsed':''}">
-      <div class="finder-cats-hdr" onclick="toggleFinderFolders()">
-        <span class="finder-hdr-lbl">Разделы</span>
-        <span class="finder-hdr-chev">
-          ${fc?totalCats+' папок':'свернуть'}
-          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-        </span>
-      </div>
-      <div class="finder-cats-body finder-folders">`;
-    catEntries.forEach(([l,c])=>{
-      html+=`<div class="finder-row${noteFilter===l?' fr-active':''}" onclick="setFilter(${jsAttr(l)})">
-        <span class="finder-row-ico">${catIcon(l)}</span>
-        <span class="finder-row-name">${esc(l)}</span>
-        <span class="finder-row-count">${c}</span>
-      </div>`;
-    });
-    html+=`</div></div>`;
-  }
-  html+='</div>';
-  el.innerHTML=dateBanner+html;
+  notes.forEach(n=>{const l=safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430');counts[l]=(counts[l]||0)+1;});
+  let h=`<button class="drill-sec-row" onclick="drillGo(1,{category:null})">
+    <div class="drill-sec-ico">\u{1F4CB}</div>
+    <div class="drill-sec-name">\u0412\u0441\u0435 \u0437\u0430\u043c\u0435\u0442\u043a\u0438</div>
+    <div class="drill-sec-count">${notes.length}</div>
+    <div class="drill-sec-arr">&rsaquo;</div>
+  </button>`;
+  Object.entries(counts).forEach(([l,c])=>{
+    h+=`<button class="drill-sec-row" onclick="drillGo(1,{category:${jsAttr(l)}})">
+      <div class="drill-sec-ico">${catIcon(l)}</div>
+      <div class="drill-sec-name">${esc(l)}</div>
+      <div class="drill-sec-count">${c}</div>
+      <div class="drill-sec-arr">&rsaquo;</div>
+    </button>`;
+  });
+  el.innerHTML=h;
 }
 
-function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
-
-function toggleFinderFolders(){
-  const isCol=localStorage.getItem('rz_finder_col')==='1';
-  localStorage.setItem('rz_finder_col',isCol?'0':'1');
-  renderStatChips(getNotes(),!!CS);
+function _drillP1(){
+  const el=document.getElementById('drill-p1');if(!el)return;
+  let notes=getNotes();
+  if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
+  notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(!notes.length){el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--fg-l);font-size:15px;">\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442</div>`;return;}
+  let h='';
+  notes.forEach(n=>{
+    const preview=_notePreview(n);
+    const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+    const hasBell=!!n.reminder;
+    const aiBadge=hasAi?`<span class="drill-note-ai">\u2736 AI</span>`:'';
+    const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
+    h+=`<div class="drill-note-row" onclick="drillGo(2,{noteId:${jsAttr(n.id)}})">
+      <div class="drill-note-body">
+        <div class="drill-note-title">${esc(n.title)}</div>
+        ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
+        <div class="drill-note-foot">
+          <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
+          ${bellBadge}${aiBadge}
+        </div>
+      </div>
+      <div class="drill-note-arr">&rsaquo;</div>
+    </div>`;
+  });
+  el.innerHTML=h;
 }
+
+function _drillP2(){
+  const el=document.getElementById('drill-p2');if(!el)return;
+  const n=drillNoteId?getNotes().find(x=>x.id===drillNoteId):null;
+  if(!n){el.innerHTML=`<div style="padding:20px;color:var(--fg-l);">\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430</div>`;return;}
+  const nid=n.id;
+  const idx=getNotes().indexOf(n);
+  const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+  const aiBlock=hasAi?`<div class="drill-detail-ai">
+    <div class="drill-detail-ai-hdr">\u2736 AI \u0430\u043d\u0430\u043b\u0438\u0437</div>
+    <div class="drill-detail-ai-body">${esc(n.aiSummary||(Array.isArray(n.aiTags)?n.aiTags.join(', '):''))}</div>
+  </div>`:'';
+  const editFn=nid?`openNoteSheetById('${nid}')`:`openNoteSheet(${idx})`;
+  const delFn=nid?`delNoteById('${nid}')`:`delNote(${idx})`;
+  el.innerHTML=`<div class="drill-detail">
+    <div class="drill-detail-title">${esc(n.title)}</div>
+    <div class="drill-detail-meta">${esc(fmtDt(n.createdAt||n.updatedAt))}</div>
+    <div class="drill-detail-body">${esc(n.body||n.title||'')}</div>
+    ${aiBlock}
+    <div class="drill-detail-actions">
+      <button class="drill-btn drill-btn-edit" onclick="${editFn}">\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c</button>
+      <button class="drill-btn drill-btn-del" onclick="${delFn};drillBack();">\u0423\u0434\u0430\u043b\u0438\u0442\u044c</button>
+    </div>
+  </div>`;
+}
+
+function _drillInitSwipe(){
+  const el=document.getElementById('s-notes');if(!el)return;
+  el.addEventListener('touchstart',e=>{_drillTouchX=e.touches[0].clientX;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-_drillTouchX;
+    if(dx>60&&drillLevel>0)drillBack();
+  },{passive:true});
+}
+
+function renderStatChips(){}
+function setFilter(){}
+function toggleFinderFolders(){}
 
 // ── SWIPE HELPERS ──
 function buildNoteSwipePanel(shape, radius, onDelete){

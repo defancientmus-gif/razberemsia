@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Разберёмся v5.20</title>
+<title>Разберёмся v5.30</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
@@ -19,8 +19,7 @@
 <link rel="icon" type="image/png" href="pwa-feather-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=block" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=block" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=block" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
 input,textarea{-webkit-user-select:text;user-select:text;}
@@ -142,43 +141,8 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .sec-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--fg);margin-bottom:4px;letter-spacing:-.4px;}
 .sec-sub{font-size:14px;color:var(--fg-m);margin-bottom:14px;line-height:1.5;}
 
-/* ── NOTES VIEW TOGGLE ── */
-.notes-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.notes-title-row .sec-title{margin-bottom:0;}
-.view-toggle-btn{
-  display:flex;align-items:center;gap:6px;
-  background:
-    radial-gradient(circle at 28% 22%,oklch(1 0 0 / 0.55) 0%,transparent 52%),
-    oklch(0.90 0.06 210 / 0.26);
-  border:1px solid oklch(0.88 0.03 210 / 0.5);
-  border-radius:50px;padding:7px 13px 7px 10px;
-  font-size:12px;font-weight:700;color:var(--fg-m);
-  cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
-  box-shadow:0 2px 8px oklch(0.52 0.10 210 / 0.08);
-  transition:background .18s ease,transform .18s ease,box-shadow .18s ease;white-space:nowrap;
-}
-.view-toggle-btn:active{transform:scale(.90);}
-.view-toggle-btn.grid-on{
-  background:
-    radial-gradient(circle at 28% 22%,oklch(1 0 0 / 0.62) 0%,transparent 52%),
-    oklch(0.78 0.10 210 / 0.38);
-  border-color:oklch(0.72 0.12 210 / 0.55);
-  color:var(--accent-d);
-}
-.view-toggle-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 @keyframes noteFade{from{opacity:0;}to{opacity:1;}}
 #note-list.drop-anim{animation:noteFade .22s ease;}
-.note-grid-mode{display:grid!important;grid-template-columns:repeat(2,1fr);gap:9px;}
-.note-grid-mode>[data-nwrap]{margin-bottom:0!important;border-radius:16px!important;}
-.note-grid-mode .item-card{animation:noteFade .20s ease;padding:11px 11px 10px;}
-.note-stripe-top{display:none;}
-.grid-ico{display:none;}
-.grid-cat{display:none;}
-.grid-title{font-size:14px;font-weight:600;color:var(--fg);letter-spacing:-.1px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1;}
-.grid-meta{font-size:10px;color:var(--fg-l);}
-.grid-reminder{display:none;}
-.note-grid-mode .item-card{display:flex;flex-direction:column;min-height:90px;}
-.note-grid-mode .note-card-foot{margin-top:auto;padding-top:6px;}
 
 /* ── EMERGENCY ── */
 .emg-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
@@ -196,20 +160,23 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 /* ── NOTE / PAD CARDS ── */
 .item-card{
-  background:
-    radial-gradient(circle at 20% 20%, oklch(1 0 0 / 0.48) 0%, transparent 55%),
-    oklch(1 0 0 / 0.28);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid oklch(1 0 0 / 0.55);
-  border-radius:var(--r);padding:13px 16px;margin-bottom:8px;
+  background:oklch(1 0 0 / 0.82);
+  border:1px solid oklch(0.90 0.02 210 / 0.38);
+  border-radius:18px;
+  padding:14px 16px 12px;margin-bottom:0;
   position:relative;overflow:hidden;word-break:break-word;
-  box-shadow:inset 0 1px 3px oklch(1 0 0 / 0.55), 0 4px 16px oklch(0 0 0 / 0.04);
-  cursor:pointer;transition:transform .12s,box-shadow .12s;
+  cursor:pointer;transition:transform .12s;
 }
-.item-card:active{transform:scale(.98);}
+.item-card:active{transform:scale(.985);}
 .note-stripe{display:none;}
 .note-num{display:none;}
 .note-cat{display:none;}
+.note-preview{
+  font-size:13px;color:var(--fg-l);line-height:1.45;
+  margin-top:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  word-break:break-word;
+}
 .item-title{font-size:16px;font-weight:600;color:var(--fg);letter-spacing:-.1px;line-height:1.4;}
 .item-meta{font-size:11px;color:var(--fg-l);font-weight:400;}
 /* Нижняя строка карточки: категория · бейджи · дата */
@@ -1082,20 +1049,16 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 /* Loading state */
 .auth-loading{
   display:none;text-align:center;
-  padding:18px 0 14px;
+  padding:24px 0 20px;
 }
-.auth-loading-dots{
-  display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:12px;
+.auth-spinner{
+  width:28px;height:28px;border-radius:50%;
+  border:2.5px solid oklch(0.52 0.10 210 / 0.15);
+  border-top-color:var(--accent);
+  animation:spin .75s linear infinite;
+  margin:0 auto;
 }
-.auth-loading-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--accent);opacity:.3;
-  animation:dot-pulse 1.4s ease-in-out infinite;
-}
-.auth-loading-dot:nth-child(2){animation-delay:.22s;}
-.auth-loading-dot:nth-child(3){animation-delay:.44s;}
-@keyframes dot-pulse{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.25);}}
-.auth-loading-text{font-size:14px;color:var(--fg-m);font-weight:500;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── LIST NOTE ── */
 .list-items{padding:2px 0;}
@@ -1791,87 +1754,131 @@ html.dark .bubble{
 }
 
 
-/* ── Notes screen — compact nav bar ── */
-.notes-nav-bar{
-  display:grid;
-  grid-template-columns:40px 1fr 80px;
-  align-items:center;gap:6px;
-  padding:10px 0 10px;
-  flex-shrink:0;
+/* ── DRILL-DOWN NOTES ── */
+.drill-nav{
+  display:flex;align-items:center;gap:8px;
+  padding:14px 14px 8px;flex-shrink:0;
 }
-.notes-back-btn{
-  width:34px;height:34px;border-radius:50%;
-  background:oklch(1 0 0 / 0.55);
+.drill-back-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:oklch(1 0 0 / 0.60);
   border:1px solid oklch(0.88 0.02 210 / 0.45);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;flex-shrink:0;-webkit-appearance:none;
-  color:var(--fg);
-  transition:background .12s,transform .1s;
+  color:var(--accent-d);
+  transition:background .12s,transform .1s,opacity .18s;
 }
-.notes-back-btn:active{background:oklch(0.90 0.02 210 / 0.7);transform:scale(.9);}
-.notes-nav-title{
-  flex:1;text-align:center;
+.drill-back-btn:active{background:oklch(0.90 0.02 210);transform:scale(.88);}
+.drill-crumbs{
+  flex:1;display:flex;align-items:center;gap:5px;
+  min-width:0;overflow:hidden;
+}
+.drill-crumb{
   font-family:'Playfair Display',serif;
-  font-size:19px;font-weight:700;
-  color:var(--fg);letter-spacing:-.3px;
+  font-size:19px;color:var(--fg-l);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  cursor:pointer;flex-shrink:1;
+  transition:color .14s;
 }
-.notes-nav-actions{display:flex;gap:6px;}
+.drill-crumb:active{color:var(--accent-d);}
+.drill-crumb-cur{
+  font-size:24px;color:var(--fg);font-weight:400;
+  cursor:default;flex-shrink:0;
+}
+.drill-sep{color:var(--fg-l);font-size:17px;flex-shrink:0;opacity:.5;}
+.drill-nav-right{display:flex;gap:6px;flex-shrink:0;}
 .notes-nav-ico-btn{
-  width:34px;height:34px;border-radius:50%;
-  background:oklch(1 0 0 / 0.55);
+  width:36px;height:36px;border-radius:50%;
+  background:oklch(1 0 0 / 0.60);
   border:1px solid oklch(0.88 0.02 210 / 0.45);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;-webkit-appearance:none;
-  color:var(--fg-m);stroke:var(--fg-m);
+  cursor:pointer;-webkit-appearance:none;color:var(--fg-m);
   transition:background .12s,transform .1s;
 }
-.notes-nav-ico-btn:active{background:oklch(0.90 0.02 210 / 0.7);transform:scale(.9);}
-.notes-nav-ico-btn.grid-on{background:oklch(0.52 0.10 210 / 0.15);color:var(--accent-d);}
+.notes-nav-ico-btn:active{background:oklch(0.90 0.02 210 / 0.7);transform:scale(.88);}
 
-/* ── Finder folders — macOS style ── */
-.finder-folders-wrap{margin:0 0 12px;}
-
-/* «Все заметки» — отдельный блок */
-.finder-folders{margin:0 0 6px;}
-
-/* Категории — сворачиваемый блок */
-.finder-cats-section{margin:0;}
-.finder-cats-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:4px 2px 3px;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
+/* Depth indicator */
+.drill-depth{
+  display:flex;gap:5px;
+  padding:0 14px 12px;flex-shrink:0;
 }
-.finder-hdr-lbl{font-size:11px;font-weight:600;color:var(--fg-l);letter-spacing:.06em;text-transform:uppercase;}
-.finder-hdr-chev{
-  display:flex;align-items:center;gap:4px;
-  font-size:11px;color:var(--fg-l);font-weight:500;
+.drill-seg{
+  height:3px;flex:1;border-radius:2px;
+  background:oklch(0.88 0.02 210 / 0.55);
+  transition:background .2s;cursor:default;
 }
-.finder-hdr-chev svg{width:13px;height:13px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s ease;}
-.finder-cats-section.fc-collapsed .finder-cats-body{display:none;}
-.finder-cats-section.fc-collapsed .finder-hdr-chev svg{transform:rotate(180deg);}
+.drill-seg.done{background:var(--accent-d);cursor:pointer;}
+.drill-seg.cur{background:var(--accent);}
+.drill-seg.next{background:oklch(0.80 0.05 210);cursor:pointer;}
 
-/* Строки — macOS Finder стиль */
-.finder-row{
-  display:flex;align-items:center;
-  padding:8px 10px;gap:9px;
-  border-radius:8px;
+/* Panels */
+.drill-panels-wrap{flex:1;overflow:hidden;position:relative;}
+.drill-track{
+  display:flex;width:300%;height:100%;
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+}
+.drill-panel{
+  width:calc(100%/3);overflow-y:auto;overflow-x:hidden;
+  padding:4px 14px 80px;
+  -webkit-overflow-scrolling:touch;
+}
+.drill-panel::-webkit-scrollbar{display:none;}
+
+/* Section rows — Panel 0 */
+.drill-sec-row{
+  display:flex;align-items:center;gap:13px;
+  padding:15px 16px;
+  background:oklch(1 0 0 / 0.82);
+  border:1px solid oklch(0.90 0.02 210 / 0.38);
+  border-radius:18px;margin-bottom:9px;
+  cursor:pointer;-webkit-appearance:none;width:100%;
+  text-align:left;font-family:var(--sys);
+  transition:transform .12s;
+}
+.drill-sec-row:active{transform:scale(.98);}
+.drill-sec-ico{
+  width:44px;height:44px;border-radius:13px;
+  background:oklch(0.52 0.10 210 / 0.09);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.drill-sec-name{flex:1;font-size:17px;font-weight:600;color:var(--fg);}
+.drill-sec-count{font-size:15px;color:var(--fg-l);font-weight:400;margin-right:4px;}
+.drill-sec-arr{color:var(--fg-l);font-size:20px;line-height:1;flex-shrink:0;}
+
+/* Note rows — Panel 1 */
+.drill-note-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:14px 16px;
+  background:oklch(1 0 0 / 0.82);
+  border:1px solid oklch(0.90 0.02 210 / 0.38);
+  border-radius:18px;margin-bottom:9px;
   cursor:pointer;
-  transition:background .1s;
-  -webkit-tap-highlight-color:transparent;
+  transition:transform .12s;
 }
-.finder-row:active{background:oklch(0.88 0.02 210 / 0.6);}
-.finder-row.fr-active{background:oklch(0.52 0.10 210 / 0.12);}
-.finder-row-ico{font-size:15px;flex-shrink:0;width:20px;text-align:center;}
-.finder-row-name{
-  flex:1;font-size:15px;font-weight:400;color:var(--fg);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.finder-row.fr-active .finder-row-name{font-weight:600;color:var(--fg);}
-.finder-row-count{
-  font-size:13px;font-weight:400;
-  color:oklch(0.58 0.04 210);
-  flex-shrink:0;
-}
+.drill-note-row:active{transform:scale(.98);}
+.drill-note-body{flex:1;min-width:0;}
+.drill-note-title{font-size:16px;font-weight:600;color:var(--fg);line-height:1.35;margin-bottom:4px;}
+.drill-note-preview{font-size:13px;color:var(--fg-l);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.drill-note-foot{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.drill-note-time{font-size:11px;color:var(--fg-l);}
+.drill-note-ai{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:oklch(0.35 0.14 270);background:oklch(0.40 0.14 270/0.10);border:1px solid oklch(0.40 0.14 270/0.20);border-radius:5px;padding:1px 6px;margin-left:auto;}
+.drill-note-bell{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210/0.10);border:1px solid oklch(0.52 0.10 210/0.20);border-radius:5px;padding:1px 6px;}
+.drill-note-arr{color:var(--fg-l);font-size:18px;flex-shrink:0;padding-top:1px;}
+
+/* Detail — Panel 2 */
+.drill-detail{padding:4px 0;}
+.drill-detail-title{font-size:22px;font-weight:700;color:var(--fg);line-height:1.3;margin-bottom:6px;}
+.drill-detail-meta{font-size:12px;color:var(--fg-l);margin-bottom:18px;}
+.drill-detail-body{font-size:16px;color:var(--fg-m);line-height:1.75;white-space:pre-wrap;word-break:break-word;}
+.drill-detail-ai{margin-top:20px;background:oklch(0.95 0.010 210);border-radius:16px;padding:16px;}
+.drill-detail-ai-hdr{font-size:11px;font-weight:700;color:oklch(0.35 0.14 270);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.drill-detail-ai-body{font-size:14px;color:var(--fg-m);line-height:1.65;}
+.drill-detail-actions{display:flex;gap:10px;margin-top:24px;}
+.drill-btn{flex:1;padding:15px;border-radius:15px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;border:none;transition:transform .1s,background .12s;}
+.drill-btn:active{transform:scale(.97);}
+.drill-btn-edit{background:var(--accent);color:#fff;}
+.drill-btn-del{background:oklch(0.58 0.16 25/0.09);color:var(--rose);border:1px solid oklch(0.58 0.16 25/0.18)!important;}
 </style>
 </head>
 <body>
@@ -1896,17 +1903,13 @@ html.dark .bubble{
     <span class="auth-logo-text">Разберёмся</span>
   </div>
   <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v5.20 · бета</div>
+  <div class="auth-ver">v5.30 · бета</div>
 
   <div class="auth-card checking" id="auth-card">
 
     <!-- Проверка сессии -->
     <div class="auth-loading">
-      <div class="auth-loading-dots">
-        <div class="auth-loading-dot"></div>
-        <div class="auth-loading-dot"></div>
-        <div class="auth-loading-dot"></div>
-      </div>
+      <div class="auth-spinner"></div>
     </div>
 
     <!-- Шаг 1: Ввод почты -->
@@ -2046,7 +2049,7 @@ html.dark .bubble{
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.29</span></span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v5.30</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
@@ -2128,28 +2131,36 @@ html.dark .bubble{
       </div>
     </div>
 
-    <!-- NOTES -->
-    <div class="scr" id="s-notes" style="padding:0 12px 36px;">
-      <!-- Компактный навбар: стрелка · Заметки · иконки -->
-      <div class="notes-nav-bar">
-        <button class="notes-back-btn" onclick="go('home')" title="Назад">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    <!-- NOTES — drill-down -->
+    <div class="scr" id="s-notes" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+      <!-- Nav: back + breadcrumbs + add -->
+      <div class="drill-nav">
+        <button class="drill-back-btn" id="drill-back-btn" onclick="drillBack()">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <span class="notes-nav-title">Заметки</span>
-        <div class="notes-nav-actions">
-          <button class="notes-nav-ico-btn" onclick="openCal()" title="Календарь">
-            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          </button>
-          <button class="notes-nav-ico-btn" id="view-toggle-btn" onclick="toggleNoteView()" title="Вид">
-            <svg id="vtb-ico" viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <div class="drill-crumbs" id="drill-crumbs">
+          <span class="drill-crumb drill-crumb-cur">Заметки</span>
+        </div>
+        <div class="drill-nav-right">
+          <button class="notes-nav-ico-btn" onclick="openSheet('note')" title="Новая заметка">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
         </div>
       </div>
-      <div id="notif-banner-el"></div>
-      <!-- Папки в стиле Finder — всегда видны, без раскрытия -->
-      <div class="notes-stat" id="notes-stat"></div>
-      <div id="note-list"></div>
-      <button class="add-dashed" onclick="openSheet('note')" style="margin-top:4px;">＋ Добавить заметку</button>
+      <!-- Depth bar: 3 segments -->
+      <div class="drill-depth">
+        <div class="drill-seg cur" id="dseg0" onclick="drillJump(0)"></div>
+        <div class="drill-seg"    id="dseg1" onclick="drillJump(1)"></div>
+        <div class="drill-seg"    id="dseg2" onclick="drillJump(2)"></div>
+      </div>
+      <!-- Sliding panels -->
+      <div class="drill-panels-wrap">
+        <div class="drill-track" id="drill-track">
+          <div class="drill-panel" id="drill-p0"></div>
+          <div class="drill-panel" id="drill-p1"></div>
+          <div class="drill-panel" id="drill-p2"></div>
+        </div>
+      </div>
     </div>
 
     <!-- NOTEPAD -->
