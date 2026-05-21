@@ -1871,19 +1871,17 @@ function loadNotes(){
         <div class="grid-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
     } else {
       wrap.style.cssText='position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;';
-      let rHtml='';
-      if(n.reminder){
-        rHtml=`<div style="margin-top:6px;"><span class="reminder-tag"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>${esc(fmtDt(n.reminder))}</span></div>`;
-      }
-      const tagsHtml=Array.isArray(n.aiTags)&&n.aiTags.length
-        ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">${n.aiTags.slice(0,2).map(t=>`<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:oklch(0.55 0.12 290 / 0.09);color:oklch(0.40 0.12 290);border:1px solid oklch(0.55 0.12 290 / 0.16);">${esc(t)}</span>`).join('')}</div>`
-        : '';
+      const hasReminder=!!n.reminder;
+      const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+      const bellBadge=hasReminder?`<span class="nc-badge nc-badge-bell" title="${esc(fmtDt(n.reminder))}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
+      const aiBadge=hasAi?`<span class="nc-badge nc-badge-ai">✦ AI</span>`:'';
       d.innerHTML=`<div class="note-stripe" style="background:${stripe};"></div>
-        <div class="note-num">#${displayNum}</div>
-        <div class="note-cat"><span style="font-size:11px;margin-right:4px;">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</div>
         <div class="item-title">${esc(n.title)}</div>
-        ${rHtml}${tagsHtml}
-        <div class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+        <div class="note-card-foot">
+          <span class="nc-cat-lbl"><span class="nc-ico">${catIcon(n.label)}</span>${esc(safeLabel(n.label||'заметка'))}</span>
+          <div class="nc-badges">${bellBadge}${aiBadge}</div>
+          <span class="item-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
+        </div>`;
     }
     d.onclick=()=>nid?openNoteSheetById(nid):openNoteSheet(i);
     attachSwipeDelete(d,delBg,null,116);
@@ -1908,8 +1906,18 @@ function renderStatChips(all,csActive){
     </div>`;
   }
 
-  // Finder-style папки — всегда раскрыты, без кнопки свернуть
-  let html='<div class="finder-folders">';
+  // Finder-style папки со сворачиванием
+  const fc=localStorage.getItem('rz_finder_col')==='1';
+  const totalFolders=Object.keys(counts).length+1;
+  let html=`<div class="finder-folders-wrap${fc?' fc-collapsed':''}">
+    <div class="finder-hdr" onclick="toggleFinderFolders()">
+      <span class="finder-hdr-lbl">Папки</span>
+      <span class="finder-hdr-chev">
+        ${fc?totalFolders+' папок':'свернуть'}
+        <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+      </span>
+    </div>
+    <div class="finder-folders">`;
   html+=`<div class="finder-row${!noteFilter?' fr-active':''}" onclick="setFilter(null)">
     <span class="finder-row-ico">📋</span>
     <span class="finder-row-name">Все заметки</span>
@@ -1922,11 +1930,17 @@ function renderStatChips(all,csActive){
       <span class="finder-row-count">${c}</span>
     </div>`;
   });
-  html+='</div>';
+  html+='</div></div>';
   el.innerHTML=dateBanner+html;
 }
 
 function setFilter(f){noteFilter=f?safeLabel(f):null;loadNotes();}
+
+function toggleFinderFolders(){
+  const isCol=localStorage.getItem('rz_finder_col')==='1';
+  localStorage.setItem('rz_finder_col',isCol?'0':'1');
+  renderStatChips(getNotes(),!!CS);
+}
 
 // ── SWIPE HELPERS ──
 function buildNoteSwipePanel(shape, radius, onDelete){
