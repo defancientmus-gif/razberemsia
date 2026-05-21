@@ -166,30 +166,11 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   color:var(--accent-d);
 }
 .view-toggle-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-@keyframes dropReveal{
-  0%{clip-path:ellipse(34% 1.5% at 50% 0%);opacity:.35;}
-  18%{clip-path:ellipse(16% 24% at 50% 12%);opacity:1;}
-  48%{clip-path:ellipse(60% 80% at 50% 42%);}
-  74%{clip-path:ellipse(115% 115% at 50% 50%);}
-  100%{clip-path:ellipse(220% 220% at 50% 50%);}
-}
-#note-list.drop-anim{animation:dropReveal .52s cubic-bezier(.22,1,.36,1) both;}
+@keyframes noteFade{from{opacity:0;}to{opacity:1;}}
+#note-list.drop-anim{animation:noteFade .22s ease;}
 .note-grid-mode{display:grid!important;grid-template-columns:repeat(2,1fr);gap:9px;}
 .note-grid-mode>[data-nwrap]{margin-bottom:0!important;border-radius:16px!important;}
-@keyframes cardMorph{
-  0%{opacity:0;transform:scale(.68) translateY(-14px);}
-  62%{transform:scale(1.04) translateY(3px);}
-  100%{opacity:1;transform:scale(1) translateY(0);}
-}
-.note-grid-mode .item-card{animation:cardMorph .30s cubic-bezier(.34,1.56,.64,1) both;padding:11px 11px 10px;}
-.note-grid-mode>[data-nwrap]:nth-child(1) .item-card{animation-delay:.04s;}
-.note-grid-mode>[data-nwrap]:nth-child(2) .item-card{animation-delay:.07s;}
-.note-grid-mode>[data-nwrap]:nth-child(3) .item-card{animation-delay:.10s;}
-.note-grid-mode>[data-nwrap]:nth-child(4) .item-card{animation-delay:.13s;}
-.note-grid-mode>[data-nwrap]:nth-child(5) .item-card{animation-delay:.16s;}
-.note-grid-mode>[data-nwrap]:nth-child(6) .item-card{animation-delay:.19s;}
-.note-grid-mode>[data-nwrap]:nth-child(7) .item-card{animation-delay:.22s;}
-.note-grid-mode>[data-nwrap]:nth-child(8) .item-card{animation-delay:.25s;}
+.note-grid-mode .item-card{animation:noteFade .20s ease;padding:11px 11px 10px;}
 .note-stripe-top{display:none;}
 .grid-ico{display:none;}
 .grid-cat{display:none;}
@@ -1812,7 +1793,9 @@ html.dark .bubble{
 
 /* ── Notes screen — compact nav bar ── */
 .notes-nav-bar{
-  display:flex;align-items:center;gap:8px;
+  display:grid;
+  grid-template-columns:40px 1fr 80px;
+  align-items:center;gap:6px;
   padding:10px 0 10px;
   flex-shrink:0;
 }
@@ -1845,10 +1828,17 @@ html.dark .bubble{
 .notes-nav-ico-btn:active{background:oklch(0.90 0.02 210 / 0.7);transform:scale(.9);}
 .notes-nav-ico-btn.grid-on{background:oklch(0.52 0.10 210 / 0.15);color:var(--accent-d);}
 
-/* ── Finder folders — categories header (collapsible) ── */
+/* ── Finder folders — macOS style ── */
+.finder-folders-wrap{margin:0 0 12px;}
+
+/* «Все заметки» — отдельный блок */
+.finder-folders{margin:0 0 6px;}
+
+/* Категории — сворачиваемый блок */
+.finder-cats-section{margin:0;}
 .finder-cats-hdr{
   display:flex;align-items:center;justify-content:space-between;
-  padding:10px 2px 5px;cursor:pointer;
+  padding:4px 2px 3px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
 .finder-hdr-lbl{font-size:11px;font-weight:600;color:var(--fg-l);letter-spacing:.06em;text-transform:uppercase;}
@@ -1856,48 +1846,31 @@ html.dark .bubble{
   display:flex;align-items:center;gap:4px;
   font-size:11px;color:var(--fg-l);font-weight:500;
 }
-.finder-hdr-chev svg{width:14px;height:14px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.finder-hdr-chev svg{width:13px;height:13px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s ease;}
 .finder-cats-section.fc-collapsed .finder-cats-body{display:none;}
 .finder-cats-section.fc-collapsed .finder-hdr-chev svg{transform:rotate(180deg);}
 
-/* ── Finder-style folder list ── */
-.finder-folders{
-  margin:0 0 10px;
-  border-radius:14px;
-  overflow:hidden;
-  background:oklch(1 0 0 / 0.48);
-  border:1px solid oklch(0.88 0.02 210 / 0.38);
-}
+/* Строки — macOS Finder стиль */
 .finder-row{
-  display:flex;align-items:center;padding:10px 13px;gap:10px;
+  display:flex;align-items:center;
+  padding:8px 10px;gap:9px;
+  border-radius:8px;
   cursor:pointer;
-  border-bottom:1px solid oklch(0.88 0.02 210 / 0.22);
-  transition:background .12s;
+  transition:background .1s;
   -webkit-tap-highlight-color:transparent;
 }
-.finder-row:last-child{border-bottom:none;}
-.finder-row:active{background:oklch(0.90 0.02 210 / 0.55);}
-.finder-row.fr-active{
-  background:oklch(0.52 0.10 210 / 0.08);
-  border-left:3px solid oklch(0.42 0.12 270);
-  padding-left:10px;
-}
-.finder-row-ico{font-size:17px;flex-shrink:0;width:22px;text-align:center;}
+.finder-row:active{background:oklch(0.88 0.02 210 / 0.6);}
+.finder-row.fr-active{background:oklch(0.52 0.10 210 / 0.12);}
+.finder-row-ico{font-size:15px;flex-shrink:0;width:20px;text-align:center;}
 .finder-row-name{
-  flex:1;font-size:14px;font-weight:500;color:var(--fg);
+  flex:1;font-size:15px;font-weight:400;color:var(--fg);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.finder-row.fr-active .finder-row-name{font-weight:650;color:oklch(0.30 0.12 270);}
+.finder-row.fr-active .finder-row-name{font-weight:600;color:var(--fg);}
 .finder-row-count{
-  font-size:12px;font-weight:600;
-  color:oklch(0.52 0.06 210);
-  background:oklch(0.88 0.02 210 / 0.55);
-  border-radius:10px;padding:2px 8px;min-width:24px;text-align:center;
+  font-size:13px;font-weight:400;
+  color:oklch(0.58 0.04 210);
   flex-shrink:0;
-}
-.finder-row.fr-active .finder-row-count{
-  background:oklch(0.42 0.12 270 / 0.15);
-  color:oklch(0.35 0.12 270);
 }
 </style>
 </head>
@@ -2073,7 +2046,7 @@ html.dark .bubble{
   <header>
     <div class="logo">
       <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.28</span></span>
+      <span class="logo-name">Разберёмся<span class="logo-ver">v5.29</span></span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
