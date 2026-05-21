@@ -1911,10 +1911,11 @@ function renderStatChips(all,csActive){
     </div>`;
   }
 
-  // «Все заметки» — всегда видна
+  // «Все заметки» — всегда видна, отдельный блок
   const fc=localStorage.getItem('rz_finder_col')==='1';
   const catEntries=Object.entries(counts);
   const totalCats=catEntries.length;
+
   let html=`<div class="finder-folders-wrap">
     <div class="finder-folders">
       <div class="finder-row${!noteFilter?' fr-active':''}" onclick="setFilter(null)">
@@ -1923,26 +1924,26 @@ function renderStatChips(all,csActive){
         <span class="finder-row-count">${all.length}</span>
       </div>
     </div>`;
-  // Категории — сворачиваемые
+
+  // Категории — отдельный сворачиваемый блок
   if(totalCats>0){
-    html+=`<div class="finder-cats-hdr" onclick="toggleFinderFolders()">
-      <span class="finder-hdr-lbl">Разделы</span>
-      <span class="finder-hdr-chev">
-        ${fc?totalCats+' папок':'свернуть'}
-        <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-      </span>
-    </div>`;
-    if(!fc){
-      html+=`<div class="finder-folders">`;
-      catEntries.forEach(([l,c])=>{
-        html+=`<div class="finder-row${noteFilter===l?' fr-active':''}" onclick="setFilter(${jsAttr(l)})">
-          <span class="finder-row-ico">${catIcon(l)}</span>
-          <span class="finder-row-name">${esc(l)}</span>
-          <span class="finder-row-count">${c}</span>
-        </div>`;
-      });
-      html+=`</div>`;
-    }
+    html+=`<div class="finder-cats-section${fc?' fc-collapsed':''}">
+      <div class="finder-cats-hdr" onclick="toggleFinderFolders()">
+        <span class="finder-hdr-lbl">Разделы</span>
+        <span class="finder-hdr-chev">
+          ${fc?totalCats+' папок':'свернуть'}
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+        </span>
+      </div>
+      <div class="finder-cats-body finder-folders">`;
+    catEntries.forEach(([l,c])=>{
+      html+=`<div class="finder-row${noteFilter===l?' fr-active':''}" onclick="setFilter(${jsAttr(l)})">
+        <span class="finder-row-ico">${catIcon(l)}</span>
+        <span class="finder-row-name">${esc(l)}</span>
+        <span class="finder-row-count">${c}</span>
+      </div>`;
+    });
+    html+=`</div></div>`;
   }
   html+='</div>';
   el.innerHTML=dateBanner+html;
