@@ -2922,88 +2922,74 @@ function stopVoice(){
 // ── HOME FEED ──
 let homeRecog=null,homeIsRec=false;
 
+// ── HOME FEED (notification cards) ──
+let _homeFeedNotes=[];
+
 function loadHomeFeed(){
   const notes=getNotes();
-  const list=[...notes]; // oldest→newest = chat order, newest at bottom
   const el=document.getElementById('home-feed');if(!el)return;
-  el.innerHTML='';
-  // Тап на пустое место чата → новая заметка
-  el.onclick=(e)=>{
-    if(e.target.closest('.bubble,.bubble-swipe-panel,.bubble-wrap'))return;
-    openSheet('note');
-  };
-  const badge=document.getElementById('notes-count-badge');
-  if(badge)badge.textContent=notes.length?'('+notes.length+')':'';
-  if(!list.length){
-    return; // empty — just sky and clouds
-  }
-  list.forEach((n,i)=>{
-    const realIdx=i;
-    const displayNum=i+1;
-    const wrap=document.createElement('div');wrap.className='bubble-wrap';
-    const timeStr=fmtMeta(n.updatedAt||n.createdAt);
-    const bId=n.id||('b'+i);
 
-    if(n.type==='list'){
-      wrap.innerHTML=`
-        <div class="bubble" style="cursor:pointer;">
-          <div id="list-inner-${esc(bId)}">${buildListInner(n)}</div>
-          <div class="bubble-footer">
-            <span class="bubble-num">#${displayNum}</span>
-            <span class="bubble-cat">список</span>
-            <span class="bubble-time">${esc(timeStr)}</span>
-          </div>
-        </div>`;
-      const swipePanel=buildBubbleSwipePanel(()=>delHomeEntry(n.id,i),()=>{});
-      wrap.prepend(swipePanel);
-      const bbl=wrap.querySelector('.bubble');
-      const bdel=wrap.querySelector('.bubble-swipe-panel');
-      attachSwipeBubble(bbl,bdel,116);
-      // Клик по пузырю — открыть список на редактирование
-      bbl.addEventListener('click',()=>openListSheet(n.id));
-      const dBtnL=document.createElement('button');dBtnL.className='desk-del';
-      dBtnL.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-      dBtnL.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
-      wrap.appendChild(dBtnL);
-    } else {
-      const catHtml=safeLabel(n.label||'заметка')!=='заметка'?`<span class="bubble-cat">${esc(safeLabel(n.label))}</span>`:'';
-      const bodyText=n.body||n.title||'';
-      const isLong=bodyText.length>90||(bodyText.match(/\n/g)||[]).length>1;
-      const bodyPreview=n.body||bodyText||'';
-      const expandBtn=isLong?`<button class="bubble-expand-btn" id="bxb-${esc(bId)}" onclick="event.stopPropagation();toggleBubble(${jsAttr(bId)},this)">ещё</button>`:'';
-      wrap.innerHTML=`
-        <div class="bubble" style="cursor:pointer;">
-          <div class="bubble-text" id="bt-${bId}">${esc(bodyPreview)}</div>
-          ${expandBtn}
-          <div class="bubble-footer"><span class="bubble-num">#${displayNum}</span>${catHtml}<span class="bubble-time">${esc(timeStr)}</span></div>
-        </div>`;
-      const swipePanel=buildBubbleSwipePanel(()=>delHomeEntry(n.id,i),()=>shareNote(n));
-      wrap.prepend(swipePanel);
-      const bbl=wrap.querySelector('.bubble');
-      const bdel=wrap.querySelector('.bubble-swipe-panel');
-      bbl.onclick=(e)=>{
-        if(_cardSwiping)return;
-        if(e.target.closest('.bubble-expand-btn'))return;
-        n.id?openNoteSheetById(n.id):openNoteSheet(realIdx);
-      };
-      attachSwipeBubble(bbl,bdel,116);
-      const dBtnN=document.createElement('button');dBtnN.className='desk-del';
-      dBtnN.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-      dBtnN.onclick=(e)=>{e.stopPropagation();delHomeEntry(n.id,i);};
-      wrap.appendChild(dBtnN);
-    }
-    el.appendChild(wrap);
-    // AI-ответ под обычной заметкой
-    if(n.type!=='list'){
-      const replyEl=document.createElement('div');
-      replyEl.id='ai-reply-'+bId;
-      replyEl.className='ai-reply-wrap';
-      if(n.aiReply){replyEl.innerHTML=_buildReplyHTML(n);}
-      else{replyEl.style.display='none';}
-      el.appendChild(replyEl);
-    }
+  // Обновить дату в хедере
+  const dateEl=document.getElementById('home-hdr-date');
+  if(dateEl){
+    const now=new Date();
+    const days=['вс','пн','вт','ср','чт','пт','сб'];
+    const months=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+    dateEl.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()];
+  }
+
+  if(!notes.length){
+    _homeFeedNotes=[];
+    el.innerHTML=`<div class="hf-empty">Пока заметок нет.<br>Нажмите «Новая заметка» чтобы начать.</div>`;
+    return;
+  }
+
+  // Сортировка: сначала с ближайшими напоминаниями, потом по дате
+  const now=Date.now();
+  const withRem=notes.filter(n=>n.reminder&&new Date(n.reminder).getTime()>now)
+    .sort((a,b)=>new Date(a.reminder)-new Date(b.reminder));
+  const rest=notes.filter(n=>!n.reminder||new Date(n.reminder).getTime()<=now)
+    .sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+  const sorted=[...withRem,...rest].slice(0,20);
+  _homeFeedNotes=sorted;
+
+  let h='';
+  sorted.forEach((n,i)=>{
+    // Определяем тип точки
+    const remDt=n.reminder?new Date(n.reminder).getTime():0;
+    const remOverdue=remDt&&remDt<=now;
+    const remSoon=remDt&&remDt>now&&(remDt-now)<3*24*3600*1000;
+    const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+    let dotClass='hf-dot-none';
+    if(remOverdue)dotClass='hf-dot-red';
+    else if(remSoon)dotClass='hf-dot-amber';
+    else if(hasAi)dotClass='hf-dot-green';
+
+    const title=n.title||(n.body||'').split('\n')[0].trim().slice(0,60)||'Заметка';
+    const preview=_notePreview(n);
+    const timeStr=fmtMeta(n.updatedAt||n.createdAt);
+    const aiBadge=hasAi?`<div class="hf-ai-badge">✶︎ AI</div>`:'';
+    const typeTag=n.type==='list'?`<div class="hf-ai-badge" style="color:var(--accent-d);background:oklch(0.52 0.10 210/0.08);border-color:oklch(0.52 0.10 210/0.20);">☰ список</div>`:'';
+
+    h+=`<button class="hf-card" onclick="hfOpenNote(${i})">
+      <div class="hf-sig"><div class="hf-dot ${dotClass}"></div></div>
+      <div class="hf-body">
+        <div class="hf-title">${esc(title)}</div>
+        ${preview?`<div class="hf-preview">${esc(preview)}</div>`:''}
+        ${aiBadge}${typeTag}
+      </div>
+      <div class="hf-right">
+        <div class="hf-time">${esc(timeStr)}</div>
+        <div class="hf-arr">&rsaquo;</div>
+      </div>
+    </button>`;
   });
-  el.scrollTop=el.scrollHeight;
+  el.innerHTML=h;
+}
+
+function hfOpenNote(i){
+  const n=_homeFeedNotes[i];if(!n)return;
+  n.id?openNoteSheetById(n.id):openNoteSheet(getNotes().findIndex(x=>x==n));
 }
 
 function delHomeEntry(id,legacyI){

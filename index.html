@@ -584,17 +584,42 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .fb-send:active{background:oklch(0.44 0.14 290);transform:scale(.96);}
 .fb-send svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-/* ── HOME FEED ── */
-.jarvis-feed{
-  flex:1;overflow-y:auto;padding:10px 14px 14px;
-  margin:4px 10px 8px;
-  border-radius:26px;
-  background:oklch(0.97 0.006 210 / 0.70);
-  border:1px solid oklch(0.90 0.015 210 / 0.40);
-  box-shadow:0 4px 20px -8px oklch(0.54 0.13 210 / 0.06);
-  position:relative;z-index:2;
-}
-.jarvis-feed::-webkit-scrollbar{display:none;}
+/* ── HOME HEADER ── */
+.home-hdr{padding:14px 18px 4px;flex-shrink:0;}
+.home-hdr-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--fg);letter-spacing:-.4px;}
+.home-hdr-date{font-size:11px;color:var(--fg-l);margin-top:2px;}
+
+/* ── HOME FEED (notification cards) ── */
+.home-feed-wrap{flex:1;overflow-y:auto;padding:6px 14px 8px;-webkit-overflow-scrolling:touch;}
+.home-feed-wrap::-webkit-scrollbar{display:none;}
+.hf-card{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;background:oklch(1 0 0/0.72);border:0.5px solid oklch(1 0 0/0.90);border-radius:16px;margin-bottom:8px;cursor:pointer;transition:transform .1s;-webkit-appearance:none;width:100%;text-align:left;font-family:var(--sys);}
+.hf-card:active{transform:scale(.98);}
+.hf-sig{width:10px;padding-top:5px;flex-shrink:0;display:flex;justify-content:center;}
+.hf-dot{width:8px;height:8px;border-radius:50%;}
+.hf-dot-red{background:oklch(0.55 0.20 25);animation:blink-dot 2s ease-in-out infinite;}
+.hf-dot-amber{background:oklch(0.65 0.16 65);}
+.hf-dot-green{background:oklch(0.55 0.14 150);}
+.hf-dot-none{background:oklch(0.78 0.02 210);}
+@keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.25}}
+.hf-body{flex:1;min-width:0;}
+.hf-title{font-size:14px;font-weight:600;color:var(--fg);line-height:1.35;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hf-preview{font-size:12px;color:var(--fg-l);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hf-ai-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:oklch(0.35 0.14 270);background:oklch(0.40 0.14 270/0.10);border:1px solid oklch(0.40 0.14 270/0.20);border-radius:5px;padding:1px 5px;margin-top:4px;}
+.hf-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.hf-time{font-size:10px;color:var(--fg-l);white-space:nowrap;}
+.hf-arr{font-size:18px;color:var(--fg-l);opacity:.35;line-height:1;}
+.hf-empty{text-align:center;padding:40px 20px;color:var(--fg-l);font-size:14px;line-height:1.6;}
+
+/* ── HOME ACTION ROW ── */
+.home-act-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;}
+.home-act-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 8px;border-radius:14px;border:none;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;background:oklch(1 0 0/0.55);border:0.5px solid oklch(1 0 0/0.80);transition:transform .1s,background .12s;}
+.home-act-btn:active{transform:scale(.94);}
+.home-act-btn svg{width:20px;height:20px;stroke:var(--fg-l);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.home-act-btn span{font-size:10px;font-weight:600;color:var(--fg-l);letter-spacing:.01em;}
+.home-act-main{background:oklch(0.24 0.06 220/0.80)!important;border-color:oklch(0.40 0.10 220/0.40)!important;}
+.home-act-main svg{stroke:oklch(0.82 0.08 210);}
+.home-act-main span{color:oklch(0.78 0.06 210);}
+.home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 /* chat-empty removed */
 
 /* ── BUBBLE ── */
@@ -2067,22 +2092,14 @@ html.dark .bubble{
     <!-- HOME -->
     <div class="scr active" id="s-home" style="padding:0;overflow:hidden;">
       <div style="height:100%;display:flex;flex-direction:column;">
-        <div class="jarvis-top">
-          <div class="jarvis-quick">
-            <button class="jq-btn jq-emer" onclick="go('emergency')" title="Что-то случилось?">
-              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </button>
-            <button class="jq-btn" onclick="go('notes')">
-              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              Заметки<span id="notes-count-badge" style="opacity:.5;font-weight:500;margin-left:3px;"></span>
-            </button>
-            <button class="jq-btn jq-feedback" onclick="openFeedbackSheet()">
-              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              <span class="jq-label">Помочь проекту</span>
-            </button>
-          </div>
+        <!-- Header -->
+        <div class="home-hdr">
+          <div class="home-hdr-name">Разберёмся</div>
+          <div class="home-hdr-date" id="home-hdr-date"></div>
         </div>
-        <div class="jarvis-feed" id="home-feed"></div>
+        <!-- Notification cards feed -->
+        <div class="home-feed-wrap" id="home-feed"></div>
+        <!-- Bottom bar -->
         <div class="home-bar">
           <button class="new-note-btn" id="new-note-btn"
             oncontextmenu="return false"
@@ -2096,17 +2113,25 @@ html.dark .bubble{
             <span class="nnb-up-arrow"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>замок</span>
             <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
           </button>
-          <div class="home-bar-row">
-            <button class="bell-bar-btn" onclick="openReminderPanel()" title="Напоминания">
-              <div class="bell-bar-ico">
-                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                <div class="remind-dot" id="remind-dot"></div>
-              </div>
-              Напоминания
+          <!-- 3 quick actions -->
+          <div class="home-act-row">
+            <button class="home-act-btn" onclick="toggleVoice()">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <span>Голос</span>
             </button>
-            <button class="list-quick-btn" style="flex:1;width:auto;margin-top:0;" onclick="openListSheet()">
-              <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/></svg>
-              Новый список
+            <button class="home-act-btn home-act-main" onclick="openSheet('note')">
+              <span style="display:flex;align-items:center;gap:2px;">
+                <svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg>
+                <span class="home-act-live-dot"></span>
+              </span>
+              <span>Разберёмся</span>
+            </button>
+            <button class="home-act-btn" onclick="openReminderPanel()">
+              <span style="position:relative;display:inline-flex;">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <span class="remind-dot" id="remind-dot"></span>
+              </span>
+              <span>Напомнить</span>
             </button>
           </div>
           <div class="home-voice-label" id="home-voice-label"></div>
