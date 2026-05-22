@@ -2097,11 +2097,6 @@ html.dark .bubble{
     <!-- HOME -->
     <div class="scr active" id="s-home" style="padding:0;overflow:hidden;">
       <div style="height:100%;display:flex;flex-direction:column;">
-        <!-- Header -->
-        <div class="home-hdr">
-          <div class="home-hdr-name">Разберёмся</div>
-          <div class="home-hdr-date" id="home-hdr-date"></div>
-        </div>
         <!-- Quick nav buttons -->
         <div class="jarvis-top">
           <div class="jarvis-quick">
@@ -2110,7 +2105,7 @@ html.dark .bubble{
             </button>
             <button class="jq-btn" onclick="go('notes')">
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              Заметки
+              Заметки<span id="notes-count-badge" style="opacity:.45;font-weight:500;margin-left:2px;font-size:12px;"></span>
             </button>
             <button class="jq-btn jq-feedback" onclick="openFeedbackSheet()">
               <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -2130,7 +2125,6 @@ html.dark .bubble{
             onpointermove="nnbPointerMove(event)">
             <span class="nnb-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
             <span class="nnb-text">Новая заметка</span>
-            <span class="nnb-hint">или зажми</span>
             <span class="nnb-up-arrow"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>замок</span>
             <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
           </button>
@@ -2140,12 +2134,12 @@ html.dark .bubble{
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               <span>Голос</span>
             </button>
-            <button class="home-act-btn home-act-main" onclick="openSheet('note')">
+            <button class="home-act-btn home-act-main" onclick="go('notepad')">
               <span style="display:flex;align-items:center;gap:2px;">
                 <svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg>
                 <span class="home-act-live-dot"></span>
               </span>
-              <span>Разберёмся</span>
+              <span>Блокнот AI</span>
             </button>
             <button class="home-act-btn" onclick="openReminderPanel()">
               <span style="position:relative;display:inline-flex;">

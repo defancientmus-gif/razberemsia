@@ -2929,14 +2929,9 @@ function loadHomeFeed(){
   const notes=getNotes();
   const el=document.getElementById('home-feed');if(!el)return;
 
-  // Обновить дату в хедере
-  const dateEl=document.getElementById('home-hdr-date');
-  if(dateEl){
-    const now=new Date();
-    const days=['вс','пн','вт','ср','чт','пт','сб'];
-    const months=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-    dateEl.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()];
-  }
+  // Обновить счётчик в кнопке «Заметки»
+  const badge=document.getElementById('notes-count-badge');
+  if(badge)badge.textContent=notes.length?'('+notes.length+')':'';
 
   if(!notes.length){
     _homeFeedNotes=[];
