@@ -2955,15 +2955,14 @@ function loadHomeFeed(){
 
   let h='';
   sorted.forEach((n,i)=>{
-    // Определяем тип точки
+    // Светофор: 🔴 срочно (просрочено) → 🟡 есть напоминание → 🟢 просто заметка
     const remDt=n.reminder?new Date(n.reminder).getTime():0;
     const remOverdue=remDt&&remDt<=now;
-    const remSoon=remDt&&remDt>now&&(remDt-now)<3*24*3600*1000;
+    const remFuture=remDt&&remDt>now;
     const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
-    let dotClass='hf-dot-none';
-    if(remOverdue)dotClass='hf-dot-red';
-    else if(remSoon)dotClass='hf-dot-amber';
-    else if(hasAi)dotClass='hf-dot-green';
+    let dotClass='hf-dot-green';           // 🟢 просто заметка
+    if(remFuture)dotClass='hf-dot-amber';  // 🟡 есть напоминание
+    if(remOverdue)dotClass='hf-dot-red';   // 🔴 просрочено — перебивает
 
     const title=n.title||(n.body||'').split('\n')[0].trim().slice(0,60)||'Заметка';
     const preview=_notePreview(n);
