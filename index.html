@@ -633,60 +633,61 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-act-main span{color:oklch(0.78 0.06 210);}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
-/* ── КНОПКА РАЗБЕРЁМСЯ ── */
+/* ── КНОПКА РАЗБЕРЁМСЯ — плазменный шар (Siri-style) ── */
 .home-act-row{align-items:flex-end;}
-.rz-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;margin-bottom:-2px;}
-/* Вращающееся aurora-кольцо */
-.rz-btn-wrap::before{
-  content:'';position:absolute;
-  width:88px;height:88px;border-radius:50%;
-  background:conic-gradient(from 0deg,
-    oklch(0.68 0.24 285),
-    oklch(0.62 0.22 240),
-    oklch(0.58 0.20 200),
-    oklch(0.64 0.22 260),
-    oklch(0.70 0.18 310),
-    oklch(0.68 0.24 285)
-  );
-  animation:rz-ring-spin 5s linear infinite;
-  z-index:0;
-  top:50%;left:50%;transform:translate(-50%,-50%) rotate(0deg);
-  transform-origin:center center;
-}
-@keyframes rz-ring-spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
-/* Сама кнопка */
+.rz-btn-wrap{display:flex;flex-direction:column;align-items:center;position:relative;}
 .rz-hero-btn{
-  position:relative;z-index:1;
-  width:80px;height:80px;border-radius:50%;
+  width:84px;height:84px;border-radius:50%;
+  overflow:hidden;position:relative;
   border:none;cursor:pointer;-webkit-appearance:none;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  background:radial-gradient(circle at 38% 32%,oklch(0.50 0.24 285),oklch(0.32 0.18 260) 55%,oklch(0.24 0.12 245));
+  background:oklch(0.13 0.06 270);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
   box-shadow:
-    0 0 0 2.5px oklch(0.20 0.08 240),
-    0 6px 28px oklch(0.42 0.22 275/0.65),
-    0 0 0px oklch(0.60 0.22 280/0.0);
-  animation:rz-breathe 3.5s ease-in-out infinite;
+    0 0 0 1.5px oklch(0.55 0.18 275/0.28),
+    0 8px 32px oklch(0.42 0.22 280/0.70),
+    0 0 64px oklch(0.50 0.20 285/0.18);
+  animation:rz-glow 4s ease-in-out infinite;
   transition:transform .14s cubic-bezier(.34,1.56,.64,1);
-  font-family:var(--sys);
+  -webkit-transform:translateZ(0);font-family:var(--sys);
 }
-/* Бликовый отсвет внутри */
+/* Blob-ы — мягкие через radial-gradient с прозрачностью (без filter:blur) */
+.rz-b1,.rz-b2,.rz-b3{position:absolute;border-radius:50%;pointer-events:none;}
+.rz-b1{
+  width:90px;height:90px;
+  background:radial-gradient(circle,oklch(0.58 0.28 305/0.95) 0%,oklch(0.52 0.24 300/0.50) 42%,transparent 70%);
+  top:-18px;left:-22px;animation:rz-b1 7s ease-in-out infinite;
+}
+.rz-b2{
+  width:82px;height:82px;
+  background:radial-gradient(circle,oklch(0.60 0.26 232/0.90) 0%,oklch(0.54 0.22 228/0.45) 42%,transparent 70%);
+  bottom:-20px;right:-18px;animation:rz-b2 9s ease-in-out infinite;
+}
+.rz-b3{
+  width:72px;height:72px;
+  background:radial-gradient(circle,oklch(0.62 0.22 198/0.85) 0%,oklch(0.56 0.18 196/0.38) 42%,transparent 70%);
+  bottom:-12px;left:-8px;animation:rz-b3 11s ease-in-out infinite;
+}
+@keyframes rz-b1{0%,100%{transform:translate(0,0);}35%{transform:translate(26px,20px);}70%{transform:translate(10px,32px);}}
+@keyframes rz-b2{0%,100%{transform:translate(0,0);}40%{transform:translate(-28px,-24px);}75%{transform:translate(-16px,-36px);}}
+@keyframes rz-b3{0%,100%{transform:translate(0,0);}30%{transform:translate(18px,-16px);}65%{transform:translate(32px,-6px);}85%{transform:translate(14px,-28px);}}
+/* 3D-глубина: блик сверху + тень снизу */
 .rz-hero-btn::before{
-  content:'';position:absolute;
-  top:12%;left:18%;width:44%;height:38%;
-  background:radial-gradient(circle,oklch(1 0 0/0.22),transparent 75%);
-  border-radius:50%;pointer-events:none;
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle at 38% 28%,oklch(1 0 0/0.15) 0%,transparent 52%),
+    radial-gradient(circle at 50% 90%,oklch(0 0 0/0.40) 0%,transparent 50%);
+  z-index:1;pointer-events:none;
 }
-@keyframes rz-breathe{
-  0%,100%{
-    box-shadow:0 0 0 2.5px oklch(0.20 0.08 240),0 6px 28px oklch(0.42 0.22 275/0.60),0 0 40px oklch(0.55 0.22 280/0.10);
-  }
-  50%{
-    box-shadow:0 0 0 2.5px oklch(0.24 0.10 250),0 8px 36px oklch(0.50 0.24 275/0.85),0 0 70px oklch(0.60 0.22 280/0.30);
-  }
+/* Иконка и лейбл поверх blob-ов */
+.rz-ico,.rz-label{position:relative;z-index:2;}
+.rz-ico{display:flex;align-items:center;justify-content:center;}
+.rz-ico svg{width:26px;height:26px;fill:none;stroke:oklch(0.94 0.06 220);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.rz-label{font-size:7.5px;font-weight:800;color:oklch(0.82 0.10 240);letter-spacing:.13em;text-transform:uppercase;}
+@keyframes rz-glow{
+  0%,100%{box-shadow:0 0 0 1.5px oklch(0.55 0.18 275/0.28),0 8px 32px oklch(0.42 0.22 280/0.70),0 0 64px oklch(0.50 0.20 285/0.18);}
+  50%{box-shadow:0 0 0 2px oklch(0.62 0.20 275/0.44),0 10px 44px oklch(0.50 0.24 280/0.90),0 0 100px oklch(0.55 0.22 285/0.32);}
 }
-.rz-hero-btn:active{transform:scale(.90)!important;animation-play-state:paused;}
-.rz-hero-btn svg{width:24px;height:24px;fill:none;stroke:oklch(0.92 0.08 220);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1;}
-.rz-hero-btn .rz-label{font-size:8px;font-weight:800;color:oklch(0.80 0.10 230);letter-spacing:.12em;text-transform:uppercase;position:relative;z-index:1;}
+.rz-hero-btn:active{transform:scale(.87)!important;animation-play-state:paused;}
 /* chat-empty removed */
 
 /* ── BUBBLE ── */
@@ -2198,7 +2199,10 @@ html.dark .bubble{
             </button>
             <div class="rz-btn-wrap">
               <button class="rz-hero-btn" onclick="go('notepad')">
-                <svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg>
+                <span class="rz-b1"></span>
+                <span class="rz-b2"></span>
+                <span class="rz-b3"></span>
+                <span class="rz-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg></span>
                 <span class="rz-label">Разберёмся</span>
               </button>
             </div>
