@@ -633,65 +633,72 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-act-main span{color:oklch(0.78 0.06 210);}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
-/* ── КНОПКА РАЗБЕРЁМСЯ — жемчужный шар ── */
-.rz-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;overflow:visible;justify-content:flex-end;height:100%;}
-.rz-btn-lbl{font-size:10px;font-weight:600;color:var(--fg-l);letter-spacing:.01em;}
-.rz-hero-btn{
-  width:80px;height:80px;border-radius:50%;
-  overflow:hidden;position:relative;
-  border:1px solid oklch(1 0 0/0.75);
-  cursor:pointer;-webkit-appearance:none;
-  background:oklch(0.97 0.015 260/0.82);
-  display:flex;align-items:center;justify-content:center;
+/* ── ПОРТАЛ РАЗБЕРЁМСЯ ── живой, тактильный, межпространственный ── */
+.rz-portal-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;overflow:visible;justify-content:flex-end;height:100%;}
+.rz-portal-lbl{font-size:10px;font-weight:600;color:var(--fg-l);letter-spacing:.01em;white-space:nowrap;}
+.rz-portal{
+  width:96px;height:96px;border-radius:50%;
+  border:none;cursor:pointer;-webkit-appearance:none;
+  position:relative;overflow:hidden;flex-shrink:0;
+  /* Трёхмерный шар — блик сверху, глубина к центру, тьма по краям */
+  background:
+    radial-gradient(circle at 34% 27%, oklch(1 0 0/0.74) 0%, oklch(1 0 0/0) 30%),
+    radial-gradient(circle at 64% 20%, oklch(1 0 0/0.22) 0%, oklch(1 0 0/0) 16%),
+    radial-gradient(circle at 50% 50%,
+      oklch(0.78 0.24 268) 0%,
+      oklch(0.63 0.22 263) 38%,
+      oklch(0.50 0.20 258) 65%,
+      oklch(0.36 0.16 262) 100%);
   box-shadow:
-    inset 0 1.5px 3px oklch(1 0 0/0.90),
-    inset 0 -1px 2px oklch(0.70 0.12 270/0.15),
-    0 6px 20px oklch(0.60 0.16 280/0.22),
-    0 2px 8px oklch(0 0 0/0.06);
-  animation:rz-glow 5s ease-in-out infinite;
-  transition:transform .16s cubic-bezier(.34,1.56,.64,1);
+    0 10px 32px oklch(0.44 0.24 272/0.44),
+    0 4px 12px oklch(0 0 0/0.15),
+    0 0 0 1px oklch(0.66 0.20 268/0.30),
+    0 0 44px oklch(0.58 0.24 276/0.22),
+    inset 0 -3px 6px oklch(0.34 0.16 265/0.40),
+    inset 0 2px 5px oklch(1 0 0/0.58);
+  animation:rz-breathe 4.5s ease-in-out infinite;
+  transition:transform .06s cubic-bezier(.25,0,.5,1),box-shadow .06s;
   -webkit-transform:translateZ(0);
 }
-/* Пастельные blob-ы — лёгкие, воздушные */
-.rz-b1,.rz-b2,.rz-b3{position:absolute;border-radius:50%;pointer-events:none;}
-.rz-b1{
-  width:88px;height:88px;
-  background:radial-gradient(circle,oklch(0.80 0.18 305/0.55) 0%,oklch(0.82 0.14 300/0.22) 45%,transparent 70%);
-  top:-16px;left:-20px;animation:rz-b1 8s ease-in-out infinite;
+/* Аурные слои — три стихии переливаются (opacity only, GPU-safe) */
+.rz-au{position:absolute;inset:0;border-radius:50%;pointer-events:none;}
+.rz-au1{
+  background:radial-gradient(ellipse 90% 74% at 24% 76%, oklch(0.64 0.30 292/0.74) 0%, transparent 56%);
+  animation:rz-au1 8s ease-in-out infinite;
 }
-.rz-b2{
-  width:80px;height:80px;
-  background:radial-gradient(circle,oklch(0.76 0.20 232/0.50) 0%,oklch(0.78 0.16 228/0.20) 45%,transparent 70%);
-  bottom:-18px;right:-16px;animation:rz-b2 10s ease-in-out infinite;
+.rz-au2{
+  background:radial-gradient(ellipse 78% 90% at 76% 24%, oklch(0.58 0.28 183/0.64) 0%, transparent 54%);
+  animation:rz-au2 11.5s ease-in-out infinite;
 }
-.rz-b3{
-  width:70px;height:70px;
-  background:radial-gradient(circle,oklch(0.80 0.16 198/0.45) 0%,oklch(0.82 0.12 195/0.18) 45%,transparent 70%);
-  bottom:-10px;left:-6px;animation:rz-b3 13s ease-in-out infinite;
+.rz-au3{
+  background:radial-gradient(ellipse 70% 70% at 58% 76%, oklch(0.82 0.24 74/0.42) 0%, transparent 50%);
+  animation:rz-au3 14s ease-in-out infinite;
 }
-@keyframes rz-b1{0%,100%{transform:translate(0,0);}35%{transform:translate(24px,18px);}70%{transform:translate(8px,28px);}}
-@keyframes rz-b2{0%,100%{transform:translate(0,0);}40%{transform:translate(-26px,-22px);}75%{transform:translate(-14px,-32px);}}
-@keyframes rz-b3{0%,100%{transform:translate(0,0);}30%{transform:translate(16px,-14px);}65%{transform:translate(28px,-4px);}85%{transform:translate(12px,-24px);}}
-/* Стеклянный блик сверху */
-.rz-hero-btn::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 36% 26%,oklch(1 0 0/0.45) 0%,oklch(1 0 0/0.10) 38%,transparent 60%);
-  z-index:1;pointer-events:none;
+/* Тёмный ободок — иллюзия объёма и глубины */
+.rz-au-rim{
+  position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%, transparent 50%, oklch(0.18 0.10 268/0.55) 100%);
 }
-/* Иконка */
-.rz-ico{position:relative;z-index:2;display:flex;}
-.rz-ico svg{width:28px;height:28px;fill:none;stroke:oklch(0.42 0.18 270);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
-/* Дыхание — мягкое свечение */
-@keyframes rz-glow{
+/* Звезда-портал */
+.rz-portal-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none;}
+.rz-portal-ico svg{width:28px;height:28px;fill:oklch(1 0 0/0.18);stroke:oklch(0.96 0.04 250/0.85);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;}
+/* Дыхание портала — пульс энергии */
+@keyframes rz-breathe{
   0%,100%{
-    box-shadow:inset 0 1.5px 3px oklch(1 0 0/0.90),inset 0 -1px 2px oklch(0.70 0.12 270/0.15),0 6px 20px oklch(0.60 0.16 280/0.22),0 2px 8px oklch(0 0 0/0.06);
+    box-shadow:0 10px 32px oklch(0.44 0.24 272/0.44),0 4px 12px oklch(0 0 0/0.15),0 0 0 1px oklch(0.66 0.20 268/0.30),0 0 44px oklch(0.58 0.24 276/0.22),inset 0 -3px 6px oklch(0.34 0.16 265/0.40),inset 0 2px 5px oklch(1 0 0/0.58);
   }
   50%{
-    box-shadow:inset 0 1.5px 3px oklch(1 0 0/0.90),inset 0 -1px 2px oklch(0.70 0.12 270/0.20),0 8px 28px oklch(0.62 0.18 280/0.38),0 2px 8px oklch(0 0 0/0.06);
+    box-shadow:0 14px 42px oklch(0.44 0.24 272/0.58),0 4px 12px oklch(0 0 0/0.15),0 0 0 1.5px oklch(0.68 0.22 270/0.42),0 0 64px oklch(0.60 0.26 278/0.34),inset 0 -3px 6px oklch(0.34 0.16 265/0.40),inset 0 2px 5px oklch(1 0 0/0.58);
   }
 }
-.rz-hero-btn:active{transform:scale(.88)!important;transition:transform .08s;}
-/* chat-empty removed */
+@keyframes rz-au1{0%,100%{opacity:1;}50%{opacity:0.30;}}
+@keyframes rz-au2{0%,100%{opacity:0.40;}47%{opacity:1;}}
+@keyframes rz-au3{0%,100%{opacity:0.20;}63%{opacity:0.90;}}
+/* Тактильное нажатие — шар вдавливается внутрь */
+.rz-portal:active{
+  transform:scale(0.90);
+  box-shadow:0 4px 16px oklch(0.44 0.24 272/0.42),0 2px 5px oklch(0 0 0/0.12),0 0 0 1px oklch(0.66 0.20 268/0.35),0 0 30px oklch(0.58 0.24 276/0.40),inset 0 5px 14px oklch(0.26 0.14 265/0.55),inset 0 1px 2px oklch(1 0 0/0.25);
+}
 
 /* ── BUBBLE ── */
 .bubble-wrap{display:flex;justify-content:flex-end;margin-bottom:14px;position:relative;overflow:hidden;border-radius:22px 22px 5px 22px;}
@@ -2200,14 +2207,15 @@ html.dark .bubble{
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               <span>Голос</span>
             </button>
-            <div class="rz-btn-wrap">
-              <button class="rz-hero-btn" onclick="go('notepad')">
-                <span class="rz-b1"></span>
-                <span class="rz-b2"></span>
-                <span class="rz-b3"></span>
-                <span class="rz-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg></span>
+            <div class="rz-portal-wrap">
+              <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
+                <span class="rz-au rz-au1"></span>
+                <span class="rz-au rz-au2"></span>
+                <span class="rz-au rz-au3"></span>
+                <span class="rz-au-rim"></span>
+                <span class="rz-portal-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg></span>
               </button>
-              <span class="rz-btn-lbl">Разберёмся</span>
+              <span class="rz-portal-lbl">Разберёмся</span>
             </div>
             <button class="home-act-btn" onclick="openReminderPanel()">
               <span style="position:relative;display:inline-flex;">
