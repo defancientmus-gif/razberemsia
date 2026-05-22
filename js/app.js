@@ -1777,6 +1777,8 @@ function tagsToPrimaryLabel(tags){
 let drillLevel=0;
 let drillCategory=null;
 let drillNoteId=null;
+let _drillNoteIdx=-1;
+let _drillNotes=[];
 let _drillTouchX=0;
 let _drillSwipeInited=false;
 
@@ -1802,6 +1804,16 @@ function drillGo(level,data){
   _drillRender(level);
   _drillNav();
   _drillSeek(level);
+}
+
+function drillPickNote(i){
+  const n=_drillNotes[i];if(!n)return;
+  _drillNoteIdx=i;
+  drillNoteId=n.id||null;
+  drillLevel=2;
+  _drillP2();
+  _drillNav();
+  _drillSeek(2);
 }
 
 function drillBack(){
@@ -1830,7 +1842,7 @@ function _drillNav(){
   if(crumbs){
     let h='';
     const cat=drillCategory?esc(drillCategory):'Все заметки';
-    const note=drillNoteId?getNotes().find(n=>n.id===drillNoteId):null;
+    const note=(drillNoteId?getNotes().find(n=>n.id===drillNoteId):null)||_drillNotes[_drillNoteIdx]||null;
     if(drillLevel===0){
       h=`<span class="drill-crumb drill-crumb-cur">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span>`;
     }else if(drillLevel===1){
@@ -1882,15 +1894,16 @@ function _drillP1(){
   let notes=getNotes();
   if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
   notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  _drillNotes=notes;
   if(!notes.length){el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--fg-l);font-size:15px;">\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442</div>`;return;}
   let h='';
-  notes.forEach(n=>{
+  notes.forEach((n,i)=>{
     const preview=_notePreview(n);
     const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
     const hasBell=!!n.reminder;
     const aiBadge=hasAi?`<span class="drill-note-ai">\u2736 AI</span>`:'';
     const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
-    h+=`<div class="drill-note-row" onclick="drillGo(2,{noteId:${jsAttr(n.id)}})">
+    h+=`<div class="drill-note-row" onclick="drillPickNote(${i})">
       <div class="drill-note-body">
         <div class="drill-note-title">${esc(n.title)}</div>
         ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
@@ -1907,7 +1920,7 @@ function _drillP1(){
 
 function _drillP2(){
   const el=document.getElementById('drill-p2');if(!el)return;
-  const n=drillNoteId?getNotes().find(x=>x.id===drillNoteId):null;
+  const n=(drillNoteId?getNotes().find(x=>x.id===drillNoteId):null)||_drillNotes[_drillNoteIdx]||null;
   if(!n){el.innerHTML=`<div style="padding:20px;color:var(--fg-l);">\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430</div>`;return;}
   const nid=n.id;
   const idx=getNotes().indexOf(n);
