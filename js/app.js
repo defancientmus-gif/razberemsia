@@ -2953,42 +2953,75 @@ function loadHomeFeed(){
   const sorted=[...withRem,...rest].slice(0,20);
   _homeFeedNotes=sorted;
 
-  let h='';
+  el.innerHTML='';
   sorted.forEach((n,i)=>{
-    // Светофор: 🔴 срочно (просрочено) → 🟡 есть напоминание → 🟢 просто заметка
+    // 🚦 Светофор: 🔴 просрочено → 🟡 есть напоминание → 🟢 просто заметка
     const remDt=n.reminder?new Date(n.reminder).getTime():0;
     const remOverdue=remDt&&remDt<=now;
     const remFuture=remDt&&remDt>now;
     const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
-    let dotClass='hf-dot-green';           // 🟢 просто заметка
-    if(remFuture)dotClass='hf-dot-amber';  // 🟡 есть напоминание
-    if(remOverdue)dotClass='hf-dot-red';   // 🔴 просрочено — перебивает
+    let dotClass='hf-dot-green';
+    if(remFuture)dotClass='hf-dot-amber';
+    if(remOverdue)dotClass='hf-dot-red';
 
     const title=n.title||(n.body||'').split('\n')[0].trim().slice(0,60)||'Заметка';
     const preview=_notePreview(n);
     const timeStr=fmtMeta(n.updatedAt||n.createdAt);
-    const aiBadge=hasAi?`<div class="hf-ai-badge">✶︎ AI</div>`:'';
-    const typeTag=n.type==='list'?`<div class="hf-ai-badge" style="color:var(--accent-d);background:oklch(0.52 0.10 210/0.08);border-color:oklch(0.52 0.10 210/0.20);">☰ список</div>`:'';
+    const aiBadge=hasAi?`<span class="hf-ai-badge">✶︎ AI</span>`:'';
+    const typeTag=n.type==='list'?`<span class="hf-ai-badge" style="color:var(--accent-d);background:oklch(0.52 0.10 210/0.08);border-color:oklch(0.52 0.10 210/0.20);">☰ список</span>`:'';
 
-    h+=`<button class="hf-card" onclick="hfOpenNote(${i})">
+    // Обёртка со свайпом
+    const wrap=document.createElement('div');
+    wrap.className='hf-wrap';
+
+    // Карточка
+    const card=document.createElement('button');
+    card.className='hf-card';
+    card.innerHTML=`
       <div class="hf-sig"><div class="hf-dot ${dotClass}"></div></div>
       <div class="hf-body">
         <div class="hf-title">${esc(title)}</div>
         ${preview?`<div class="hf-preview">${esc(preview)}</div>`:''}
-        ${aiBadge}${typeTag}
+        <div style="margin-top:${(hasAi||n.type==='list')?'4px':'0'}">${aiBadge}${typeTag}</div>
       </div>
       <div class="hf-right">
         <div class="hf-time">${esc(timeStr)}</div>
         <div class="hf-arr">&rsaquo;</div>
-      </div>
-    </button>`;
+      </div>`;
+    card.onclick=()=>{
+      if(_cardSwiping)return;
+      n.id?openNoteSheetById(n.id):openNoteSheet(getNotes().findIndex(x=>x===n));
+    };
+
+    // Панель удаления (свайп)
+    const delPanel=document.createElement('div');
+    delPanel.className='hf-del-panel';
+    delPanel.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
+    delPanel._onDelete=()=>{
+      const notes=getNotes();
+      const idx=n.id?notes.findIndex(x=>x.id===n.id):notes.findIndex(x=>x===n);
+      if(idx>=0){const del=notes.splice(idx,1)[0];del._deletedAt=Date.now();const tr=getTrash();tr.unshift(del);if(tr.length>50)tr.pop();saveTrash(tr);saveNotes(notes);}
+      loadHomeFeed();loadNotes();
+      showToast('В корзину · можно восстановить');
+    };
+    _makeSwipeAttach(card,delPanel);
+
+    // Крестик для десктопа
+    const dDel=document.createElement('button');
+    dDel.className='hf-desk-del';
+    dDel.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="oklch(0.45 0.15 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    dDel.onclick=(e)=>{e.stopPropagation();delPanel._onDelete();};
+
+    wrap.appendChild(delPanel);
+    wrap.appendChild(card);
+    wrap.appendChild(dDel);
+    el.appendChild(wrap);
   });
-  el.innerHTML=h;
 }
 
 function hfOpenNote(i){
   const n=_homeFeedNotes[i];if(!n)return;
-  n.id?openNoteSheetById(n.id):openNoteSheet(getNotes().findIndex(x=>x==n));
+  n.id?openNoteSheetById(n.id):openNoteSheet(getNotes().findIndex(x=>x===n));
 }
 
 function delHomeEntry(id,legacyI){

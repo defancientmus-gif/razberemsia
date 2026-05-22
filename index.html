@@ -609,6 +609,11 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .hf-time{font-size:10px;color:var(--fg-l);white-space:nowrap;}
 .hf-arr{font-size:18px;color:var(--fg-l);opacity:.35;line-height:1;}
 .hf-empty{text-align:center;padding:40px 20px;color:var(--fg-l);font-size:14px;line-height:1.6;}
+.hf-wrap{position:relative;overflow:hidden;border-radius:16px;margin-bottom:8px;}
+.hf-card{border-radius:0;margin-bottom:0;}
+.hf-del-panel{position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .15s;pointer-events:none;background:oklch(0.94 0.05 15/0.55);}
+.hf-desk-del{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3;-webkit-appearance:none;}
+@media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
 
 /* ── HOME ACTION ROW ── */
 .home-act-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;}
@@ -2096,6 +2101,22 @@ html.dark .bubble{
         <div class="home-hdr">
           <div class="home-hdr-name">Разберёмся</div>
           <div class="home-hdr-date" id="home-hdr-date"></div>
+        </div>
+        <!-- Quick nav buttons -->
+        <div class="jarvis-top">
+          <div class="jarvis-quick">
+            <button class="jq-btn jq-emer" onclick="go('emergency')" title="Что-то случилось?">
+              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </button>
+            <button class="jq-btn" onclick="go('notes')">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Заметки
+            </button>
+            <button class="jq-btn jq-feedback" onclick="openFeedbackSheet()">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <span class="jq-label">Помочь проекту</span>
+            </button>
+          </div>
         </div>
         <!-- Notification cards feed -->
         <div class="home-feed-wrap" id="home-feed"></div>
