@@ -1377,6 +1377,31 @@ function closeReminderPanel(){
   const overlay=document.getElementById('remind-overlay');
   if(overlay)overlay.classList.remove('open');
 }
+function _remindWhenTxt(dt,now){
+  const ms=dt.getTime()-now;
+  const abs=Math.abs(ms);
+  const d=new Date(dt);
+  const today=new Date();today.setHours(0,0,0,0);
+  const tom=new Date(today);tom.setDate(tom.getDate()+1);
+  const days=['вс','пн','вт','ср','чт','пт','сб'];
+  const hm=pad(d.getHours())+':'+pad(d.getMinutes());
+  if(ms<0){
+    // просрочено
+    if(abs<3600000)return'Только что';
+    if(abs<86400000)return'Сегодня в '+hm+' — просрочено';
+    return _fmtDayTime(d)+' — просрочено';
+  }
+  const dayStart=new Date(d);dayStart.setHours(0,0,0,0);
+  if(dayStart.getTime()===today.getTime())return'Сегодня в '+hm;
+  if(dayStart.getTime()===tom.getTime())return'Завтра в '+hm;
+  const diffDays=Math.round((dayStart-today)/86400000);
+  if(diffDays<7)return days[d.getDay()]+' в '+hm;
+  return _fmtDayTime(d);
+}
+function _fmtDayTime(d){
+  const months=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  return d.getDate()+' '+months[d.getMonth()]+' в '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
 function renderReminderPanel(){
   const scroll=document.getElementById('remind-scroll');if(!scroll)return;
   const notes=getNotes();
@@ -1384,7 +1409,7 @@ function renderReminderPanel(){
   const upcoming=notes.filter(n=>{
     if(!n.reminder)return false;
     const dt=parseDt(n.reminder);if(!dt)return false;
-    return dt.getTime()>now-3600000;
+    return dt.getTime()>now-86400000; // показываем просроченные до суток
   }).sort((a,b)=>{
     const da=parseDt(a.reminder),db=parseDt(b.reminder);
     return(da?da.getTime():0)-(db?db.getTime():0);
@@ -1392,30 +1417,33 @@ function renderReminderPanel(){
   const settings=getReminderSettings();
   let html='';
   if(upcoming.length){
-    html+='<div class="remind-section-label">Предстоящие</div>';
+    html+='<div class="remind-section-label">Напоминания</div>';
     upcoming.forEach(n=>{
       const dt=parseDt(n.reminder);
       const isPast=dt&&dt.getTime()<now;
-      const whenTxt=dt?(isPast?'Было: ':'Через '+(relativeTime(dt.getTime()-now)+' — '))+fmtDt(n.reminder):fmtDt(n.reminder);
+      const isSoon=dt&&!isPast&&(dt.getTime()-now)<3*3600000;
+      const dotCls=isPast?'overdue':isSoon?'soon':'future';
+      const whenCls=isPast?'overdue':'';
+      const whenTxt=dt?_remindWhenTxt(dt,now):fmtDt(n.reminder);
       html+=`<div class="remind-item">
-        <div class="remind-bell-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+        <div class="remind-item-dot ${dotCls}"></div>
         <div class="remind-item-body">
-          <div class="remind-item-title">${esc(n.title||n.body||'Заметка')}</div>
-          <div class="remind-item-when" style="${isPast?'color:oklch(0.58 0.16 25);':''}">${esc(whenTxt)}</div>
+          <div class="remind-item-title">${esc(n.title||(n.body||'').split('\n')[0].slice(0,50)||'Заметка')}</div>
+          <div class="remind-item-when ${whenCls}">${esc(whenTxt)}</div>
         </div>
-        <button class="remind-item-del" onclick="removeNoteReminder('${n.id}')" title="Удалить напоминание"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="remind-item-del" onclick="removeNoteReminder('${n.id}')" title="Удалить"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>`;
     });
   } else {
-    html+=`<div class="remind-empty">🔔<br>Нет активных напоминаний.<br><span style="font-size:12px;">Нажмите кнопку выше — поставим напоминание прямо сейчас.</span></div>`;
+    html+=`<div class="remind-empty">🔔<br>Нет активных напоминаний</div>`;
   }
-  html+='<div class="remind-section-label" style="margin-top:20px;">Настройки</div>';
+  html+='<div class="remind-section-label">Настройки</div>';
   html+=`<div class="remind-settings">
     <div class="remind-set-row">
       <span class="remind-set-lbl">Напомнить заранее</span>
       <button class="remind-set-val" id="remind-adv-btn" onclick="cycleAdvance()">${advanceLabel(settings.advanceMinutes)}</button>
     </div>
-    <div class="remind-set-row" style="border-top:1px solid oklch(0.88 0.02 210/0.25);margin-top:4px;padding-top:10px;">
+    <div class="remind-set-row">
       <span class="remind-set-lbl">AI предлагает время</span>
       <label class="remind-toggle">
         <input type="checkbox" id="remind-ai-toggle" ${settings.aiSuggest?'checked':''} onchange="toggleAiSuggest(this.checked)">
