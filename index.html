@@ -632,6 +632,61 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-act-main svg{stroke:oklch(0.82 0.08 210);}
 .home-act-main span{color:oklch(0.78 0.06 210);}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
+
+/* ── КНОПКА РАЗБЕРЁМСЯ ── */
+.home-act-row{align-items:flex-end;}
+.rz-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;margin-bottom:-2px;}
+/* Вращающееся aurora-кольцо */
+.rz-btn-wrap::before{
+  content:'';position:absolute;
+  width:88px;height:88px;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    oklch(0.68 0.24 285),
+    oklch(0.62 0.22 240),
+    oklch(0.58 0.20 200),
+    oklch(0.64 0.22 260),
+    oklch(0.70 0.18 310),
+    oklch(0.68 0.24 285)
+  );
+  animation:rz-ring-spin 5s linear infinite;
+  z-index:0;
+  top:50%;left:50%;transform:translate(-50%,-50%) rotate(0deg);
+  transform-origin:center center;
+}
+@keyframes rz-ring-spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+/* Сама кнопка */
+.rz-hero-btn{
+  position:relative;z-index:1;
+  width:80px;height:80px;border-radius:50%;
+  border:none;cursor:pointer;-webkit-appearance:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:radial-gradient(circle at 38% 32%,oklch(0.50 0.24 285),oklch(0.32 0.18 260) 55%,oklch(0.24 0.12 245));
+  box-shadow:
+    0 0 0 2.5px oklch(0.20 0.08 240),
+    0 6px 28px oklch(0.42 0.22 275/0.65),
+    0 0 0px oklch(0.60 0.22 280/0.0);
+  animation:rz-breathe 3.5s ease-in-out infinite;
+  transition:transform .14s cubic-bezier(.34,1.56,.64,1);
+  font-family:var(--sys);
+}
+/* Бликовый отсвет внутри */
+.rz-hero-btn::before{
+  content:'';position:absolute;
+  top:12%;left:18%;width:44%;height:38%;
+  background:radial-gradient(circle,oklch(1 0 0/0.22),transparent 75%);
+  border-radius:50%;pointer-events:none;
+}
+@keyframes rz-breathe{
+  0%,100%{
+    box-shadow:0 0 0 2.5px oklch(0.20 0.08 240),0 6px 28px oklch(0.42 0.22 275/0.60),0 0 40px oklch(0.55 0.22 280/0.10);
+  }
+  50%{
+    box-shadow:0 0 0 2.5px oklch(0.24 0.10 250),0 8px 36px oklch(0.50 0.24 275/0.85),0 0 70px oklch(0.60 0.22 280/0.30);
+  }
+}
+.rz-hero-btn:active{transform:scale(.90)!important;animation-play-state:paused;}
+.rz-hero-btn svg{width:24px;height:24px;fill:none;stroke:oklch(0.92 0.08 220);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1;}
+.rz-hero-btn .rz-label{font-size:8px;font-weight:800;color:oklch(0.80 0.10 230);letter-spacing:.12em;text-transform:uppercase;position:relative;z-index:1;}
 /* chat-empty removed */
 
 /* ── BUBBLE ── */
@@ -2141,13 +2196,12 @@ html.dark .bubble{
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               <span>Голос</span>
             </button>
-            <button class="home-act-btn home-act-main" onclick="go('notepad')">
-              <span style="display:flex;align-items:center;gap:2px;">
+            <div class="rz-btn-wrap">
+              <button class="rz-hero-btn" onclick="go('notepad')">
                 <svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg>
-                <span class="home-act-live-dot"></span>
-              </span>
-              <span>Блокнот AI</span>
-            </button>
+                <span class="rz-label">Разберёмся</span>
+              </button>
+            </div>
             <button class="home-act-btn" onclick="openReminderPanel()">
               <span style="position:relative;display:inline-flex;">
                 <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
