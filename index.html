@@ -640,14 +640,21 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
 /* ── ПОРТАЛ РАЗБЕРЁМСЯ ── liquid glass agent ── */
+.rz-portal-slot{
+  flex:1;
+  height:58px;
+  position:relative;
+  overflow:visible;
+  pointer-events:auto;
+}
 .rz-portal-wrap{
   position:absolute;
-  bottom:calc(100% - 22px);
+  top:50%;
   left:50%;
-  transform:translateX(-50%);
+  transform:translate(-50%,-50%);
   display:flex;flex-direction:column;align-items:center;
   pointer-events:auto;
-  z-index:3;
+  z-index:4;
 }
 .rz-portal-ball{
   position:relative;
@@ -2166,15 +2173,6 @@ html.dark .bubble{
         <div class="home-feed-wrap" id="home-feed"></div>
         <!-- Bottom bar -->
         <div class="home-bar">
-          <!-- Портал — абсолютно над баром, по центру -->
-          <div class="rz-portal-wrap">
-            <div class="rz-portal-ball">
-              <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
-                <canvas class="rz-portal-canvas" id="rz-portal-canvas" aria-hidden="true"></canvas>
-              </button>
-            </div>
-            <span class="rz-portal-lbl">Разберёмся</span>
-          </div>
           <!-- Широкая кнопка новой заметки -->
           <button class="new-note-btn" id="new-note-btn"
             oncontextmenu="return false"
@@ -2193,8 +2191,16 @@ html.dark .bubble{
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               <span>Голос</span>
             </button>
-            <!-- Пустое место под портал -->
-            <div style="flex:1;pointer-events:none;"></div>
+            <div class="rz-portal-slot">
+              <div class="rz-portal-wrap">
+                <div class="rz-portal-ball">
+                  <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
+                    <canvas class="rz-portal-canvas" id="rz-portal-canvas" aria-hidden="true"></canvas>
+                  </button>
+                </div>
+                <span class="rz-portal-lbl">Разберёмся</span>
+              </div>
+            </div>
             <button class="home-act-btn" onclick="openReminderPanel()">
               <span style="position:relative;display:inline-flex;">
                 <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
