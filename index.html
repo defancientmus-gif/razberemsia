@@ -639,76 +639,35 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-act-btn span{font-size:10px;font-weight:600;color:oklch(0.38 0.10 220);letter-spacing:.01em;}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
-/* ── ПОРТАЛ РАЗБЕРЁМСЯ ── облачко с котиком ── */
+/* ── ПОРТАЛ РАЗБЕРЁМСЯ ── liquid glass agent ── */
 .rz-portal-wrap{
   position:absolute;
-  bottom:calc(100% - 6px);
+  bottom:calc(100% - 22px);
   left:50%;
   transform:translateX(-50%);
-  display:flex;flex-direction:column;align-items:center;gap:5px;
+  display:flex;flex-direction:column;align-items:center;
   pointer-events:auto;
   z-index:3;
 }
-/* Обёртка — плывёт вверх-вниз */
 .rz-portal-ball{
   position:relative;
-  width:80px;height:80px;
+  width:145px;height:145px;
   flex-shrink:0;
-  animation:rz-float 3.6s ease-in-out infinite;
-  will-change:transform;
 }
-/* Кнопка — небо */
 .rz-portal{
   position:absolute;inset:0;
   border:none;cursor:pointer;-webkit-appearance:none;
   border-radius:50%;
-  background:radial-gradient(ellipse at 50% 34%,
-    oklch(0.90 0.11 216) 0%,
-    oklch(0.95 0.06 214) 55%,
-    oklch(0.92 0.04 210) 100%);
-  box-shadow:
-    0 8px 22px oklch(0.52 0.13 218/0.28),
-    0 2px 8px oklch(0 0 0/0.07),
-    0 0 0 1px oklch(0.78 0.10 218/0.16),
-    inset 0 1px 4px oklch(1 0 0/0.55);
-  transition:transform .09s, box-shadow .09s;
+  background:transparent;
+  filter:drop-shadow(0 26px 40px oklch(0.25 0.04 160 / 0.13));
+  transition:transform .10s;
   overflow:hidden;
 }
 .rz-portal:active{
-  transform:scale(0.92);
-  box-shadow:
-    0 3px 10px oklch(0.52 0.13 218/0.22),
-    inset 0 2px 8px oklch(0.52 0.12 218/0.18);
+  transform:scale(.985);
 }
-/* Иконка котика */
-.rz-portal-ico{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;z-index:2;
-}
-.rz-portal-ico svg{width:80px;height:80px;}
-/* Глаза моргают раз в несколько секунд */
-.rz-eyes-open{animation:rz-blink-open 5.5s ease-in-out infinite;}
-.rz-eyes-blink{animation:rz-blink-close 5.5s ease-in-out infinite;}
-@keyframes rz-blink-open{
-  0%,80%,100%{opacity:1;}
-  86%,93%{opacity:0;}
-}
-@keyframes rz-blink-close{
-  0%,80%,100%{opacity:0;}
-  86%,93%{opacity:1;}
-}
-/* Плавный подъём-опускание */
-@keyframes rz-float{
-  0%,100%{transform:translateY(0px);}
-  50%    {transform:translateY(-7px);}
-}
-/* Подпись */
-.rz-portal-lbl{
-  font-size:10px;font-weight:600;
-  color:oklch(0.52 0.10 218);
-  letter-spacing:.04em;white-space:nowrap;
-}
+.rz-portal-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;}
+.rz-portal-lbl{display:none;}
 
 /* ── BUBBLE ── */
 .bubble-wrap{display:flex;justify-content:flex-end;margin-bottom:14px;position:relative;overflow:hidden;border-radius:22px 22px 5px 22px;}
@@ -2211,50 +2170,7 @@ html.dark .bubble{
           <div class="rz-portal-wrap">
             <div class="rz-portal-ball">
               <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
-                <span class="rz-portal-ico">
-                  <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <filter id="rz-cat-shadow" x="-30%" y="-30%" width="160%" height="160%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(80,120,175,0.18)"/>
-                      </filter>
-                    </defs>
-                    <!-- Облако + котик вместе -->
-                    <g filter="url(#rz-cat-shadow)">
-                      <!-- Уши (за головой) -->
-                      <path d="M27 27 L23 13 L33 21Z" fill="white"/>
-                      <path d="M53 27 L57 13 L47 21Z" fill="white"/>
-                      <!-- Внутри ушей — розовый -->
-                      <path d="M27.5 25 L24.5 15 L31.5 21Z" fill="oklch(0.88 0.09 345)"/>
-                      <path d="M52.5 25 L55.5 15 L48.5 21Z" fill="oklch(0.88 0.09 345)"/>
-                      <!-- Голова котика -->
-                      <circle cx="40" cy="34" r="15" fill="white"/>
-                      <!-- Облако — шары снизу -->
-                      <circle cx="19" cy="54" r="11" fill="white"/>
-                      <circle cx="32" cy="47" r="14" fill="white"/>
-                      <circle cx="49" cy="48" r="13" fill="white"/>
-                      <circle cx="63" cy="54" r="10" fill="white"/>
-                      <rect x="11" y="56" width="58" height="16" rx="8" fill="white"/>
-                    </g>
-                    <!-- Глаза открытые — два дугообразных штриха -->
-                    <g class="rz-eyes-open">
-                      <path d="M31 33 Q34.5 29 38 33" stroke="oklch(0.38 0.07 268)" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M42 33 Q45.5 29 49 33" stroke="oklch(0.38 0.07 268)" stroke-width="2" stroke-linecap="round"/>
-                    </g>
-                    <!-- Глаза закрытые (моргание) -->
-                    <g class="rz-eyes-blink" style="opacity:0">
-                      <line x1="31" y1="32" x2="38" y2="32" stroke="oklch(0.38 0.07 268)" stroke-width="2" stroke-linecap="round"/>
-                      <line x1="42" y1="32" x2="49" y2="32" stroke="oklch(0.38 0.07 268)" stroke-width="2" stroke-linecap="round"/>
-                    </g>
-                    <!-- Носик -->
-                    <path d="M38.5 38.5 L40 41 L41.5 38.5Z" fill="oklch(0.68 0.14 345)"/>
-                    <!-- Усы левые -->
-                    <line x1="18" y1="37" x2="35" y2="38.5" stroke="oklch(0.65 0.04 268)" stroke-width="0.9" stroke-linecap="round"/>
-                    <line x1="18" y1="41" x2="35" y2="41" stroke="oklch(0.65 0.04 268)" stroke-width="0.9" stroke-linecap="round"/>
-                    <!-- Усы правые -->
-                    <line x1="45" y1="38.5" x2="62" y2="37" stroke="oklch(0.65 0.04 268)" stroke-width="0.9" stroke-linecap="round"/>
-                    <line x1="45" y1="41" x2="62" y2="41" stroke="oklch(0.65 0.04 268)" stroke-width="0.9" stroke-linecap="round"/>
-                  </svg>
-                </span>
+                <canvas class="rz-portal-canvas" id="rz-portal-canvas" aria-hidden="true"></canvas>
               </button>
             </div>
             <span class="rz-portal-lbl">Разберёмся</span>
@@ -2853,6 +2769,181 @@ document.addEventListener('DOMContentLoaded', ()=>{
     };
   }
 });
+</script>
+<script>
+(function(){
+  var canvas=document.getElementById('rz-portal-canvas');
+  if(!canvas||!canvas.getContext)return;
+  var ctx=canvas.getContext('2d');
+  var PHI=(1+Math.sqrt(5))/2;
+  var GOLDEN_ANGLE=Math.PI*(3-Math.sqrt(5));
+  var cfg={
+    radius:22,
+    void:78,
+    rings:5,
+    ribbons:4,
+    width:6,
+    glass:60,
+    viscosity:100,
+    speed:34,
+    energy:45,
+    sync:86,
+    glow:34,
+    particles:28,
+    particleSize:38,
+    lanes:5
+  };
+  var w=0,h=0,dpr=1;
+
+  function resizePortalCanvas(){
+    var rect=canvas.getBoundingClientRect();
+    dpr=Math.min(2,window.devicePixelRatio||1);
+    w=rect.width;h=rect.height;
+    canvas.width=Math.round(w*dpr);
+    canvas.height=Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function ribbon(cx,cy,radius,bandWidth,start,length,time,index){
+    var steps=88,outer=[],inner=[];
+    var energy=cfg.energy/100;
+    var viscosity=cfg.viscosity/100;
+    var laminarPower=1-viscosity*.72;
+    for(var i=0;i<=steps;i++){
+      var p=i/steps;
+      var a=start+length*p;
+      var taper=Math.sin(p*Math.PI);
+      var wave=taper*bandWidth*(.18+energy*.20);
+      var laminar=Math.sin(p*Math.PI*2+time*.42+index)*laminarPower*bandWidth*.16;
+      var outerR=radius+bandWidth*.5+wave+laminar;
+      var innerR=radius-bandWidth*.5-wave*.26+laminar*.22;
+      outer.push([cx+Math.cos(a)*outerR,cy+Math.sin(a)*outerR]);
+      inner.push([cx+Math.cos(a)*innerR,cy+Math.sin(a)*innerR]);
+    }
+    ctx.beginPath();
+    outer.forEach(function(point,i){i?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]);});
+    inner.reverse().forEach(function(point){ctx.lineTo(point[0],point[1]);});
+    ctx.closePath();
+    var glass=cfg.glass/100;
+    var grad=ctx.createRadialGradient(cx-radius*.42,cy-radius*.48,4,cx,cy,radius+bandWidth*1.8);
+    grad.addColorStop(0,'rgba(255,255,255,'+(.10+glass*.42)+')');
+    grad.addColorStop(.44,'rgba(255,255,255,'+(.08+glass*.30)+')');
+    grad.addColorStop(.74,index%2?'rgba(212,236,255,'+(.04+glass*.14)+')':'rgba(255,235,190,'+(.04+glass*.12)+')');
+    grad.addColorStop(1,'rgba(255,255,255,.02)');
+    ctx.fillStyle=grad;
+    ctx.shadowColor='rgba(255,255,255,.45)';
+    ctx.shadowBlur=cfg.glow*.18;
+    ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle='rgba(255,255,255,'+(.12+glass*.18)+')';
+    ctx.lineWidth=.9;
+    ctx.stroke();
+  }
+
+  function drawStructure(cx,cy,radius,time){
+    var rings=cfg.rings;
+    if(!rings)return;
+    var glass=cfg.glass/100;
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,'+(.12+glass*.20)+')';
+    ctx.lineWidth=.75;
+    for(var i=0;i<rings;i++){
+      var t=rings===1?.5:i/(rings-1);
+      var r=radius*(.72+t*.62);
+      ctx.beginPath();
+      ctx.arc(cx,cy,r+Math.sin(time*.25+i)*.25,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawParticles(cx,cy,radius,time){
+    var count=cfg.particles;
+    var lanes=Math.max(1,cfg.lanes);
+    var energy=cfg.energy/100;
+    var particleScale=cfg.particleSize/100;
+    var sync=cfg.sync/100;
+    var baseSpeed=(.008+cfg.speed*.00055)*(1+energy*.55);
+    var colors=['rgba(255,255,255,.62)','rgba(214,235,255,.30)','rgba(255,235,190,.28)','rgba(214,235,222,.30)'];
+    for(var i=0;i<count;i++){
+      var laneIndex=i%lanes;
+      var laneT=lanes===1?.5:laneIndex/(lanes-1);
+      var lane=radius*(.76+laneT*.70);
+      var phase=i*GOLDEN_ANGLE;
+      var a=phase+time*baseSpeed*(1+(1-sync)*((i%5)-2)*.2);
+      var x=cx+Math.cos(a)*lane;
+      var y=cy+Math.sin(a)*lane;
+      var pulse=.45+.55*Math.pow(Math.sin(time*.8+i*PHI),2);
+      var size=(.45+particleScale*1.9)*pulse;
+      ctx.beginPath();
+      ctx.fillStyle=colors[i%colors.length];
+      ctx.shadowColor=colors[i%colors.length];
+      ctx.shadowBlur=cfg.glow*.08;
+      ctx.arc(x,y,size,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.shadowBlur=0;
+  }
+
+  function clearVoid(cx,cy,radius){
+    var r=radius*(cfg.void/100);
+    ctx.save();
+    ctx.globalCompositeOperation='destination-out';
+    var grad=ctx.createRadialGradient(cx,cy,0,cx,cy,r*1.08);
+    grad.addColorStop(0,'rgba(0,0,0,1)');
+    grad.addColorStop(.72,'rgba(0,0,0,.96)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r*1.08,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPortal(now){
+    var time=now*.001;
+    ctx.clearRect(0,0,w,h);
+    var cx=w/2,cy=h/2;
+    var radius=Math.min(w,h)*(cfg.radius/100);
+    var speed=cfg.speed/100;
+    var sync=cfg.sync/100;
+    var phase=time*(.10+speed*.28);
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    var aura=ctx.createRadialGradient(cx,cy,radius*.55,cx,cy,radius*1.62);
+    aura.addColorStop(0,'rgba(255,255,255,0)');
+    aura.addColorStop(.52,'rgba(255,255,255,'+(.05+cfg.glow*.002)+')');
+    aura.addColorStop(.72,'rgba(255,255,255,'+(.10+cfg.glow*.003)+')');
+    aura.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=aura;
+    ctx.beginPath();
+    ctx.arc(cx,cy,radius*1.72,0,Math.PI*2);
+    ctx.fill();
+    drawStructure(cx,cy,radius,time);
+    for(var i=0;i<cfg.ribbons;i++){
+      var ratio=i/Math.max(1,cfg.ribbons-1);
+      var bandRadius=radius*(1+(ratio-.5)*.10);
+      var band=cfg.width*(1-ratio*.18);
+      var start=phase*(1-ratio*.32*sync)+i*GOLDEN_ANGLE;
+      var length=Math.PI*(1/PHI+.22-ratio*.12);
+      ribbon(cx,cy,bandRadius,band,start,length,time,i);
+    }
+    drawParticles(cx,cy,radius,time);
+    ctx.globalAlpha=.32+cfg.glass*.004;
+    ctx.strokeStyle='rgba(255,255,255,.34)';
+    ctx.lineWidth=.9;
+    ctx.beginPath();
+    ctx.arc(cx,cy,radius,0,Math.PI*2);
+    ctx.stroke();
+    clearVoid(cx,cy,radius);
+    ctx.restore();
+    requestAnimationFrame(drawPortal);
+  }
+
+  window.addEventListener('resize',resizePortalCanvas);
+  resizePortalCanvas();
+  requestAnimationFrame(drawPortal);
+})();
 </script>
 </body>
 </html>
