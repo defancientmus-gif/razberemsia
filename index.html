@@ -668,12 +668,39 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
   background:transparent;
   filter:drop-shadow(0 26px 40px oklch(0.25 0.04 160 / 0.13));
   transition:transform .10s;
-  overflow:hidden;
+  overflow:visible;
+}
+.rz-portal::before{
+  content:'';
+  position:absolute;
+  inset:38px;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 54%, oklch(1 0 0 / 0.42) 58%, transparent 72%),
+    radial-gradient(circle at 36% 30%, oklch(1 0 0 / 0.34), transparent 34%),
+    radial-gradient(circle at 50% 50%, transparent 0 64%, oklch(0.78 0.045 185 / 0.30) 66%, transparent 78%);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.62),
+    0 0 0 7px oklch(0.70 0.045 185 / 0.075),
+    0 0 28px oklch(0.72 0.055 185 / 0.22),
+    inset 0 0 18px oklch(1 0 0 / 0.28);
+  z-index:0;
+}
+.rz-portal::after{
+  content:'';
+  position:absolute;
+  inset:31px;
+  border-radius:50%;
+  pointer-events:none;
+  border:1px solid oklch(0.78 0.045 185 / 0.34);
+  box-shadow:inset 0 0 20px oklch(1 0 0 / 0.18);
+  z-index:0;
 }
 .rz-portal:active{
   transform:scale(.985);
 }
-.rz-portal-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;}
+.rz-portal-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:1;}
 .rz-portal-lbl{display:none;}
 
 /* ── BUBBLE ── */
