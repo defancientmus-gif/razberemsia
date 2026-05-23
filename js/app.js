@@ -16,7 +16,14 @@ function writeJson(key,value){localStorage.setItem(scopedKey(key),JSON.stringify
 function readText(key){return localStorage.getItem(scopedKey(key))||'';}
 function writeText(key,value){localStorage.setItem(scopedKey(key),String(value||''));queueCloudSave();}
 function migrateLegacyLocal(){['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{const target=scopedKey(key);if(localStorage.getItem(target)!==null)return;const legacy=localStorage.getItem(key);if(legacy!==null)localStorage.setItem(target,legacy);});}
-function getNotes(){return readJson('rz_notes',[]);}
+function getNotes(){
+  const notes=readJson('rz_notes',[]);
+  // Миграция: назначаем id заметкам без него (старые заметки)
+  let dirty=false;
+  notes.forEach(n=>{if(!n.id){n.id=genId();dirty=true;}});
+  if(dirty)writeJson('rz_notes',notes);
+  return notes;
+}
 function saveNotes(notes){writeJson('rz_notes',notes);}
 function getTrash(){return readJson('rz_trash',[]);}
 function saveTrash(trash){writeJson('rz_trash',trash);}
@@ -1951,14 +1958,14 @@ function _drillP2(){
   const n=(drillNoteId?getNotes().find(x=>x.id===drillNoteId):null)||_drillNotes[_drillNoteIdx]||null;
   if(!n){el.innerHTML=`<div style="padding:20px;color:var(--fg-l);">\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430</div>`;return;}
   const nid=n.id;
-  const idx=getNotes().indexOf(n);
+  // \u0412\u0441\u0435\u0433\u0434\u0430 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c id \u2014 getNotes() \u0443\u0436\u0435 \u0433\u0430\u0440\u0430\u043d\u0442\u0438\u0440\u0443\u0435\u0442 \u043d\u0430\u043b\u0438\u0447\u0438\u0435 id \u0443 \u0432\u0441\u0435\u0445 \u0437\u0430\u043c\u0435\u0442\u043e\u043a
   const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
   const aiBlock=hasAi?`<div class="drill-detail-ai">
     <div class="drill-detail-ai-hdr">\u2736 AI \u0430\u043d\u0430\u043b\u0438\u0437</div>
     <div class="drill-detail-ai-body">${esc(n.aiSummary||(Array.isArray(n.aiTags)?n.aiTags.join(', '):''))}</div>
   </div>`:'';
-  const editFn=nid?`openNoteSheetById('${nid}')`:`openNoteSheet(${idx})`;
-  const delFn=nid?`delNoteById('${nid}')`:`delNote(${idx})`;
+  const editFn=nid?`openNoteSheetById('${nid}')`:`showToast('ID\u00a0\u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d')`;
+  const delFn=nid?`delNoteById('${nid}')`:`showToast('ID\u00a0\u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d')`;
   el.innerHTML=`<div class="drill-detail">
     <div class="drill-detail-title">${esc(n.title)}</div>
     <div class="drill-detail-meta">${esc(fmtDt(n.createdAt||n.updatedAt))}</div>
