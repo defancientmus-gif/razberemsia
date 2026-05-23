@@ -639,81 +639,120 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .home-act-btn span{font-size:10px;font-weight:600;color:oklch(0.38 0.10 220);letter-spacing:.01em;}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.65 0.18 150);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
-/* ── ПОРТАЛ РАЗБЕРЁМСЯ ── живой, тактильный, межпространственный ── */
-/* абсолютно позиционирован от .home-bar — не участвует в layout строки */
+/* ── ПОРТАЛ РАЗБЕРЁМСЯ ── живой, тактильный, душевный ── */
 .rz-portal-wrap{
   position:absolute;
-  bottom:calc(100% - 6px);   /* почти целиком над баром, 6px якорь */
+  bottom:calc(100% - 6px);
   left:50%;
   transform:translateX(-50%);
-  display:flex;flex-direction:column;align-items:center;gap:4px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
   pointer-events:auto;
   z-index:3;
 }
-.rz-portal-lbl{font-size:10px;font-weight:600;color:var(--fg-l);letter-spacing:.01em;white-space:nowrap;}
+/* Обёртка шара — пространство для пульсирующих колец */
+.rz-portal-ball{
+  position:relative;
+  width:80px;height:80px;
+  flex-shrink:0;
+}
+/* Кольца-ряби — уходят в тишину как круги на воде */
+.rz-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid oklch(0.72 0.20 284/0.44);
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+.rz-ring1{animation:rz-ring-pulse 3.8s ease-out infinite;}
+.rz-ring2{animation:rz-ring-pulse 3.8s ease-out 1.9s infinite;}
+@keyframes rz-ring-pulse{
+  0%  {transform:scale(1.00);opacity:0.62;}
+  100%{transform:scale(1.90);opacity:0;}
+}
+/* Сам шар */
 .rz-portal{
+  position:absolute;inset:0;
   width:80px;height:80px;border-radius:50%;
   border:none;cursor:pointer;-webkit-appearance:none;
-  position:relative;overflow:hidden;flex-shrink:0;
-  /* Трёхмерный шар — блик сверху, глубина к центру, тьма по краям */
+  overflow:hidden;
+  /* блик + малый блик + тёплое золотое сердце + сфера */
   background:
-    radial-gradient(circle at 34% 27%, oklch(1 0 0/0.74) 0%, oklch(1 0 0/0) 30%),
-    radial-gradient(circle at 64% 20%, oklch(1 0 0/0.22) 0%, oklch(1 0 0/0) 16%),
+    radial-gradient(circle at 34% 26%, oklch(1 0 0/0.84) 0%, oklch(1 0 0/0) 24%),
+    radial-gradient(circle at 66% 20%, oklch(1 0 0/0.28) 0%, oklch(1 0 0/0) 13%),
+    radial-gradient(circle at 50% 62%, oklch(0.90 0.20 72/0.50) 0%, oklch(0.90 0.20 72/0) 44%),
     radial-gradient(circle at 50% 50%,
-      oklch(0.78 0.24 268) 0%,
-      oklch(0.63 0.22 263) 38%,
-      oklch(0.50 0.20 258) 65%,
-      oklch(0.36 0.16 262) 100%);
+      oklch(0.78 0.22 278) 0%,
+      oklch(0.62 0.24 272) 36%,
+      oklch(0.46 0.22 266) 66%,
+      oklch(0.28 0.14 268) 100%);
   box-shadow:
-    0 10px 32px oklch(0.44 0.24 272/0.44),
-    0 4px 12px oklch(0 0 0/0.15),
-    0 0 0 1px oklch(0.66 0.20 268/0.30),
-    0 0 44px oklch(0.58 0.24 276/0.22),
-    inset 0 -3px 6px oklch(0.34 0.16 265/0.40),
-    inset 0 2px 5px oklch(1 0 0/0.58);
+    0 10px 34px oklch(0.44 0.24 272/0.46),
+    0 4px 12px oklch(0 0 0/0.18),
+    0 0 0 1px oklch(0.66 0.20 268/0.28),
+    0 0 50px oklch(0.60 0.24 278/0.28),
+    inset 0 -4px 8px oklch(0.28 0.16 265/0.44),
+    inset 0 2px 6px oklch(1 0 0/0.66);
   animation:rz-breathe 4.5s ease-in-out infinite;
-  transition:transform .06s cubic-bezier(.25,0,.5,1),box-shadow .06s;
+  transition:transform .08s cubic-bezier(.25,0,.5,1);
   -webkit-transform:translateZ(0);
+  will-change:transform;
 }
 /* Аурные слои — три стихии переливаются (opacity only, GPU-safe) */
 .rz-au{position:absolute;inset:0;border-radius:50%;pointer-events:none;}
+/* роза — душа */
 .rz-au1{
-  background:radial-gradient(ellipse 90% 74% at 24% 76%, oklch(0.64 0.30 292/0.74) 0%, transparent 56%);
+  background:radial-gradient(ellipse 88% 72% at 22% 78%, oklch(0.70 0.30 330/0.72) 0%, transparent 54%);
   animation:rz-au1 8s ease-in-out infinite;
 }
+/* холодная бирюза — спокойствие */
 .rz-au2{
-  background:radial-gradient(ellipse 78% 90% at 76% 24%, oklch(0.58 0.28 183/0.64) 0%, transparent 54%);
+  background:radial-gradient(ellipse 78% 90% at 78% 22%, oklch(0.58 0.26 195/0.60) 0%, transparent 52%);
   animation:rz-au2 11.5s ease-in-out infinite;
 }
+/* золото — тепло */
 .rz-au3{
-  background:radial-gradient(ellipse 70% 70% at 58% 76%, oklch(0.82 0.24 74/0.42) 0%, transparent 50%);
+  background:radial-gradient(ellipse 68% 68% at 58% 74%, oklch(0.88 0.22 74/0.54) 0%, transparent 48%);
   animation:rz-au3 14s ease-in-out infinite;
 }
-/* Тёмный ободок — иллюзия объёма и глубины */
+/* Тёмный ободок — иллюзия объёма */
 .rz-au-rim{
   position:absolute;inset:0;border-radius:50%;pointer-events:none;
-  background:radial-gradient(circle at 50% 50%, transparent 50%, oklch(0.18 0.10 268/0.55) 100%);
+  background:radial-gradient(circle at 50% 50%, transparent 48%, oklch(0.16 0.10 268/0.60) 100%);
 }
-/* Звезда-портал */
+/* Звезда — дышит и чуть вращается */
 .rz-portal-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none;}
-.rz-portal-ico svg{width:28px;height:28px;fill:oklch(1 0 0/0.18);stroke:oklch(0.96 0.04 250/0.85);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;}
-/* Дыхание портала — пульс энергии */
+.rz-portal-ico svg{
+  width:28px;height:28px;
+  fill:oklch(1 0 0/0.20);
+  stroke:oklch(0.97 0.03 250/0.90);
+  stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;
+  transform-origin:center;
+  animation:rz-star 6s ease-in-out infinite;
+  will-change:transform,opacity;
+}
+@keyframes rz-star{
+  0%,100%{transform:rotate(0deg)   scale(1.00);opacity:0.90;}
+  28%    {transform:rotate(20deg)  scale(1.16);opacity:1.00;}
+  72%    {transform:rotate(-13deg) scale(0.88);opacity:0.76;}
+}
+/* Дыхание портала */
 @keyframes rz-breathe{
   0%,100%{
-    box-shadow:0 10px 32px oklch(0.44 0.24 272/0.44),0 4px 12px oklch(0 0 0/0.15),0 0 0 1px oklch(0.66 0.20 268/0.30),0 0 44px oklch(0.58 0.24 276/0.22),inset 0 -3px 6px oklch(0.34 0.16 265/0.40),inset 0 2px 5px oklch(1 0 0/0.58);
+    box-shadow:0 10px 34px oklch(0.44 0.24 272/0.46),0 4px 12px oklch(0 0 0/0.18),0 0 0 1px oklch(0.66 0.20 268/0.28),0 0 50px oklch(0.60 0.24 278/0.28),inset 0 -4px 8px oklch(0.28 0.16 265/0.44),inset 0 2px 6px oklch(1 0 0/0.66);
   }
   50%{
-    box-shadow:0 14px 42px oklch(0.44 0.24 272/0.58),0 4px 12px oklch(0 0 0/0.15),0 0 0 1.5px oklch(0.68 0.22 270/0.42),0 0 64px oklch(0.60 0.26 278/0.34),inset 0 -3px 6px oklch(0.34 0.16 265/0.40),inset 0 2px 5px oklch(1 0 0/0.58);
+    box-shadow:0 14px 44px oklch(0.44 0.24 272/0.60),0 4px 12px oklch(0 0 0/0.18),0 0 0 1.5px oklch(0.68 0.22 272/0.44),0 0 70px oklch(0.62 0.26 280/0.40),inset 0 -4px 8px oklch(0.28 0.16 265/0.44),inset 0 2px 6px oklch(1 0 0/0.66);
   }
 }
-@keyframes rz-au1{0%,100%{opacity:1;}50%{opacity:0.30;}}
-@keyframes rz-au2{0%,100%{opacity:0.40;}47%{opacity:1;}}
-@keyframes rz-au3{0%,100%{opacity:0.20;}63%{opacity:0.90;}}
+@keyframes rz-au1{0%,100%{opacity:1.00;}50%{opacity:0.26;}}
+@keyframes rz-au2{0%,100%{opacity:0.36;}47%{opacity:1.00;}}
+@keyframes rz-au3{0%,100%{opacity:0.16;}63%{opacity:0.96;}}
 /* Тактильное нажатие — шар вдавливается внутрь */
 .rz-portal:active{
   transform:scale(0.90);
-  box-shadow:0 4px 16px oklch(0.44 0.24 272/0.42),0 2px 5px oklch(0 0 0/0.12),0 0 0 1px oklch(0.66 0.20 268/0.35),0 0 30px oklch(0.58 0.24 276/0.40),inset 0 5px 14px oklch(0.26 0.14 265/0.55),inset 0 1px 2px oklch(1 0 0/0.25);
+  box-shadow:0 4px 16px oklch(0.44 0.24 272/0.44),0 2px 5px oklch(0 0 0/0.12),0 0 0 1px oklch(0.66 0.20 268/0.36),0 0 32px oklch(0.60 0.24 278/0.46),inset 0 6px 16px oklch(0.22 0.14 265/0.58),inset 0 1px 2px oklch(1 0 0/0.22);
 }
+/* Подпись — тёплая и мягкая */
+.rz-portal-lbl{font-size:10px;font-weight:600;color:oklch(0.58 0.14 285);letter-spacing:.04em;white-space:nowrap;text-shadow:0 0 10px oklch(0.70 0.18 282/0.30);}
 
 /* ── BUBBLE ── */
 .bubble-wrap{display:flex;justify-content:flex-end;margin-bottom:14px;position:relative;overflow:hidden;border-radius:22px 22px 5px 22px;}
@@ -2214,13 +2253,17 @@ html.dark .bubble{
         <div class="home-bar">
           <!-- Портал — абсолютно над баром, по центру -->
           <div class="rz-portal-wrap">
-            <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
-              <span class="rz-au rz-au1"></span>
-              <span class="rz-au rz-au2"></span>
-              <span class="rz-au rz-au3"></span>
-              <span class="rz-au-rim"></span>
-              <span class="rz-portal-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg></span>
-            </button>
+            <div class="rz-portal-ball">
+              <span class="rz-ring rz-ring1"></span>
+              <span class="rz-ring rz-ring2"></span>
+              <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
+                <span class="rz-au rz-au1"></span>
+                <span class="rz-au rz-au2"></span>
+                <span class="rz-au rz-au3"></span>
+                <span class="rz-au-rim"></span>
+                <span class="rz-portal-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg></span>
+              </button>
+            </div>
             <span class="rz-portal-lbl">Разберёмся</span>
           </div>
           <!-- Широкая кнопка новой заметки -->
