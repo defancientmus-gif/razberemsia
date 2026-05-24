@@ -1734,6 +1734,11 @@ html.dark .bubble{
 #sheet-spell-btn.spell-active svg { transform: scaleX(-1); }
 #sheet-spell-btn:disabled { opacity: .32; pointer-events: none; }
 
+/* ── LIST TOGGLE BUTTON ── */
+.sheet-list-toggle { display: none; color: var(--fg-l); }
+.overlay.list-mode .sheet-list-toggle { display: flex; }
+.sheet-list-toggle.list-mode-on { color: oklch(0.42 0.14 160); background: oklch(0.55 0.14 160 / 0.12); }
+
 /* ── TOOLS BUTTON (в футере) ── */
 .sheet-tools-btn {
   display: flex; align-items: center; justify-content: center;
@@ -2431,6 +2436,9 @@ html.dark .bubble{
       </button>
       <button class="sheet-undo-btn is-disabled" id="sheet-redo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetRedo()" title="Повторить" aria-disabled="true">
         <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+      </button>
+      <button class="sheet-undo-btn sheet-list-toggle" id="sheet-list-toggle-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="toggleListMode()" title="Переключить в обычную заметку">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>
       <button class="sheet-undo-btn" id="sheet-spell-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="toggleSpellFix()" title="Исправить орфографию и пунктуацию">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>

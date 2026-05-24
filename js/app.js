@@ -1806,6 +1806,10 @@ let _drillTouchX=0;
 let _drillSwipeInited=false;
 
 function _notePreview(n){
+  // Список — показываем первые пункты через запятую
+  if(n.type==='list'&&Array.isArray(n.items)&&n.items.length){
+    return n.items.slice(0,5).map(i=>i.t||'').filter(Boolean).join(' · ').slice(0,120);
+  }
   const body=(n.body||n.title||'');
   const lines=body.split('\n').filter(l=>l.trim());
   if(lines.length>1)return lines.slice(1).join(' ').trim().slice(0,120);
@@ -2163,7 +2167,30 @@ function _openSheet(){
   },120);
 }
 
-/* toggleListMode removed — auto-detection handles it */
+function toggleListMode(){
+  const overlay=document.getElementById('overlay');
+  const body=document.getElementById('sheet-body');
+  if(!overlay||!body)return;
+  const ta=document.getElementById('sh1');
+  const lines=ta?ta.value.split('\n').map(l=>l.trim()).filter(Boolean):[];
+  if(ST==='list'){
+    // Список → обычная заметка
+    overlay.classList.remove('list-mode');
+    body.innerHTML=noteForm(lines.join('\n'));
+    const nt=body.querySelector('#sh1');
+    if(nt){nt.addEventListener('input',onSheetInput);nt.addEventListener('keydown',onSheetKeydown);nt.addEventListener('paste',onSheetPaste);autoGrowTA(nt);nt.focus();}
+    ST='note';
+    showToast('Обычная заметка');
+  }else{
+    // Обычная заметка → список
+    overlay.classList.add('list-mode');
+    body.innerHTML=`<textarea class="list-sheet-area" id="sh1" placeholder="Каждый пункт с новой строки">${esc(lines.join('\n'))}</textarea>`;
+    const nt=body.querySelector('#sh1');
+    if(nt){nt.addEventListener('input',onSheetInput);nt.addEventListener('keydown',onSheetKeydown);nt.addEventListener('paste',onSheetPaste);nt.focus();}
+    ST='list';
+    showToast('Список с галочками');
+  }
+}
 
 function onSheetKeydown(e){
   const f=document.getElementById('sh1');if(!f)return;
