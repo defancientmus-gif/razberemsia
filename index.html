@@ -1728,6 +1728,56 @@ html.dark .bubble{
   from{transform:translateX(-380px);}
   to{transform:translateX(calc(100vw + 380px));}
 }
+/* ── LOADING SCREEN — чистый экран с логотипом ── */
+.auth-card.checking { opacity:0; pointer-events:none; transition:opacity .3s; }
+.auth-logo-mark svg { display:none; } /* убираем старое перо */
+.auth-logo-img {
+  width:110px; height:110px; object-fit:contain;
+  mix-blend-mode:multiply;
+  animation: logo-breathe 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px oklch(0.45 0.15 220 / 0.30));
+}
+.auth-logo-text, .auth-tag, .auth-ver { display:none; }
+@keyframes logo-breathe {
+  0%,100% { transform:scale(1);   filter:drop-shadow(0 8px 24px oklch(0.45 0.15 220 / 0.25)); }
+  50%      { transform:scale(1.04); filter:drop-shadow(0 12px 32px oklch(0.45 0.15 220 / 0.45)); }
+}
+
+/* ── AI PORTAL BUTTON — пульсирующие кольца ── */
+.rz-portal-canvas { display:none; } /* canvas больше не нужен */
+.rz-portal {
+  background:
+    radial-gradient(circle at 38% 28%, oklch(1 0 0 / 0.55) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, oklch(0.78 0.12 220 / 0.18) 0%, oklch(0.55 0.14 220 / 0.35) 100%);
+  border:1.5px solid oklch(1 0 0 / 0.55);
+  box-shadow:
+    0 0 0 1px oklch(0.60 0.14 220 / 0.20),
+    0 8px 32px oklch(0.45 0.14 220 / 0.22),
+    inset 0 1px 0 oklch(1 0 0 / 0.70);
+}
+.rz-ring {
+  position:absolute; border-radius:50%; pointer-events:none;
+  border:1.5px solid oklch(0.55 0.14 220 / 0.45);
+  animation: rz-pulse 2.8s ease-out infinite;
+}
+.rz-ring-1 { inset:0;     animation-delay:0s; }
+.rz-ring-2 { inset:-14px; animation-delay:.9s; }
+.rz-ring-3 { inset:-28px; animation-delay:1.8s; }
+@keyframes rz-pulse {
+  0%   { opacity:.75; transform:scale(.90); }
+  100% { opacity:0;   transform:scale(1.08); }
+}
+.rz-portal-logo {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; z-index:2;
+}
+.rz-portal-logo img {
+  width:72px; height:72px; object-fit:contain;
+  mix-blend-mode:multiply;
+  filter:drop-shadow(0 2px 8px oklch(0.40 0.14 220 / 0.30));
+}
+
 /* ── SPELL FIX BUTTON ── */
 #sheet-spell-btn { color: var(--fg-l); }
 #sheet-spell-btn.spell-active { color: oklch(0.45 0.12 290); background: oklch(0.55 0.12 290 / 0.12); }
@@ -1992,12 +2042,9 @@ html.dark .bubble{
 <div id="auth-screen">
   <div class="auth-logo">
     <div class="auth-logo-mark">
-      <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+      <img src="logo-mark.png" class="auth-logo-img" alt="Разберёмся" draggable="false">
     </div>
-    <span class="auth-logo-text">Разберёмся</span>
   </div>
-  <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v5.30 · бета</div>
 
   <div class="auth-card checking" id="auth-card">
 
@@ -2197,8 +2244,13 @@ html.dark .bubble{
             <div class="rz-portal-slot">
               <div class="rz-portal-wrap">
                 <div class="rz-portal-ball">
+                  <div class="rz-ring rz-ring-1"></div>
+                  <div class="rz-ring rz-ring-2"></div>
+                  <div class="rz-ring rz-ring-3"></div>
                   <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
-                    <canvas class="rz-portal-canvas" id="rz-portal-canvas" aria-hidden="true"></canvas>
+                    <div class="rz-portal-logo">
+                      <img src="logo-mark.png" alt="" draggable="false">
+                    </div>
                   </button>
                 </div>
                 <span class="rz-portal-lbl">Разберёмся</span>
