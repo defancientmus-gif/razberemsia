@@ -577,8 +577,46 @@ function toggleAiCollapse(){
   }
 }
 
-// ── ИСПРАВЛЕНИЕ ТЕКСТА — реализация в inline-скрипте index.html (toggleSpellFix) ──
-// Переменные _spellOriginal и _spellActive объявлены там через var → доступны глобально.
+// ── ИСПРАВЛЕНИЕ ТЕКСТА ──
+// _spellOriginal и _spellActive — var-глобалы из inline-скрипта index.html
+async function toggleSpellFix(){
+  const btn=document.getElementById('sheet-spell-btn');
+  const f=document.getElementById('sh1');
+  if(!f)return;
+  if(_spellActive&&_spellOriginal!==null){
+    f.value=_spellOriginal;
+    autoGrowTA(f);onSheetInput();
+    _spellOriginal=null;_spellActive=false;
+    if(btn){btn.classList.remove('spell-active');btn.title='Исправить орфографию и пунктуацию';}
+    showToast('Текст восстановлён ✓');
+    return;
+  }
+  const text=f.value.trim();
+  if(text.length<5){showToast('Напишите немного больше');return;}
+  if(btn){btn.disabled=true;}
+  try{
+    const session=await sb.auth.getSession();
+    const token=session?.data?.session?.access_token;
+    if(!token)throw new Error('no session');
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'rewrite',payload:{text}})
+    });
+    if(!res.ok){const e=await res.text();throw new Error(e||'Ошибка сервера');}
+    const data=await res.json();
+    const rewritten=data.rewritten||data.text||data.result;
+    if(!rewritten)throw new Error('Пустой ответ AI');
+    _spellOriginal=f.value;_spellActive=true;
+    f.value=rewritten;
+    autoGrowTA(f);onSheetInput();
+    if(btn){btn.disabled=false;btn.classList.add('spell-active');btn.title='Вернуть оригинал';}
+    showToast('Исправлено · нажми снова чтобы вернуть');
+  }catch(e){
+    if(btn){btn.disabled=false;}
+    showToast(String(e?.message||'Не удалось исправить текст'));
+  }
+}
 function _scrollToAiPanel(){
   const sa=document.getElementById('sheet-scroll-area');
   if(!sa)return;

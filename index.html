@@ -2615,52 +2615,10 @@ html.dark .bubble{
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
-// ── SPELL FIX ──
-// var (не let) — чтобы _openSheet() в app.js мог сбрасывать состояние
+// ── SPELL FIX — переменные состояния ──
+// var (не let/const) — доступны из app.js через typeof-проверку
 var _spellOriginal = null, _spellActive = false;
-
-async function toggleSpellFix(){
-  const btn = document.getElementById('sheet-spell-btn');
-  const f = document.getElementById('sh1');
-  if(!f) return;
-  if(_spellActive && _spellOriginal !== null){
-    f.value = _spellOriginal;
-    if(typeof autoGrowTA === 'function') autoGrowTA(f);
-    if(typeof onSheetInput === 'function') onSheetInput();
-    _spellOriginal = null; _spellActive = false;
-    if(btn){ btn.classList.remove('spell-active'); btn.title = 'Исправить орфографию и пунктуацию'; }
-    showToast('Текст восстановлён ✓');
-    return;
-  }
-  const text = f.value.trim();
-  if(text.length < 5){ showToast('Напишите немного больше'); return; }
-  if(btn){ btn.disabled = true; }
-  try{
-    const sb = window.sb || window._sb;
-    const session = await sb.auth.getSession();
-    const token = session?.data?.session?.access_token;
-    if(!token) throw new Error('no session');
-    const EDGE = typeof SUPABASE_EDGE_URL !== 'undefined' ? SUPABASE_EDGE_URL : '';
-    const res = await fetch(EDGE, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body: JSON.stringify({action:'rewrite', payload:{text}})
-    });
-    if(!res.ok){ const e = await res.text(); throw new Error(e||'Ошибка сервера'); }
-    const data = await res.json();
-    const rewritten = data.rewritten || data.text || data.result;
-    if(!rewritten) throw new Error('Пустой ответ AI');
-    _spellOriginal = f.value; _spellActive = true;
-    f.value = rewritten;
-    if(typeof autoGrowTA === 'function') autoGrowTA(f);
-    if(typeof onSheetInput === 'function') onSheetInput();
-    if(btn){ btn.disabled = false; btn.classList.add('spell-active'); btn.title = 'Вернуть оригинал'; }
-    showToast('Исправлено · нажми снова чтобы вернуть');
-  } catch(e){
-    if(btn){ btn.disabled = false; }
-    showToast(String(e?.message||'Не удалось исправить текст'));
-  }
-}
+// toggleSpellFix() определена в app.js — там есть доступ к sb и SUPABASE_EDGE_URL
 
 // ── TAG FOLDERS ──
 const TAG_FOLDERS_KEY = 'rz_tag_folders';
