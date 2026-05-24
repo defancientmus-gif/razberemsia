@@ -577,58 +577,8 @@ function toggleAiCollapse(){
   }
 }
 
-// ── ИСПРАВЛЕНИЕ ТЕКСТА (кнопка-карандаш в шапке) ──
-// Первое нажатие: отправляет rewrite, применяет результат, подсвечивает кнопку
-// Повторное нажатие: возвращает исходный текст, гасит кнопку
-let _spellOriginal=null;   // оригинальный текст до исправления
-let _spellLoading=false;   // идёт запрос
-
-async function toggleSpellFix(){
-  if(_spellLoading)return;
-  const btn=document.getElementById('sheet-spell-btn');
-  const f=document.getElementById('sh1');
-  if(!f)return;
-
-  // ── Если исправление уже активно — откатываем ──
-  if(_spellOriginal!==null){
-    f.value=_spellOriginal;
-    _spellOriginal=null;
-    autoGrowTA(f);onSheetInput();
-    if(btn){btn.classList.remove('spell-on');btn.title='Исправить орфографию и пунктуацию';}
-    showToast('Вернули исходный текст');
-    return;
-  }
-
-  const text=f.value.trim();
-  if(text.length<15){showToast('Напишите больше текста');return;}
-
-  // ── Запрос ──
-  _spellLoading=true;
-  if(btn){btn.classList.add('spell-loading');btn.disabled=true;}
-  try{
-    const session=await sb.auth.getSession();
-    const token=session?.data?.session?.access_token;
-    if(!token)throw new Error('Войдите в аккаунт');
-    const res=await fetch(SUPABASE_EDGE_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'rewrite',payload:{text}})
-    });
-    if(!res.ok)throw new Error(await readErrorText(res));
-    const {rewritten}=await res.json();
-    if(!rewritten)throw new Error('Пустой ответ от AI');
-    _spellOriginal=f.value;          // сохраняем оригинал
-    f.value=rewritten;
-    autoGrowTA(f);onSheetInput();
-    if(btn){btn.classList.add('spell-on');btn.title='Нажми ещё раз — вернуть исходный текст';}
-    showToast('✓ Текст исправлен — нажми ✏️ снова чтобы вернуть');
-  }catch(e){
-    showToast('Не получилось: '+String(e?.message||''));
-  }finally{
-    _spellLoading=false;
-    if(btn){btn.classList.remove('spell-loading');btn.disabled=false;}
-  }
-}
+// ── ИСПРАВЛЕНИЕ ТЕКСТА — реализация в inline-скрипте index.html (toggleSpellFix) ──
+// Переменные _spellOriginal и _spellActive объявлены там через var → доступны глобально.
 function _scrollToAiPanel(){
   const sa=document.getElementById('sheet-scroll-area');
   if(!sa)return;
@@ -2125,9 +2075,11 @@ function _openSheet(){
   sheetListMode=false;
   // ── Сбросить AI-панель и spell-fix при открытии нового листа ──
   _aiOn=false;
-  _spellOriginal=null;
+  // _spellOriginal и _spellActive — var-глобалы из inline-скрипта index.html
+  if(typeof _spellOriginal!=='undefined') _spellOriginal=null;
+  if(typeof _spellActive!=='undefined') _spellActive=false;
   const spellBtn=document.getElementById('sheet-spell-btn');
-  if(spellBtn){spellBtn.classList.remove('spell-on','spell-loading');spellBtn.disabled=false;}
+  if(spellBtn){spellBtn.classList.remove('spell-on','spell-active','spell-loading');spellBtn.disabled=false;}
   const aiBtn=document.getElementById('sheet-ai-btn');
   if(aiBtn)aiBtn.classList.remove('ai-on');
   const aiPanel=document.getElementById('ai-panel');

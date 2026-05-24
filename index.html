@@ -2594,7 +2594,8 @@ html.dark .bubble{
 <script src="js/app.js"></script>
 <script>
 // ── SPELL FIX ──
-let _spellOriginal = null, _spellActive = false;
+// var (не let) — чтобы _openSheet() в app.js мог сбрасывать состояние
+var _spellOriginal = null, _spellActive = false;
 
 async function toggleSpellFix(){
   const btn = document.getElementById('sheet-spell-btn');
