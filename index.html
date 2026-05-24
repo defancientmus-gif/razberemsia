@@ -55,27 +55,14 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
     radial-gradient(ellipse 70% 50% at 10% 100%, oklch(0.54 0.10 210 / 0.12) 0%, transparent 60%),
     linear-gradient(165deg, oklch(0.98 0.010 210) 0%, oklch(0.95 0.014 215) 55%, oklch(0.92 0.018 218) 100%);
 }
-/* Floating ambient blobs — статичные, без blur и анимации (GPU экономия) */
-.bg-blob1{position:fixed;top:-15%;left:-10%;width:65%;height:65%;border-radius:50%;
-  background:radial-gradient(circle, oklch(0.82 0.06 210 / 0.28), transparent 65%);
-  pointer-events:none;z-index:0;}
-.bg-blob2{position:fixed;bottom:-20%;right:-15%;width:70%;height:70%;border-radius:50%;
-  background:radial-gradient(circle, oklch(0.75 0.08 210 / 0.16), transparent 65%);
-  pointer-events:none;z-index:0;}
-.bg-blob3{position:fixed;top:40%;left:30%;width:50%;height:50%;border-radius:50%;
-  background:radial-gradient(circle, oklch(0.88 0.04 210 / 0.13), transparent 70%);
-  pointer-events:none;z-index:0;}
+/* bg-blobs removed */
 
 .app{position:relative;z-index:10;height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── HEADER ── */
 header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:6px;min-width:0;max-width:168px;flex:0 1 auto;}
-.logo-feather{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.logo-feather svg{width:22px;height:22px;stroke:var(--accent-d);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 6px oklch(0.54 0.13 210 / 0.25));}
-.logo-name{overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.logo-ver{font-size:9px;color:oklch(0.52 0.012 210 / 0.45);font-family:var(--sys);font-weight:500;vertical-align:middle;letter-spacing:.02em;}
-/* logo-icon-wrap removed (unused) */
+.logo{display:flex;align-items:center;min-width:0;flex:0 1 auto;}
+.logo-img{height:38px;width:auto;display:block;flex-shrink:0;}
 
 .hcenter{display:flex;flex-direction:column;align-items:center;margin:0 auto;}
 .hdate{font-size:11px;font-weight:500;color:var(--fg-l);letter-spacing:.01em;}
@@ -989,25 +976,12 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 
 /* Logo — без entrance-анимации: виден сразу как страница открывается */
 .auth-logo{
-  display:flex;flex-direction:column;align-items:center;gap:12px;
-  margin-bottom:10px;
+  display:flex;flex-direction:column;align-items:center;
+  margin-bottom:24px;
 }
-.auth-logo-mark{
-  display:flex;align-items:center;justify-content:center;
-}
-.auth-logo-mark svg{width:52px;height:52px;stroke:var(--accent-d);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 4px 12px oklch(0.54 0.13 210 / 0.30));}
-.auth-logo-text{
-  font-family:'Playfair Display',serif;
-  font-size:36px;color:var(--fg);letter-spacing:-.5px;line-height:1;
-}
-.auth-tag{
-  font-size:15px;color:var(--fg-l);text-align:center;
-  font-weight:400;letter-spacing:.01em;
-  margin-bottom:2px;
-}
-.auth-ver{
-  font-size:11px;color:oklch(0.52 0.012 210 / 0.40);
-  text-align:center;margin-bottom:0;font-weight:500;letter-spacing:.04em;
+.auth-logo-img{
+  width:220px;height:auto;display:block;
+  filter:drop-shadow(0 4px 18px oklch(0.54 0.13 210 / 0.18));
 }
 
 /* ── ONBOARDING ── */
@@ -1160,17 +1134,6 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 .auth-back:active{background:oklch(0 0 0 / 0.04);}
 
 /* Loading state */
-.auth-loading{
-  display:none;text-align:center;
-  padding:24px 0 20px;
-}
-.auth-spinner{
-  width:28px;height:28px;border-radius:50%;
-  border:2.5px solid oklch(0.52 0.10 210 / 0.15);
-  border-top-color:var(--accent);
-  animation:spin .75s linear infinite;
-  margin:0 auto;
-}
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── LIST NOTE ── */
@@ -1655,7 +1618,7 @@ header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:spa
 html{transition:filter .35s ease;}
 html.dark{filter:invert(1) hue-rotate(180deg);color-scheme:dark;}
 html.dark img,html.dark video,html.dark canvas{filter:invert(1) hue-rotate(180deg);}
-html.dark .splash-mark svg,html.dark .auth-logo-mark svg{filter:invert(1) hue-rotate(180deg);}
+html.dark .auth-logo-img,html.dark .logo-img{filter:invert(1) hue-rotate(180deg);}
 html.dark .jarvis-feed{
   background:oklch(0.99 0.002 210 / 0.10);
   backdrop-filter:blur(16px) saturate(1.35) brightness(1.02);
@@ -1996,9 +1959,6 @@ html.dark .bubble{
 </head>
 <body>
 <div class="bg"></div>
-<div class="bg-blob1"></div>
-<div class="bg-blob2"></div>
-<div class="bg-blob3"></div>
 <div class="cloud-sky" aria-hidden="true">
   <div class="cld cld1"></div>
   <div class="cld cld2"></div>
@@ -2010,20 +1970,10 @@ html.dark .bubble{
 <!-- AUTH (он же заставка — виден сразу, без отдельного splash) -->
 <div id="auth-screen">
   <div class="auth-logo">
-    <div class="auth-logo-mark">
-      <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
-    </div>
-    <span class="auth-logo-text">Разберёмся</span>
+    <img src="logo_with_text.svg" alt="Разберёмся" class="auth-logo-img">
   </div>
-  <div class="auth-tag">Спокойный помощник рядом</div>
-  <div class="auth-ver">v5.30 · бета</div>
 
   <div class="auth-card checking" id="auth-card">
-
-    <!-- Проверка сессии -->
-    <div class="auth-loading">
-      <div class="auth-spinner"></div>
-    </div>
 
     <!-- Шаг 1: Ввод почты -->
     <div class="auth-step active" id="step-email">
@@ -2161,8 +2111,7 @@ html.dark .bubble{
 <div class="app" id="main-app" style="display:none;">
   <header>
     <div class="logo">
-      <span class="logo-feather"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>
-      <span class="logo-name">Разберёмся<span class="logo-ver">v5.30</span></span>
+      <img src="logo_with_text.svg" alt="Разберёмся" class="logo-img">
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
