@@ -1760,12 +1760,13 @@ html.dark .bubble{
   border:1px solid oklch(0.60 0.10 220 / 0.22);
   animation: rz-pulse 3.2s ease-out infinite;
 }
-.rz-ring-1 { inset:4px;  animation-delay:0s; }
-.rz-ring-2 { inset:-6px; animation-delay:1.0s; }
-.rz-ring-3 { inset:-16px;animation-delay:2.0s; }
+.rz-ring-1 { inset:22px; animation-delay:0s; }
+.rz-ring-2 { inset:10px; animation-delay:1.0s; }
+.rz-ring-3 { inset:2px;  animation-delay:2.0s; }
 @keyframes rz-pulse {
-  0%   { opacity:.55; transform:scale(.96); }
-  100% { opacity:0;   transform:scale(1.05); }
+  0%   { opacity:0;   transform:scale(.7); }
+  40%  { opacity:.30; }
+  100% { opacity:0;   transform:scale(1.0); }
 }
 .rz-portal-logo {
   position:absolute; inset:0;
