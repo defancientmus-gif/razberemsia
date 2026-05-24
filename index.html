@@ -1732,7 +1732,7 @@ html.dark .bubble{
 .auth-card.checking { opacity:0; pointer-events:none; transition:opacity .3s; }
 .auth-logo-mark svg { display:none; } /* убираем старое перо */
 .auth-logo-img {
-  width:110px; height:110px; object-fit:contain;
+  width:220px; height:220px; object-fit:contain;
   mix-blend-mode:multiply;
   animation: logo-breathe 3s ease-in-out infinite;
   filter: drop-shadow(0 8px 24px oklch(0.45 0.15 220 / 0.30));
@@ -1757,15 +1757,15 @@ html.dark .bubble{
 }
 .rz-ring {
   position:absolute; border-radius:50%; pointer-events:none;
-  border:1.5px solid oklch(0.55 0.14 220 / 0.45);
-  animation: rz-pulse 2.8s ease-out infinite;
+  border:1px solid oklch(0.60 0.10 220 / 0.22);
+  animation: rz-pulse 3.2s ease-out infinite;
 }
-.rz-ring-1 { inset:0;     animation-delay:0s; }
-.rz-ring-2 { inset:-14px; animation-delay:.9s; }
-.rz-ring-3 { inset:-28px; animation-delay:1.8s; }
+.rz-ring-1 { inset:4px;  animation-delay:0s; }
+.rz-ring-2 { inset:-6px; animation-delay:1.0s; }
+.rz-ring-3 { inset:-16px;animation-delay:2.0s; }
 @keyframes rz-pulse {
-  0%   { opacity:.75; transform:scale(.90); }
-  100% { opacity:0;   transform:scale(1.08); }
+  0%   { opacity:.55; transform:scale(.96); }
+  100% { opacity:0;   transform:scale(1.05); }
 }
 .rz-portal-logo {
   position:absolute; inset:0;
