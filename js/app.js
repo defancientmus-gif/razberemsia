@@ -3584,12 +3584,15 @@ async function _processAgentQuery(text){
     if(!token){showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
     const memoryContext=getAiMemoryContext?.()??[];
     const _allNotes=getNotes();
+    // Для запросов про планы/маршруты/сводку — передаём больше тела заметок
+    const needsDeepCtx=/(план|маршрут|что у меня|сегодня|завтра|расскажи|составь|список дел|прочитай|озвучь)/i.test(text);
     const recentNotes=_allNotes.slice(0,20).map((n,i)=>({
       index:i,
       title:n.title||'Без названия',
-      body:i<5?(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,150):'',
+      body:(needsDeepCtx||i<5)?(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,200):'',
       hasReminder:!!n.reminder,
-      isRecurring:!!n.recurring
+      isRecurring:!!n.recurring,
+      reminderTime:n.reminder||null
     }));
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
@@ -3750,6 +3753,26 @@ function _runSingleIntent(intent,params,originalText){
     }
   }
 
+  if(intent==='READ_NOTE_ALOUD'){
+    const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
+    const note=getNotes()[idx];
+    if(note){
+      const content=(note.body||note.items?.map(x=>x.text||x).join('. ')||note.title||'').slice(0,500);
+      // Озвучиваем через небольшую задержку чтобы карточка успела появиться
+      setTimeout(()=>_agentSpeak(content||note.title),400);
+    }
+  }
+
+  if(intent==='MAKE_PLAN'&&params.saveAsNote){
+    // Агент явно просит сохранить план — создадим заметку
+    const planText=params.planText||'';
+    if(planText&&planText.length>10){
+      const ts=Date.now();const id=genId();const notes=getNotes();
+      notes.unshift({id,title:params.title||'План',body:planText,label:'заметка',createdAt:ts,updatedAt:ts});
+      saveNotes(notes);loadHomeFeed();loadNotes();
+    }
+  }
+
 }
 
 function _agentPickOption(query){
@@ -3772,17 +3795,23 @@ function _agentSpeak(text){
 
 function _showAgentCard(intent,response,params,options){
   document.getElementById('agent-card')?.remove();
-  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥'};
-  const autoClose=!['QUESTION','FIND_DOCTOR','CLARIFY'].includes(intent);
+  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺'};
+  const autoClose=!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD'].includes(intent);
 
   // Кнопка «Открыть заметку» для интентов с noteIndex
   let openBtn='';
-  if(['OPEN_NOTE','ANALYZE_NOTE','TAG_NOTE','CREATE_NOTE'].includes(intent)&&typeof params?.noteIndex==='number'){
+  if(['OPEN_NOTE','ANALYZE_NOTE','TAG_NOTE','CREATE_NOTE','READ_NOTE_ALOUD'].includes(intent)&&typeof params?.noteIndex==='number'){
     const noteTitle=getNotes()[params.noteIndex]?.title||'заметку';
     openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(${params.noteIndex})">Открыть «${esc(noteTitle.slice(0,30))}»</button>`;
   } else if(intent==='CREATE_NOTE'){
     // Последняя созданная заметка — index 0
     openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
+  }
+
+  // Кнопка «Сохранить план» для MAKE_PLAN
+  let savePlanBtn='';
+  if(intent==='MAKE_PLAN'&&response&&response.length>20){
+    savePlanBtn=`<button class="agent-card-open" onclick="_agentSavePlan(${jsAttr(response)})">Сохранить план</button>`;
   }
 
   const isClarify=intent==='CLARIFY';
@@ -3812,6 +3841,7 @@ function _showAgentCard(intent,response,params,options){
     <div class="agent-card-txt">${esc(response)}</div>
     ${optBtns}
     ${openBtn}
+    ${savePlanBtn}
     ${closeBtn}
   </div>`;
   document.body.appendChild(card);
@@ -3826,6 +3856,17 @@ function _agentOpenNote(idx){
   if(!note)return;
   if(note.id)openNoteSheetById(note.id);
   else openNoteSheet(idx);
+}
+
+function _agentSavePlan(planText){
+  document.getElementById('agent-card')?.remove();
+  if(!planText||planText.length<5)return;
+  const ts=Date.now();const id=genId();const notes=getNotes();
+  const title='План — '+new Date(ts).toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+  notes.unshift({id,title,body:planText,label:'заметка',createdAt:ts,updatedAt:ts});
+  saveNotes(notes);loadHomeFeed();loadNotes();
+  showToast('✅ План сохранён в заметки');
+  setTimeout(()=>openNoteSheetById(id),300);
 }
 
 // ── LOAD ALL ──
