@@ -2122,10 +2122,12 @@ let _drillNoteIdx=-1;
 let _drillNotes=[];
 let _drillTouchX=0;
 let _drillSwipeInited=false;
-let _drillGrid=false;
+let _drillGrid=(()=>{const v=localStorage.getItem('rz_drill_grid');return v!==null?v==='1':true;})();
+let _drillP1Limit=10;
 
 function toggleDrillGrid(){
   _drillGrid=!_drillGrid;
+  localStorage.setItem('rz_drill_grid',_drillGrid?'1':'0');
   const btn=document.getElementById('drill-grid-btn');
   if(btn)btn.classList.toggle('active',_drillGrid);
   if(drillLevel===1)_drillP1();
@@ -2148,9 +2150,13 @@ function loadNotes(){
   _drillNav();
   _drillSeek(0);
   if(!_drillSwipeInited){_drillInitSwipe();_drillSwipeInited=true;}
+  // Sync grid-button visual state
+  const gBtn=document.getElementById('drill-grid-btn');
+  if(gBtn)gBtn.classList.toggle('active',_drillGrid);
 }
 
 function drillGo(level,data){
+  if(level===1)_drillP1Limit=10; // сбросить пагинацию при входе в список
   if(data&&data.category!==undefined){drillCategory=data.category;drillAiTag=null;}
   if(data&&data.aiTag!==undefined){drillAiTag=data.aiTag;drillCategory=null;}
   if(data&&data.noteId!==undefined)drillNoteId=data.noteId;
@@ -2284,10 +2290,12 @@ function _drillP1(){
   notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   _drillNotes=notes;
   if(!notes.length){el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--fg-l);font-size:15px;">\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442</div>`;return;}
+  const totalNotes=notes.length;
   let h='';
   if(_drillGrid){
     h='<div class="drill-grid">';
     notes.forEach((n,i)=>{
+      if(i>=_drillP1Limit)return;
       const preview=_notePreview(n);
       const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
       const hasBell=!!n.reminder;
@@ -2305,6 +2313,7 @@ function _drillP1(){
     h+='</div>';
   } else {
     notes.forEach((n,i)=>{
+      if(i>=_drillP1Limit)return;
       const preview=_notePreview(n);
       const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
       const hasBell=!!n.reminder;
@@ -2322,7 +2331,18 @@ function _drillP1(){
       </div>`;
     });
   }
+  if(totalNotes>_drillP1Limit){
+    const rem=totalNotes-_drillP1Limit;
+    h+=`<button class="drill-show-more" onclick="_drillShowMore()">\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0435\u0449\u0451 ${rem}</button>`;
+  }
   el.innerHTML=h;
+}
+function _drillShowMore(){
+  const el=document.getElementById('drill-p1');
+  const prev=el?el.scrollTop:0;
+  _drillP1Limit+=10;
+  _drillP1();
+  if(el)requestAnimationFrame(()=>{el.scrollTop=prev;});
 }
 
 function _drillP2(){
@@ -2357,6 +2377,14 @@ function _drillInitSwipe(){
     const dx=e.changedTouches[0].clientX-_drillTouchX;
     if(dx>60&&drillLevel>0)drillBack();
   },{passive:true});
+  // Scroll-to-top FAB для drill-p1
+  const p1=document.getElementById('drill-p1');
+  const fab=document.getElementById('drill-top-fab');
+  if(p1&&fab){
+    p1.addEventListener('scroll',()=>{
+      fab.style.display=p1.scrollTop>150?'flex':'none';
+    },{passive:true});
+  }
 }
 
 function renderStatChips(){}
@@ -4344,22 +4372,27 @@ function onSearchInput(q){
 }
 
 function _searchNotes(q){
-  if(!q||q.length<2)return[];
+  if(!q||q.length<2)return{active:[],trash:[]};
   const lq=q.toLowerCase();
-  return getNotes()
-    .filter(n=>{
-      return (n.title||'').toLowerCase().includes(lq)
-        ||(n.body||'').toLowerCase().includes(lq)
-        ||(n.aiTags||[]).some(t=>t.toLowerCase().includes(lq))
-        ||(n.items||[]).some(i=>(i.t||i.text||'').toLowerCase().includes(lq));
-    })
-    .sort((a,b)=>{
+  function match(n){
+    return (n.title||'').toLowerCase().includes(lq)
+      ||(n.body||'').toLowerCase().includes(lq)
+      ||(n.aiSummary||'').toLowerCase().includes(lq)
+      ||(n.aiTags||[]).some(t=>t.toLowerCase().includes(lq))
+      ||(n.items||[]).some(i=>(i.t||i.text||'').toLowerCase().includes(lq));
+  }
+  function sortFn(arr){
+    return arr.filter(match).sort((a,b)=>{
       const at=(a.title||'').toLowerCase().includes(lq)?1:0;
       const bt=(b.title||'').toLowerCase().includes(lq)?1:0;
       if(at!==bt)return bt-at;
       return(b.updatedAt||0)-(a.updatedAt||0);
-    })
-    .slice(0,25);
+    });
+  }
+  return{
+    active:sortFn(getNotes()).slice(0,25),
+    trash:sortFn(getTrash()).slice(0,5)
+  };
 }
 
 function _hl(text,q){
@@ -4376,22 +4409,27 @@ function _renderSearch(q){
     res.innerHTML='<div class="search-hint">Начни вводить — найду по тексту, тегам и смыслу</div>';
     return;
   }
-  const found=_searchNotes(q);
-  if(!found.length){
+  const{active,trash}=_searchNotes(q);
+  if(!active.length&&!trash.length){
     res.innerHTML='<div class="search-none">Ничего не нашёл по «'+esc(q)+'»</div>';
     return;
   }
-  const notes=getNotes();
-  res.innerHTML=found.map(n=>{
-    const idx=notes.findIndex(x=>x.id===n.id);
+  function renderItem(n,inTrash){
     const previewBody=(n.body||(n.items||[]).map(i=>i.t||i.text||'').join(' ')||'').slice(0,120);
     const tags=(n.aiTags||[]).slice(0,3).map(t=>`<span class="sr-tag">${esc(t)}</span>`).join('');
-    return `<div class="sr-item" onclick="closeSearch();${idx>=0?`openNoteSheetById(${JSON.stringify(n.id)})`:''}">
-      <div class="sr-title">${_hl(n.title||'Без названия',q)}</div>
+    const clickFn=inTrash?`closeSearch();go('trash')`:`closeSearch();openNoteSheetById(${JSON.stringify(n.id)})`;
+    return `<div class="sr-item${inTrash?' sr-item--trash':''}" onclick="${clickFn}">
+      <div class="sr-title">${inTrash?'<span class="sr-trash-ico">🗑</span>':''}${_hl(n.title||'Без названия',q)}</div>
       ${previewBody?`<div class="sr-body">${_hl(previewBody,q)}</div>`:''}
       ${tags?`<div class="sr-tags">${tags}</div>`:''}
     </div>`;
-  }).join('');
+  }
+  let html=active.map(n=>renderItem(n,false)).join('');
+  if(trash.length){
+    html+=`<div class="sr-sep">В корзине:</div>`;
+    html+=trash.map(n=>renderItem(n,true)).join('');
+  }
+  res.innerHTML=html;
 }
 
 function _agentSavePlan(planText){
@@ -4405,6 +4443,33 @@ function _agentSavePlan(planText){
   setTimeout(()=>openNoteSheetById(id),300);
 }
 
+// ── CLEANUP PAST REMINDERS ──
+// Убирает просроченные не-повторяющиеся напоминания из заметок и с сервера
+async function _cleanupPastReminders(){
+  try{
+    const now=Date.now();
+    const notes=getNotes();
+    let dirty=false;
+    const toDelete=[];
+    notes.forEach(n=>{
+      if(!n.reminder)return;
+      const dt=parseDt(n.reminder);if(!dt)return;
+      // Если прошло более 5 минут и напоминание не повторяющееся — чистим
+      if(dt.getTime()<now-5*60*1000&&!n.recurring?.times?.length){
+        n.reminder=null;n.updatedAt=Date.now();
+        dirty=true;toDelete.push(n.id);
+      }
+    });
+    if(dirty){
+      saveNotes(notes);
+      toDelete.forEach(id=>_deleteReminderFromServer(id));
+      updateReminderDot();
+      if(document.getElementById('remind-overlay')?.classList.contains('open'))renderReminderPanel();
+      console.log('🧹 Cleared',toDelete.length,'past reminder(s)');
+    }
+  }catch(e){console.warn('_cleanupPastReminders error',e);}
+}
+
 // ── LOAD ALL ──
 function loadAll(){
   loadHomeFeed();
@@ -4412,9 +4477,9 @@ function loadAll(){
   loadNotepad();
   updTrashBadge();
   if('requestIdleCallback'in window){
-    requestIdleCallback(()=>{scheduleAll();calRender();updCalTrigger();updateReminderDot();checkDueReminders();});
+    requestIdleCallback(()=>{_cleanupPastReminders();scheduleAll();calRender();updCalTrigger();updateReminderDot();checkDueReminders();});
   } else {
-    setTimeout(()=>{scheduleAll();calRender();updCalTrigger();updateReminderDot();checkDueReminders();},200);
+    setTimeout(()=>{_cleanupPastReminders();scheduleAll();calRender();updCalTrigger();updateReminderDot();checkDueReminders();},200);
   }
 }
 
