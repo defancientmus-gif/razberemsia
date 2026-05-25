@@ -1510,29 +1510,37 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .home-reminder-btn:active{background:oklch(0.88 0.04 210 / 0.5);}
 
 /* ── REMINDER PICKER ── */
-#rmp-ov{position:fixed;inset:0;z-index:9200;background:oklch(0 0 0 / 0.30);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+#rmp-ov{position:fixed;inset:0;z-index:9200;background:oklch(0.14 0.02 210 / 0.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;}
 #rmp{
   width:100%;max-width:480px;
-  background:radial-gradient(ellipse 90% 55% at 28% 8%, oklch(1 0 0 / 0.88) 0%, transparent 52%), oklch(0.97 0.006 210 / 0.97);
+  background:
+    radial-gradient(ellipse 80% 50% at 22% 6%, oklch(1 0 0 / 0.85) 0%, transparent 50%),
+    oklch(0.97 0.008 210 / 0.97);
   backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
-  border:1px solid oklch(0.92 0.02 210 / 0.7);
+  border:1px solid oklch(1 0 0 / 0.70);
   border-radius:28px 28px 0 0;
-  padding:22px 22px calc(24px + env(safe-area-inset-bottom,0px));
-  box-shadow:0 -8px 40px oklch(0 0 0 / 0.10),inset 0 1.5px 4px oklch(1 0 0 / 0.9);
+  padding:28px 22px calc(32px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 48px oklch(0.14 0.04 210 / 0.18),inset 0 1.5px 4px oklch(1 0 0 / 0.95);
   animation:sheet-up .30s cubic-bezier(.22,1,.36,1);
 }
-.rmp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.rmp-title{font-size:16px;font-weight:700;color:var(--fg);display:flex;align-items:center;gap:7px;}
-.rmp-close-btn{background:oklch(0.88 0.02 210 / 0.45);border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:var(--fg-m);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;}
-.rmp-chips{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
-.rmp-chip{padding:10px 4px;border-radius:14px;border:1px solid oklch(0.88 0.02 210 / 0.5);background:oklch(0.93 0.03 210 / 0.35);font-size:12px;font-weight:600;color:var(--fg-m);cursor:pointer;font-family:var(--sys);transition:all .15s;-webkit-appearance:none;line-height:1.35;text-align:center;}
-.rmp-chip.active{background:oklch(0.40 0.14 270 / 0.12);border-color:oklch(0.40 0.14 270 / 0.40);color:oklch(0.35 0.14 270);}
-.rmp-chip:active{transform:scale(.95);}
-.rmp-dt-wrap{margin-bottom:18px;}
-.rmp-dt-lbl{font-size:11px;font-weight:600;color:var(--fg-l);letter-spacing:.05em;text-transform:uppercase;margin-bottom:7px;}
-.rmp-dt-input{width:100%;padding:13px 14px;border-radius:14px;border:1.5px solid oklch(0.88 0.02 210 / 0.55);background:oklch(0.96 0.008 210 / 0.70);font-size:15px;font-weight:500;font-family:var(--sys);color:var(--fg);box-sizing:border-box;-webkit-appearance:none;outline:none;transition:border-color .15s;}
-.rmp-dt-input:focus{border-color:oklch(0.40 0.14 270 / 0.45);}
-.rmp-ok{width:100%;padding:15px;border:none;border-radius:18px;background:oklch(0.40 0.14 270);color:#fff;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 18px oklch(0.40 0.14 270 / 0.28);transition:transform .12s,opacity .12s;-webkit-appearance:none;}
+.rmp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.rmp-title{font-size:17px;font-weight:700;color:var(--fg);display:flex;align-items:center;gap:8px;}
+.rmp-close-btn{background:oklch(0.88 0.02 210 / 0.45);border:none;width:30px;height:30px;border-radius:50%;font-size:14px;color:var(--fg-m);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;}
+/* Текущее напоминание — баннер */
+.rmp-current{display:flex;align-items:center;gap:10px;padding:13px 15px;background:oklch(0.60 0.10 270 / 0.10);border:1.5px solid oklch(0.50 0.12 270 / 0.25);border-radius:16px;margin-bottom:18px;}
+.rmp-current-ico{font-size:20px;flex-shrink:0;}
+.rmp-current-body{flex:1;}
+.rmp-current-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;color:oklch(0.40 0.14 270);text-transform:uppercase;margin-bottom:2px;}
+.rmp-current-val{font-size:16px;font-weight:600;color:var(--fg);}
+/* Chips hidden — kept in JS for future use */
+.rmp-chips{display:none;}
+.rmp-chip{}
+/* Date/time section */
+.rmp-dt-wrap{margin-bottom:20px;}
+.rmp-dt-lbl{font-size:11px;font-weight:700;color:var(--fg-l);letter-spacing:.05em;text-transform:uppercase;margin-bottom:9px;}
+.rmp-dt-input{width:100%;padding:16px 16px;border-radius:16px;border:1.5px solid oklch(0.85 0.025 210 / 0.6);background:oklch(0.97 0.008 210 / 0.75);font-size:17px;font-weight:500;font-family:var(--sys);color:var(--fg);box-sizing:border-box;-webkit-appearance:none;outline:none;transition:border-color .15s;}
+.rmp-dt-input:focus{border-color:oklch(0.50 0.12 270 / 0.50);background:oklch(0.98 0.006 210 / 0.90);}
+.rmp-ok{width:100%;padding:17px;border:none;border-radius:20px;background:oklch(0.50 0.12 270);color:#fff;font-size:16px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 20px oklch(0.40 0.14 270 / 0.30);transition:transform .12s,opacity .12s;-webkit-appearance:none;letter-spacing:.02em;}
 .rmp-ok:active{transform:scale(.97);opacity:.9;}
 
 /* ── REMINDER EDITOR MODAL ── */
@@ -2090,7 +2098,7 @@ html.dark .bubble{
 .drill-seg.next{background:oklch(0.80 0.05 210);cursor:pointer;}
 
 /* Panels */
-.drill-panels-wrap{flex:1;overflow:hidden;position:relative;}
+.drill-panels-wrap{flex:1;overflow:hidden;position:relative;min-height:0;}
 .drill-track{
   display:flex;width:300%;height:100%;
   transition:transform .22s cubic-bezier(.4,0,.2,1);
@@ -2326,12 +2334,21 @@ html.dark .bubble{
   <div id="rmp">
     <div class="rmp-hdr">
       <span class="rmp-title">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-        Напомнить
+        <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Напоминание
       </span>
       <button class="rmp-close-btn" onclick="rmpClose()">✕</button>
     </div>
-    <div class="rmp-chips">
+    <!-- Текущее напоминание (показывается только если уже стоит) -->
+    <div class="rmp-current" id="rmp-current" style="display:none">
+      <div class="rmp-current-ico">🔔</div>
+      <div class="rmp-current-body">
+        <div class="rmp-current-lbl">Уже стоит</div>
+        <div class="rmp-current-val" id="rmp-current-val">—</div>
+      </div>
+    </div>
+    <!-- Chips hidden, kept for JS compatibility -->
+    <div class="rmp-chips" style="display:none">
       <button class="rmp-chip" onclick="rmpPickQuick(60,this)">Через 1 ч</button>
       <button class="rmp-chip" onclick="rmpPickQuick(180,this)">Через 3 ч</button>
       <button class="rmp-chip" onclick="rmpPickQuick(480,this)">Через 8 ч</button>
@@ -2340,10 +2357,10 @@ html.dark .bubble{
       <button class="rmp-chip" onclick="rmpPickTomorrow(19,0,this)">Завтра вечером</button>
     </div>
     <div class="rmp-dt-wrap">
-      <div class="rmp-dt-lbl">Дата и время</div>
+      <div class="rmp-dt-lbl">Выбрать дату и время</div>
       <input class="rmp-dt-input" type="datetime-local" id="rmp-dt-input" onchange="rmpPickNative(this.value)">
     </div>
-    <button class="rmp-ok" onclick="rmpConfirm()">Готово</button>
+    <button class="rmp-ok" onclick="rmpConfirm()">Сохранить</button>
   </div>
 </div>
 
@@ -2475,7 +2492,7 @@ html.dark .bubble{
     </div>
 
     <!-- NOTES — drill-down -->
-    <div class="scr" id="s-notes" style="padding:0;overflow:hidden;display:flex;flex-direction:column;position:relative;">
+    <div class="scr" id="s-notes" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
       <!-- Nav: back + breadcrumbs + add -->
       <div class="drill-nav">
         <button class="drill-back-btn" id="drill-back-btn" onclick="drillBack()">

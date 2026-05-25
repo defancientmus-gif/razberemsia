@@ -3106,6 +3106,12 @@ function openRmp(target){
   const id=target==='sheet'?'sheet-reminder-in':'home-input-reminder';
   const cur=document.getElementById(id)?.value;
   _rmpDate=cur?new Date(cur):null;
+  // Показать баннер с текущим напоминанием если уже стоит
+  const currentBanner=document.getElementById('rmp-current');
+  const currentVal=document.getElementById('rmp-current-val');
+  const hasExisting=_rmpDate&&!isNaN(_rmpDate.getTime())&&_rmpDate>new Date();
+  if(currentBanner)currentBanner.style.display=hasExisting?'flex':'none';
+  if(currentVal&&hasExisting)currentVal.textContent=fmtDt(_rmpDate.toISOString());
   if(!_rmpDate||isNaN(_rmpDate.getTime())||_rmpDate<=new Date()){
     _rmpDate=new Date(Date.now()+3600000);
   }
