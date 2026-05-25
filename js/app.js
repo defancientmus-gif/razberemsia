@@ -1352,6 +1352,11 @@ function dismissInAppReminder(){
 let _shownReminders=(()=>{try{return JSON.parse(sessionStorage.getItem('rz_shown_rem')||'{}');}catch(e){return{};}})();
 function _persistShownRem(){try{sessionStorage.setItem('rz_shown_rem',JSON.stringify(_shownReminders));}catch(e){}}
 
+function _tsToIso(ts){
+  const d=new Date(ts);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+
 function _nextRecurringTime(times){
   const now=new Date();
   // Сегодня — ближайшее время в будущем
@@ -1386,10 +1391,11 @@ function checkDueReminders(){
     // Авто-перепланировка повторяющихся напоминаний
     if(diff<0&&n.recurring?.times?.length){
       const next=_nextRecurringTime(n.recurring.times);
-      if(next!==n.reminder){
+      const nextIso=_tsToIso(next);
+      if(nextIso!==n.reminder){
         const list=getNotes();
         const idx=list.findIndex(x=>x.id===n.id);
-        if(idx>=0){list[idx].reminder=next;list[idx].updatedAt=Date.now();saveNotes(list);scheduleAll();}
+        if(idx>=0){list[idx].reminder=nextIso;list[idx].updatedAt=Date.now();saveNotes(list);scheduleAll();}
       }
     }
     // Clean shown cache for reminders more than 1h past
@@ -1679,7 +1685,13 @@ function parseVoiceReminder(text){
 
 // ── DATE UTILS ──
 function parseDt(s){
-  const p=s.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if(!s)return null;
+  // Числовой timestamp (от агента и SET_RECURRING)
+  if(typeof s==='number'||(typeof s==='string'&&/^\d{10,}$/.test(s.trim()))){
+    const d=new Date(+s);return isNaN(d.getTime())?null:d;
+  }
+  // ISO строка YYYY-MM-DDTHH:MM (стандартный формат)
+  const p=String(s).match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
   if(!p)return null;
   return new Date(+p[1],+p[2]-1,+p[3],+p[4],+p[5],0);
 }
@@ -3621,7 +3633,8 @@ function _runSingleIntent(intent,params,originalText){
     const reminderTime=parseVoiceReminder(originalText)||parseVoiceReminder(params.when||'')||null;
     const auto=analyzeText(body);
     notes.push({id,title:params.title||auto.title,body,label:'заметка',
-      reminder:reminderTime,createdAt:ts,updatedAt:ts});
+      reminder:reminderTime,  // parseVoiceReminder уже возвращает ISO
+      createdAt:ts,updatedAt:ts});
     saveNotes(notes);
     if(reminderTime)_handleReminderAfterSave(reminderTime,id,params.title||auto.title,body.slice(0,200));
     loadHomeFeed();loadNotes();
@@ -3684,7 +3697,7 @@ function _runSingleIntent(intent,params,originalText){
     const ts=Date.now();const id=genId();
     const notes=getNotes();
     notes.push({id,title,body:title,label:'заметка',
-      reminder:nextTs,recurring:{times,days:params.days||'daily'},
+      reminder:_tsToIso(nextTs),recurring:{times,days:params.days||'daily'},
       createdAt:ts,updatedAt:ts});
     saveNotes(notes);
     _handleReminderAfterSave(nextTs,id,title,title);
