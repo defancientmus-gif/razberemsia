@@ -2100,13 +2100,18 @@ html.dark .bubble{
 /* Panels */
 .drill-panels-wrap{flex:1;overflow:hidden;position:relative;min-height:0;}
 .drill-track{
-  display:flex;width:300%;height:100%;
+  /* position:absolute so height comes from positioned parent, not flex:1 chain */
+  position:absolute;top:0;left:0;bottom:0;
+  display:flex;width:300%;
   transition:transform .22s cubic-bezier(.4,0,.2,1);
 }
 .drill-panel{
-  width:calc(100%/3);overflow-y:auto;overflow-x:hidden;
+  /* flex stretch gives panel full height of track (top:0→bottom:0 = panels-wrap height) */
+  flex:0 0 calc(100%/3);
+  overflow-y:auto;overflow-x:hidden;
   padding:4px 14px 80px;
   -webkit-overflow-scrolling:touch;
+  box-sizing:border-box;
 }
 .drill-panel::-webkit-scrollbar{display:none;}
 
