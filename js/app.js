@@ -3537,10 +3537,13 @@ async function _processAgentQuery(text){
     const token=sess?.data?.session?.access_token;
     if(!token){showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
     const memoryContext=getAiMemoryContext?.()??[];
+    const recentNotes=getNotes().slice(0,5).map((n,i)=>({
+      index:i,title:n.title||'Без названия',body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,200)
+    }));
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,memoryContext}})
+      body:JSON.stringify({action:'agent_query',payload:{text,memoryContext,recentNotes}})
     });
     let data;
     try{data=await res.json();}catch(e){showToast('Ошибка ответа сервера');_setAgentState('idle');return;}
@@ -3556,6 +3559,7 @@ async function _processAgentQuery(text){
 
 function _executeAgentIntent(result,originalText){
   const{intent,params,response}=result;
+
   if(intent==='CREATE_NOTE'){
     const ts=Date.now();const notes=getNotes();const id=genId();
     const auto=analyzeText(params.body||originalText);
@@ -3563,6 +3567,7 @@ function _executeAgentIntent(result,originalText){
       label:auto.label||'заметка',createdAt:ts,updatedAt:ts,fromPad:true});
     saveNotes(notes);loadHomeFeed();loadNotes();loadNotepad();
   }
+
   if(intent==='SET_REMINDER'){
     const ts=Date.now();const notes=getNotes();const id=genId();
     const body=params.body||originalText;
@@ -3574,7 +3579,59 @@ function _executeAgentIntent(result,originalText){
     if(reminderTime)_handleReminderAfterSave(reminderTime,id,params.title||auto.title,body.slice(0,200));
     loadHomeFeed();loadNotes();
   }
+
+  if(intent==='CREATE_TAG_FOLDER'){
+    const tag=(params.tag||params.label||'').toLowerCase().trim();
+    const label=params.label||tag;
+    if(tag&&typeof getTagFolders==='function'){
+      const folders=getTagFolders();
+      if(!folders.some(f=>f.tag===tag)){
+        folders.push({tag,label,createdAt:Date.now()});
+        localStorage.setItem('rz_tag_folders',JSON.stringify(folders));
+        loadNotes(); // обновить список папок
+      }
+    }
+  }
+
+  if(intent==='TAG_NOTE'){
+    const tag=(params.tag||'').toLowerCase().trim();
+    const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
+    if(tag){
+      const notes=getNotes();
+      const note=notes[idx];
+      if(note){
+        if(!Array.isArray(note.aiTags))note.aiTags=[];
+        if(!note.aiTags.map(t=>t.toLowerCase()).includes(tag)){
+          note.aiTags=[...note.aiTags,tag];
+          note.updatedAt=Date.now();
+          saveNotes(notes);loadHomeFeed();loadNotes();
+        }
+        // Создать тег-папку если нет
+        if(typeof getTagFolders==='function'){
+          const folders=getTagFolders();
+          if(!folders.some(f=>f.tag===tag)){
+            folders.push({tag,label:params.tag||tag,createdAt:Date.now()});
+            localStorage.setItem('rz_tag_folders',JSON.stringify(folders));
+          }
+        }
+      }
+    }
+  }
+
   _showAgentCard(intent,response);
+}
+
+// ── TTS — озвучка ответа агента ──
+function _agentSpeak(text){
+  if(!text||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(text.slice(0,300));
+  utt.lang='ru-RU';utt.rate=0.92;utt.pitch=1.05;
+  // Выбрать русский голос если есть
+  const voices=window.speechSynthesis.getVoices();
+  const ruVoice=voices.find(v=>v.lang.startsWith('ru'));
+  if(ruVoice)utt.voice=ruVoice;
+  window.speechSynthesis.speak(utt);
 }
 
 function _showAgentCard(intent,response){
@@ -3591,6 +3648,8 @@ function _showAgentCard(intent,response){
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
   if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},6000);
+  // Небольшая задержка — iOS требует чтобы TTS шёл после жеста пользователя
+  setTimeout(()=>_agentSpeak(response),100);
 }
 
 // ── LOAD ALL ──
