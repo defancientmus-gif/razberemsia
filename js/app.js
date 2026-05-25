@@ -1564,7 +1564,7 @@ function renderReminderPanel(){
         ?`<div class="remind-item-recurring">🔁 ${esc(n.recurring.times.join(' · '))}</div>`:'';
       html+=`<div class="remind-item">
         <div class="remind-item-dot ${dotCls}"></div>
-        <div class="remind-item-body" onclick="openNoteSheetById('${n.id}')">
+        <div class="remind-item-body" onclick="openRemEditForNote('${n.id}')">
           <div class="remind-item-title">${esc(n.title||(n.body||'').split('\n')[0].slice(0,50)||'Заметка')}</div>
           <div class="remind-item-when ${whenCls}">${esc(whenTxt)}</div>
           ${recurLine}
@@ -1580,14 +1580,6 @@ function renderReminderPanel(){
     <div class="remind-set-row">
       <span class="remind-set-lbl">Напомнить заранее</span>
       <button class="remind-set-val" id="remind-adv-btn" onclick="cycleAdvance()">${advanceLabel(settings.advanceMinutes)}</button>
-    </div>
-    <div class="remind-set-row">
-      <span class="remind-set-lbl">AI предлагает время</span>
-      <label class="remind-toggle">
-        <input type="checkbox" id="remind-ai-toggle" ${settings.aiSuggest?'checked':''} onchange="toggleAiSuggest(this.checked)">
-        <div class="remind-toggle-track"></div>
-        <div class="remind-toggle-thumb"></div>
-      </label>
     </div>
   </div>`;
   scroll.innerHTML=html;
@@ -1611,6 +1603,182 @@ function cycleAdvance(){
 function toggleAiSuggest(val){
   const s=getReminderSettings();s.aiSuggest=val;saveReminderSettings(s);
 }
+
+// ── REMINDER EDITOR MODAL ──
+let _remEditNoteId=null;
+
+function openRemEditForNote(noteId){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n)return;
+  _remEditNoteId=noteId;
+  const isRec=!!(n.recurring?.times?.length);
+  // Заголовок
+  const nameEl=document.getElementById('rem-edit-note-name');
+  if(nameEl)nameEl.textContent=n.title||(n.body||'').split('\n')[0].slice(0,60)||'Заметка';
+  const typeLbl=document.getElementById('rem-edit-type-lbl');
+  if(typeLbl)typeLbl.textContent=isRec?'🔁 Повторяющееся напоминание':'🔔 Время напоминания';
+  // Показываем нужный блок
+  const simpleBlock=document.getElementById('rem-edit-simple-block');
+  const recBlock=document.getElementById('rem-edit-rec-block');
+  if(simpleBlock)simpleBlock.style.display=isRec?'none':'block';
+  if(recBlock)recBlock.style.display=isRec?'block':'none';
+  // Сбрасываем активные чипы
+  document.querySelectorAll('.rem-edit-q').forEach(b=>b.classList.remove('active'));
+  if(isRec){
+    _renderRemEditRecChips(n);
+  } else {
+    // Показываем текущее время
+    const dtLbl=document.getElementById('rem-edit-dt-lbl');
+    if(dtLbl)dtLbl.textContent=n.reminder?fmtDt(n.reminder):'Выбрать дату и время';
+  }
+  // Открываем
+  const ov=document.getElementById('rem-edit-ov');
+  if(ov){
+    ov.style.display='flex';
+    requestAnimationFrame(()=>{
+      const sheet=document.getElementById('rem-edit-sheet');
+      if(sheet)sheet.style.transform='translateY(0)';
+    });
+  }
+}
+
+function closeRemEdit(){
+  const sheet=document.getElementById('rem-edit-sheet');
+  if(sheet)sheet.style.transform='translateY(100%)';
+  setTimeout(()=>{
+    const ov=document.getElementById('rem-edit-ov');
+    if(ov)ov.style.display='none';
+    _remEditNoteId=null;
+  },320);
+}
+
+function remEditOpenNote(){
+  // Тап на название — открывает заметку
+  const id=_remEditNoteId;
+  closeRemEdit();
+  setTimeout(()=>{ if(id)openNoteSheetById(id); },350);
+}
+
+function _remEditSave(isoVal){
+  if(!_remEditNoteId)return;
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===_remEditNoteId);
+  if(idx<0)return;
+  const dt=new Date(isoVal);
+  if(isNaN(dt.getTime()))return;
+  if(dt.getTime()<Date.now()){showToast('Время уже прошло — выбери будущее');return;}
+  notes[idx].reminder=isoVal;
+  notes[idx].updatedAt=Date.now();
+  saveNotes(notes);
+  scheduleAll();
+  renderReminderPanel();
+  const dtLbl=document.getElementById('rem-edit-dt-lbl');
+  if(dtLbl)dtLbl.textContent=fmtDt(isoVal);
+  showToast('🔔 Напомним '+fmtDt(isoVal));
+}
+
+function remEditQuick(minutes,btn){
+  if(!_remEditNoteId)return;
+  const dt=new Date(Date.now()+minutes*60000);
+  _remEditSave(_rmpLocalStr(dt));
+  document.querySelectorAll('.rem-edit-q').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+
+function remEditTomorrow(h,m,btn){
+  if(!_remEditNoteId)return;
+  const d=new Date();d.setDate(d.getDate()+1);d.setHours(h,m,0,0);
+  _remEditSave(_rmpLocalStr(d));
+  document.querySelectorAll('.rem-edit-q').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+
+function remEditOpenDt(){
+  if(!_remEditNoteId)return;
+  const inp=document.getElementById('rem-edit-dt-inp');
+  if(!inp)return;
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===_remEditNoteId);
+  if(n?.reminder){const d=parseDt(n.reminder);if(d&&!isNaN(d.getTime()))inp.value=_rmpLocalStr(d);}
+  inp.click();
+}
+
+function remEditDtChange(val){
+  if(!val||!_remEditNoteId)return;
+  _remEditSave(val);
+}
+
+function remEditDelete(){
+  if(!_remEditNoteId)return;
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===_remEditNoteId);
+  if(idx<0)return;
+  delete notes[idx].reminder;
+  delete notes[idx].recurring;
+  notes[idx].updatedAt=Date.now();
+  saveNotes(notes);
+  scheduleAll();
+  renderReminderPanel();
+  closeRemEdit();
+  showToast('Напоминание удалено');
+}
+
+function _renderRemEditRecChips(n){
+  const wrap=document.getElementById('rem-edit-rec-chips');
+  if(!wrap||!n?.recurring?.times)return;
+  const times=[...n.recurring.times].sort();
+  wrap.innerHTML=times.map(t=>`<span class="rem-edit-rec-chip">${esc(t)}<button class="rem-edit-rec-chip-del" type="button" onclick="remEditRemoveTime('${t}')" title="Убрать">×</button></span>`).join('');
+}
+
+function remEditRemoveTime(time){
+  if(!_remEditNoteId)return;
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===_remEditNoteId);
+  if(idx<0)return;
+  const n=notes[idx];
+  if(!n.recurring?.times)return;
+  const newTimes=n.recurring.times.filter(t=>t!==time);
+  if(!newTimes.length){
+    delete notes[idx].recurring;
+    delete notes[idx].reminder;
+    notes[idx].updatedAt=Date.now();
+    saveNotes(notes);scheduleAll();renderReminderPanel();
+    closeRemEdit();
+    showToast('Повторение отключено');
+    return;
+  }
+  notes[idx].recurring={...n.recurring,times:newTimes};
+  notes[idx].reminder=_tsToIso(_nextRecurringTime(newTimes));
+  notes[idx].updatedAt=Date.now();
+  saveNotes(notes);scheduleAll();renderReminderPanel();
+  _renderRemEditRecChips(notes[idx]);
+  showToast(`Убрано ${time}`);
+}
+
+function remEditAddTimePrompt(){
+  const inp=document.getElementById('rem-edit-add-time-inp');
+  if(inp)inp.click();
+}
+
+function remEditAddTime(val){
+  if(!val||!_remEditNoteId)return;
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===_remEditNoteId);
+  if(idx<0)return;
+  const n=notes[idx];
+  if(!n.recurring)return;
+  const times=[...(n.recurring.times||[])];
+  if(!times.includes(val))times.push(val);
+  times.sort();
+  notes[idx].recurring={...n.recurring,times};
+  notes[idx].reminder=_tsToIso(_nextRecurringTime(times));
+  notes[idx].updatedAt=Date.now();
+  saveNotes(notes);scheduleAll();renderReminderPanel();
+  _renderRemEditRecChips(notes[idx]);
+  showToast(`Добавлено ${val}`);
+}
+
 function removeNoteReminder(id){
   const notes=getNotes();
   const idx=notes.findIndex(n=>n.id===id);

@@ -1504,6 +1504,51 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .rmp-ok{width:100%;padding:15px;border:none;border-radius:18px;background:oklch(0.40 0.14 270);color:#fff;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 18px oklch(0.40 0.14 270 / 0.28);transition:transform .12s,opacity .12s;-webkit-appearance:none;}
 .rmp-ok:active{transform:scale(.97);opacity:.9;}
 
+/* ── REMINDER EDITOR MODAL ── */
+#rem-edit-ov{position:fixed;inset:0;z-index:9300;background:oklch(0 0 0/0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;}
+#rem-edit-sheet{
+  width:100%;max-width:480px;
+  background:radial-gradient(ellipse 90% 55% at 28% 8%, oklch(1 0 0/0.88) 0%, transparent 52%), oklch(0.97 0.006 210/0.97);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid oklch(0.92 0.02 210/0.7);
+  border-radius:28px 28px 0 0;
+  padding:0 20px calc(28px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 40px oklch(0 0 0/0.10),inset 0 1.5px 4px oklch(1 0 0/0.9);
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.22,1,.36,1);
+}
+.rem-edit-drag{width:36px;height:5px;border-radius:3px;background:oklch(0.75 0.02 210/0.5);margin:14px auto 18px;}
+.rem-edit-note-name{font-size:18px;font-weight:700;color:var(--fg);margin-bottom:6px;padding:0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+.rem-edit-note-name:active{opacity:.6;}
+.rem-edit-type-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;padding:0 2px;}
+/* Quick time chips */
+.rem-edit-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+.rem-edit-q{padding:13px 8px;border-radius:16px;border:1.5px solid oklch(0.88 0.02 210/0.5);background:oklch(0.93 0.03 210/0.35);font-size:14px;font-weight:600;color:var(--fg-m);cursor:pointer;font-family:var(--sys);transition:all .15s;-webkit-appearance:none;text-align:center;line-height:1.2;}
+.rem-edit-q span{display:block;font-size:11px;font-weight:400;color:var(--fg-l);margin-top:2px;}
+.rem-edit-q.active{background:oklch(0.40 0.14 270/0.12);border-color:oklch(0.40 0.14 270/0.40);color:oklch(0.35 0.14 270);}
+.rem-edit-q.active span{color:oklch(0.42 0.12 270);}
+.rem-edit-q:active{transform:scale(.96);}
+/* Custom time row */
+.rem-edit-custom-row{display:flex;align-items:center;gap:10px;padding:13px 16px;background:oklch(0.93 0.03 210/0.25);border:1.5px solid oklch(0.88 0.02 210/0.4);border-radius:16px;margin-bottom:22px;cursor:pointer;}
+.rem-edit-custom-row:active{opacity:.7;}
+.rem-edit-custom-ico{font-size:20px;flex-shrink:0;}
+.rem-edit-custom-lbl{flex:1;}
+.rem-edit-custom-title{font-size:14px;font-weight:600;color:var(--fg);}
+.rem-edit-custom-sub{font-size:12px;color:var(--fg-l);margin-top:1px;}
+.rem-edit-custom-arr{font-size:18px;color:var(--fg-l);}
+/* Recurring chips */
+.rem-edit-rec-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.rem-edit-rec-chip{display:inline-flex;align-items:center;gap:5px;background:oklch(0.93 0.04 210/0.36);border:1.5px solid oklch(0.88 0.04 210/0.60);border-radius:22px;padding:8px 8px 8px 14px;font-size:14px;font-weight:600;color:oklch(0.35 0.12 270);}
+.rem-edit-rec-chip-del{background:oklch(0.88 0.02 210/0.6);border:none;width:22px;height:22px;border-radius:50%;font-size:13px;color:var(--fg-l);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;line-height:1;flex-shrink:0;}
+.rem-edit-rec-chip-del:active{background:oklch(0.80 0.08 15/0.4);color:#fff;}
+.rem-edit-add-time-btn{display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:14px;background:oklch(0.93 0.04 210/0.25);border:1.5px dashed oklch(0.75 0.04 210/0.55);font-size:14px;font-weight:600;color:oklch(0.45 0.10 270);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;width:100%;margin-bottom:20px;}
+.rem-edit-add-time-btn:active{background:oklch(0.88 0.04 210/0.4);}
+/* Buttons */
+.rem-edit-done-btn{width:100%;padding:15px;border:none;border-radius:18px;background:oklch(0.40 0.14 270);color:#fff;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 18px oklch(0.40 0.14 270/0.25);-webkit-appearance:none;margin-bottom:10px;}
+.rem-edit-done-btn:active{opacity:.88;}
+.rem-edit-del-btn{width:100%;padding:13px;border:none;border-radius:18px;background:oklch(0.90 0.04 15/0.35);color:oklch(0.45 0.16 15);font-size:14px;font-weight:600;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}
+.rem-edit-del-btn:active{background:oklch(0.85 0.08 15/0.45);}
+
 /* ── AI PANEL ── */
 .sheet-ai-btn{display:flex;align-items:center;gap:5px;padding:0 10px;height:32px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:oklch(0.55 0.12 290 / 0.10);color:oklch(0.45 0.12 290);transition:background .18s,transform .12s;}
 .sheet-ai-btn:active{transform:scale(.95);}
@@ -3055,6 +3100,47 @@ document.addEventListener('DOMContentLoaded', ()=>{
     <div id="search-results" class="search-results">
       <div class="search-hint">Начни вводить — найду по тексту, тегам и смыслу</div>
     </div>
+  </div>
+</div>
+
+<!-- ── REMINDER EDITOR MODAL ── -->
+<div id="rem-edit-ov" onclick="if(event.target===this)closeRemEdit()">
+  <div id="rem-edit-sheet">
+    <div class="rem-edit-drag"></div>
+    <div class="rem-edit-note-name" id="rem-edit-note-name" onclick="remEditOpenNote()">Напоминание</div>
+    <div class="rem-edit-type-lbl" id="rem-edit-type-lbl">🔔 Время напоминания</div>
+
+    <!-- Блок: разовое напоминание -->
+    <div id="rem-edit-simple-block">
+      <div class="rem-edit-quick" id="rem-edit-quick-chips">
+        <button class="rem-edit-q" onclick="remEditQuick(30,this)">30 минут<span>через 30 мин</span></button>
+        <button class="rem-edit-q" onclick="remEditQuick(60,this)">1 час<span>через час</span></button>
+        <button class="rem-edit-q" onclick="remEditQuick(180,this)">3 часа<span>через 3 часа</span></button>
+        <button class="rem-edit-q" onclick="remEditTomorrow(9,0,this)">Утром<span>завтра 09:00</span></button>
+      </div>
+      <div class="rem-edit-custom-row" onclick="remEditOpenDt()">
+        <div class="rem-edit-custom-ico">📅</div>
+        <div class="rem-edit-custom-lbl">
+          <div class="rem-edit-custom-title" id="rem-edit-dt-lbl">Выбрать дату и время</div>
+          <div class="rem-edit-custom-sub">Точное время напоминания</div>
+        </div>
+        <div class="rem-edit-custom-arr">›</div>
+      </div>
+      <input type="datetime-local" id="rem-edit-dt-inp" style="opacity:0;height:0;width:0;position:absolute;pointer-events:none;" onchange="remEditDtChange(this.value)">
+    </div>
+
+    <!-- Блок: повторяющееся -->
+    <div id="rem-edit-rec-block" style="display:none;">
+      <div class="rem-edit-rec-chips" id="rem-edit-rec-chips"></div>
+      <button class="rem-edit-add-time-btn" onclick="remEditAddTimePrompt()">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Добавить время
+      </button>
+      <input type="time" id="rem-edit-add-time-inp" style="opacity:0;height:0;width:0;position:absolute;pointer-events:none;" onchange="remEditAddTime(this.value);this.value=''">
+    </div>
+
+    <button class="rem-edit-done-btn" onclick="closeRemEdit()">Готово</button>
+    <button class="rem-edit-del-btn" onclick="remEditDelete()">Удалить напоминание</button>
   </div>
 </div>
 </body>
