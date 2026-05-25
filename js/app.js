@@ -2494,7 +2494,12 @@ function _drillInitSwipe(){
   el.addEventListener('touchstart',e=>{_drillTouchX=e.touches[0].clientX;},{passive:true});
   el.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-_drillTouchX;
-    if(dx>60&&drillLevel>0){_drillHandledSwipe=true;drillBack();}
+    if(dx>60&&drillLevel>0){
+      _drillHandledSwipe=true;
+      drillBack();
+      // Авто-сброс флага если document handler не успел (edge case)
+      setTimeout(()=>{_drillHandledSwipe=false;},300);
+    }
   },{passive:true});
   // Scroll-to-top FAB для drill-p1
   const p1=document.getElementById('drill-p1');
@@ -2994,7 +2999,6 @@ function selectCat(label){
   saveSheetDraft();
 }
 function selectUserFolderTag(folderName){
-  // Сохраняем имя раздела в data-attribute кнопки для последующего считывания при сохранении
   const btn=document.getElementById('sheet-cat-btn');
   if(btn){
     btn.dataset.label=folderName;
@@ -3002,10 +3006,13 @@ function selectUserFolderTag(folderName){
     const dot=document.getElementById('sheet-cat-dot');
     const lbl=document.getElementById('sheet-cat-label');
     const userFolders=getUserFolders();
-    const fi=userFolders.findIndex(f=>f.name===folderName);
+    const fi=userFolders.findIndex(f=>f.name.toLowerCase()===folderName.toLowerCase());
     const col=fi>=0?_folderColor(userFolders[fi].idx!==undefined?userFolders[fi].idx:fi):_folderColor(0);
     if(dot)dot.style.background=col;
     if(lbl)lbl.textContent=folderName;
+    // Тонируем фон листа в цвет раздела (используем нейтральный hue=180 — бирюзовый)
+    const sheet=document.querySelector('#overlay .sheet');
+    if(sheet)sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.80 0.06 180 / 0.18), transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.012 180 / 0.96)`;
   }
   document.getElementById('cat-dropdown').classList.remove('open');
   saveSheetDraft();
