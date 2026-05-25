@@ -548,8 +548,15 @@ function toggleAiPanel(){
   // ── Кэш: если заметка уже анализировалась и текст не менялся — показать без API ──
   if(EI){
     const list=getNotes();
-    const note=list.find(n=>n.id===EI);
+    const idx=list.findIndex(n=>n.id===EI);
+    const note=idx>=0?list[idx]:null;
     if(note?.aiCache&&note.aiCache.bodyKey===text.slice(0,80)){
+      // Бэкфилл: сохраняем aiTags если их ещё нет (старые заметки)
+      if(!Array.isArray(note.aiTags)||!note.aiTags.length){
+        list[idx].aiTags=note.aiCache.tags||[];
+        list[idx].aiSummary=note.aiCache.summary||'';
+        saveNotes(list);
+      }
       _renderAiResult(note.aiCache.summary,note.aiCache.tags,note.aiCache.actions,panel,text);
       _scrollToAiPanel();
       return;
@@ -557,6 +564,16 @@ function toggleAiPanel(){
   }
   runAiAnalysis(text,panel);
 }
+function rerunAiAnalysis(){
+  // Сброс кэша → принудительный перезапуск
+  if(EI){
+    const list=getNotes();const idx=list.findIndex(n=>n.id===EI);
+    if(idx>=0){list[idx].aiCache=null;saveNotes(list);}
+  }
+  _aiOn=false; // сбросить флаг чтобы toggleAiPanel перезапустил
+  toggleAiPanel();
+}
+
 function toggleAiCollapse(){
   const panel=document.getElementById('ai-panel');
   if(!panel)return;

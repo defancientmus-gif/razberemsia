@@ -2531,7 +2531,10 @@ html.dark .bubble{
       <div id="ai-panel" class="ai-panel" style="display:none;">
         <div class="ai-panel-hdr">
           <span class="ai-panel-title"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Анализ AI</span>
-          <button class="ai-collapse-btn" id="ai-collapse-btn" type="button" onclick="toggleAiCollapse()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="ai-collapse-btn" type="button" onclick="rerunAiAnalysis()" title="Обновить анализ" style="opacity:.6;"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+            <button class="ai-collapse-btn" id="ai-collapse-btn" type="button" onclick="toggleAiCollapse()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+          </div>
         </div>
         <div class="ai-panel-body" id="ai-panel-body"></div>
       </div>
