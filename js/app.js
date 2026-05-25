@@ -2082,6 +2082,62 @@ function mkDay(num,ds,other,isT,isSel,hasDot){
   return b;
 }
 
+// ── USER FOLDERS (custom sections created by user via + button) ──
+function getUserFolders(){try{return JSON.parse(localStorage.getItem(scopedKey('rz_user_folders'))||'[]');}catch(e){return[];}}
+function saveUserFolders(arr){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(arr));}
+// Palette for user-created folders
+const _FOLDER_COLORS=['oklch(0.58 0.12 180)','oklch(0.58 0.12 60)','oklch(0.58 0.12 300)','oklch(0.58 0.12 25)','oklch(0.58 0.12 140)','oklch(0.58 0.12 220)'];
+function _folderColor(idx){return _FOLDER_COLORS[idx%_FOLDER_COLORS.length];}
+function openFolderModal(){
+  const m=document.getElementById('folder-modal');
+  const inner=document.getElementById('folder-modal-inner');
+  const inp=document.getElementById('folder-modal-inp');
+  if(!m)return;
+  m.style.pointerEvents='auto';
+  m.style.background='oklch(0.14 0.02 210 / 0.28)';
+  m.style.backdropFilter='blur(6px)';
+  m.style.webkitBackdropFilter='blur(6px)';
+  inner.style.transform='scale(1) translateY(0)';
+  inner.style.opacity='1';
+  if(inp){inp.value='';setTimeout(()=>inp.focus(),320);}
+}
+function closeFolderModal(){
+  const m=document.getElementById('folder-modal');
+  const inner=document.getElementById('folder-modal-inner');
+  if(!m)return;
+  inner.style.transform='scale(.88) translateY(14px)';
+  inner.style.opacity='0';
+  setTimeout(()=>{
+    m.style.pointerEvents='none';
+    m.style.background='oklch(0.14 0.02 210 / 0)';
+    m.style.backdropFilter='blur(0px)';
+    m.style.webkitBackdropFilter='blur(0px)';
+  },260);
+}
+function confirmFolderCreate(){
+  const inp=document.getElementById('folder-modal-inp');
+  const name=(inp?.value||'').trim();
+  if(!name){inp?.focus();return;}
+  const folders=getUserFolders();
+  if(!folders.find(f=>f.name.toLowerCase()===name.toLowerCase())){
+    folders.push({name,idx:folders.length});
+    saveUserFolders(folders);
+    loadNotes();
+    showToast('Раздел «'+name+'» создан');
+  }
+  closeFolderModal();
+}
+function openDrillAdd(){
+  if(drillLevel===0)openFolderModal();
+  else openSheet('note');
+}
+function deleteUserFolder(name){
+  const folders=getUserFolders().filter(f=>f.name!==name);
+  saveUserFolders(folders);
+  loadNotes();
+  showToast('Раздел удалён');
+}
+
 // ── STRIPES (oklch) ──
 const STRIPES={
   здоровье:'oklch(0.62 0.14 25)',
@@ -2270,11 +2326,31 @@ function _drillP0(){
       <div class="drill-sec-arr">&rsaquo;</div>
     </button>`;
   });
+  // Пользовательские разделы (созданные через +)
+  const userFolders=getUserFolders();
+  if(userFolders.length){
+    userFolders.forEach((f,i)=>{
+      const folderName=f.name;
+      const fNameLow=folderName.toLowerCase();
+      const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.map(t=>t.toLowerCase()).includes(fNameLow)).length;
+      const col=_folderColor(f.idx!==undefined?f.idx:i);
+      h+=`<div class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
+        <div class="drill-sec-ico" style="background:${col}22;">🗂</div>
+        <div class="drill-sec-name">${esc(folderName)}</div>
+        <div class="drill-sec-count">${cnt}</div>
+        <span class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </span>
+      </div>`;
+    });
+  }
   // Тег-папки (из AI-анализа)
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
   if(tagFolders.length){
     const allAiTags=notes.flatMap(n=>Array.isArray(n.aiTags)?n.aiTags.map(t=>t.toLowerCase()):[]);
-    tagFolders.forEach(f=>{
+    // Не показывать тег-папки, если уже показаны как user-folder
+    const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
+    tagFolders.filter(f=>!userFolderNames.includes(f.tag.toLowerCase())).forEach(f=>{
       const cnt=allAiTags.filter(t=>t===f.tag.toLowerCase()).length;
       h+=`<div class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
         <div class="drill-sec-ico">🏷</div>
@@ -2855,6 +2931,7 @@ function showSheetCat(label){
   const lbl=document.getElementById('sheet-cat-label');
   if(!btn)return;
   btn.style.display='inline-flex';
+  delete btn.dataset.userFolder; // сброс флага пользовательского раздела
   const col=STRIPES[label||'заметка']||STRIPES.заметка;
   if(dot)dot.style.background=col;
   if(lbl)lbl.textContent=label||'заметка';
@@ -2873,11 +2950,21 @@ function toggleCatDropdown(){
   const dd=document.getElementById('cat-dropdown');if(!dd)return;
   if(dd.classList.contains('open')){dd.classList.remove('open');return;}
   const cur=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
-  dd.innerHTML=Object.keys(STRIPES).map(l=>`
+  const stripeOpts=Object.keys(STRIPES).map(l=>`
     <div class="cat-opt" onclick="selectCat('${l}')">
       <div class="cat-opt-dot" style="background:${STRIPES[l]};"></div>${l}
       ${l===cur?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
     </div>`).join('');
+  const userFolders=getUserFolders();
+  const folderOpts=userFolders.length
+    ?'<div class="cat-opt-sep">Разделы</div>'+userFolders.map((f,i)=>{
+      const col=_folderColor(f.idx!==undefined?f.idx:i);
+      return `<div class="cat-opt" onclick="selectUserFolderTag(${jsAttr(f.name)})">
+        <div class="cat-opt-dot" style="background:${col};"></div>${esc(f.name)}
+        ${f.name===cur?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>`;}).join('')
+    :'';
+  dd.innerHTML=stripeOpts+folderOpts;
   dd.classList.add('open');
   setTimeout(()=>document.addEventListener('click',closeCatOnClick,{once:true}),10);
 }
@@ -2887,6 +2974,23 @@ function closeCatOnClick(e){
 }
 function selectCat(label){
   showSheetCat(label);
+  document.getElementById('cat-dropdown').classList.remove('open');
+  saveSheetDraft();
+}
+function selectUserFolderTag(folderName){
+  // Сохраняем имя раздела в data-attribute кнопки для последующего считывания при сохранении
+  const btn=document.getElementById('sheet-cat-btn');
+  if(btn){
+    btn.dataset.label=folderName;
+    btn.dataset.userFolder='1';
+    const dot=document.getElementById('sheet-cat-dot');
+    const lbl=document.getElementById('sheet-cat-label');
+    const userFolders=getUserFolders();
+    const fi=userFolders.findIndex(f=>f.name===folderName);
+    const col=fi>=0?_folderColor(userFolders[fi].idx!==undefined?userFolders[fi].idx:fi):_folderColor(0);
+    if(dot)dot.style.background=col;
+    if(lbl)lbl.textContent=folderName;
+  }
   document.getElementById('cat-dropdown').classList.remove('open');
   saveSheetDraft();
 }
@@ -3171,7 +3275,9 @@ function saveSheet(){
   const f=document.getElementById('sh1');
   const v1=f?f.value:'';
   const catBtn=document.getElementById('sheet-cat-btn');
-  const v3=safeLabel(catBtn?catBtn.dataset.label||'заметка':'заметка');
+  const isUserFolder=catBtn?.dataset.userFolder==='1';
+  const v3=isUserFolder?'заметка':safeLabel(catBtn?catBtn.dataset.label||'заметка':'заметка');
+  const _selectedUserFolder=isUserFolder?(catBtn?.dataset.label||''):'';
   const reminderEl=document.getElementById('sheet-reminder-in');
   const v2=reminderEl?reminderEl.value:'';
   if(!v1.trim()){showToast('Напишите текст');return;}
@@ -3189,6 +3295,10 @@ function saveSheet(){
   // Если создаём заметку из тег-папки — добавляем её тег автоматически
   if(existingIdx<0&&drillAiTag&&!aiTags.map(t=>t.toLowerCase()).includes(drillAiTag.toLowerCase())){
     aiTags=[...aiTags,drillAiTag];
+  }
+  // Если пользователь выбрал раздел из пикера — добавляем тег
+  if(_selectedUserFolder&&!aiTags.map(t=>t.toLowerCase()).includes(_selectedUserFolder.toLowerCase())){
+    aiTags=[...aiTags,_selectedUserFolder];
   }
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
@@ -4136,7 +4246,7 @@ function _executeAgentIntent(result,originalText){
     ?result.options
     :(Array.isArray(actions[0].params?.options)?actions[0].params.options:[]);
 
-  _showAgentCard(firstIntent,result.response,actions[0].params,options);
+  _showAgentCardDebounced(firstIntent,result.response,actions[0].params,options);
 }
 
 function _runSingleIntent(intent,params,originalText){
@@ -4320,6 +4430,14 @@ function _agentSpeak(text){
   window.speechSynthesis.speak(utt);
 }
 
+let _agentCardTimer=null;
+function _showAgentCardDebounced(intent,response,params,options){
+  // Если уже есть карточка ожидающая показа — заменяем на новую (агент выдал лучший ответ)
+  if(_agentCardTimer){clearTimeout(_agentCardTimer);}
+  const needsImmediate=['CLARIFY','QUESTION','FIND_DOCTOR','MAKE_PLAN','DAILY_BRIEFING']; // требуют ответа — сразу
+  const delay=needsImmediate.includes(intent)?0:1200;
+  _agentCardTimer=setTimeout(()=>{_agentCardTimer=null;_showAgentCard(intent,response,params,options);},delay);
+}
 function _showAgentCard(intent,response,params,options){
   document.getElementById('agent-card')?.remove();
   const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎'};
@@ -4371,9 +4489,13 @@ function _showAgentCard(intent,response,params,options){
     ${savePlanBtn}
     ${closeBtn}
   </div>`;
+  // Клик на затемнённый фон = закрыть (только для autoClose карточек)
+  if(autoClose){
+    card.addEventListener('click',e=>{if(e.target===card){card.classList.remove('show');setTimeout(()=>card.remove(),380);}},{passive:true});
+  }
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
-  if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},6000);
+  if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},7000);
 }
 
 function _agentOpenNote(idx){

@@ -924,24 +924,48 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .agent-lbl{font-size:12px;color:var(--accent-d);text-align:center;height:18px;opacity:0;transition:opacity .25s;letter-spacing:.01em;margin-top:2px;}
 
 /* ── Agent card (result) ── */
-.agent-card{position:fixed;inset:auto 0 0;max-width:520px;margin:0 auto;z-index:3000;transform:translateY(100%);transition:transform .38s cubic-bezier(.34,1.1,.64,1);pointer-events:none;}
-.agent-card.show{transform:translateY(0);pointer-events:auto;}
-.agent-card-inner{background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 44px;box-shadow:0 -6px 40px oklch(0 0 0/0.11);}
-.agent-card-head{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;}
-.agent-card-ico{font-size:44px;line-height:1;}
-.agent-card-speak{background:none;border:none;font-size:22px;cursor:pointer;opacity:.55;padding:4px;border-radius:8px;transition:opacity .15s;}
+/* ── AGENT CARD — centered modal "thought materializing" ── */
+.agent-card{
+  position:fixed;inset:0;z-index:3000;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 20px;
+  background:oklch(0.14 0.02 210 / 0);
+  backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);
+  transition:background .30s ease,backdrop-filter .30s ease,-webkit-backdrop-filter .30s ease;
+  pointer-events:none;
+}
+.agent-card.show{
+  background:oklch(0.14 0.02 210 / 0.28);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  pointer-events:auto;
+}
+.agent-card-inner{
+  width:100%;max-width:380px;
+  background:linear-gradient(160deg, oklch(1 0 0 / 0.96) 0%, oklch(0.97 0.010 210 / 0.95) 100%);
+  border:1px solid oklch(1 0 0 / 0.85);
+  border-radius:28px;
+  padding:32px 24px 26px;
+  box-shadow:0 24px 56px -8px oklch(0.14 0.04 210 / 0.32),inset 0 1px 0 oklch(1 0 0 / 1);
+  transform:scale(0.88) translateY(16px);
+  opacity:0;
+  transition:transform .40s cubic-bezier(.34,1.56,.64,1),opacity .28s ease;
+}
+.agent-card.show .agent-card-inner{transform:scale(1) translateY(0);opacity:1;}
+.agent-card-head{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;}
+.agent-card-ico{font-size:42px;line-height:1;filter:drop-shadow(0 2px 6px oklch(0.50 0.10 210 / 0.22));}
+.agent-card-speak{background:none;border:none;font-size:20px;cursor:pointer;opacity:.50;padding:4px;border-radius:8px;transition:opacity .15s;}
 .agent-card-speak:active{opacity:1;}
-.agent-card-txt{font-size:17px;line-height:1.6;color:var(--fg);text-align:center;margin-bottom:28px;white-space:pre-wrap;}
-.agent-card-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.agent-card-txt{font-size:16px;line-height:1.65;color:var(--fg);text-align:center;margin-bottom:22px;white-space:pre-wrap;}
+.agent-card-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .agent-card-opts--clarify{grid-template-columns:1fr;gap:10px;margin-bottom:8px;}
-.agent-card-opt{padding:12px 8px;background:oklch(0.96 0.03 210);color:var(--accent-d);border:1.5px solid oklch(0.88 0.06 210/0.5);border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s,transform .1s;line-height:1.3;}
-.agent-card-opts--clarify .agent-card-opt{padding:16px 18px;font-size:16px;font-weight:600;border-radius:16px;text-align:left;}
-.agent-card-opt:active{background:oklch(0.92 0.05 210);transform:scale(.97);}
-.agent-card-cancel{display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:14px;cursor:pointer;margin-top:4px;}
-.agent-card-open{display:block;width:100%;padding:13px;background:oklch(0.96 0.03 210);color:var(--accent-d);border:1.5px solid oklch(0.88 0.06 210/0.5);border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;transition:opacity .15s;}
+.agent-card-opt{padding:14px 10px;background:oklch(0.95 0.025 210);color:var(--accent-d);border:1.5px solid oklch(0.87 0.06 210/0.45);border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;line-height:1.35;font-family:var(--sys);}
+.agent-card-opts--clarify .agent-card-opt{padding:16px 18px;font-size:16px;border-radius:18px;text-align:left;}
+.agent-card-opt:active{background:oklch(0.90 0.05 210);transform:scale(.97);}
+.agent-card-cancel{display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:14px;cursor:pointer;margin-top:4px;font-family:var(--sys);}
+.agent-card-open{display:block;width:100%;padding:13px;background:oklch(0.95 0.025 210);color:var(--accent-d);border:1.5px solid oklch(0.87 0.06 210/0.45);border-radius:16px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .15s;font-family:var(--sys);}
 .agent-card-open:active{opacity:.7;}
-.agent-card-btn{display:block;width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .15s;}
-.agent-card-btn:active{opacity:.8;}
+.agent-card-btn{display:block;width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:18px;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;font-family:var(--sys);letter-spacing:.02em;}
+.agent-card-btn:active{opacity:.85;transform:scale(.98);}
 
 /* ── Portal agent states ── */
 .rz-portal.agent-listening{animation:rz-listen 1s ease-in-out infinite!important;}
@@ -1431,18 +1455,19 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .sheet-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px oklch(1 0 0 / 0.35);}
 
 /* Category dropdown */
-.cat-dropdown{position:absolute;top:calc(100% + 4px);left:0;
+.cat-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;
   background:oklch(0.98 0.008 210 / 0.98);
   backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
   border:1px solid oklch(0.90 0.02 210 / 0.55);
-  border-radius:16px;
-  box-shadow:0 8px 32px oklch(0 0 0 / 0.10),inset 0 1px 0 oklch(1 0 0 / 0.8);
-  z-index:100;min-width:160px;overflow:hidden;display:none;}
+  border-radius:18px;
+  box-shadow:0 8px 32px oklch(0 0 0 / 0.12),inset 0 1px 0 oklch(1 0 0 / 0.8);
+  z-index:100;max-height:340px;overflow-y:auto;overflow-x:hidden;display:none;-webkit-overflow-scrolling:touch;}
 .cat-dropdown.open{display:block;animation:dropIn .2s cubic-bezier(.22,1,.36,1);}
 @keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
-.cat-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:14px;color:var(--fg);font-family:var(--sys);transition:background .1s;}
+.cat-opt{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:15px;color:var(--fg);font-family:var(--sys);transition:background .1s;}
 .cat-opt:active{background:oklch(0.52 0.10 210 / 0.08);}
 .cat-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.cat-opt-sep{padding:6px 14px 4px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--fg-l);text-transform:uppercase;}
 
 /* Divider */
 .sheet-hdr-line{height:1px;background:oklch(0.88 0.02 210 / 0.22);flex-shrink:0;margin-top:0;}
@@ -2081,11 +2106,10 @@ html.dark .bubble{
 .drill-sec-row{
   display:flex;align-items:center;gap:13px;
   padding:15px 16px;
-  background:oklch(1 0 0 / 0.52);
-  border:1px solid oklch(1 0 0 / 0.55);
+  background:linear-gradient(158deg, oklch(1 0 0 / 0.80) 0%, oklch(0.96 0.012 210 / 0.70) 100%);
+  border:1px solid oklch(1 0 0 / 0.62);
   border-radius:18px;margin-bottom:9px;
-  backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
-  box-shadow:inset 0 1px 3px oklch(1 0 0 / 0.60),0 2px 12px -4px oklch(0.50 0.10 210 / 0.10);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.90),0 2px 10px -3px oklch(0.50 0.10 210 / 0.12);
   cursor:pointer;-webkit-appearance:none;width:100%;
   text-align:left;font-family:var(--sys);
   transition:transform .12s;
@@ -2109,11 +2133,10 @@ html.dark .bubble{
 .drill-note-row{
   display:flex;align-items:flex-start;gap:10px;
   padding:14px 16px;
-  background:oklch(1 0 0 / 0.52);
-  border:1px solid oklch(1 0 0 / 0.55);
+  background:linear-gradient(158deg, oklch(1 0 0 / 0.80) 0%, oklch(0.96 0.012 210 / 0.70) 100%);
+  border:1px solid oklch(1 0 0 / 0.62);
   border-radius:18px;margin-bottom:9px;
-  backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
-  box-shadow:inset 0 1px 3px oklch(1 0 0 / 0.60),0 2px 12px -4px oklch(0.50 0.10 210 / 0.10);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.90),0 2px 10px -3px oklch(0.50 0.10 210 / 0.12);
   cursor:pointer;
   transition:transform .12s;
 }
@@ -2438,7 +2461,7 @@ html.dark .bubble{
           <button class="notes-nav-ico-btn" id="drill-grid-btn" onclick="toggleDrillGrid()" title="Сетка / список">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           </button>
-          <button class="notes-nav-ico-btn" onclick="openSheet('note')" title="Новая заметка">
+          <button class="notes-nav-ico-btn" id="drill-add-btn" onclick="openDrillAdd()" title="Создать">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
         </div>
@@ -3169,6 +3192,19 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     <button class="rem-edit-done-btn" onclick="closeRemEdit()">Готово</button>
     <button class="rem-edit-del-btn" onclick="remEditDelete()">Удалить напоминание</button>
+  </div>
+</div>
+
+<!-- FOLDER CREATE MODAL -->
+<div id="folder-modal" onclick="closeFolderModal()" style="position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;padding:0 24px;background:oklch(0.14 0.02 210 / 0);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);pointer-events:none;transition:background .25s,backdrop-filter .25s,-webkit-backdrop-filter .25s;">
+  <div id="folder-modal-inner" onclick="event.stopPropagation()" style="width:100%;max-width:340px;background:linear-gradient(160deg,oklch(1 0 0/.97) 0%,oklch(0.97 0.010 210/.96) 100%);border:1px solid oklch(1 0 0/.85);border-radius:26px;padding:28px 22px 22px;box-shadow:0 24px 52px -8px oklch(0.14 0.04 210/.30),inset 0 1px 0 oklch(1 0 0/1);transform:scale(.88) translateY(14px);opacity:0;transition:transform .38s cubic-bezier(.34,1.56,.64,1),opacity .26s ease;">
+    <div style="font-size:28px;text-align:center;margin-bottom:10px;">🗂</div>
+    <div style="font-size:18px;font-weight:700;color:var(--fg);text-align:center;margin-bottom:18px;">Новый раздел</div>
+    <input id="folder-modal-inp" type="text" maxlength="32" placeholder="Название раздела…"
+      style="width:100%;box-sizing:border-box;font-size:17px;font-family:var(--sys);padding:13px 16px;border:1.5px solid oklch(0.87 0.04 210/.5);border-radius:14px;background:oklch(0.96 0.008 210/.7);color:var(--fg);outline:none;margin-bottom:16px;"
+      onkeydown="if(event.key==='Enter')confirmFolderCreate()">
+    <button onclick="confirmFolderCreate()" style="display:block;width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:700;font-family:var(--sys);cursor:pointer;margin-bottom:10px;transition:opacity .15s;">Создать</button>
+    <button onclick="closeFolderModal()" style="display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:15px;font-family:var(--sys);cursor:pointer;">Отмена</button>
   </div>
 </div>
 </body>
