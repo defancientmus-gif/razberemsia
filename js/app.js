@@ -1365,6 +1365,8 @@ async function _saveReminderToServer(noteId,noteTitle,noteBody,remindAt){
     // Конвертируем в UTC ISO — браузер парсит как локальное время, сервер должен получить UTC
     const dt=new Date(remindAt);
     if(isNaN(dt.getTime()))return;
+    // Не сохранять на сервер прошедшие напоминания — они будут слаться снова и снова
+    if(dt.getTime()<Date.now())return;
     const remindAtUtc=dt.toISOString();
     await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
