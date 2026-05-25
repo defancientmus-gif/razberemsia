@@ -1135,8 +1135,8 @@ async function sendNoteChat(){
     if(Math.abs(dy)>55)return;
     // Навигация: только от левого края (sx<44px), правый свайп ≥90px
     if(dx>90&&sx<44&&cur!=='home'){
-      // Если внутри папки заметок — drill-swipe обработает сам, home не нужен
-      if(cur==='notes'&&drillLevel>0)return;
+      // Если drill-свайп уже сработал внутри #s-notes — не дублируем переход на home
+      if(cur==='notes'&&_drillHandledSwipe){_drillHandledSwipe=false;return;}
       go('home');
     }
     if(dx<-90&&sx<44&&cur==='home'){go('notes');return;}
@@ -2150,6 +2150,7 @@ let _drillTouchX=0;
 let _drillSwipeInited=false;
 let _drillGrid=(()=>{const v=localStorage.getItem('rz_drill_grid');return v!==null?v==='1':true;})();
 let _drillP1Limit=10;
+let _drillHandledSwipe=false; // флаг: drill-свайп обработан, не дублировать в глобальном хендлере
 
 function toggleDrillGrid(){
   _drillGrid=!_drillGrid;
@@ -2401,7 +2402,7 @@ function _drillInitSwipe(){
   el.addEventListener('touchstart',e=>{_drillTouchX=e.touches[0].clientX;},{passive:true});
   el.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-_drillTouchX;
-    if(dx>60&&drillLevel>0)drillBack();
+    if(dx>60&&drillLevel>0){_drillHandledSwipe=true;drillBack();}
   },{passive:true});
   // Scroll-to-top FAB для drill-p1
   const p1=document.getElementById('drill-p1');
@@ -3213,14 +3214,17 @@ function saveSheet(){
   const wasNew=(EI===null); // запомнить ДО closeSheet(), который обнуляет EI
   const _prevAiTag=drillAiTag;
   const _prevCategory=drillCategory;
+  const _prevDrillLevel=drillLevel;
   const _wasInNotes=(cur==='notes');
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
   showToast(wasNew?'Сохранено ✓':'Изменено ✓');
-  // Возврат в папку после создания заметки
-  if(wasNew&&_wasInNotes){
-    if(_prevAiTag!==null)setTimeout(()=>drillGo(1,{aiTag:_prevAiTag}),50);
-    else if(_prevCategory!==null)setTimeout(()=>drillGo(1,{category:_prevCategory}),50);
+  // Возврат в папку после сохранения (и создания, и редактирования)
+  if(_wasInNotes&&_prevDrillLevel>=1){
+    setTimeout(()=>{
+      if(_prevAiTag!==null)drillGo(1,{aiTag:_prevAiTag});
+      else drillGo(1,{category:_prevCategory}); // null = все заметки
+    },50);
   }
   if(v2) _handleReminderAfterSave(v2,item.id,title,v1.trim().slice(0,200));
   // AI-ответ — только для новых заметок (не редактирование)
