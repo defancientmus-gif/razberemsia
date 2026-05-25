@@ -3617,7 +3617,18 @@ function _executeAgentIntent(result,originalText){
     ?result.actions
     :[{intent:result.intent,params:result.params||{}}];
   actions.forEach(a=>_runSingleIntent(a.intent,a.params,originalText));
-  _showAgentCard(actions[0].intent,result.response,actions[0].params,result.options);
+
+  const firstIntent=actions[0].intent;
+
+  // Для удалений карточка не нужна — тост уже дал фидбек
+  if(firstIntent==='DELETE_NOTE'||firstIntent==='DELETE_REMINDER')return;
+
+  // options могут быть на верхнем уровне (старый формат) или внутри params первого action (CLARIFY в новом формате)
+  const options=Array.isArray(result.options)&&result.options.length
+    ?result.options
+    :(Array.isArray(actions[0].params?.options)?actions[0].params.options:[]);
+
+  _showAgentCard(firstIntent,result.response,actions[0].params,options);
 }
 
 function _runSingleIntent(intent,params,originalText){
