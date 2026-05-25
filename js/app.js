@@ -3486,7 +3486,7 @@ function startAgentVoice(){
   if(!CU){showToast('Сначала войдите в аккаунт');return;}
   _agentCollected='';
   _agentRec=new SR();
-  _agentRec.lang='ru-RU';_agentRec.continuous=false;_agentRec.interimResults=false;
+  _agentRec.lang='ru-RU';_agentRec.continuous=true;_agentRec.interimResults=false;
   _agentRec.onstart=()=>{_agentRecording=true;_setAgentState('listening');};
   _agentRec.onresult=e=>{
     for(let i=e.resultIndex;i<e.results.length;i++){
@@ -3494,14 +3494,20 @@ function startAgentVoice(){
     }
   };
   _agentRec.onerror=e=>{
-    if(e.error!=='no-speech')showToast('Ошибка голоса: '+e.error);
+    if(e.error==='no-speech'){return;}// продолжаем слушать
+    showToast('Ошибка голоса: '+e.error);
     _agentRecording=false;_agentRec=null;_setAgentState('idle');
   };
   _agentRec.onend=()=>{
     _agentRecording=false;_agentRec=null;
     const text=_agentCollected.trim();
-    if(text)_processAgentQuery(text);
-    else _setAgentState('idle');
+    if(text){
+      showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');
+      _processAgentQuery(text);
+    } else {
+      showToast('Не услышал — попробуйте ещё раз');
+      _setAgentState('idle');
+    }
   };
   _agentRec.start();
 }
@@ -3526,22 +3532,25 @@ function _setAgentState(state){
 async function _processAgentQuery(text){
   _setAgentState('thinking');
   try{
-    const sess=await sb?.auth?.getSession?.();
+    if(!sb){showToast('Нет подключения к серверу');_setAgentState('idle');return;}
+    const sess=await sb.auth.getSession();
     const token=sess?.data?.session?.access_token;
-    if(!token){showToast('Войдите в аккаунт');_setAgentState('idle');return;}
+    if(!token){showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
     const memoryContext=getAiMemoryContext?.()??[];
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({action:'agent_query',payload:{text,memoryContext}})
     });
-    const data=await res.json();
+    let data;
+    try{data=await res.json();}catch(e){showToast('Ошибка ответа сервера');_setAgentState('idle');return;}
     _setAgentState('idle');
-    if(!res.ok||data.error){showToast(data.error||'Ошибка');return;}
+    if(!res.ok||data.error){showToast('Агент: '+(data.error||'ошибка '+res.status));return;}
+    if(!data.intent){showToast('Агент не понял намерение');return;}
     _executeAgentIntent(data,text);
   }catch(e){
     _setAgentState('idle');
-    showToast('Нет сети — попробуйте ещё раз');
+    showToast('Нет сети — '+String(e?.message||'').slice(0,40));
   }
 }
 
