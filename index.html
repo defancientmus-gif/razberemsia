@@ -1750,23 +1750,15 @@ html.dark .bubble{
     radial-gradient(circle at 38% 28%, oklch(1 0 0 / 0.55) 0%, transparent 45%),
     radial-gradient(circle at 50% 50%, oklch(0.78 0.12 220 / 0.18) 0%, oklch(0.55 0.14 220 / 0.35) 100%);
   border:1.5px solid oklch(1 0 0 / 0.55);
-  box-shadow:
-    0 0 0 1px oklch(0.60 0.14 220 / 0.20),
-    0 8px 32px oklch(0.45 0.14 220 / 0.22),
-    inset 0 1px 0 oklch(1 0 0 / 0.70);
+  animation: rz-pulse 3s ease-in-out infinite;
 }
-.rz-ring {
-  position:absolute; border-radius:50%; pointer-events:none;
-  border:1px solid oklch(0.60 0.10 220 / 0.22);
-  animation: rz-pulse 3.2s ease-out infinite;
-}
-.rz-ring-1 { inset:22px; animation-delay:0s; }
-.rz-ring-2 { inset:10px; animation-delay:1.0s; }
-.rz-ring-3 { inset:2px;  animation-delay:2.0s; }
 @keyframes rz-pulse {
-  0%   { opacity:0;   transform:scale(.7); }
-  40%  { opacity:.30; }
-  100% { opacity:0;   transform:scale(1.0); }
+  0%,100% { box-shadow: 0 0 0 0   oklch(0.55 0.14 220 / 0.00),
+                        0 0 0 4px oklch(0.55 0.14 220 / 0.10),
+                        0 6px 24px oklch(0.45 0.14 220 / 0.15); }
+  50%     { box-shadow: 0 0 0 8px oklch(0.55 0.14 220 / 0.12),
+                        0 0 0 4px oklch(0.55 0.14 220 / 0.08),
+                        0 8px 32px oklch(0.45 0.14 220 / 0.28); }
 }
 .rz-portal-logo {
   position:absolute; inset:0;
@@ -2245,9 +2237,6 @@ html.dark .bubble{
             <div class="rz-portal-slot">
               <div class="rz-portal-wrap">
                 <div class="rz-portal-ball">
-                  <div class="rz-ring rz-ring-1"></div>
-                  <div class="rz-ring rz-ring-2"></div>
-                  <div class="rz-ring rz-ring-3"></div>
                   <button class="rz-portal" onclick="go('notepad')" aria-label="Разберёмся">
                     <div class="rz-portal-logo">
                       <img src="logo-mark.png" alt="" draggable="false">
