@@ -1352,6 +1352,23 @@ function dismissInAppReminder(){
 let _shownReminders=(()=>{try{return JSON.parse(sessionStorage.getItem('rz_shown_rem')||'{}');}catch(e){return{};}})();
 function _persistShownRem(){try{sessionStorage.setItem('rz_shown_rem',JSON.stringify(_shownReminders));}catch(e){}}
 
+function _nextRecurringTime(times){
+  const now=new Date();
+  // Сегодня — ближайшее время в будущем
+  const todayFuture=times.map(t=>{
+    const [h,m]=(t||'').split(':').map(Number);
+    const d=new Date(now);d.setHours(h,m||0,0,0);return d;
+  }).filter(d=>d.getTime()>now.getTime()).sort((a,b)=>a-b);
+  if(todayFuture.length)return todayFuture[0].getTime();
+  // Завтра — первое время из списка
+  const sorted=[...times].sort();
+  const [h,m]=(sorted[0]||'09:00').split(':').map(Number);
+  const tomorrow=new Date(now);
+  tomorrow.setDate(tomorrow.getDate()+1);
+  tomorrow.setHours(h,m||0,0,0);
+  return tomorrow.getTime();
+}
+
 function checkDueReminders(){
   const settings=getReminderSettings();
   const advMs=settings.advanceMinutes*60*1000;
@@ -1366,8 +1383,17 @@ function checkDueReminders(){
       _persistShownRem();
       showInAppReminder(n);
     }
+    // Авто-перепланировка повторяющихся напоминаний
+    if(diff<0&&n.recurring?.times?.length){
+      const next=_nextRecurringTime(n.recurring.times);
+      if(next!==n.reminder){
+        const list=getNotes();
+        const idx=list.findIndex(x=>x.id===n.id);
+        if(idx>=0){list[idx].reminder=next;list[idx].updatedAt=Date.now();saveNotes(list);scheduleAll();}
+      }
+    }
     // Clean shown cache for reminders more than 1h past
-    if(diff<-3600000){delete _shownReminders[key];_persistShownRem();}
+    if(diff<-3600000&&!n.recurring){delete _shownReminders[key];_persistShownRem();}
   });
 }
 setInterval(checkDueReminders,60000);
@@ -3611,28 +3637,16 @@ function _runSingleIntent(intent,params,originalText){
 
   if(intent==='SET_RECURRING'){
     const title=params.title||originalText;
-    const times=Array.isArray(params.times)?params.times:[];
-    if(!times.length){showToast('Не указано время');return;}
+    const times=Array.isArray(params.times)&&params.times.length?params.times:['09:00'];
+    const nextTs=_nextRecurringTime(times);
+    const ts=Date.now();const id=genId();
     const notes=getNotes();
-    const now=new Date();
-    let created=0;
-    times.forEach(t=>{
-      const [hh,mm]=(t||'').split(':').map(Number);
-      if(isNaN(hh))return;
-      // Завтра в указанное время (и каждый день — создаём на 7 дней)
-      for(let day=0;day<7;day++){
-        const dt=new Date(now);
-        dt.setDate(dt.getDate()+day+(day===0&&(now.getHours()>hh||(now.getHours()===hh&&now.getMinutes()>=mm))?1:0));
-        dt.setHours(hh,mm||0,0,0);
-        if(dt.getTime()<=now.getTime())continue;
-        const id=genId();const ts=Date.now();
-        notes.push({id,title,body:title,label:'заметка',reminder:dt.getTime(),createdAt:ts+created,updatedAt:ts+created});
-        _handleReminderAfterSave(dt.getTime(),id,title,title);
-        created++;
-        if(created>=times.length*7)break;
-      }
-    });
-    saveNotes(notes);loadHomeFeed();loadNotes();
+    notes.push({id,title,body:title,label:'заметка',
+      reminder:nextTs,recurring:{times,days:params.days||'daily'},
+      createdAt:ts,updatedAt:ts});
+    saveNotes(notes);
+    _handleReminderAfterSave(nextTs,id,title,title);
+    loadHomeFeed();loadNotes();
   }
 
   if(intent==='OPEN_NOTE'||intent==='ANALYZE_NOTE'){
@@ -3733,8 +3747,13 @@ function _showAgentCard(intent,response,params,options){
 
   const card=document.createElement('div');
   card.id='agent-card';card.className='agent-card';
+  const speakBtn=window.speechSynthesis
+    ?`<button class="agent-card-speak" onclick="_agentSpeak(${jsAttr(response)})" title="Озвучить">🔊</button>`:'';
   card.innerHTML=`<div class="agent-card-inner">
-    <div class="agent-card-ico">${icons[intent]||'✦'}</div>
+    <div class="agent-card-head">
+      <div class="agent-card-ico">${icons[intent]||'✦'}</div>
+      ${speakBtn}
+    </div>
     <div class="agent-card-txt">${esc(response)}</div>
     ${optBtns}
     ${openBtn}
@@ -3743,7 +3762,6 @@ function _showAgentCard(intent,response,params,options){
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
   if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},6000);
-  setTimeout(()=>_agentSpeak(response),100);
 }
 
 function _agentOpenNote(idx){
