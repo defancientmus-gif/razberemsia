@@ -2173,6 +2173,34 @@ html.dark .bubble{
 .drill-note-bell{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210/0.10);border:1px solid oklch(0.52 0.10 210/0.20);border-radius:5px;padding:1px 6px;}
 .drill-note-arr{color:var(--fg-l);font-size:18px;flex-shrink:0;padding-top:1px;}
 
+/* ── "РАЗОБРАЛИСЬ" — метка проработанных заметок ── */
+.drill-note-row.resolved,.drill-grid-card.resolved{opacity:0.60;}
+/* Штамп в списке — правый край строки */
+.note-resolved-row{
+  display:flex;align-items:center;
+  flex-shrink:0;
+  font-size:9px;font-weight:700;letter-spacing:.04em;
+  color:oklch(0.52 0.10 210 / 0.65);
+  background:oklch(0.52 0.10 210 / 0.08);
+  border:1px solid oklch(0.52 0.10 210 / 0.18);
+  border-radius:6px;
+  padding:2px 7px;
+  white-space:nowrap;
+  writing-mode:initial;
+  margin-left:8px;
+  align-self:center;
+}
+/* Штамп в сетке — нижний правый угол карточки */
+.note-resolved-stamp{
+  position:absolute;bottom:8px;right:9px;
+  font-size:8px;font-weight:800;letter-spacing:.06em;
+  color:oklch(0.52 0.10 210 / 0.55);
+  text-transform:lowercase;
+  line-height:1;
+  pointer-events:none;
+}
+.drill-grid-card{position:relative;}
+
 /* Detail — Panel 2 */
 .drill-detail{padding:4px 0;}
 .drill-detail-title{font-size:22px;font-weight:700;color:var(--fg);line-height:1.3;margin-bottom:6px;}

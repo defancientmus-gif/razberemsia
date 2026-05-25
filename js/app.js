@@ -2082,6 +2082,17 @@ function mkDay(num,ds,other,isT,isSel,hasDot){
   return b;
 }
 
+// ── "РАЗОБРАЛИСЬ" — пометить заметку как проработанную ──
+// Заметка считается проработанной если у неё есть тег, совпадающий с пользовательским разделом.
+// Такие заметки остаются в AI-папках (сортировочный центр), но помечаются визуально.
+function isNoteResolved(note){
+  if(!Array.isArray(note.aiTags)||!note.aiTags.length)return false;
+  const folders=getUserFolders();
+  if(!folders.length)return false;
+  const names=folders.map(f=>f.name.toLowerCase());
+  return note.aiTags.some(t=>names.includes(t.toLowerCase()));
+}
+
 // ── USER FOLDERS (custom sections created by user via + button) ──
 function getUserFolders(){try{return JSON.parse(localStorage.getItem(scopedKey('rz_user_folders'))||'[]');}catch(e){return[];}}
 function saveUserFolders(arr){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(arr));}
@@ -2402,15 +2413,17 @@ function _drillP1(){
       const preview=_notePreview(n);
       const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
       const hasBell=!!n.reminder;
+      const resolved=isNoteResolved(n);
       const bg=_drillCardBg(i,notes.length);
-      h+=`<div class="drill-grid-card" style="background:${bg}" onclick="drillPickNote(${i})">
+      h+=`<div class="drill-grid-card${resolved?' resolved':''}" style="background:${bg}" onclick="drillPickNote(${i})">
         <div class="drill-grid-title">${esc(n.title)}</div>
         ${preview?`<div class="drill-grid-preview">${esc(preview)}</div>`:''}
         <div class="drill-grid-foot">
           <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
           ${hasBell?'<span style="font-size:10px">\ud83d\udd14</span>':''}
-          ${hasAi?'<span style="font-size:9px;color:var(--accent-d);font-weight:700">AI</span>':''}
+          ${hasAi&&!resolved?'<span style="font-size:9px;color:var(--accent-d);font-weight:700">AI</span>':''}
         </div>
+        ${resolved?'<div class="note-resolved-stamp">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</div>':''}
       </div>`;
     });
     h+='</div>';
@@ -2420,9 +2433,11 @@ function _drillP1(){
       const preview=_notePreview(n);
       const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
       const hasBell=!!n.reminder;
-      const aiBadge=hasAi?`<span class="drill-note-ai">\u2736 AI</span>`:'';
+      const resolved=isNoteResolved(n);
+      const aiBadge=hasAi&&!resolved?`<span class="drill-note-ai">\u2736 AI</span>`:'';
       const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
-      h+=`<div class="drill-note-row" onclick="drillPickNote(${i})">
+      const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
+      h+=`<div class="drill-note-row${resolved?' resolved':''}" onclick="drillPickNote(${i})">
         <div class="drill-note-body">
           <div class="drill-note-title">${esc(n.title)}</div>
           ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
@@ -2431,6 +2446,7 @@ function _drillP1(){
             ${bellBadge}${aiBadge}
           </div>
         </div>
+        ${resolvedBadge}
       </div>`;
     });
   }
