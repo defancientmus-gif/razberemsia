@@ -2075,15 +2075,29 @@ function _drillP0(){
     const allAiTags=notes.flatMap(n=>Array.isArray(n.aiTags)?n.aiTags.map(t=>t.toLowerCase()):[]);
     tagFolders.forEach(f=>{
       const cnt=allAiTags.filter(t=>t===f.tag.toLowerCase()).length;
-      h+=`<button class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
+      h+=`<div class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
         <div class="drill-sec-ico">🏷</div>
         <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
         <div class="drill-sec-count">${cnt}</div>
-        <div class="drill-sec-arr">&rsaquo;</div>
-      </button>`;
+        <span class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </span>
+      </div>`;
     });
   }
   el.innerHTML=h;
+}
+
+function deleteTagFolder(tag){
+  if(typeof getTagFolders!=='function')return;
+  const folders=getTagFolders();
+  const f=folders.find(x=>x.tag===tag);
+  if(!f)return;
+  const label=f.label||f.tag;
+  const newFolders=folders.filter(x=>x.tag!==tag);
+  localStorage.setItem('rz_tag_folders',JSON.stringify(newFolders));
+  loadNotes();
+  showToast(`Папка «${label}» удалена`);
 }
 
 function _drillCardBg(i,total){
@@ -3685,22 +3699,30 @@ function agentTap(){
   _agentRecording?stopAgentVoice():startAgentVoice();
 }
 
+let _agentAlts=[];// Альтернативы последнего финального результата (топ-3)
+
 function startAgentVoice(){
   if(_agentRecording||_agentRec)return;
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голосовой ввод не поддерживается');return;}
   if(!CU){showToast('Сначала войдите в аккаунт');return;}
-  _agentCollected='';
+  _agentCollected='';_agentAlts=[];
   _agentRec=new SR();
-  _agentRec.lang='ru-RU';_agentRec.continuous=true;_agentRec.interimResults=false;
+  _agentRec.lang='ru-RU';
+  _agentRec.continuous=true;
+  _agentRec.interimResults=false;
+  _agentRec.maxAlternatives=3;// Просим браузер дать топ-3 варианта
   _agentRec.onstart=()=>{_agentRecording=true;_setAgentState('listening');};
   _agentRec.onresult=e=>{
     for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal)_agentCollected+=(e.results[i][0].transcript||'');
+      if(!e.results[i].isFinal)continue;
+      _agentCollected+=(e.results[i][0].transcript||'');
+      // Сохраняем альтернативы последнего сегмента (индекс 1 и 2)
+      _agentAlts=Array.from(e.results[i]).slice(1,3).map(a=>a.transcript).filter(Boolean);
     }
   };
   _agentRec.onerror=e=>{
-    if(e.error==='no-speech'){return;}// продолжаем слушать
+    if(e.error==='no-speech')return;// продолжаем слушать
     showToast('Ошибка голоса: '+e.error);
     _agentRecording=false;_agentRec=null;_setAgentState('idle');
   };
@@ -3709,7 +3731,7 @@ function startAgentVoice(){
     const text=_agentCollected.trim();
     if(text){
       showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');
-      _processAgentQuery(text);
+      _processAgentQuery(text,_agentAlts);
     } else {
       showToast('Не услышал — попробуйте ещё раз');
       _setAgentState('idle');
@@ -3735,7 +3757,7 @@ function _setAgentState(state){
   }
 }
 
-async function _processAgentQuery(text){
+async function _processAgentQuery(text,alts=[]){
   _setAgentState('thinking');
   try{
     if(!sb){showToast('Нет подключения к серверу');_setAgentState('idle');return;}
@@ -3754,10 +3776,12 @@ async function _processAgentQuery(text){
       isRecurring:!!n.recurring,
       reminderTime:n.reminder||null
     }));
+    // Отправляем альтернативы только если они отличаются от основного текста
+    const alternatives=alts.filter(a=>a&&a!==text).slice(0,2);
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,memoryContext,recentNotes}})
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes}})
     });
     let data;
     try{data=await res.json();}catch(e){showToast('Ошибка ответа сервера');_setAgentState('idle');return;}
