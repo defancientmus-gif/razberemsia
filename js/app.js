@@ -3571,8 +3571,13 @@ async function _processAgentQuery(text){
     const token=sess?.data?.session?.access_token;
     if(!token){showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
     const memoryContext=getAiMemoryContext?.()??[];
-    const recentNotes=getNotes().slice(0,5).map((n,i)=>({
-      index:i,title:n.title||'Без названия',body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,200)
+    const _allNotes=getNotes();
+    const recentNotes=_allNotes.slice(0,20).map((n,i)=>({
+      index:i,
+      title:n.title||'Без названия',
+      body:i<5?(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,150):'',
+      hasReminder:!!n.reminder,
+      isRecurring:!!n.recurring
     }));
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
@@ -3620,6 +3625,43 @@ function _runSingleIntent(intent,params,originalText){
     saveNotes(notes);
     if(reminderTime)_handleReminderAfterSave(reminderTime,id,params.title||auto.title,body.slice(0,200));
     loadHomeFeed();loadNotes();
+  }
+
+  if(intent==='DELETE_REMINDER'){
+    const notes=getNotes();
+    let count=0;
+    const pat=(params.pattern||'').toLowerCase().trim();
+    const byIdx=typeof params.noteIndex==='number';
+    notes.forEach((n,i)=>{
+      const match=byIdx?i===params.noteIndex:(pat&&(n.title||'').toLowerCase().includes(pat));
+      if(match&&(n.reminder||n.recurring)){
+        delete n.reminder;delete n.recurring;n.updatedAt=Date.now();count++;
+      }
+    });
+    if(count){saveNotes(notes);scheduleAll();loadHomeFeed();loadNotes();
+      showToast(count===1?'Напоминание удалено':'Удалено напоминаний: '+count);}
+    else showToast('Напоминание не найдено');
+  }
+
+  if(intent==='DELETE_NOTE'){
+    let notes=getNotes();
+    const trash=getTrash();
+    let count=0;
+    const pat=(params.pattern||'').toLowerCase().trim();
+    const byIdx=typeof params.noteIndex==='number';
+    const toDelete=notes.filter((n,i)=>
+      byIdx?i===params.noteIndex:(pat&&(n.title||'').toLowerCase().includes(pat))
+    );
+    toDelete.forEach(n=>{n._deletedAt=Date.now();trash.unshift(n);count++;});
+    if(count){
+      notes=notes.filter((n,i)=>
+        byIdx?i!==params.noteIndex:!(pat&&(n.title||'').toLowerCase().includes(pat))
+      );
+      if(trash.length>50)trash.length=50;
+      saveNotes(notes);saveTrash(trash);
+      loadNotes();loadHomeFeed();loadNotepad();updTrashBadge();
+      showToast(count===1?'Заметка в корзине':'В корзину: '+count+' заметок');
+    } else showToast('Заметка не найдена');
   }
 
   if(intent==='CREATE_TAG_FOLDER'){
