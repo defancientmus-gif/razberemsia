@@ -3593,6 +3593,32 @@ function _executeAgentIntent(result,originalText){
     }
   }
 
+  if(intent==='SET_RECURRING'){
+    const title=params.title||originalText;
+    const times=Array.isArray(params.times)?params.times:[];
+    if(!times.length){showToast('Не указано время');return;}
+    const notes=getNotes();
+    const now=new Date();
+    let created=0;
+    times.forEach(t=>{
+      const [hh,mm]=(t||'').split(':').map(Number);
+      if(isNaN(hh))return;
+      // Завтра в указанное время (и каждый день — создаём на 7 дней)
+      for(let day=0;day<7;day++){
+        const dt=new Date(now);
+        dt.setDate(dt.getDate()+day+(day===0&&(now.getHours()>hh||(now.getHours()===hh&&now.getMinutes()>=mm))?1:0));
+        dt.setHours(hh,mm||0,0,0);
+        if(dt.getTime()<=now.getTime())continue;
+        const id=genId();const ts=Date.now();
+        notes.push({id,title,body:title,label:'заметка',reminder:dt.getTime(),createdAt:ts+created,updatedAt:ts+created});
+        _handleReminderAfterSave(dt.getTime(),id,title,title);
+        created++;
+        if(created>=times.length*7)break;
+      }
+    });
+    saveNotes(notes);loadHomeFeed();loadNotes();
+  }
+
   if(intent==='OPEN_NOTE'||intent==='ANALYZE_NOTE'){
     const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
     const notes=getNotes();
@@ -3639,7 +3665,12 @@ function _executeAgentIntent(result,originalText){
     }
   }
 
-  _showAgentCard(intent,response,params);
+  _showAgentCard(intent,response,params,result.options);
+}
+
+function _agentPickOption(query){
+  document.getElementById('agent-card')?.remove();
+  if(query)_processAgentQuery(query);
 }
 
 // ── TTS — озвучка ответа агента ──
@@ -3655,10 +3686,10 @@ function _agentSpeak(text){
   window.speechSynthesis.speak(utt);
 }
 
-function _showAgentCard(intent,response,params){
+function _showAgentCard(intent,response,params,options){
   document.getElementById('agent-card')?.remove();
-  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥'};
-  const autoClose=!['QUESTION','FIND_DOCTOR'].includes(intent);
+  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥'};
+  const autoClose=!['QUESTION','FIND_DOCTOR','CLARIFY'].includes(intent);
 
   // Кнопка «Открыть заметку» для интентов с noteIndex
   let openBtn='';
@@ -3670,11 +3701,19 @@ function _showAgentCard(intent,response,params){
     openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
   }
 
+  // Кнопки-опции для CLARIFY
+  const optBtns=(Array.isArray(options)&&options.length)
+    ?'<div class="agent-card-opts">'+options.map(o=>
+        `<button class="agent-card-opt" onclick="_agentPickOption(${jsAttr(o.query||o.label)})">${esc(o.label)}</button>`
+      ).join('')+'</div>'
+    :'';
+
   const card=document.createElement('div');
   card.id='agent-card';card.className='agent-card';
   card.innerHTML=`<div class="agent-card-inner">
     <div class="agent-card-ico">${icons[intent]||'✦'}</div>
     <div class="agent-card-txt">${esc(response)}</div>
+    ${optBtns}
     ${openBtn}
     <button class="agent-card-btn" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Готово</button>
   </div>`;
