@@ -3438,6 +3438,116 @@ function stopHomeVoice(){
 }
 
 
+// ── VOICE AGENT (portal button) ──
+let _agentRec=null,_agentRecording=false,_agentCollected='';
+
+function agentTap(){_agentRecording?stopAgentVoice():startAgentVoice();}
+
+function startAgentVoice(){
+  if(_agentRecording||_agentRec)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Голосовой ввод не поддерживается');return;}
+  if(!CU){showToast('Сначала войдите в аккаунт');return;}
+  _agentCollected='';
+  _agentRec=new SR();
+  _agentRec.lang='ru-RU';_agentRec.continuous=false;_agentRec.interimResults=false;
+  _agentRec.onstart=()=>{_agentRecording=true;_setAgentState('listening');};
+  _agentRec.onresult=e=>{
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)_agentCollected+=(e.results[i][0].transcript||'');
+    }
+  };
+  _agentRec.onerror=e=>{
+    if(e.error!=='no-speech')showToast('Ошибка голоса: '+e.error);
+    _agentRecording=false;_agentRec=null;_setAgentState('idle');
+  };
+  _agentRec.onend=()=>{
+    _agentRecording=false;_agentRec=null;
+    const text=_agentCollected.trim();
+    if(text)_processAgentQuery(text);
+    else _setAgentState('idle');
+  };
+  _agentRec.start();
+}
+
+function stopAgentVoice(){if(_agentRec)try{_agentRec.stop();}catch(e){}}
+
+function _setAgentState(state){
+  const btn=document.querySelector('.rz-portal');
+  const lbl=document.getElementById('agent-lbl');
+  btn?.classList.remove('agent-listening','agent-thinking');
+  if(state==='listening'){
+    btn?.classList.add('agent-listening');
+    if(lbl){lbl.textContent='🎙 Слушаю…';lbl.style.opacity='1';}
+  }else if(state==='thinking'){
+    btn?.classList.add('agent-thinking');
+    if(lbl){lbl.textContent='Думаю…';lbl.style.opacity='1';}
+  }else{
+    if(lbl){lbl.textContent='';lbl.style.opacity='0';}
+  }
+}
+
+async function _processAgentQuery(text){
+  _setAgentState('thinking');
+  try{
+    const sess=await sb?.auth?.getSession?.();
+    const token=sess?.data?.session?.access_token;
+    if(!token){showToast('Войдите в аккаунт');_setAgentState('idle');return;}
+    const memoryContext=getAiMemoryContext?.()??[];
+    const res=await fetch(SUPABASE_EDGE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'agent_query',payload:{text,memoryContext}})
+    });
+    const data=await res.json();
+    _setAgentState('idle');
+    if(!res.ok||data.error){showToast(data.error||'Ошибка');return;}
+    _executeAgentIntent(data,text);
+  }catch(e){
+    _setAgentState('idle');
+    showToast('Нет сети — попробуйте ещё раз');
+  }
+}
+
+function _executeAgentIntent(result,originalText){
+  const{intent,params,response}=result;
+  if(intent==='CREATE_NOTE'){
+    const ts=Date.now();const notes=getNotes();const id=genId();
+    const auto=analyzeText(params.body||originalText);
+    notes.push({id,title:params.title||auto.title,body:params.body||originalText,
+      label:auto.label||'заметка',createdAt:ts,updatedAt:ts,fromPad:true});
+    saveNotes(notes);loadHomeFeed();loadNotes();loadNotepad();
+  }
+  if(intent==='SET_REMINDER'){
+    const ts=Date.now();const notes=getNotes();const id=genId();
+    const body=params.body||originalText;
+    const reminderTime=parseVoiceReminder(originalText)||parseVoiceReminder(params.when||'')||null;
+    const auto=analyzeText(body);
+    notes.push({id,title:params.title||auto.title,body,label:'заметка',
+      reminder:reminderTime,createdAt:ts,updatedAt:ts});
+    saveNotes(notes);
+    if(reminderTime)_handleReminderAfterSave(reminderTime,id,params.title||auto.title,body.slice(0,200));
+    loadHomeFeed();loadNotes();
+  }
+  _showAgentCard(intent,response);
+}
+
+function _showAgentCard(intent,response){
+  document.getElementById('agent-card')?.remove();
+  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',QUESTION:'💬',FIND_DOCTOR:'🏥'};
+  const autoClose=intent!=='QUESTION'&&intent!=='FIND_DOCTOR';
+  const card=document.createElement('div');
+  card.id='agent-card';card.className='agent-card';
+  card.innerHTML=`<div class="agent-card-inner">
+    <div class="agent-card-ico">${icons[intent]||'✦'}</div>
+    <div class="agent-card-txt">${esc(response)}</div>
+    <button class="agent-card-btn" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Готово</button>
+  </div>`;
+  document.body.appendChild(card);
+  requestAnimationFrame(()=>card.classList.add('show'));
+  if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},6000);
+}
+
 // ── LOAD ALL ──
 function loadAll(){
   loadHomeFeed();
