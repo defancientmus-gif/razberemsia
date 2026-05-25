@@ -1111,9 +1111,12 @@ async function sendNoteChat(){
     const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dy)>55)return;
     // Навигация: только от левого края (sx<44px), правый свайп ≥90px
-    if(dx>90&&sx<44&&cur!=='home')go('home');
+    if(dx>90&&sx<44&&cur!=='home'){
+      // Если внутри папки заметок — drill-swipe обработает сам, home не нужен
+      if(cur==='notes'&&drillLevel>0)return;
+      go('home');
+    }
     if(dx<-90&&sx<44&&cur==='home'){go('notes');return;}
-    if(dx>90&&sx<44&&cur==='notes'){go('home');return;}
   },{passive:true});
 })();
 
@@ -2513,7 +2516,9 @@ function openSheet(type){
   document.getElementById('sheet-title').textContent='Новая заметка';
   document.getElementById('sheet-body').innerHTML=noteForm('');
   document.getElementById('sheet-char-count').textContent='0 символов';
-  showSheetCat('заметка');
+  // Если открываем из категории — подставляем её по умолчанию
+  const defaultCat=(drillCategory&&typeof drillCategory==='string')?drillCategory:'заметка';
+  showSheetCat(defaultCat);
   initSheetReminder('');
   initSheetRecurring(null);
   initSheetUndo('');
@@ -3157,6 +3162,10 @@ function saveSheet(){
     try{const parsed=JSON.parse(aiPanel.dataset.aiTags);if(Array.isArray(parsed))aiTags=parsed.filter(t=>typeof t==='string').slice(0,8);}catch(e){}
   }
   if(aiPanel?.dataset.aiSummary)aiSummary=aiPanel.dataset.aiSummary;
+  // Если создаём заметку из тег-папки — добавляем её тег автоматически
+  if(existingIdx<0&&drillAiTag&&!aiTags.map(t=>t.toLowerCase()).includes(drillAiTag.toLowerCase())){
+    aiTags=[...aiTags,drillAiTag];
+  }
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
@@ -3177,11 +3186,19 @@ function saveSheet(){
   saveNotes(list);
   if(aiSummary)addToAiMemory(aiSummary,aiTags,item.id);
   clearSheetDraft();
-  // .ics автоэкспорт убран — теперь работает VAPID push через сервер
+  // Запомнить контекст папки ДО сброса в loadNotes()
   const wasNew=(EI===null); // запомнить ДО closeSheet(), который обнуляет EI
+  const _prevAiTag=drillAiTag;
+  const _prevCategory=drillCategory;
+  const _wasInNotes=(cur==='notes');
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
   showToast(wasNew?'Сохранено ✓':'Изменено ✓');
+  // Возврат в папку после создания заметки
+  if(wasNew&&_wasInNotes){
+    if(_prevAiTag!==null)setTimeout(()=>drillGo(1,{aiTag:_prevAiTag}),50);
+    else if(_prevCategory!==null)setTimeout(()=>drillGo(1,{category:_prevCategory}),50);
+  }
   if(v2) _handleReminderAfterSave(v2,item.id,title,v1.trim().slice(0,200));
   // AI-ответ — только для новых заметок (не редактирование)
   if(wasNew&&v1.trim().length>=15){
