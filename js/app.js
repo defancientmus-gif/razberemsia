@@ -3867,30 +3867,108 @@ function agentTap(){
   _agentRecording?stopAgentVoice():startAgentVoice();
 }
 
-let _agentAlts=[];// Альтернативы последнего финального результата (топ-3)
+let _agentAlts=[];
+let _agentMediaRec=null;
+let _agentAudioChunks=[];
+let _agentAudioMime='audio/webm';
 
+// ── AGENT VOICE — Whisper (основной) + Web Speech (fallback) ──
 function startAgentVoice(){
-  if(_agentRecording||_agentRec)return;
+  if(_agentRecording||_agentRec||_agentMediaRec)return;
+  if(!CU){showToast('Сначала войдите в аккаунт');return;}
+  // Используем Whisper если MediaRecorder доступен
+  if(window.MediaRecorder&&navigator.mediaDevices?.getUserMedia){
+    _startAgentVoiceWhisper();
+  } else {
+    _startAgentVoiceSR();
+  }
+}
+
+async function _startAgentVoiceWhisper(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mimes=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+    _agentAudioMime=mimes.find(t=>MediaRecorder.isTypeSupported(t))||'';
+    _agentAudioChunks=[];
+    const opts=_agentAudioMime?{mimeType:_agentAudioMime}:{};
+    _agentMediaRec=new MediaRecorder(stream,opts);
+    if(!_agentAudioMime)_agentAudioMime=_agentMediaRec.mimeType||'audio/webm';
+
+    _agentMediaRec.ondataavailable=e=>{if(e.data.size>0)_agentAudioChunks.push(e.data);};
+
+    _agentMediaRec.onstop=async()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const blob=new Blob(_agentAudioChunks,{type:_agentAudioMime});
+      _agentMediaRec=null;_agentRecording=false;
+
+      if(blob.size<500){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
+
+      _setAgentState('transcribing');
+      try{
+        // blob → base64
+        const base64=await new Promise((res,rej)=>{
+          const reader=new FileReader();
+          reader.onload=()=>res(reader.result.split(',')[1]);
+          reader.onerror=rej;
+          reader.readAsDataURL(blob);
+        });
+        const sess=await sb.auth.getSession();
+        const token=sess?.data?.session?.access_token;
+        if(!token){showToast('Войдите в аккаунт');_setAgentState('idle');return;}
+
+        const res=await fetch(SUPABASE_EDGE_URL,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body:JSON.stringify({action:'transcribe',payload:{audio_base64:base64,mime_type:_agentAudioMime}})
+        });
+        const data=await res.json();
+        if(!res.ok||data.error){
+          // Если Groq не настроен — тихо переходим на SR
+          if(data.error==='GROQ_API_KEY not configured'){
+            showToast('Whisper не настроен, использую браузерное распознавание');
+            _startAgentVoiceSR();return;
+          }
+          showToast('Ошибка расшифровки — попробуйте ещё раз');
+          _setAgentState('idle');return;
+        }
+        const text=(data.text||'').trim();
+        if(!text){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
+
+        showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');
+        _processAgentQuery(text,[]);
+      }catch(e){
+        console.error('Whisper transcription error:',e);
+        showToast('Ошибка сети — попробуйте ещё раз');
+        _setAgentState('idle');
+      }
+    };
+
+    _agentMediaRec.start();
+    _agentRecording=true;
+    _setAgentState('listening');
+  }catch(e){
+    console.warn('MediaRecorder unavailable, falling back to SR:',e);
+    _startAgentVoiceSR();
+  }
+}
+
+// Fallback: старый Web Speech API
+function _startAgentVoiceSR(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голосовой ввод не поддерживается');return;}
-  if(!CU){showToast('Сначала войдите в аккаунт');return;}
   _agentCollected='';_agentAlts=[];
   _agentRec=new SR();
-  _agentRec.lang='ru-RU';
-  _agentRec.continuous=true;
-  _agentRec.interimResults=false;
-  _agentRec.maxAlternatives=3;// Просим браузер дать топ-3 варианта
+  _agentRec.lang='ru-RU';_agentRec.continuous=true;_agentRec.interimResults=false;_agentRec.maxAlternatives=3;
   _agentRec.onstart=()=>{_agentRecording=true;_setAgentState('listening');};
   _agentRec.onresult=e=>{
     for(let i=e.resultIndex;i<e.results.length;i++){
       if(!e.results[i].isFinal)continue;
       _agentCollected+=(e.results[i][0].transcript||'');
-      // Сохраняем альтернативы последнего сегмента (индекс 1 и 2)
       _agentAlts=Array.from(e.results[i]).slice(1,3).map(a=>a.transcript).filter(Boolean);
     }
   };
   _agentRec.onerror=e=>{
-    if(e.error==='no-speech')return;// продолжаем слушать
+    if(e.error==='no-speech')return;
     showToast('Ошибка голоса: '+e.error);
     _agentRecording=false;_agentRec=null;_setAgentState('idle');
   };
@@ -3908,7 +3986,10 @@ function startAgentVoice(){
   _agentRec.start();
 }
 
-function stopAgentVoice(){if(_agentRec)try{_agentRec.stop();}catch(e){}}
+function stopAgentVoice(){
+  if(_agentMediaRec){try{_agentMediaRec.stop();}catch(e){}}
+  else if(_agentRec){try{_agentRec.stop();}catch(e){}}
+}
 
 function _setAgentState(state){
   const btn=document.querySelector('.rz-portal');
@@ -3917,6 +3998,9 @@ function _setAgentState(state){
   if(state==='listening'){
     btn?.classList.add('agent-listening');
     if(lbl){lbl.textContent='🎙 Слушаю…';lbl.style.opacity='1';}
+  }else if(state==='transcribing'){
+    btn?.classList.add('agent-thinking');
+    if(lbl){lbl.textContent='✦ Расшифровываю…';lbl.style.opacity='1';}
   }else if(state==='thinking'){
     btn?.classList.add('agent-thinking');
     if(lbl){lbl.textContent='Думаю…';lbl.style.opacity='1';}
