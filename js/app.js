@@ -3593,6 +3593,27 @@ function _executeAgentIntent(result,originalText){
     }
   }
 
+  if(intent==='OPEN_NOTE'||intent==='ANALYZE_NOTE'){
+    const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
+    const notes=getNotes();
+    const note=notes[idx];
+    if(note){
+      // Закрываем карточку сразу, затем открываем заметку
+      setTimeout(()=>{
+        if(note.id)openNoteSheetById(note.id);
+        else openNoteSheet(idx);
+        // Для ANALYZE — запускаем AI через 400ms после открытия
+        if(intent==='ANALYZE_NOTE'){
+          setTimeout(()=>{
+            if(!_aiOn)toggleAiPanel();
+          },400);
+        }
+      },300);
+    } else {
+      showToast('Заметка не найдена');
+    }
+  }
+
   if(intent==='TAG_NOTE'){
     const tag=(params.tag||'').toLowerCase().trim();
     const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
@@ -3618,7 +3639,7 @@ function _executeAgentIntent(result,originalText){
     }
   }
 
-  _showAgentCard(intent,response);
+  _showAgentCard(intent,response,params);
 }
 
 // ── TTS — озвучка ответа агента ──
@@ -3634,22 +3655,42 @@ function _agentSpeak(text){
   window.speechSynthesis.speak(utt);
 }
 
-function _showAgentCard(intent,response){
+function _showAgentCard(intent,response,params){
   document.getElementById('agent-card')?.remove();
-  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',QUESTION:'💬',FIND_DOCTOR:'🏥'};
-  const autoClose=intent!=='QUESTION'&&intent!=='FIND_DOCTOR';
+  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥'};
+  const autoClose=!['QUESTION','FIND_DOCTOR'].includes(intent);
+
+  // Кнопка «Открыть заметку» для интентов с noteIndex
+  let openBtn='';
+  if(['OPEN_NOTE','ANALYZE_NOTE','TAG_NOTE','CREATE_NOTE'].includes(intent)&&typeof params?.noteIndex==='number'){
+    const noteTitle=getNotes()[params.noteIndex]?.title||'заметку';
+    openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(${params.noteIndex})">Открыть «${esc(noteTitle.slice(0,30))}»</button>`;
+  } else if(intent==='CREATE_NOTE'){
+    // Последняя созданная заметка — index 0
+    openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
+  }
+
   const card=document.createElement('div');
   card.id='agent-card';card.className='agent-card';
   card.innerHTML=`<div class="agent-card-inner">
     <div class="agent-card-ico">${icons[intent]||'✦'}</div>
     <div class="agent-card-txt">${esc(response)}</div>
+    ${openBtn}
     <button class="agent-card-btn" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Готово</button>
   </div>`;
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
   if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},6000);
-  // Небольшая задержка — iOS требует чтобы TTS шёл после жеста пользователя
   setTimeout(()=>_agentSpeak(response),100);
+}
+
+function _agentOpenNote(idx){
+  document.getElementById('agent-card')?.remove();
+  const notes=getNotes();
+  const note=notes[idx];
+  if(!note)return;
+  if(note.id)openNoteSheetById(note.id);
+  else openNoteSheet(idx);
 }
 
 // ── LOAD ALL ──
