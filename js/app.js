@@ -3853,6 +3853,14 @@ function _runSingleIntent(intent,params,originalText){
     }
   }
 
+  if(intent==='FIND_NOTES'){
+    const q=(params.query||'').trim();
+    if(q){
+      // Небольшая задержка чтобы карточка агента не конкурировала с оверлеем
+      setTimeout(()=>openSearch(q),350);
+    }
+  }
+
   if(intent==='READ_NOTE_ALOUD'){
     const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
     const note=getNotes()[idx];
@@ -3895,7 +3903,7 @@ function _agentSpeak(text){
 
 function _showAgentCard(intent,response,params,options){
   document.getElementById('agent-card')?.remove();
-  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺'};
+  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎'};
   const autoClose=!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD'].includes(intent);
 
   // Кнопка «Открыть заметку» для интентов с noteIndex
@@ -3956,6 +3964,87 @@ function _agentOpenNote(idx){
   if(!note)return;
   if(note.id)openNoteSheetById(note.id);
   else openNoteSheet(idx);
+}
+
+// ── SEARCH ──────────────────────────────────────────────────────────────────
+let _searchTimer=null;
+
+function openSearch(prefill){
+  const ov=document.getElementById('search-overlay');
+  if(!ov)return;
+  ov.classList.add('show');
+  const inp=document.getElementById('search-input');
+  if(inp){
+    inp.value=prefill||'';
+    setTimeout(()=>inp.focus(),100);
+    if(prefill)onSearchInput(prefill);
+  }
+}
+
+function closeSearch(){
+  const ov=document.getElementById('search-overlay');
+  if(!ov)return;
+  ov.classList.remove('show');
+  const inp=document.getElementById('search-input');
+  if(inp)inp.value='';
+  const res=document.getElementById('search-results');
+  if(res)res.innerHTML='<div class="search-hint">Начни вводить — найду по тексту, тегам и смыслу</div>';
+}
+
+function onSearchInput(q){
+  clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(()=>_renderSearch(q.trim()),120);
+}
+
+function _searchNotes(q){
+  if(!q||q.length<2)return[];
+  const lq=q.toLowerCase();
+  return getNotes()
+    .filter(n=>{
+      return (n.title||'').toLowerCase().includes(lq)
+        ||(n.body||'').toLowerCase().includes(lq)
+        ||(n.aiTags||[]).some(t=>t.toLowerCase().includes(lq))
+        ||(n.items||[]).some(i=>(i.t||i.text||'').toLowerCase().includes(lq));
+    })
+    .sort((a,b)=>{
+      const at=(a.title||'').toLowerCase().includes(lq)?1:0;
+      const bt=(b.title||'').toLowerCase().includes(lq)?1:0;
+      if(at!==bt)return bt-at;
+      return(b.updatedAt||0)-(a.updatedAt||0);
+    })
+    .slice(0,25);
+}
+
+function _hl(text,q){
+  if(!text||!q)return esc(text||'');
+  const idx=text.toLowerCase().indexOf(q.toLowerCase());
+  if(idx<0)return esc(text);
+  return esc(text.slice(0,idx))+'<mark class="sr-hl">'+esc(text.slice(idx,idx+q.length))+'</mark>'+esc(text.slice(idx+q.length));
+}
+
+function _renderSearch(q){
+  const res=document.getElementById('search-results');
+  if(!res)return;
+  if(!q||q.length<2){
+    res.innerHTML='<div class="search-hint">Начни вводить — найду по тексту, тегам и смыслу</div>';
+    return;
+  }
+  const found=_searchNotes(q);
+  if(!found.length){
+    res.innerHTML='<div class="search-none">Ничего не нашёл по «'+esc(q)+'»</div>';
+    return;
+  }
+  const notes=getNotes();
+  res.innerHTML=found.map(n=>{
+    const idx=notes.findIndex(x=>x.id===n.id);
+    const previewBody=(n.body||(n.items||[]).map(i=>i.t||i.text||'').join(' ')||'').slice(0,120);
+    const tags=(n.aiTags||[]).slice(0,3).map(t=>`<span class="sr-tag">${esc(t)}</span>`).join('');
+    return `<div class="sr-item" onclick="closeSearch();${idx>=0?`openNoteSheetById(${JSON.stringify(n.id)})`:''}">
+      <div class="sr-title">${_hl(n.title||'Без названия',q)}</div>
+      ${previewBody?`<div class="sr-body">${_hl(previewBody,q)}</div>`:''}
+      ${tags?`<div class="sr-tags">${tags}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 function _agentSavePlan(planText){
