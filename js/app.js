@@ -3477,7 +3477,15 @@ function stopHomeVoice(){
 // ── VOICE AGENT (portal button) ──
 let _agentRec=null,_agentRecording=false,_agentCollected='';
 
-function agentTap(){_agentRecording?stopAgentVoice():startAgentVoice();}
+function agentTap(){
+  // Разблокировка TTS на iOS — должна быть в обработчике жеста
+  if(window.speechSynthesis&&!window._ttsPrimed){
+    window._ttsPrimed=true;
+    const u=new SpeechSynthesisUtterance('');u.volume=0;
+    window.speechSynthesis.speak(u);
+  }
+  _agentRecording?stopAgentVoice():startAgentVoice();
+}
 
 function startAgentVoice(){
   if(_agentRecording||_agentRec)return;
@@ -3708,12 +3716,20 @@ function _showAgentCard(intent,response,params,options){
     openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
   }
 
-  // Кнопки-опции для CLARIFY
-  const optBtns=(Array.isArray(options)&&options.length)
-    ?'<div class="agent-card-opts">'+options.map(o=>
-        `<button class="agent-card-opt" onclick="_agentPickOption(${jsAttr(o.query||o.label)})">${esc(o.label)}</button>`
-      ).join('')+'</div>'
+  const isClarify=intent==='CLARIFY';
+  const hasOpts=Array.isArray(options)&&options.length;
+
+  // Кнопки-опции
+  const optBtns=hasOpts
+    ?'<div class="agent-card-opts'+(isClarify?' agent-card-opts--clarify':'')+'">'+
+      options.map(o=>`<button class="agent-card-opt" onclick="_agentPickOption(${jsAttr(o.query||o.label)})">${esc(o.label)}</button>`).join('')+
+      '</div>'
     :'';
+
+  // Для CLARIFY: только варианты + мелкая «Отмена»; для остальных — кнопка «Готово»
+  const closeBtn=isClarify
+    ?`<button class="agent-card-cancel" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Отмена</button>`
+    :`<button class="agent-card-btn" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Готово</button>`;
 
   const card=document.createElement('div');
   card.id='agent-card';card.className='agent-card';
@@ -3722,7 +3738,7 @@ function _showAgentCard(intent,response,params,options){
     <div class="agent-card-txt">${esc(response)}</div>
     ${optBtns}
     ${openBtn}
-    <button class="agent-card-btn" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Готово</button>
+    ${closeBtn}
   </div>`;
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
