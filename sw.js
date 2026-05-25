@@ -1,15 +1,14 @@
-const CACHE = 'rz-v149';
+const CACHE = 'rz-v150';
 const ASSETS = [
   './',
   'index.html',
   'js/app.js',
   'manifest.json',
   'logo-mark.png',
-  'pwa-feather-180.png',
-  'pwa-feather-192.png',
-  'pwa-feather-512.png',
-  'icon-192.png',
-  'icon-512.png'
+  'pwa-logo-180.png',
+  'pwa-logo-192.png',
+  'pwa-logo-512.png',
+  'manifest.json'
 ];
 
 self.addEventListener('install', e => {
