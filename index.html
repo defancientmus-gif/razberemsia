@@ -267,10 +267,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .remind-item-dot.overdue{background:oklch(0.55 0.20 25);animation:blink-dot 2s ease-in-out infinite;}
 .remind-item-dot.soon{background:oklch(0.65 0.16 65);}
 .remind-item-dot.future{background:oklch(0.52 0.10 210);}
-.remind-item-body{flex:1;min-width:0;}
+.remind-item-body{flex:1;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.remind-item-body:active{opacity:.65;}
 .remind-item-title{font-size:14px;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .remind-item-when{font-size:12px;color:var(--accent-d);margin-top:1px;font-weight:500;}
 .remind-item-when.overdue{color:oklch(0.55 0.20 25);}
+.remind-item-recurring{font-size:11px;color:var(--fg-l);margin-top:3px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .remind-item-del{width:32px;height:32px;border-radius:50%;background:oklch(0.92 0.02 210/0.5);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;-webkit-appearance:none;transition:background .12s;}
 .remind-item-del:active{background:oklch(0.88 0.08 15/0.5);}
 .remind-item-del svg{width:13px;height:13px;stroke:var(--fg-l);stroke-width:2.2;fill:none;stroke-linecap:round;}
@@ -1460,6 +1462,14 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 
 /* Reminder row */
 .sheet-reminder-row{display:none;align-items:center;gap:8px;padding:6px 0;}
+/* Recurring times editor row */
+.sheet-recurring-row{display:none;align-items:center;gap:8px;padding:4px 0 6px;flex-wrap:wrap;}
+.rec-chips-wrap{display:flex;flex-wrap:wrap;gap:5px;flex:1;}
+.rec-chip{display:inline-flex;align-items:center;gap:3px;background:oklch(0.93 0.04 210/0.36);border:1px solid oklch(0.94 0.02 210/0.70);border-radius:20px;padding:4px 6px 4px 10px;font-size:12px;font-weight:600;color:oklch(0.38 0.12 270);white-space:nowrap;}
+.rec-chip-del{background:none;border:none;padding:0 2px;font-size:15px;color:var(--fg-l);cursor:pointer;line-height:1;-webkit-appearance:none;opacity:.55;transition:opacity .1s;}
+.rec-chip-del:active{opacity:1;}
+.rec-add-btn{width:28px;height:28px;border-radius:50%;background:oklch(0.93 0.04 210/0.5);border:1px solid oklch(0.94 0.02 210/0.70);font-size:18px;color:oklch(0.38 0.12 270);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;flex-shrink:0;line-height:1;}
+.rec-add-btn:active{background:oklch(0.88 0.04 210/0.7);}
 .sheet-reminder-lbl{font-size:11px;font-weight:600;color:var(--fg-l);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
 .sheet-reminder-btn{flex:1;background:oklch(0.93 0.04 210 / 0.36);border:1px solid oklch(0.94 0.020 210 / 0.70);border-radius:12px;padding:7px 12px;font-size:13px;font-weight:600;color:oklch(0.38 0.12 270);font-family:var(--sys);cursor:pointer;text-align:left;transition:background .15s;-webkit-appearance:none;}
 .sheet-reminder-btn:active{background:oklch(0.88 0.04 210 / 0.5);}
@@ -2591,6 +2601,9 @@ html.dark .bubble{
       <button class="sheet-reminder-del" type="button" onclick="clearSheetReminder()" title="Убрать напоминание">×</button>
       <input type="hidden" id="sheet-reminder-in">
     </div>
+    <!-- Recurring times editor (показывается если у заметки recurring) -->
+    <div class="sheet-recurring-row" id="sheet-recurring-row" style="display:none;"></div>
+    <input type="time" id="rec-add-time-input" style="display:none;position:absolute;left:-9999px;" onchange="addRecurringTime(this.value);this.value=''">
     <!-- Tools row — раскрывается из кнопки в футере -->
     <div class="tools-row" id="tools-row" style="display:none;">
       <button class="tool-pill" type="button" onclick="showToast('Таблицы — скоро')">

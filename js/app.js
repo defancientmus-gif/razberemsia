@@ -1560,13 +1560,16 @@ function renderReminderPanel(){
       const dotCls=isPast?'overdue':isSoon?'soon':'future';
       const whenCls=isPast?'overdue':'';
       const whenTxt=dt?_remindWhenTxt(dt,now):fmtDt(n.reminder);
+      const recurLine=n.recurring?.times?.length
+        ?`<div class="remind-item-recurring">🔁 ${esc(n.recurring.times.join(' · '))}</div>`:'';
       html+=`<div class="remind-item">
         <div class="remind-item-dot ${dotCls}"></div>
-        <div class="remind-item-body">
+        <div class="remind-item-body" onclick="openNoteSheetById('${n.id}')">
           <div class="remind-item-title">${esc(n.title||(n.body||'').split('\n')[0].slice(0,50)||'Заметка')}</div>
           <div class="remind-item-when ${whenCls}">${esc(whenTxt)}</div>
+          ${recurLine}
         </div>
-        <button class="remind-item-del" onclick="removeNoteReminder('${n.id}')" title="Удалить"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="remind-item-del" onclick="event.stopPropagation();removeNoteReminder('${n.id}')" title="Удалить"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>`;
     });
   } else {
@@ -2288,6 +2291,7 @@ function _openNoteWith(n){
   document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' символов';
   showSheetCat(safeLabel(n.label||'заметка'));
   initSheetReminder(n.reminder||'');
+  initSheetRecurring(n);
   initSheetUndo(n.body||n.title||'');
   // Рендерим чат внутри заметки
   renderNoteChat(n);
@@ -2301,6 +2305,7 @@ function openSheet(type){
   document.getElementById('sheet-char-count').textContent='0 символов';
   showSheetCat('заметка');
   initSheetReminder('');
+  initSheetRecurring(null);
   initSheetUndo('');
   const cw=document.getElementById('note-chat');if(cw)cw.style.display='none';
   const cr=document.getElementById('note-chat-input-row');if(cr)cr.style.display='none';
@@ -2660,6 +2665,72 @@ function clearSheetReminder(){
   document.getElementById('sheet-reminder-row').style.display='none';
 }
 function onReminderChange(){}
+
+// ── RECURRING TIMES EDITOR ──
+function initSheetRecurring(n){
+  const row=document.getElementById('sheet-recurring-row');
+  if(!row)return;
+  if(!n||!n.recurring?.times?.length){row.style.display='none';row.innerHTML='';return;}
+  const times=[...n.recurring.times].sort();
+  const chips=times.map(t=>`<span class="rec-chip">${esc(t)}<button class="rec-chip-del" type="button" onclick="removeRecurringTime('${t}')" title="Убрать это время">×</button></span>`).join('');
+  row.innerHTML=`<span class="sheet-reminder-lbl">🔁</span><div class="rec-chips-wrap">${chips}</div><button class="rec-add-btn" type="button" onclick="addRecurringTimePrompt()" title="Добавить время">+</button>`;
+  row.style.display='flex';
+}
+function removeRecurringTime(time){
+  if(!EI)return;
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===EI);
+  if(idx<0)return;
+  const n=notes[idx];
+  if(!n.recurring?.times)return;
+  const newTimes=n.recurring.times.filter(t=>t!==time);
+  if(!newTimes.length){
+    // Последнее время убрано — отключаем recurring, оставляем как разовое (без reminder)
+    delete notes[idx].recurring;
+    delete notes[idx].reminder;
+    notes[idx].updatedAt=Date.now();
+    saveNotes(notes);
+    scheduleAll();
+    initSheetRecurring(null);
+    initSheetReminder('');
+    renderReminderPanel();
+    showToast('Повторение отключено');
+    return;
+  }
+  notes[idx].recurring={...n.recurring,times:newTimes};
+  notes[idx].reminder=_tsToIso(_nextRecurringTime(newTimes));
+  notes[idx].updatedAt=Date.now();
+  saveNotes(notes);
+  scheduleAll();
+  initSheetRecurring(notes[idx]);
+  initSheetReminder(notes[idx].reminder||'');
+  renderReminderPanel();
+  showToast(`Убрано ${time}`);
+}
+function addRecurringTimePrompt(){
+  const inp=document.getElementById('rec-add-time-input');
+  if(inp)inp.click();
+}
+function addRecurringTime(val){
+  if(!val||!EI)return;
+  const notes=getNotes();
+  const idx=notes.findIndex(n=>n.id===EI);
+  if(idx<0)return;
+  const n=notes[idx];
+  if(!n.recurring)return;
+  const times=[...(n.recurring.times||[])];
+  if(!times.includes(val))times.push(val);
+  times.sort();
+  notes[idx].recurring={...n.recurring,times};
+  notes[idx].reminder=_tsToIso(_nextRecurringTime(times));
+  notes[idx].updatedAt=Date.now();
+  saveNotes(notes);
+  scheduleAll();
+  initSheetRecurring(notes[idx]);
+  initSheetReminder(notes[idx].reminder||'');
+  renderReminderPanel();
+  showToast(`Добавлено ${val}`);
+}
 
 // ── REMINDER PICKER ──
 let _rmpTarget=null,_rmpDate=new Date();
