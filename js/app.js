@@ -1804,6 +1804,14 @@ let _drillNoteIdx=-1;
 let _drillNotes=[];
 let _drillTouchX=0;
 let _drillSwipeInited=false;
+let _drillGrid=false;
+
+function toggleDrillGrid(){
+  _drillGrid=!_drillGrid;
+  const btn=document.getElementById('drill-grid-btn');
+  if(btn)btn.classList.toggle('active',_drillGrid);
+  if(drillLevel===1)_drillP1();
+}
 
 function _notePreview(n){
   // Список — показываем первые пункты через запятую
@@ -1835,12 +1843,9 @@ function drillGo(level,data){
 
 function drillPickNote(i){
   const n=_drillNotes[i];if(!n)return;
-  _drillNoteIdx=i;
-  drillNoteId=n.id||null;
-  drillLevel=2;
-  _drillP2();
-  _drillNav();
-  _drillSeek(2);
+  // Сразу открываем заметку — уровень 2 пропускаем
+  if(n.id)openNoteSheetById(n.id);
+  else openNoteSheet(getNotes().findIndex(x=>x===n));
 }
 
 function drillBack(){
@@ -1924,24 +1929,42 @@ function _drillP1(){
   _drillNotes=notes;
   if(!notes.length){el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--fg-l);font-size:15px;">\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442</div>`;return;}
   let h='';
-  notes.forEach((n,i)=>{
-    const preview=_notePreview(n);
-    const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
-    const hasBell=!!n.reminder;
-    const aiBadge=hasAi?`<span class="drill-note-ai">\u2736 AI</span>`:'';
-    const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
-    h+=`<div class="drill-note-row" onclick="drillPickNote(${i})">
-      <div class="drill-note-body">
-        <div class="drill-note-title">${esc(n.title)}</div>
-        ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
-        <div class="drill-note-foot">
+  if(_drillGrid){
+    h='<div class="drill-grid">';
+    notes.forEach((n,i)=>{
+      const preview=_notePreview(n);
+      const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+      const hasBell=!!n.reminder;
+      h+=`<div class="drill-grid-card" onclick="drillPickNote(${i})">
+        <div class="drill-grid-title">${esc(n.title)}</div>
+        ${preview?`<div class="drill-grid-preview">${esc(preview)}</div>`:''}
+        <div class="drill-grid-foot">
           <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
-          ${bellBadge}${aiBadge}
+          ${hasBell?'<span style="font-size:10px">\ud83d\udd14</span>':''}
+          ${hasAi?'<span style="font-size:9px;color:var(--accent-d);font-weight:700">AI</span>':''}
         </div>
-      </div>
-      <div class="drill-note-arr">&rsaquo;</div>
-    </div>`;
-  });
+      </div>`;
+    });
+    h+='</div>';
+  } else {
+    notes.forEach((n,i)=>{
+      const preview=_notePreview(n);
+      const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+      const hasBell=!!n.reminder;
+      const aiBadge=hasAi?`<span class="drill-note-ai">\u2736 AI</span>`:'';
+      const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
+      h+=`<div class="drill-note-row" onclick="drillPickNote(${i})">
+        <div class="drill-note-body">
+          <div class="drill-note-title">${esc(n.title)}</div>
+          ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
+          <div class="drill-note-foot">
+            <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
+            ${bellBadge}${aiBadge}
+          </div>
+        </div>
+      </div>`;
+    });
+  }
   el.innerHTML=h;
 }
 
