@@ -1988,6 +1988,7 @@ html.dark .bubble{
   transition:transform .12s;
 }
 .drill-sec-row:active{transform:scale(.98);}
+.drill-sec-tag{border-top:1px solid oklch(0.92 0.015 210/0.5);}
 .drill-sec-ico{
   width:44px;height:44px;border-radius:13px;
   background:oklch(0.52 0.10 210 / 0.09);
@@ -2707,12 +2708,12 @@ function toggleTagFolder(tag){
   const folders = getTagFolders();
   const exists = folders.some(f => f.tag === t);
   if(exists){
-    showToast('Папка «'+tag+'» уже есть — открываем');
+    showToast('Папка «'+tag+'» — открываем');
     if(typeof closeSheet === 'function') closeSheet();
     setTimeout(()=>{
       if(typeof go === 'function') go('notes');
-      window._activeTagFilter = t;
-      if(typeof loadNotes === 'function') loadNotes();
+      // Переходим в drill с фильтром по AI-тегу
+      setTimeout(()=>{if(typeof drillGo === 'function') drillGo(1,{aiTag:t});},80);
     }, 180);
   } else {
     folders.push({tag:t, label:tag, createdAt:Date.now()});

@@ -1799,6 +1799,7 @@ function tagsToPrimaryLabel(tags){
 // ── DRILL-DOWN NAVIGATION ──
 let drillLevel=0;
 let drillCategory=null;
+let drillAiTag=null;   // фильтр по AI-тегу (tag-папки)
 let drillNoteId=null;
 let _drillNoteIdx=-1;
 let _drillNotes=[];
@@ -1825,7 +1826,7 @@ function _notePreview(n){
 }
 
 function loadNotes(){
-  drillLevel=0;drillCategory=null;drillNoteId=null;
+  drillLevel=0;drillCategory=null;drillAiTag=null;drillNoteId=null;
   _drillRender(0);
   _drillNav();
   _drillSeek(0);
@@ -1833,7 +1834,8 @@ function loadNotes(){
 }
 
 function drillGo(level,data){
-  if(data&&data.category!==undefined)drillCategory=data.category;
+  if(data&&data.category!==undefined){drillCategory=data.category;drillAiTag=null;}
+  if(data&&data.aiTag!==undefined){drillAiTag=data.aiTag;drillCategory=null;}
   if(data&&data.noteId!==undefined)drillNoteId=data.noteId;
   drillLevel=level;
   _drillRender(level);
@@ -1873,7 +1875,7 @@ function _drillNav(){
   if(backBtn){backBtn.style.opacity='1';backBtn.style.pointerEvents='all';}
   if(crumbs){
     let h='';
-    const cat=drillCategory?esc(drillCategory):'Все заметки';
+    const cat=drillAiTag?esc('🏷 '+drillAiTag):drillCategory?esc(drillCategory):'Все заметки';
     const note=(drillNoteId?getNotes().find(n=>n.id===drillNoteId):null)||_drillNotes[_drillNoteIdx]||null;
     if(drillLevel===0){
       h=`<span class="drill-crumb drill-crumb-cur">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span>`;
@@ -1918,6 +1920,20 @@ function _drillP0(){
       <div class="drill-sec-arr">&rsaquo;</div>
     </button>`;
   });
+  // Тег-папки (из AI-анализа)
+  const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
+  if(tagFolders.length){
+    const allAiTags=notes.flatMap(n=>Array.isArray(n.aiTags)?n.aiTags.map(t=>t.toLowerCase()):[]);
+    tagFolders.forEach(f=>{
+      const cnt=allAiTags.filter(t=>t===f.tag.toLowerCase()).length;
+      h+=`<button class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
+        <div class="drill-sec-ico">🏷</div>
+        <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
+        <div class="drill-sec-count">${cnt}</div>
+        <div class="drill-sec-arr">&rsaquo;</div>
+      </button>`;
+    });
+  }
   el.innerHTML=h;
 }
 
@@ -1933,6 +1949,7 @@ function _drillP1(){
   const el=document.getElementById('drill-p1');if(!el)return;
   let notes=getNotes();
   if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
+  if(drillAiTag!==null){const t=drillAiTag.toLowerCase();notes=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.map(x=>x.toLowerCase()).includes(t));}
   notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   _drillNotes=notes;
   if(!notes.length){el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--fg-l);font-size:15px;">\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442</div>`;return;}
