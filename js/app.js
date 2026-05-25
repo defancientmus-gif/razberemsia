@@ -688,6 +688,8 @@ async function runAiAnalysis(text,panel,attempt=0){
       const idx=list.findIndex(n=>n.id===EI);
       if(idx>=0){
         list[idx].aiCache={summary:summary||'',tags:tags||[],actions:actions||[],bodyKey:text.slice(0,80)};
+        list[idx].aiTags=tags||[];
+        list[idx].aiSummary=summary||'';
         saveNotes(list);
       }
     }
