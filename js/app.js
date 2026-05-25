@@ -1921,6 +1921,14 @@ function _drillP0(){
   el.innerHTML=h;
 }
 
+function _drillCardBg(i,total){
+  const t=total>1?i/(total-1):0;
+  const l=(0.93+t*0.06).toFixed(3);
+  const c=(0.065-t*0.06).toFixed(4);
+  const a=(0.90-t*0.35).toFixed(2);
+  return `oklch(${l} ${c} 210 / ${a})`;
+}
+
 function _drillP1(){
   const el=document.getElementById('drill-p1');if(!el)return;
   let notes=getNotes();
@@ -1935,7 +1943,8 @@ function _drillP1(){
       const preview=_notePreview(n);
       const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
       const hasBell=!!n.reminder;
-      h+=`<div class="drill-grid-card" onclick="drillPickNote(${i})">
+      const bg=_drillCardBg(i,notes.length);
+      h+=`<div class="drill-grid-card" style="background:${bg}" onclick="drillPickNote(${i})">
         <div class="drill-grid-title">${esc(n.title)}</div>
         ${preview?`<div class="drill-grid-preview">${esc(preview)}</div>`:''}
         <div class="drill-grid-foot">
