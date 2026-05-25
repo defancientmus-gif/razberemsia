@@ -626,6 +626,7 @@ function toggleAiPanel(){
   const f=document.getElementById('sh1');
   const text=(f?.value||'').trim();
   panel.style.display='block';
+  panel.classList.remove('collapsed'); // всегда раскрывать при показе
   const bodyEl=document.getElementById('ai-panel-body');
   if(text.length<15){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
@@ -821,17 +822,23 @@ function _renderAiResult(summary,tags,actions,panel,text){
   let html='<div class="ai-panel-inner">';
   if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
   if(tags?.length){
+    // Текущая открытая папка (если открыта из drill)
+    const currentFolderTag=(drillAiTag||'').toLowerCase();
     const tagBtns=tags.map(t=>{
+      const tl=t.toLowerCase();
       const exists=typeof tagFolderExists==='function'&&tagFolderExists(t);
-      return `<button type="button" class="ai-tag${exists?' ai-tag--active':''}" data-tag="${esc(t)}" onclick="toggleTagFolder(${jsAttr(t)})" title="${exists?'Открыть папку':'Создать папку в Заметках'}">${esc(t)}</button>`;
+      const isCurrent=currentFolderTag&&tl===currentFolderTag;
+      const cls='ai-tag'+(isCurrent?' ai-tag--current':exists?' ai-tag--active':'');
+      const title=isCurrent?'Текущая папка':exists?'Открыть папку':'Создать папку в Заметках';
+      return `<button type="button" class="${cls}" data-tag="${esc(t)}" onclick="toggleTagFolder(${jsAttr(t)})" title="${title}">${esc(t)}</button>`;
     }).join('');
-    html+=`<div class="ai-section"><div class="ai-label-row"><span class="ai-label">Теги — нажми чтобы создать папку</span><button type="button" class="ai-tag-add-btn" onclick="promptNewTag()">+ тег</button></div><div class="ai-tags">${tagBtns}</div></div>`;
+    html+=`<div class="ai-section"><div class="ai-label-row"><span class="ai-label">Теги</span><button type="button" class="ai-tag-add-btn" onclick="promptNewTag()">+ тег</button></div><div class="ai-tags">${tagBtns}</div></div>`;
   }
   if(actions?.length){
     // Простой toggle — CSS transition обрабатывает анимацию через .open класс
     html+=`<div class="ai-section ai-actions-section">
       <button type="button" class="ai-actions-toggle" onclick="this.closest('.ai-actions-section').classList.toggle('open')">
-        <span class="ai-label">Можно сделать <span class="ai-actions-hint">(${actions.length})</span></span>
+        <span class="ai-label">Разберёмся? <span class="ai-actions-hint">(${actions.length})</span></span>
         <svg class="ai-actions-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="ai-actions-body">
@@ -1031,7 +1038,8 @@ function renderNoteChat(n){
   const msgs=Array.isArray(n.aiChat)?n.aiChat:[];
   _chatNoteId=n.id;
   if(!msgs.length){wrap.style.display='none';if(inputRow)inputRow.style.display='none';return;}
-  wrap.style.display='block';
+  // Показываем только строку ввода + кнопку раскрыть (чтобы не путать пользователя)
+  wrap.style.display='none'; // сообщения скрыты по умолчанию
   if(inputRow)inputRow.style.display='flex';
   wrap.innerHTML=msgs.map(m=>{
     const isAi=m.role==='ai';
@@ -1040,8 +1048,23 @@ function renderNoteChat(n){
       <div class="nc-text">${esc(m.text)}</div>
     </div>`;
   }).join('');
-  // scrollTop устанавливается в _openSheet() после autoGrowTA,
-  // чтобы рост textarea не сбивал позицию. Здесь не скроллим.
+  // Показываем подсказку в поле ввода что есть ответ
+  const inp=document.getElementById('note-chat-in');
+  if(inp&&msgs.some(m=>m.role==='ai'))inp.placeholder='Есть ответ ✦ — открыть…';
+}
+function toggleNoteChat(){
+  const wrap=document.getElementById('note-chat');
+  if(!wrap)return;
+  const isHidden=wrap.style.display==='none'||wrap.style.display==='';
+  wrap.style.display=isHidden?'block':'none';
+  if(isHidden){
+    const inp=document.getElementById('note-chat-in');
+    if(inp)inp.placeholder='Продолжить разговор…';
+    requestAnimationFrame(()=>{
+      const sa=document.getElementById('sheet-scroll-area');
+      if(sa)sa.scrollTop=sa.scrollHeight;
+    });
+  }
 }
 
 async function sendNoteChat(){

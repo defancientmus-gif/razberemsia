@@ -1560,7 +1560,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .sheet-ai-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .ai-panel{margin:0 16px 10px;border-radius:14px;background:oklch(0.97 0.008 290 / 0.85);border:1px solid oklch(0.55 0.12 290 / 0.15);overflow:hidden;animation:aiPanelIn .26s cubic-bezier(.22,1,.36,1);}
 @keyframes aiPanelIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
-.ai-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px 8px;cursor:pointer;border-bottom:1px solid oklch(0.55 0.12 290 / 0.10);}
+.ai-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px 8px;cursor:pointer;border-bottom:1px solid oklch(0.55 0.12 290 / 0.10);-webkit-tap-highlight-color:transparent;}
 .ai-panel-title{font-size:11px;font-weight:600;color:oklch(0.45 0.12 290);display:flex;align-items:center;gap:5px;letter-spacing:.03em;}
 .ai-collapse-btn{background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;color:oklch(0.55 0.12 290 / 0.55);transition:transform .28s cubic-bezier(.22,1,.36,1);}
 .ai-panel.collapsed .ai-collapse-btn{transform:rotate(180deg);}
@@ -1584,6 +1584,13 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .ai-tag:hover{background:oklch(0.55 0.12 290 / 0.20);}
 .ai-tag:active{transform:scale(.88);}
 .ai-tag.applied{background:oklch(0.52 0.10 210 / 0.18);color:oklch(0.30 0.10 210);font-weight:600;}
+/* Тег с существующей папкой */
+.ai-tag--active{background:oklch(0.96 0.008 210);color:oklch(0.30 0.10 210);font-weight:600;border:1.5px solid oklch(0.52 0.10 210 / 0.30);box-shadow:0 1px 4px oklch(0 0 0 / 0.07);}
+.ai-tag--active:hover{background:oklch(0.92 0.015 210);}
+/* Текущая папка (папка из которой открыта заметка) */
+.ai-tag--current{background:oklch(0.52 0.10 210);color:oklch(1 0 0);font-weight:700;border:1.5px solid oklch(0.42 0.10 210);box-shadow:0 2px 8px oklch(0.52 0.10 210 / 0.25);}
+.ai-tag--current:hover{background:oklch(0.46 0.10 210);}
+.ai-tag--current:active{transform:scale(.88);background:oklch(0.42 0.10 210);}
 .ai-cat-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
 .ai-cat-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;border:1px solid oklch(0.88 0.02 210 / 0.30);cursor:pointer;font-size:12px;font-family:var(--sys);color:oklch(0.42 0.04 210);background:oklch(0.96 0.008 210 / 0.80);transition:transform .12s cubic-bezier(.34,1.56,.64,1),background .15s,border-color .15s;}
 .ai-cat-chip:hover{background:oklch(0.92 0.015 210 / 0.90);}
@@ -1990,7 +1997,7 @@ html.dark .bubble{
   opacity: 0;
 }
 .ai-actions-section.open .ai-actions-body {
-  max-height: 800px; opacity: 1; overflow-y: auto;
+  max-height: 800px; opacity: 1; overflow: visible;
 }
 .ai-actions-hint {
   font-size: 11px; color: oklch(0.55 0.12 290 / 0.55);
@@ -2637,11 +2644,11 @@ html.dark .bubble{
       <div class="sheet-body-wrap" id="sheet-body"></div>
       <!-- AI Panel (появляется при включении) -->
       <div id="ai-panel" class="ai-panel" style="display:none;">
-        <div class="ai-panel-hdr">
+        <div class="ai-panel-hdr" onclick="toggleAiCollapse()">
           <span class="ai-panel-title"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Анализ AI</span>
           <div style="display:flex;align-items:center;gap:4px;">
-            <button class="ai-collapse-btn" type="button" onclick="rerunAiAnalysis()" title="Обновить анализ" style="opacity:.6;"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
-            <button class="ai-collapse-btn" id="ai-collapse-btn" type="button" onclick="toggleAiCollapse()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+            <button class="ai-collapse-btn" type="button" onclick="event.stopPropagation();rerunAiAnalysis()" title="Обновить анализ" style="opacity:.6;"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+            <button class="ai-collapse-btn" id="ai-collapse-btn" type="button" onclick="event.stopPropagation();toggleAiCollapse()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
           </div>
         </div>
         <div class="ai-panel-body" id="ai-panel-body"></div>
@@ -2650,6 +2657,7 @@ html.dark .bubble{
       <div id="note-chat" class="note-chat" style="display:none;"></div>
       <div id="note-chat-input-row" class="note-chat-input-row" style="display:none;">
         <input id="note-chat-in" class="note-chat-in" type="text" placeholder="Продолжить разговор…" maxlength="500"
+          onfocus="if(document.getElementById('note-chat').style.display==='none')toggleNoteChat()"
           onkeydown="if(event.key==='Enter'){event.preventDefault();sendNoteChat();}">
         <button id="note-chat-send" class="note-chat-send" type="button" onclick="sendNoteChat()">
           <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
