@@ -3558,7 +3558,15 @@ async function _processAgentQuery(text){
 }
 
 function _executeAgentIntent(result,originalText){
-  const{intent,params,response}=result;
+  // Поддержка массива действий
+  const actions=Array.isArray(result.actions)&&result.actions.length
+    ?result.actions
+    :[{intent:result.intent,params:result.params||{}}];
+  actions.forEach(a=>_runSingleIntent(a.intent,a.params,originalText));
+  _showAgentCard(actions[0].intent,result.response,actions[0].params,result.options);
+}
+
+function _runSingleIntent(intent,params,originalText){
 
   if(intent==='CREATE_NOTE'){
     const ts=Date.now();const notes=getNotes();const id=genId();
@@ -3665,7 +3673,6 @@ function _executeAgentIntent(result,originalText){
     }
   }
 
-  _showAgentCard(intent,response,params,result.options);
 }
 
 function _agentPickOption(query){
