@@ -29,6 +29,89 @@ function getTrash(){return readJson('rz_trash',[]);}
 function saveTrash(trash){writeJson('rz_trash',trash);}
 function getHistory(){return readJson('rz_history',[]);}
 function saveHistory(hist){writeJson('rz_history',hist);}
+
+// ── NOTES TABLE — конвертеры client ↔ Supabase ──
+function _noteToRow(n,userId,deletedAt){
+  return{
+    id:n.id,user_id:userId,
+    title:n.title||null,body:n.body||null,label:n.label||'заметка',
+    reminder:n.reminder||null,recurring:n.recurring||null,
+    ai_tags:Array.isArray(n.aiTags)&&n.aiTags.length?n.aiTags:null,
+    ai_summary:n.aiSummary||null,ai_cache:n.aiCache||null,
+    items:Array.isArray(n.items)&&n.items.length?n.items:null,
+    from_pad:n.fromPad||false,
+    created_at:n.createdAt?new Date(n.createdAt).toISOString():new Date().toISOString(),
+    updated_at:n.updatedAt?new Date(n.updatedAt).toISOString():new Date().toISOString(),
+    deleted_at:deletedAt||null
+  };
+}
+function _rowToNote(r){
+  return{
+    id:r.id,title:r.title||'',body:r.body||'',label:r.label||'заметка',
+    reminder:r.reminder||null,recurring:r.recurring||null,
+    aiTags:Array.isArray(r.ai_tags)?r.ai_tags:[],
+    aiSummary:r.ai_summary||'',aiCache:r.ai_cache||null,
+    items:r.items||null,fromPad:r.from_pad||false,
+    createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
+    updatedAt:r.updated_at?new Date(r.updated_at).getTime():Date.now(),
+    ...(r.deleted_at?{_deletedAt:new Date(r.deleted_at).getTime()}:{})
+  };
+}
+
+// Одноразовая миграция: перенос из user_state.notes в таблицу notes
+async function _migrateNotesToTable(){
+  if(!cloudAllowed())return;
+  if(localStorage.getItem('rz_notes_migrated_v1'))return;
+  const localNotes=getNotes();const localTrash=getTrash();
+  const rows=[
+    ...localNotes.map(n=>_noteToRow(n,CU.id,null)),
+    ...localTrash.map(n=>_noteToRow(n,CU.id,n._deletedAt?new Date(n._deletedAt).toISOString():new Date().toISOString()))
+  ];
+  if(!rows.length){localStorage.setItem('rz_notes_migrated_v1','1');return;}
+  const{error}=await sb.from('notes').upsert(rows,{onConflict:'id'});
+  if(!error){
+    localStorage.setItem('rz_notes_migrated_v1','1');
+    console.log('✅ notes migrated:',rows.length);
+  } else {
+    console.warn('notes migration failed:',error.message);
+  }
+}
+
+// Загрузить заметки из таблицы notes (вызывается при старте)
+async function _syncFromNotesTable(){
+  if(!cloudAllowed())return;
+  try{
+    const{data:rows,error}=await sb.from('notes').select('*').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(500);
+    if(error){
+      // Таблица ещё не создана — норм, используем user_state
+      console.warn('notes table not ready:',error.message);return;
+    }
+    if(rows&&rows.length>0){
+      // Таблица есть — она источник правды
+      const active=rows.filter(r=>!r.deleted_at).map(_rowToNote);
+      const trashed=rows.filter(r=>!!r.deleted_at).map(_rowToNote);
+      localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(active));
+      if(trashed.length)localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(trashed));
+      if(!localStorage.getItem('rz_notes_migrated_v1'))localStorage.setItem('rz_notes_migrated_v1','1');
+    } else {
+      // Таблица пустая — запускаем одноразовую миграцию
+      await _migrateNotesToTable();
+    }
+  }catch(e){console.warn('_syncFromNotesTable error:',e);}
+}
+
+// Синхронизировать текущие заметки в таблицу notes (fire-and-forget)
+function _syncNotesToTable(){
+  if(!cloudAllowed()||!localStorage.getItem('rz_notes_migrated_v1'))return;
+  const rows=[
+    ...getNotes().map(n=>_noteToRow(n,CU.id,null)),
+    ...getTrash().map(n=>_noteToRow(n,CU.id,n._deletedAt?new Date(n._deletedAt).toISOString():new Date().toISOString()))
+  ];
+  if(!rows.length)return;
+  sb.from('notes').upsert(rows,{onConflict:'id'}).then(({error})=>{
+    if(error)console.warn('notes upsert failed:',error.message);
+  });
+}
 function getAiMemory(){try{const raw=localStorage.getItem(scopedKey('rz_ai_memory'));return raw?JSON.parse(raw):[];}catch(e){return[];}}
 function _saveAiMemoryRaw(mem){try{localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(mem));}catch(e){}}
 function getSheetDraft(){try{const raw=localStorage.getItem(scopedKey('rz_sheet_draft'));return raw?JSON.parse(raw):null;}catch(e){return null;}}
@@ -95,6 +178,8 @@ async function loadCloudData(){
     } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
       await saveCloudNow();
     }
+    // Синхронизация с таблицей notes (новый источник правды)
+    await _syncFromNotesTable();
     CLOUD_READY_UID=CU.id;
   }catch(e){
     console.warn('cloud load failed (attempt 1)',e);
@@ -141,6 +226,8 @@ async function saveCloudNow(){
       error=fallback.error;
     }
     if(error)throw error;
+    // Параллельная синхронизация в таблицу notes (fire-and-forget)
+    _syncNotesToTable();
   }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
 }
 function setAuthChecking(checking){
@@ -3586,10 +3673,10 @@ async function _processAgentQuery(text){
     const _allNotes=getNotes();
     // Для запросов про планы/маршруты/сводку — передаём больше тела заметок
     const needsDeepCtx=/(план|маршрут|что у меня|сегодня|завтра|расскажи|составь|список дел|прочитай|озвучь)/i.test(text);
-    const recentNotes=_allNotes.slice(0,20).map((n,i)=>({
+    const recentNotes=_allNotes.slice(0,30).map((n,i)=>({
       index:i,
       title:n.title||'Без названия',
-      body:(needsDeepCtx||i<5)?(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,200):'',
+      body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,needsDeepCtx?300:100),
       hasReminder:!!n.reminder,
       isRecurring:!!n.recurring,
       reminderTime:n.reminder||null
