@@ -1746,12 +1746,13 @@ html.dark .bubble{
 /* ── AI PORTAL BUTTON — пульсирующие кольца ── */
 .rz-portal-canvas { display:none; } /* canvas больше не нужен */
 .rz-portal {
-  background:
-    radial-gradient(circle at 38% 28%, oklch(1 0 0 / 0.55) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, oklch(0.78 0.12 220 / 0.18) 0%, oklch(0.55 0.14 220 / 0.35) 100%);
-  border:1.5px solid oklch(1 0 0 / 0.55);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: none !important;
   animation: rz-breathe 3.5s ease-in-out infinite;
 }
+.rz-portal::before, .rz-portal::after { display:none !important; }
 @keyframes rz-breathe {
   0%,100% { transform:scale(1); }
   50%     { transform:scale(1.03); }
