@@ -5046,83 +5046,122 @@ function showAiTranscriptBlock(text){
 let _nnbHoldTimer=null, _nnbHolding=false, _nnbHandsfree=false, _nnbJustLocked=false;
 let _nnbStartY=0,_nnbStopTap=false,_nnbManualStop=false;
 
+// ── CENTER BUTTON — тап=заметка, удержание=ИИ Агент ──
 function nnbPointerDown(e){
-  // Если уже в хендсфри — этот тап останавливает
-  if(_nnbHandsfree){
-    _nnbStopTap=true;
-    _nnbManualStop=true;
-    stopHomeVoice();
-    nnbStopHandsfree();
-    const lbl=document.getElementById('home-voice-label');
-    if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
-    return;
-  }
-  // Захватываем pointer — события продолжают идти даже если палец ушёл с кнопки
   try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}
   _nnbStartY=e.clientY;
   _nnbHolding=false;
-  _nnbJustLocked=false;
   _nnbHoldTimer=setTimeout(()=>{
     _nnbHolding=true;
     const btn=document.getElementById('new-note-btn');
     if(btn)btn.classList.add('holding');
-    startHomeVoice();
-  },200);
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl){lbl.textContent='Агент слушает…';lbl.classList.add('rec');}
+    startAgentVoice();
+  },220);
 }
 
 function nnbPointerMove(e){
-  if(!_nnbHolding||_nnbHandsfree)return;
-  const dy=_nnbStartY-e.clientY;
-  // Свайп вверх 30px = замок хендсфри
-  if(dy>30){
-    _nnbHandsfree=true;
-    _nnbJustLocked=true;
-    const btn=document.getElementById('new-note-btn');
-    if(btn){btn.classList.remove('holding');btn.classList.add('handsfree');}
-    const lbl=document.getElementById('home-voice-label');
-    if(lbl){lbl.textContent='🔒 Хендсфри — говорите';lbl.classList.add('rec');}
-  }
+  // Агент-режим — свайп не используется
 }
 
 function nnbPointerUp(e){
   clearTimeout(_nnbHoldTimer);
-  if(_nnbStopTap){
-    _nnbStopTap=false;
-    return;
-  }
-  if(_nnbHandsfree&&_nnbJustLocked){
-    // Отпустили палец после свайпа вверх — хендсфри остаётся активным
-    _nnbJustLocked=false;
-    _nnbHolding=false;
-    return;
-  }
   if(_nnbHolding){
-    // Держали — отпустили без свайпа — останавливаем
     _nnbHolding=false;
     const btn=document.getElementById('new-note-btn');
     if(btn)btn.classList.remove('holding');
-    _nnbManualStop=true;
-    stopHomeVoice();
-  } else if(!_nnbHandsfree){
-    // Короткий тап — открываем заметку
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
+    stopAgentVoice();
+  } else {
+    // Короткий тап — новая заметка
     openSheet('note');
   }
 }
 
 function nnbPointerCancel(e){
   clearTimeout(_nnbHoldTimer);
-  if(_nnbHolding&&!_nnbHandsfree){
+  if(_nnbHolding){
     _nnbHolding=false;
     const btn=document.getElementById('new-note-btn');
     if(btn)btn.classList.remove('holding');
-    _nnbManualStop=true;
-    stopHomeVoice();
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
+    stopAgentVoice();
   }
 }
 
 function nnbStopHandsfree(){
   _nnbHandsfree=false;_nnbHolding=false;_nnbJustLocked=false;
   const btn=document.getElementById('new-note-btn');
+  if(btn){btn.classList.remove('holding');btn.classList.remove('handsfree');}
+}
+
+// ── MIC BUTTON — тап=голосовая заметка, удержание=хендсфри ──
+let _micHolding=false,_micHandsfree=false,_micHoldTimer=null,_micJustLocked=false,_micStopTap=false,_micStartY=0,_micManualStop=false;
+
+function micBtnPointerDown(e){
+  if(_micHandsfree){
+    _micStopTap=true;
+    _micManualStop=true;
+    stopHomeVoice();
+    micStopHandsfree();
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl){lbl.textContent='';lbl.classList.remove('rec');}
+    return;
+  }
+  try{e.currentTarget.setPointerCapture(e.pointerId);}catch(_){}
+  _micStartY=e.clientY;_micHolding=false;_micJustLocked=false;_micManualStop=false;
+  _micHoldTimer=setTimeout(()=>{
+    _micHolding=true;
+    const btn=document.getElementById('mic-home-btn');
+    if(btn)btn.classList.add('holding');
+    startHomeVoice();
+  },220);
+}
+
+function micBtnPointerMove(e){
+  if(!_micHolding||_micHandsfree)return;
+  const dy=_micStartY-e.clientY;
+  if(dy>30){
+    _micHandsfree=true;_micJustLocked=true;
+    const btn=document.getElementById('mic-home-btn');
+    if(btn){btn.classList.remove('holding');btn.classList.add('handsfree');}
+    const lbl=document.getElementById('home-voice-label');
+    if(lbl){lbl.textContent='🔒 Хендсфри — говорите';lbl.classList.add('rec');}
+  }
+}
+
+function micBtnPointerUp(e){
+  clearTimeout(_micHoldTimer);
+  if(_micStopTap){_micStopTap=false;return;}
+  if(_micHandsfree&&_micJustLocked){_micJustLocked=false;_micHolding=false;return;}
+  if(_micHolding){
+    _micHolding=false;
+    const btn=document.getElementById('mic-home-btn');
+    if(btn)btn.classList.remove('holding');
+    _micManualStop=true;
+    stopHomeVoice();
+  } else if(!_micHandsfree){
+    toggleHomeVoice();
+  }
+}
+
+function micBtnPointerCancel(e){
+  clearTimeout(_micHoldTimer);
+  if(_micHolding&&!_micHandsfree){
+    _micHolding=false;
+    const btn=document.getElementById('mic-home-btn');
+    if(btn)btn.classList.remove('holding');
+    _micManualStop=true;
+    stopHomeVoice();
+  }
+}
+
+function micStopHandsfree(){
+  _micHandsfree=false;_micHolding=false;_micJustLocked=false;
+  const btn=document.getElementById('mic-home-btn');
   if(btn){btn.classList.remove('holding');btn.classList.remove('handsfree');}
 }
 
@@ -5170,10 +5209,10 @@ function startHomeVoice(){
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
       if(reminder) _handleReminderAfterSave(reminder,nidVoice,auto.title,cleanBody.slice(0,200));
     }
-    if(_nnbHandsfree&&!_nnbManualStop){
-      setTimeout(()=>{if(_nnbHandsfree&&!homeRecog)startHomeVoice();},260);
+    if(_micHandsfree&&!_micManualStop){
+      setTimeout(()=>{if(_micHandsfree&&!homeRecog)startHomeVoice();},260);
     }else{
-      nnbStopHandsfree();
+      micStopHandsfree();
     }
   };
   homeRecog.start();

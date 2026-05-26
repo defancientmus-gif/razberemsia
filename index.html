@@ -991,96 +991,94 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   overflow:visible;
 }
 
-/* ── NEW NOTE BUTTON (wide, hold=voice) ── */
-/* ── ЦЕНТРАЛЬНАЯ КНОПКА — матовый хрусталь, поднята над баром ── */
+/* ── ИИ АГЕНТ — центральная кнопка, 3D-глубина ── */
 .new-note-btn{
-  flex:0 0 84px;
+  flex:0 0 86px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  padding:15px 8px 12px;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
-  border-radius:24px;
-  background:linear-gradient(148deg,oklch(1 0 0/.82),oklch(0.96 0.022 210/.68));
-  backdrop-filter:blur(14px) saturate(1.3);
-  -webkit-backdrop-filter:blur(14px) saturate(1.3);
-  border:1px solid oklch(0.95 0.025 210/.78);
+  padding:17px 8px 13px;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
+  border-radius:26px;
+  background:linear-gradient(155deg,oklch(1 0 0/.90),oklch(0.97 0.018 210/.78),oklch(0.95 0.030 215/.60));
+  backdrop-filter:blur(18px) saturate(1.5);
+  -webkit-backdrop-filter:blur(18px) saturate(1.5);
+  border:1px solid oklch(0.96 0.022 210/.88);
   box-shadow:
-    0 12px 36px oklch(0.52 0.12 210/.22),
-    0 2px 8px oklch(0 0 0/.06),
-    inset 0 2px 0 oklch(1 0 0/.95);
-  transform:translateY(-14px);
+    0 28px 56px oklch(0.52 0.14 210/.30),
+    0 8px 22px oklch(0 0 0/.10),
+    0 2px 5px oklch(0 0 0/.06),
+    inset 0 2.5px 0 oklch(1 0 0/.98),
+    inset 0 -1px 0 oklch(0.85 0.02 210/.18);
+  transform:perspective(700px) rotateX(-5deg) translateY(-16px);
   position:relative;overflow:hidden;-webkit-touch-callout:none;
-  animation:nnb-ambient 3.8s ease-in-out infinite;
-  transition:transform .14s,box-shadow .14s;
+  animation:nnb-float 4s ease-in-out infinite;
+  transition:transform .15s,box-shadow .15s;
   z-index:5;
 }
-/* Блик хрусталя — верхний левый */
+/* Блик хрусталя */
 .new-note-btn::before{
-  content:'';position:absolute;top:8px;left:14px;
-  width:22px;height:9px;border-radius:50%;
-  background:oklch(1 0 0/0.60);
-  transform:rotate(-22deg);filter:blur(2px);
+  content:'';position:absolute;top:7px;left:12px;
+  width:26px;height:8px;border-radius:50%;
+  background:oklch(1 0 0/0.65);
+  transform:rotate(-20deg);filter:blur(2.5px);
   pointer-events:none;
 }
-/* Фоновое свечение кнопки */
+/* Аура — тень от «висящей» кнопки, имитирует глубину */
 .new-note-btn::after{
-  content:'';position:absolute;bottom:-18px;left:50%;
-  width:56px;height:20px;
-  background:oklch(0.52 0.14 210/0.18);
-  border-radius:50%;filter:blur(10px);
+  content:'';position:absolute;bottom:-28px;left:50%;
+  width:72px;height:28px;
+  background:oklch(0.52 0.14 210/.22);
+  border-radius:50%;filter:blur(16px);
   transform:translateX(-50%);
   pointer-events:none;
-  animation:nnb-glow-flicker 3.8s ease-in-out infinite;
+  animation:nnb-aura 4s ease-in-out infinite;
 }
-@keyframes nnb-ambient{
-  0%,100%{box-shadow:0 12px 36px oklch(0.52 0.12 210/.20),0 2px 8px oklch(0 0 0/.06),inset 0 2px 0 oklch(1 0 0/.95);}
-  50%{box-shadow:0 14px 42px oklch(0.52 0.14 210/.32),0 2px 10px oklch(0 0 0/.06),inset 0 2px 0 oklch(1 0 0/.95);}
+/* Плавание по Z — меняется и угол и высота, создаётся иллюзия глубины */
+@keyframes nnb-float{
+  0%,100%{transform:perspective(700px) rotateX(-5deg) translateY(-16px);box-shadow:0 28px 56px oklch(0.52 0.14 210/.28),0 8px 22px oklch(0 0 0/.09),0 2px 5px oklch(0 0 0/.05),inset 0 2.5px 0 oklch(1 0 0/.98),inset 0 -1px 0 oklch(0.85 0.02 210/.18);}
+  50%{transform:perspective(700px) rotateX(-6deg) translateY(-20px);box-shadow:0 38px 72px oklch(0.52 0.16 210/.40),0 12px 28px oklch(0 0 0/.09),0 2px 5px oklch(0 0 0/.05),inset 0 2.5px 0 oklch(1 0 0/.98),inset 0 -1px 0 oklch(0.85 0.02 210/.18);}
 }
-@keyframes nnb-glow-flicker{
-  0%,100%{opacity:.8;transform:translateX(-50%) scaleX(1);}
-  50%{opacity:1;transform:translateX(-50%) scaleX(1.15);}
+@keyframes nnb-aura{
+  0%,100%{opacity:.75;transform:translateX(-50%) scaleX(1.0);}
+  50%{opacity:1;transform:translateX(-50%) scaleX(1.35);}
 }
-/* Запись — удержание */
+/* Агент слушает — удержание */
 .new-note-btn.holding{
-  background:linear-gradient(148deg,oklch(1 0 0/.72),oklch(0.96 0.08 25/.52));
-  border-color:oklch(0.65 0.18 25/.60);
-  transform:translateY(-14px) scale(0.96);
-  animation:rec-border-pulse 1.2s ease-in-out infinite;
-}
-/* Хендсфри */
-.new-note-btn.handsfree{
-  background:linear-gradient(148deg,oklch(1 0 0/.68),oklch(0.94 0.10 25/.48));
-  border-color:oklch(0.62 0.20 25/.72);
-  transform:translateY(-14px);
-  animation:rec-border-pulse 0.9s ease-in-out infinite;
+  background:linear-gradient(148deg,oklch(1 0 0/.78),oklch(0.96 0.10 22/.55));
+  border-color:oklch(0.65 0.18 25/.65);
+  transform:perspective(700px) rotateX(-5deg) translateY(-16px) scale(0.96);
+  animation:rec-border-pulse 1.1s ease-in-out infinite;
 }
 @keyframes rec-border-pulse{
-  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25/.22),0 0 0 6px oklch(0.65 0.18 25/.08),0 10px 30px oklch(0.55 0.20 25/.22),inset 0 2px 0 oklch(1 0 0/.80);}
-  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25/.38),0 0 0 9px oklch(0.65 0.18 25/.12),0 12px 36px oklch(0.55 0.20 25/.35),inset 0 2px 0 oklch(1 0 0/.80);}
+  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25/.24),0 0 0 7px oklch(0.65 0.18 25/.09),0 20px 44px oklch(0.55 0.20 25/.26),inset 0 2.5px 0 oklch(1 0 0/.85);}
+  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25/.44),0 0 0 11px oklch(0.65 0.18 25/.14),0 24px 52px oklch(0.55 0.20 25/.42),inset 0 2.5px 0 oklch(1 0 0/.85);}
 }
-.new-note-btn:not(.holding):not(.handsfree):active{
-  transform:translateY(-14px) scale(.95);
+.new-note-btn:not(.holding):active{
+  transform:perspective(700px) rotateX(-3deg) translateY(-12px) scale(.96);
   animation:none;
 }
-/* Иконка + искра ИИ */
+/* Иконки: карандаш (default) / sun-ray (agent) */
 .nnb-ico{display:flex;align-items:center;justify-content:center;position:relative;}
-.nnb-ico svg{width:22px;height:22px;stroke:oklch(0.38 0.12 220);stroke-width:1.65;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s;filter:drop-shadow(0 1px 4px oklch(0.52 0.12 210/0.18));}
-.new-note-btn.holding .nnb-ico svg,.new-note-btn.handsfree .nnb-ico svg{stroke:oklch(0.42 0.18 25);}
+.nnb-ico svg{width:22px;height:22px;stroke:oklch(0.36 0.12 220);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:opacity .2s,stroke .25s;filter:drop-shadow(0 1px 4px oklch(0.52 0.12 210/0.20));}
+.nnb-ico-agent{display:none;position:absolute;}
+.new-note-btn.holding .nnb-ico-note{opacity:0;}
+.new-note-btn.holding .nnb-ico-agent{display:block;stroke:oklch(0.42 0.18 25);}
 .nnb-spark{position:absolute;top:-5px;right:-7px;font-size:10px;color:oklch(0.52 0.14 210);line-height:1;animation:spark-spin 6s linear infinite;pointer-events:none;}
 @keyframes spark-spin{0%{transform:rotate(0deg) scale(1);opacity:.65;}50%{transform:rotate(180deg) scale(1.2);opacity:1;}100%{transform:rotate(360deg) scale(1);opacity:.65;}}
-.new-note-btn.holding .nnb-spark,.new-note-btn.handsfree .nnb-spark{color:oklch(0.50 0.18 25);animation:none;}
-/* Текст */
-.nnb-text{font-size:11px;font-weight:700;color:oklch(0.38 0.08 220);letter-spacing:.03em;text-transform:uppercase;transition:color .25s;}
-.new-note-btn.holding .nnb-text,.new-note-btn.handsfree .nnb-text{color:oklch(0.38 0.14 25);}
-/* Стрелка «потяни вверх» */
-.nnb-up-arrow{display:none;align-items:center;gap:2px;font-size:10px;font-weight:600;color:oklch(0.42 0.14 25/.85);}
-.new-note-btn.holding .nnb-up-arrow{display:flex;animation:swipe-up-bounce .55s ease-in-out infinite;}
-.new-note-btn.handsfree .nnb-up-arrow{display:none;}
-.nnb-up-arrow svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-@keyframes swipe-up-bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
-/* Хендсфри замок */
-.nnb-lock{display:none;align-items:center;gap:3px;}
-.new-note-btn.handsfree .nnb-lock{display:flex;}
-.nnb-lock svg{width:12px;height:12px;stroke:oklch(0.42 0.14 25/.82);stroke-width:2;fill:none;stroke-linecap:round;}
-.nnb-lock-txt{font-size:10px;color:oklch(0.42 0.14 25/.82);}
+.new-note-btn.holding .nnb-spark{color:oklch(0.50 0.18 25);animation:none;}
+.nnb-text{font-size:11px;font-weight:700;color:oklch(0.36 0.08 220);letter-spacing:.04em;text-transform:uppercase;transition:color .25s;}
+.new-note-btn.holding .nnb-text{color:oklch(0.38 0.14 25);}
+
+/* ── MIC BUTTON — голосовые заметки + хендсфри ── */
+.home-mic-btn{cursor:pointer;-webkit-touch-callout:none;}
+.home-mic-btn .mic-btn-ico{position:relative;display:flex;align-items:center;justify-content:center;}
+.home-mic-btn .mic-btn-hf-lbl{display:none;position:absolute;bottom:-14px;font-size:8px;font-weight:700;letter-spacing:.03em;color:oklch(0.42 0.14 25);text-transform:uppercase;white-space:nowrap;}
+.home-mic-btn.holding{background:linear-gradient(155deg,oklch(1 0 0/.68),oklch(0.96 0.08 25/.46))!important;border-color:oklch(0.65 0.18 25/.50)!important;animation:mic-pulse 1.1s ease-in-out infinite;}
+.home-mic-btn.handsfree{background:linear-gradient(155deg,oklch(1 0 0/.64),oklch(0.94 0.10 25/.42))!important;border-color:oklch(0.62 0.20 25/.68)!important;animation:mic-pulse 0.9s ease-in-out infinite;}
+.home-mic-btn.handsfree .mic-btn-hf-lbl{display:block;}
+.home-mic-btn.holding svg,.home-mic-btn.handsfree svg{stroke:oklch(0.42 0.18 25)!important;}
+@keyframes mic-pulse{
+  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25/.20),0 2px 8px oklch(0 0 0/.06),inset 0 1.5px 0 oklch(1 0 0/.85);}
+  50%{box-shadow:0 0 0 4px oklch(0.65 0.18 25/.34),0 2px 10px oklch(0 0 0/.06),inset 0 1.5px 0 oklch(1 0 0/.85);}
+}
 
 .home-voice-label{font-size:11px;color:var(--fg-l);text-align:center;margin-top:5px;letter-spacing:.01em;transition:color .3s;min-height:16px;}
 .home-voice-label.rec{color:oklch(0.50 0.16 25 / 0.70);}
@@ -2647,11 +2645,14 @@ header{padding:15px 16px 9px;}
   box-shadow:none;padding:6px 14px max(env(safe-area-inset-bottom,10px),10px);
 }
 .new-note-btn{
-  flex:0 0 96px;transform:translateY(-10px);
+  flex:0 0 96px;
+  transform:perspective(700px) rotateX(-5deg) translateY(-10px);
   background:linear-gradient(148deg,oklch(1 0 0/.72),oklch(0.96 0.020 210/.56));
   border-color:oklch(1 0 0/.65);
 }
 .new-note-btn::before{display:none;}
+.new-note-btn.holding{transform:perspective(700px) rotateX(-5deg) translateY(-10px) scale(.96)!important;}
+.new-note-btn:not(.holding):active{transform:perspective(700px) rotateX(-3deg) translateY(-7px) scale(.96)!important;}
 .home-act-row{gap:10px;margin-top:4px;max-width:380px;margin-left:auto;margin-right:auto;}
 .home-act-btn{
   flex:0 0 110px;padding:10px 8px;border-radius:18px;
@@ -3226,11 +3227,15 @@ header{padding:15px 16px 9px;}
         <!-- Bottom bar — 3 кнопки: Голос | Заметка↑ | Напомнить -->
         <div class="home-bar">
           <div class="home-act-row">
-            <button class="home-act-btn" onclick="toggleVoice()">
-              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-              <span>Голос</span>
+            <!-- Напомнить (слева) -->
+            <button class="home-act-btn" onclick="openReminderPanel()">
+              <span style="position:relative;display:inline-flex;">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <span class="remind-dot" id="remind-dot"></span>
+              </span>
+              <span>Напомнить</span>
             </button>
-            <!-- Центральная кнопка: тап = заметка, удержи = голосовой ввод -->
+            <!-- ИИ Агент (центр): тап = заметка, удержи = агент слушает -->
             <button class="new-note-btn" id="new-note-btn"
               oncontextmenu="return false"
               onpointerdown="nnbPointerDown(event)"
@@ -3238,19 +3243,24 @@ header{padding:15px 16px 9px;}
               onpointercancel="nnbPointerCancel(event)"
               onpointermove="nnbPointerMove(event)">
               <span class="nnb-ico">
-                <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <svg class="nnb-ico-note" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <svg class="nnb-ico-agent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
                 <span class="nnb-spark">✦</span>
               </span>
-              <span class="nnb-text">Заметка</span>
-              <span class="nnb-up-arrow"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
-              <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
+              <span class="nnb-text">Агент</span>
             </button>
-            <button class="home-act-btn" onclick="openReminderPanel()">
-              <span style="position:relative;display:inline-flex;">
-                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                <span class="remind-dot" id="remind-dot"></span>
+            <!-- Голос (справа): тап=голосовая заметка, удержи=хендсфри -->
+            <button class="home-act-btn home-mic-btn" id="mic-home-btn"
+              oncontextmenu="return false"
+              onpointerdown="micBtnPointerDown(event)"
+              onpointerup="micBtnPointerUp(event)"
+              onpointercancel="micBtnPointerCancel(event)"
+              onpointermove="micBtnPointerMove(event)">
+              <span class="mic-btn-ico">
+                <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span class="mic-btn-hf-lbl">хендсфри</span>
               </span>
-              <span>Напомнить</span>
+              <span>Голос</span>
             </button>
           </div>
           <div class="home-voice-label" id="home-voice-label"></div>
