@@ -158,13 +158,17 @@ function isMissingAiMemoryColumn(error){
   const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
   return msg.includes('ai_memory')&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
 }
+function isMissingFoldersColumns(error){
+  const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
+  return (msg.includes('user_folders')||msg.includes('tag_folders'))&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
+}
 async function loadCloudData(){
   if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
   try{
-    let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,name').eq('user_id',CU.id).maybeSingle();
-    if(error&&isMissingAiMemoryColumn(error)){
-      console.warn('ai_memory column is not ready yet, loading cloud state without it');
+    let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name').eq('user_id',CU.id).maybeSingle();
+    if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
+      console.warn('new columns not ready yet, loading cloud state without them');
       const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
       data=fallback.data;error=fallback.error;
     }
@@ -174,6 +178,8 @@ async function loadCloudData(){
       if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
       if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
       if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
+      if(Array.isArray(data.user_folders))localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(data.user_folders));
+      if(Array.isArray(data.tag_folders))localStorage.setItem('rz_tag_folders',JSON.stringify(data.tag_folders));
       if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
     } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
       await saveCloudNow();
@@ -189,8 +195,8 @@ async function loadCloudData(){
       if(CLOUD_READY_UID===CU?.id)return; // уже загрузилось
       try{
         CLOUD_LOADING=true;
-        let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,name').eq('user_id',CU.id).maybeSingle();
-        if(error&&isMissingAiMemoryColumn(error)){
+        let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name').eq('user_id',CU.id).maybeSingle();
+        if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
           const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
           data=fallback.data;error=fallback.error;
         }
@@ -200,6 +206,8 @@ async function loadCloudData(){
           if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
           if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
           if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
+          if(Array.isArray(data.user_folders))localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(data.user_folders));
+          if(Array.isArray(data.tag_folders))localStorage.setItem('rz_tag_folders',JSON.stringify(data.tag_folders));
           if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
           loadAll(); // обновляем UI с данными из облака
         }
@@ -217,11 +225,11 @@ function queueCloudSave(){if(CLOUD_LOADING||!cloudAllowed())return;clearTimeout(
 async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
-    const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),ai_memory:getAiMemory(),name:readText('rz_name'),updated_at:new Date().toISOString()};
+    const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),ai_memory:getAiMemory(),user_folders:getUserFolders(),tag_folders:typeof getTagFolders==='function'?getTagFolders():[],name:readText('rz_name'),updated_at:new Date().toISOString()};
     let {error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
-    if(error&&isMissingAiMemoryColumn(error)){
-      console.warn('ai_memory column is not ready yet, saving cloud state without it');
-      const {ai_memory,...fallbackPayload}=payload;
+    if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
+      console.warn('new columns not ready yet, saving cloud state without them');
+      const {ai_memory,user_folders,tag_folders,...fallbackPayload}=payload;
       const fallback=await sb.from('user_state').upsert(fallbackPayload,{onConflict:'user_id'});
       error=fallback.error;
     }
@@ -2251,7 +2259,7 @@ function closeStats(){
 
 // ── USER FOLDERS (custom sections created by user via + button) ──
 function getUserFolders(){try{return JSON.parse(localStorage.getItem(scopedKey('rz_user_folders'))||'[]');}catch(e){return[];}}
-function saveUserFolders(arr){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(arr));}
+function saveUserFolders(arr){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(arr));queueCloudSave();}
 function isUserFolderName(name){
   const value=String(name||'').toLowerCase();
   return !!value&&getUserFolders().some(folder=>String(folder.name||'').toLowerCase()===value);
@@ -2722,8 +2730,7 @@ function deleteTagFolder(tag){
   const f=folders.find(x=>x.tag===tag);
   if(!f)return;
   const label=f.label||f.tag;
-  const newFolders=folders.filter(x=>x.tag!==tag);
-  localStorage.setItem('rz_tag_folders',JSON.stringify(newFolders));
+  saveTagFolders(folders.filter(x=>x.tag!==tag));
   loadNotes();
   showToast(`Папка «${label}» удалена`);
 }
@@ -2752,7 +2759,7 @@ function promoteToSection(tag){
   });
   saveNotes(notes);
   if(typeof getTagFolders==='function'){
-    localStorage.setItem('rz_tag_folders',JSON.stringify(tFolders.filter(x=>x.tag.toLowerCase()!==String(tag).toLowerCase())));
+    saveTagFolders(tFolders.filter(x=>x.tag.toLowerCase()!==String(tag).toLowerCase()));
   }
   loadNotes();loadHomeFeed();
   showToast(`«${sectionName}» теперь в Архиве`+(filed?` · ${filed} заметок разобрались`:''));
@@ -4927,7 +4934,7 @@ function _runSingleIntent(intent,params,originalText){
       const folders=getTagFolders();
       if(!folders.some(f=>f.tag===tag)){
         folders.push({tag,label,createdAt:Date.now()});
-        localStorage.setItem('rz_tag_folders',JSON.stringify(folders));
+        saveTagFolders(folders);
         loadNotes(); // обновить список папок
       }
     }
@@ -4996,7 +5003,7 @@ function _runSingleIntent(intent,params,originalText){
           const folders=getTagFolders();
           if(!folders.some(f=>f.tag===tag)){
             folders.push({tag,label:params.tag||tag,createdAt:Date.now()});
-            localStorage.setItem('rz_tag_folders',JSON.stringify(folders));
+            saveTagFolders(folders);
           }
         }
       }

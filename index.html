@@ -3409,6 +3409,7 @@ var _spellOriginal = null, _spellActive = false, _spellStage = 0;
 // ── TAG FOLDERS ──
 const TAG_FOLDERS_KEY = 'rz_tag_folders';
 function getTagFolders(){ try{ return JSON.parse(localStorage.getItem(TAG_FOLDERS_KEY)||'[]'); } catch(e){ return []; } }
+function saveTagFolders(arr){ localStorage.setItem(TAG_FOLDERS_KEY, JSON.stringify(arr)); if(typeof queueCloudSave==='function') queueCloudSave(); }
 function tagFolderExists(tag){ return getTagFolders().some(f => f.tag === tag.toLowerCase()); }
 
 function toggleTagFolder(tag){
@@ -3425,7 +3426,7 @@ function toggleTagFolder(tag){
     }, 180);
   } else {
     folders.push({tag:t, label:tag, createdAt:Date.now()});
-    localStorage.setItem(TAG_FOLDERS_KEY, JSON.stringify(folders));
+    saveTagFolders(folders);
     showToast('✓ Папка «'+tag+'» создана');
     document.querySelectorAll('.ai-tag[data-tag="'+CSS.escape(tag)+'"]').forEach(el=>{
       el.classList.add('ai-tag--active');
