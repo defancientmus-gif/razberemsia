@@ -606,6 +606,7 @@ function go(id){
   setTimeout(()=>p.classList.remove('sl','sr'),280);
   n.classList.remove('sl','sr');n.classList.add('active');
   cur=id;n.scrollTop=0;
+  if(id!=='notes')document.getElementById('main-app')?.classList.remove('agent-folder-shell');
   if(id==='home')loadHomeFeed();
   if(id==='notes'){renderNotifBanner();loadNotes();}
   if(id==='notepad')loadNotepad();
@@ -2558,6 +2559,7 @@ function _drillNav(){
   const agentFolderView=drillLevel===1&&drillAiTag!==null&&!isUserFolderName(drillAiTag);
   const notesScreen=document.getElementById('s-notes');
   notesScreen?.classList.toggle('agent-folder-view',agentFolderView);
+  document.getElementById('main-app')?.classList.toggle('agent-folder-shell',agentFolderView);
   if(!agentFolderView)notesScreen?.classList.remove('placing');
   if(backBtn){backBtn.style.opacity='1';backBtn.style.pointerEvents='all';}
   if(crumbs){
@@ -4617,11 +4619,25 @@ function _setAgentState(state){
 
 async function _processAgentQuery(text,alts=[]){
   _setAgentState('thinking');
+
+  // ── Таймаут агента: 30 сек, продление ещё на 30 сек ──
+  const ac=new AbortController();
+  let _abortTimer=null;
+  let _warnTimer=null;
+  function _armAbort(ms){clearTimeout(_abortTimer);_abortTimer=setTimeout(()=>ac.abort(),ms);}
+  function _cleanTimers(){clearTimeout(_abortTimer);clearTimeout(_warnTimer);}
+
+  // За 5 сек до аборта — предлагаем продлить
+  _warnTimer=setTimeout(()=>{
+    showActionToast('Агент думает… 🤔','Ещё 30 сек',()=>{_armAbort(30000);});
+  },25000);
+  _armAbort(30000);
+
   try{
-    if(!sb){showToast('Нет подключения к серверу');_setAgentState('idle');return;}
+    if(!sb){_cleanTimers();showToast('Нет подключения к серверу');_setAgentState('idle');return;}
     const sess=await sb.auth.getSession();
     const token=sess?.data?.session?.access_token;
-    if(!token){showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
+    if(!token){_cleanTimers();showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
     const memoryContext=getAiMemoryContext?.()??[];
     const _allNotes=getNotes();
     // Для запросов про планы/маршруты/сводку — передаём больше тела заметок
@@ -4639,8 +4655,10 @@ async function _processAgentQuery(text,alts=[]){
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes}})
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes}}),
+      signal:ac.signal
     });
+    _cleanTimers();
     let data;
     try{data=await res.json();}catch(e){showToast('Ошибка ответа сервера');_setAgentState('idle');return;}
     _setAgentState('idle');
@@ -4648,7 +4666,9 @@ async function _processAgentQuery(text,alts=[]){
     if(!data.intent){showToast('Агент не понял намерение');return;}
     _executeAgentIntent(data,text);
   }catch(e){
+    _cleanTimers();
     _setAgentState('idle');
+    if(e?.name==='AbortError'){showToast('Агент не успел ответить — попробуйте ещё раз');return;}
     showToast('Нет сети — '+String(e?.message||'').slice(0,40));
   }
 }
