@@ -2306,21 +2306,20 @@ html.dark .bubble{
 .sect-hdr-label{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-l);}
 .sect-hdr-add{width:28px;height:28px;border-radius:50%;border:none;background:oklch(0.52 0.10 210 / .12);color:var(--accent);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;transition:background .15s,transform .12s;}
 .sect-hdr-add:active{transform:scale(.88);background:oklch(0.52 0.10 210 / .22);}
-.sect-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px 14px;}
-.sect-card{border-radius:18px;padding:14px 12px 12px;background:linear-gradient(158deg,oklch(1 0 0 / .88),oklch(0.965 0.010 210 / .75));border:1px solid oklch(0.82 0.01 210 / .50);cursor:pointer;display:flex;flex-direction:column;gap:5px;transition:transform .12s,box-shadow .12s;position:relative;overflow:hidden;text-align:left;font-family:var(--sys);-webkit-tap-highlight-color:transparent;}
-.sect-card::before{content:'';position:absolute;inset:0;background:var(--card-tint,transparent);opacity:.7;pointer-events:none;border-radius:inherit;}
-.sect-card:active{transform:scale(.96);box-shadow:0 2px 12px oklch(0.40 0.05 210 / .12);}
-.sect-card-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:var(--sys);flex-shrink:0;margin-bottom:2px;position:relative;}
-.sect-card-name{font-size:14px;font-weight:600;color:var(--fg);line-height:1.25;position:relative;}
-.sect-card-cnt{font-size:11px;color:var(--fg-l);position:relative;}
-.sect-card-del{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.28;-webkit-appearance:none;padding:0;color:var(--fg);transition:opacity .15s,background .15s;}
-.sect-card-del:active,.sect-card-del:hover{opacity:.75;background:oklch(0.88 0.06 15/0.20);}
-.sect-card-pinned{background:linear-gradient(158deg,oklch(1 0 0 / .88),oklch(0.965 0.008 270 / .72));}
-.sect-card-ico-pin{background:oklch(0.55 0.12 270 / .10)!important;color:oklch(0.50 0.14 270)!important;font-size:18px!important;}
-.sect-card-stripe{background:linear-gradient(158deg,oklch(1 0 0 / .88),oklch(0.970 0.006 210 / .72));}
-.sect-card-new{background:transparent!important;border:1.5px dashed oklch(0.76 0.02 210 / .55)!important;align-items:center;justify-content:center;min-height:72px;gap:4px;}
-.sect-card-plus{font-size:22px;color:var(--fg-l);line-height:1;}
-.sect-card-new-lbl{font-size:12px;color:var(--fg-l);}
+.sect-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 14px;}
+/* ── Матовый хрусталь: мягкий стеклянный эффект ── */
+.sect-card{border-radius:20px;padding:11px 10px 10px;background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.007 215 / .48));backdrop-filter:blur(12px) saturate(1.25);-webkit-backdrop-filter:blur(12px) saturate(1.25);border:1px solid oklch(0.95 0.01 210 / .75);box-shadow:0 1.5px 10px oklch(0 0 0 / .07),inset 0 1.5px 0 oklch(1 0 0 / .90);cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:transform .14s,box-shadow .14s;position:relative;overflow:visible;text-align:left;font-family:var(--sys);-webkit-tap-highlight-color:transparent;}
+.sect-card::before{content:'';position:absolute;inset:0;background:var(--card-tint,transparent);opacity:.45;pointer-events:none;border-radius:inherit;}
+.sect-card:active{transform:scale(.95);box-shadow:0 1px 5px oklch(0 0 0/.06),inset 0 1px 0 oklch(1 0 0/.90);}
+.sect-card-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;font-family:var(--sys);flex-shrink:0;margin-bottom:3px;position:relative;}
+.sect-card-name{font-size:13px;font-weight:600;color:var(--fg);line-height:1.25;position:relative;}
+.sect-card-cnt{font-size:10px;color:var(--fg-l);position:relative;}
+/* z-index:2 — выше ::before overlay; touch-action — iOS tap fix */
+.sect-card-del{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.22;-webkit-appearance:none;padding:0;color:var(--fg);transition:opacity .15s,background .15s;z-index:2;touch-action:manipulation;}
+.sect-card-del:active,.sect-card-del:hover{opacity:.80;background:oklch(0.88 0.08 15/0.22);}
+.sect-card-pinned{background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.007 270 / .46))!important;}
+.sect-card-ico-pin{background:oklch(0.55 0.12 270 / .10)!important;color:oklch(0.50 0.14 270)!important;font-size:16px!important;}
+.sect-card-stripe{background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.005 210 / .46))!important;}
 .sect-card-empty{grid-column:1/-1;padding:8px 4px;font-size:13px;color:var(--fg-l);line-height:1.5;}
 /* Кнопки управления папками/разделами */
 .folder-del-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;cursor:pointer;opacity:.35;transition:opacity .15s,background .15s;-webkit-tap-highlight-color:transparent;border:none;background:transparent;padding:0;margin:0;-webkit-appearance:none;}

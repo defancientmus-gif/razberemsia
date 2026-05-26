@@ -1398,8 +1398,36 @@ function scheduleAll(){
 }
 
 // Пересылаем в SW при каждом возвращении в приложение
+let _lastPullAt=0;
+async function _pullCloudIfStale(){
+  if(!cloudAllowed()||!CU)return;
+  const age=Date.now()-_lastPullAt;
+  if(age<30000)return; // не чаще раза в 30 секунд
+  _lastPullAt=Date.now();
+  try{
+    const {data}=await sb.from('user_state')
+      .select('notes,trash,user_folders,tag_folders')
+      .eq('user_id',CU.id).maybeSingle();
+    if(!data)return;
+    let changed=false;
+    if(Array.isArray(data.notes)){
+      const localJson=localStorage.getItem(scopedKey('rz_notes'));
+      const cloudJson=JSON.stringify(data.notes);
+      if(localJson!==cloudJson){localStorage.setItem(scopedKey('rz_notes'),cloudJson);changed=true;}
+    }
+    if(Array.isArray(data.trash)){
+      localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+    }
+    _mergeCloudFolders(data.user_folders,data.tag_folders);
+    if(changed)loadAll();
+    else if(document.getElementById('drill-p0')?.offsetParent!==null)_drillP0(); // обновить разделы
+  }catch(_){}
+}
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&notifGranted())scheduleAll();
+  if(document.visibilityState==='visible'){
+    if(notifGranted())scheduleAll();
+    _pullCloudIfStale();
+  }
 });
 
 // ── Умная обработка напоминания после сохранения заметки ──
@@ -2421,7 +2449,7 @@ function _suggestAgentDestination(note,sourceTag){
     if(!best||score>best.score)best={name:folder.name,score,index};
   });
   if(best&&best.score>0)return best.name;
-  return folders.length===1?folders[0].name:'';
+  return ''; // не предлагаем папку без реального совпадения
 }
 function openFolderModal(){
   const m=document.getElementById('folder-modal');
@@ -2879,8 +2907,6 @@ function _drillP0(){
     h+=`<div class="sect-card-empty">Скажи агенту что записать — разделы появятся сами</div>`;
   }
 
-  // Кнопка + новый раздел
-  h+=`<button type="button" class="sect-card sect-card-new" onclick="openFolderModal()"><span class="sect-card-plus">+</span><span class="sect-card-new-lbl">Новый раздел</span></button>`;
   h+=`</div>`;
 
   // ── ВХОДЯЩИЕ ──
