@@ -739,27 +739,11 @@ function toggleAiCollapse(){
   if(!panel)return;
   const body=document.getElementById('ai-panel-body');
   const btn=document.getElementById('ai-collapse-btn');
-  const isCollapsed=panel.classList.contains('collapsed');
-  if(!isCollapsed&&body){
-    // Закрываем: блокируем overflow перед анимацией
-    panel.style.overflow='hidden';
-    body.style.overflow='hidden';
-    body.style.maxHeight=body.scrollHeight+'px';
-    requestAnimationFrame(()=>{body.style.maxHeight='0px';});
-  }
+  // Сбросить любые inline-стили от предыдущих итераций
+  if(body){body.style.maxHeight='';body.style.overflow='';body.style.opacity='';}
+  panel.style.overflow='';
   panel.classList.toggle('collapsed');
-  if(btn)btn.style.transform=isCollapsed?'rotate(0deg)':'rotate(180deg)';
-  if(isCollapsed&&body){
-    requestAnimationFrame(()=>{
-      body.style.maxHeight=body.scrollHeight+'px';
-      setTimeout(()=>{
-        body.style.maxHeight='';
-        // Открыли — разрешаем скроллу пробрасываться до sheet-scroll-area
-        body.style.overflow='visible';
-        panel.style.overflow='visible';
-      },320);
-    });
-  }
+  if(btn)btn.style.transform=panel.classList.contains('collapsed')?'rotate(180deg)':'rotate(0deg)';
 }
 
 // ── ИСПРАВЛЕНИЕ ТЕКСТА ──
@@ -969,10 +953,9 @@ function _renderAiResult(summary,tags,actions,panel,text){
   html+='</div>';
   if(bodyEl){
     bodyEl.innerHTML=html;
-    // Сбрасываем inline max-height — пусть CSS управляет высотой.
-    // Фиксированное значение до рендера блокирует раскрытие внутренних секций.
+    // Inline стили не нужны — CSS .ai-panel:not(.collapsed) управляет высотой
     bodyEl.style.maxHeight='';
-    // Скролл после того как браузер отрисовал контент
+    bodyEl.style.overflow='';
     requestAnimationFrame(()=>{ _scrollToAiPanel(); });
   }
   if(panel){
@@ -3286,12 +3269,18 @@ function _openSheet(){
   const aiPanel=document.getElementById('ai-panel');
   if(aiPanel){
     aiPanel.style.display='none';
+    aiPanel.style.overflow='';
     aiPanel.classList.remove('collapsed');
     aiPanel.dataset.aiTags='';
     aiPanel.dataset.aiSummary='';
   }
   const aiBody=document.getElementById('ai-panel-body');
-  if(aiBody)aiBody.innerHTML='';
+  if(aiBody){
+    aiBody.innerHTML='';
+    aiBody.style.maxHeight='';
+    aiBody.style.overflow='';
+    aiBody.style.opacity='';
+  }
   document.getElementById('ai-edit-area')?.remove();
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
