@@ -1678,36 +1678,50 @@ function renderReminderPanel(){
   const upcoming=notes.filter(n=>{
     if(!n.reminder)return false;
     const dt=parseDt(n.reminder);if(!dt)return false;
-    return dt.getTime()>now-86400000; // показываем просроченные до суток
+    return dt.getTime()>now-86400000*3; // просроченные до 3 суток тоже показываем
   }).sort((a,b)=>{
     const da=parseDt(a.reminder),db=parseDt(b.reminder);
-    return(da?da.getTime():0)-(db?db.getTime():0);
+    return(da?da.getTime():Infinity)-(db?db.getTime():Infinity);
   });
   const settings=getReminderSettings();
   let html='';
   if(upcoming.length){
-    html+='<div class="remind-section-label">Напоминания</div>';
     upcoming.forEach(n=>{
       const dt=parseDt(n.reminder);
       const isPast=dt&&dt.getTime()<now;
       const isSoon=dt&&!isPast&&(dt.getTime()-now)<3*3600000;
       const dotCls=isPast?'overdue':isSoon?'soon':'future';
-      const whenCls=isPast?'overdue':'';
+      const timeCls=isPast?'overdue':isSoon?'soon':'';
       const whenTxt=dt?_remindWhenTxt(dt,now):fmtDt(n.reminder);
+      const cardCls=isPast?'remind-item overdue-card':'remind-item';
+      const title=n.title||(n.body||'').split('\n')[0].slice(0,60)||'Заметка';
+      const preview=(n.body||'').split('\n').slice(1).join(' ').trim().slice(0,120);
       const recurLine=n.recurring?.times?.length
         ?`<div class="remind-item-recurring">🔁 ${esc(n.recurring.times.join(' · '))}</div>`:'';
-      html+=`<div class="remind-item">
-        <div class="remind-item-dot ${dotCls}"></div>
-        <div class="remind-item-body" onclick="openRemEditForNote('${n.id}')">
-          <div class="remind-item-title">${esc(n.title||(n.body||'').split('\n')[0].slice(0,50)||'Заметка')}</div>
-          <div class="remind-item-when ${whenCls}">${esc(whenTxt)}</div>
-          ${recurLine}
+      html+=`<div class="${cardCls}" onclick="closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(n.id)}),260)">
+        <div class="remind-item-top">
+          <div class="remind-item-dot ${dotCls}"></div>
+          <div class="remind-item-time ${timeCls}">${esc(whenTxt)}</div>
         </div>
-        <button class="remind-item-del" onclick="event.stopPropagation();removeNoteReminder('${n.id}')" title="Удалить"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="remind-item-title">${esc(title)}</div>
+        ${preview?`<div class="remind-item-preview">${esc(preview)}</div>`:''}
+        ${recurLine}
+        <div class="remind-item-actions">
+          <button class="remind-done-btn" onclick="event.stopPropagation();doneReminder(${jsAttr(n.id)})">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Выполнено
+          </button>
+          <button class="remind-open-btn" onclick="event.stopPropagation();openRemEditForNote(${jsAttr(n.id)})">
+            Изменить
+          </button>
+          <button class="remind-del-btn" onclick="event.stopPropagation();removeNoteReminder(${jsAttr(n.id)})" title="Удалить напоминание">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
       </div>`;
     });
   } else {
-    html+=`<div class="remind-empty">🔔<br>Нет активных напоминаний</div>`;
+    html+=`<div class="remind-empty"><div class="remind-empty-ico">🔔</div><div class="remind-empty-txt">Нет активных напоминаний</div></div>`;
   }
   html+='<div class="remind-section-label">Настройки</div>';
   html+=`<div class="remind-settings">
@@ -1717,6 +1731,19 @@ function renderReminderPanel(){
     </div>
   </div>`;
   scroll.innerHTML=html;
+}
+
+function doneReminder(noteId){
+  // Убираем напоминание (выполнено) — с анимацией исчезновения карточки
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n)return;
+  n.reminder=null;
+  if(n.recurring)n.recurring=null;
+  n.updatedAt=Date.now();
+  saveNotes(notes);
+  showToast('Выполнено ✓');
+  renderReminderPanel();
 }
 function relativeTime(ms){
   if(ms<0)return'';
