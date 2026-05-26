@@ -4861,13 +4861,9 @@ async function _startAgentVoiceWhisper(){
         });
         const data=await res.json();
         if(!res.ok||data.error){
-          // Если Groq не настроен — тихо переходим на SR
-          if(data.error==='GROQ_API_KEY not configured'){
-            showToast('Whisper не настроен, использую браузерное распознавание');
-            _startAgentVoiceSR();return;
-          }
-          showToast('Ошибка расшифровки — попробуйте ещё раз');
-          _setAgentState('idle');return;
+          // Любая ошибка Groq/Whisper — тихо падаем на браузерный SR
+          console.warn('[rz] Whisper error, fallback to SR:', data.error||res.status);
+          _startAgentVoiceSR();return;
         }
         const text=(data.text||'').trim();
         if(!text){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
