@@ -616,13 +616,27 @@ function go(id){
 const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/ai';
 let _aiOn=false;
 
+function _setSheetAiButtonState(state){
+  const btn=document.getElementById('sheet-ai-btn');
+  const label=btn?.querySelector('.sheet-ai-btn-label');
+  if(!btn||!label)return;
+  const text={
+    idle:'Разобраться в заметке',
+    loading:'Разбираюсь...',
+    ready:'Разбор готов',
+    retry:'Попробовать разобраться снова'
+  };
+  label.textContent=text[state]||text.idle;
+  btn.classList.toggle('is-thinking',state==='loading');
+}
+
 function toggleAiPanel(){
   const btn=document.getElementById('sheet-ai-btn');
   const panel=document.getElementById('ai-panel');
   if(!btn||!panel)return;
   _aiOn=!_aiOn;
   btn.classList.toggle('ai-on',_aiOn);
-  if(!_aiOn){panel.style.display='none';return;}
+  if(!_aiOn){panel.style.display='none';_setSheetAiButtonState('idle');return;}
   const f=document.getElementById('sh1');
   const text=(f?.value||'').trim();
   panel.style.display='block';
@@ -630,6 +644,7 @@ function toggleAiPanel(){
   const bodyEl=document.getElementById('ai-panel-body');
   if(text.length<15){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
+    _setSheetAiButtonState('retry');
     _scrollToAiPanel();
     return;
   }
@@ -650,6 +665,7 @@ function toggleAiPanel(){
       return;
     }
   }
+  _setSheetAiButtonState('loading');
   runAiAnalysis(text,panel);
 }
 function rerunAiAnalysis(){
@@ -759,6 +775,7 @@ async function readErrorText(res){
 }
 async function runAiAnalysis(text,panel,attempt=0){
   let autoLabel=null;
+  _setSheetAiButtonState('loading');
   const bodyEl=document.getElementById('ai-panel-body');
   if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>${attempt?'AI занят, пробую ещё раз...':'Анализирую...'}</div></div>`;
   _scrollToAiPanel();
@@ -792,8 +809,9 @@ async function runAiAnalysis(text,panel,attempt=0){
       const list=getNotes();
       const idx=list.findIndex(n=>n.id===EI);
       if(idx>=0){
+        const filedTags=(list[idx].aiTags||[]).filter(_isFiledFolderTag);
         list[idx].aiCache={summary:summary||'',tags:tags||[],actions:actions||[],bodyKey:text.slice(0,80)};
-        list[idx].aiTags=tags||[];
+        list[idx].aiTags=[...(tags||[]),...filedTags];
         list[idx].aiSummary=summary||'';
         saveNotes(list);
       }
@@ -811,6 +829,7 @@ async function runAiAnalysis(text,panel,attempt=0){
     console.warn('AI error',e);
     const msg=String(e?.message||'').startsWith('Ошибка AI:')||String(e?.message||'').startsWith('AI ')||String(e?.message||'').startsWith('Войдите')||String(e?.message||'').startsWith('Не получилось')?String(e?.message):friendlyAiError(e?.message);
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
+    _setSheetAiButtonState('retry');
     // editBtn removed
     _scrollToAiPanel();
   }
@@ -864,6 +883,7 @@ function _renderAiResult(summary,tags,actions,panel,text){
     panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
     panel.dataset.aiSummary=summary||'';
   }
+  _setSheetAiButtonState('ready');
 }
 
 // ── SAVE IDEA TO REPO ──
@@ -1229,8 +1249,17 @@ function buildListInner(n){
 
 let _toastT=null;
 function showToast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  const t=document.getElementById('toast');t.classList.remove('action');t.textContent=msg;t.classList.add('show');
   clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function showActionToast(msg,label,action){
+  const t=document.getElementById('toast');if(!t)return;
+  t.textContent='';t.classList.add('action','show');
+  const copy=document.createElement('span');copy.textContent=msg;
+  const btn=document.createElement('button');btn.type='button';btn.className='toast-action-btn';btn.textContent=label;
+  btn.onclick=()=>{t.classList.remove('show','action');action();};
+  t.append(copy,btn);
+  clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('show','action'),5600);
 }
 
 // ── ESC ──
@@ -2083,22 +2112,181 @@ function mkDay(num,ds,other,isT,isSel,hasDot){
 }
 
 // ── "РАЗОБРАЛИСЬ" — пометить заметку как проработанную ──
-// Заметка считается проработанной если у неё есть тег, совпадающий с пользовательским разделом.
-// Такие заметки остаются в AI-папках (сортировочный центр), но помечаются визуально.
+// Размещение в пользовательском разделе хранится отдельной служебной меткой.
+// Обычный AI-тег — лишь предложение и не должен убирать заметку из входящих.
+const FILED_FOLDER_PREFIX='__filed__:';
+function _filedFolderTag(name){return FILED_FOLDER_PREFIX+String(name||'').trim().toLowerCase();}
+function _isFiledFolderTag(tag){return String(tag||'').toLowerCase().startsWith(FILED_FOLDER_PREFIX);}
+function getFiledFolderName(note){
+  const tag=Array.isArray(note?.aiTags)?note.aiTags.find(_isFiledFolderTag):null;
+  return tag?String(tag).slice(FILED_FOLDER_PREFIX.length):'';
+}
 function isNoteResolved(note){
-  if(!Array.isArray(note.aiTags)||!note.aiTags.length)return false;
-  const folders=getUserFolders();
-  if(!folders.length)return false;
-  const names=folders.map(f=>f.name.toLowerCase());
-  return note.aiTags.some(t=>names.includes(t.toLowerCase()));
+  const filedFolder=getFiledFolderName(note);
+  return !!filedFolder&&isUserFolderName(filedFolder);
+}
+
+// ── STATS ──
+const _HEALTH_RX=/здоров|врач|лекар|аптек|анализ|спорт|фитнес|бег|трениров|диет|витамин|давлен|таблетк|процедур/i;
+function _isHealthNote(n){
+  if(n.label==='здоровье')return true;
+  return Array.isArray(n.aiTags)&&n.aiTags.some(t=>_HEALTH_RX.test(t));
+}
+function calcStats(){
+  const notes=getNotes();
+  const now=Date.now();
+  const dayMs=86400000;
+  const weekMs=7*dayMs;
+  const healthNotes=notes.filter(_isHealthNote);
+  const weekNotes=notes.filter(n=>(n.updatedAt||n.createdAt||0)>now-weekMs);
+  const resolvedNotes=notes.filter(n=>isNoteResolved(n));
+  // Per day last 7 days oldest→newest
+  const days=Array.from({length:7},(_,i)=>{
+    const start=now-(6-i)*dayMs;
+    return notes.filter(n=>{const ts=n.updatedAt||n.createdAt||0;return ts>=start&&ts<start+dayMs;}).length;
+  });
+  const maxDay=Math.max(1,...days);
+  // Scores 0→100 for scale position
+  const healthScore=Math.min(96,Math.round(healthNotes.length*20));   // 5 notes = full
+  const activityScore=Math.min(96,Math.round(weekNotes.length*12));   // 8 notes = full
+  return{total:notes.length,health:healthNotes.length,resolved:resolvedNotes.length,week:weekNotes.length,days,maxDay,healthScore,activityScore};
+}
+function updateStatsPill(){
+  const s=calcStats();
+  const h=document.getElementById('hstat-hcnt');
+  const a=document.getElementById('hstat-scnt');
+  if(h)h.textContent=s.health;
+  if(a)a.textContent=s.week;
+}
+function openStats(){
+  const s=calcStats();
+  const modal=document.getElementById('stats-modal');
+  if(!modal)return;
+  // Reset markers before animating
+  const mh=document.getElementById('stats-mark-h');
+  const ms=document.getElementById('stats-mark-s');
+  if(mh)mh.style.transition='none';
+  if(ms)ms.style.transition='none';
+  if(mh)mh.style.left='5%';
+  if(ms)ms.style.left='5%';
+  // Week chart
+  const barsEl=document.getElementById('stats-week-bars');
+  if(barsEl){
+    const DAY_NAMES=['пн','вт','ср','чт','пт','сб','вс'];
+    const todayIdx=(new Date().getDay()+6)%7; // 0=Mon
+    barsEl.innerHTML=s.days.map((cnt,i)=>{
+      const barH=Math.max(3,Math.round((cnt/s.maxDay)*48));
+      const today=i===todayIdx;
+      return`<div class="stats-week-col"><div class="stats-week-bar${today?' today':''}" style="height:${barH}px"></div><div class="stats-week-day">${DAY_NAMES[i]}</div></div>`;
+    }).join('');
+  }
+  // Breakdown
+  const bd=document.getElementById('stats-breakdown');
+  if(bd){
+    bd.innerHTML=[
+      {e:'📝',name:'Всего заметок',val:s.total},
+      {e:'❤️',name:'О здоровье',val:s.health},
+      {e:'⭐',name:'За эту неделю',val:s.week},
+      {e:'✅',name:'Разобрались',val:s.resolved},
+    ].map(r=>`<div class="stats-row"><div class="stats-row-l"><span class="stats-row-emo">${r.e}</span><span class="stats-row-name">${r.name}</span></div><span class="stats-row-val">${r.val}</span></div>`).join('');
+  }
+  // Show modal
+  modal.style.pointerEvents='auto';
+  requestAnimationFrame(()=>{
+    modal.classList.add('show');
+    // Animate markers after sheet appears
+    setTimeout(()=>{
+      if(mh){mh.style.transition='';mh.style.left=Math.max(5,s.healthScore)+'%';}
+      if(ms){ms.style.transition='';ms.style.left=Math.max(5,s.activityScore)+'%';}
+    },120);
+  });
+}
+function closeStats(){
+  const modal=document.getElementById('stats-modal');
+  if(!modal)return;
+  modal.classList.remove('show');
+  setTimeout(()=>{modal.style.pointerEvents='none';},300);
 }
 
 // ── USER FOLDERS (custom sections created by user via + button) ──
 function getUserFolders(){try{return JSON.parse(localStorage.getItem(scopedKey('rz_user_folders'))||'[]');}catch(e){return[];}}
 function saveUserFolders(arr){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(arr));}
+function isUserFolderName(name){
+  const value=String(name||'').toLowerCase();
+  return !!value&&getUserFolders().some(folder=>String(folder.name||'').toLowerCase()===value);
+}
 // Palette for user-created folders
 const _FOLDER_COLORS=['oklch(0.58 0.12 180)','oklch(0.58 0.12 60)','oklch(0.58 0.12 300)','oklch(0.58 0.12 25)','oklch(0.58 0.12 140)','oklch(0.58 0.12 220)'];
 function _folderColor(idx){return _FOLDER_COLORS[idx%_FOLDER_COLORS.length];}
+function _folderTint(idx,alpha){
+  return _folderColor(idx).replace(/\)$/,` / ${alpha})`);
+}
+function getNoteUserFolder(note){
+  const filedFolder=getFiledFolderName(note);
+  if(!filedFolder)return null;
+  const folders=getUserFolders();
+  const index=folders.findIndex(folder=>String(folder.name).toLowerCase()===filedFolder);
+  return index<0?null:{...folders[index],colorIndex:folders[index].idx!==undefined?folders[index].idx:index};
+}
+function _sectionNoteStyle(note){
+  const folder=getNoteUserFolder(note);if(!folder)return '';
+  const tint=_folderTint(folder.colorIndex,'.13');
+  const line=_folderTint(folder.colorIndex,'.11');
+  return `--section-line:${line};background:radial-gradient(ellipse 86% 72% at 12% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .84),oklch(0.965 0.012 210 / .73));`;
+}
+function migrateLegacyFolderPlacements(){
+  const key=scopedKey('rz_filed_folder_migrated_v1');
+  if(localStorage.getItem(key))return;
+  const folders=getUserFolders();
+  if(!folders.length)return;
+  const notes=getNotes();
+  let changed=false;
+  notes.forEach(note=>{
+    if(getFiledFolderName(note)||!Array.isArray(note.aiTags))return;
+    const matched=folders.find(folder=>note.aiTags.some(tag=>String(tag).toLowerCase()===String(folder.name).toLowerCase()));
+    if(!matched)return;
+    note.aiTags=[...note.aiTags,_filedFolderTag(matched.name)];
+    changed=true;
+  });
+  if(changed)saveNotes(notes);
+  localStorage.setItem(key,'1');
+}
+function _agentFolderDisplayName(tag){
+  if(typeof getTagFolders==='function'){
+    const folder=getTagFolders().find(item=>String(item.tag).toLowerCase()===String(tag).toLowerCase());
+    if(folder?.label)return folder.label;
+  }
+  const raw=String(tag||'');
+  return raw?raw.charAt(0).toUpperCase()+raw.slice(1):'Папка';
+}
+const _FOLDER_SUGGESTION_HINTS={
+  финанс:['финанс','деньг','руб','банк','оплат','квитанц','чек','расход','долг','счёт','счет','платёж','платеж'],
+  здоров:['здоров','лекар','врач','анализ','аптек','бол','давлен'],
+  дом:['дом','квартир','ремонт','коммун','уборк','мебел'],
+  семь:['семь','мам','пап','ребён','ребен','внук','родител'],
+  покуп:['покуп','куп','заказ','магазин','достав'],
+  работ:['работ','клиент','встреч','проект','задач'],
+  поезд:['поезд','дорог','билет','отпуск','путешеств']
+};
+function _suggestAgentDestination(note,sourceTag){
+  const folders=getUserFolders();
+  if(!folders.length)return '';
+  const text=[sourceTag,_agentFolderDisplayName(sourceTag),note?.title,note?.body,note?.aiSummary,...((note?.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag)))]
+    .join(' ').toLowerCase().replace(/ё/g,'е');
+  let best=null;
+  folders.forEach((folder,index)=>{
+    const name=String(folder.name||'').toLowerCase().replace(/ё/g,'е');
+    let score=0;
+    name.split(/\s+/).filter(part=>part.length>2).forEach(part=>{if(text.includes(part))score+=6;});
+    Object.entries(_FOLDER_SUGGESTION_HINTS).forEach(([root,hints])=>{
+      if(!name.includes(root))return;
+      hints.forEach(hint=>{if(text.includes(hint))score+=2;});
+    });
+    if(!best||score>best.score)best={name:folder.name,score,index};
+  });
+  if(best&&best.score>0)return best.name;
+  return folders.length===1?folders[0].name:'';
+}
 function openFolderModal(){
   const m=document.getElementById('folder-modal');
   const inner=document.getElementById('folder-modal-inner');
@@ -2147,6 +2335,83 @@ function deleteUserFolder(name){
   saveUserFolders(folders);
   loadNotes();
   showToast('Раздел удалён');
+}
+
+let _pendingFilingMotion=null;
+function _filingMotionMarkup(motion){
+  const destinationNotes=getNotes().filter(n=>getFiledFolderName(n)===motion.destination.toLowerCase()).length;
+  return `<div class="agent-inbox-motion" id="filing-transfer">
+    <div class="agent-receiver">
+      <span class="agent-receiver-mark">&darr;</span>
+      <span class="agent-receiver-copy"><span class="agent-receiver-overline">Раздел</span><span class="agent-receiver-name">${esc(motion.destination)}</span></span>
+      <span class="agent-receiver-count">${destinationNotes}</span>
+    </div>
+    <div class="agent-transfer-guide"><span class="agent-transfer-guide-mark">&rarr;</span><span>Сохраняю в раздел «${esc(motion.destination)}»</span></div>
+    <article class="agent-note filing-ghost">
+      <div class="agent-note-top">
+        <span class="agent-note-dot"></span>
+        <span class="agent-note-copy"><span class="agent-note-title">${esc(motion.title)}</span><span class="agent-note-body">${esc(motion.body)}</span></span>
+      </div>
+    </article>
+  </div>`;
+}
+function _runFilingMotion(){
+  const motion=_pendingFilingMotion;
+  const stage=document.getElementById('filing-transfer');
+  if(!motion||!stage)return;
+  document.getElementById('s-notes')?.classList.add('placing');
+  setTimeout(()=>stage.classList.add('routing'),820);
+  setTimeout(()=>{
+    stage.classList.add('landed');
+    showActionToast(`Сохранено в «${motion.destination}»`,'Отменить',()=>_undoFilingMotion(motion));
+  },2340);
+  setTimeout(()=>stage.classList.add('folding'),2680);
+  setTimeout(()=>stage.classList.add('vanishing'),3900);
+  setTimeout(()=>{
+    if(_pendingFilingMotion===motion)_pendingFilingMotion=null;
+    document.getElementById('s-notes')?.classList.remove('placing');
+    if(cur==='notes'&&drillLevel===1&&drillAiTag&&drillAiTag.toLowerCase()===motion.source.toLowerCase())_drillP1();
+    else stage.remove();
+  },4550);
+}
+function _undoFilingMotion(motion){
+  const notes=getNotes();
+  const note=notes.find(n=>n.id===motion.noteId);
+  if(!note)return;
+  note.aiTags=(note.aiTags||[]).filter(tag=>String(tag).toLowerCase()!==_filedFolderTag(motion.destination));
+  note.updatedAt=Date.now();
+  saveNotes(notes);
+  _pendingFilingMotion=null;
+  loadHomeFeed();
+  if(cur==='notes'){
+    if(drillLevel===1)_drillP1();
+    else loadNotes();
+  }
+  showToast('Перемещение отменено');
+}
+function confirmAgentFiling(event,noteId,destination){
+  event?.stopPropagation();
+  if(_pendingFilingMotion||!drillAiTag||isUserFolderName(drillAiTag))return;
+  const notes=getNotes();
+  const note=notes.find(item=>item.id===noteId);
+  if(!note||!destination)return;
+  const destinationLow=destination.toLowerCase();
+  const cleanTags=(note.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
+  if(!cleanTags.some(tag=>String(tag).toLowerCase()===destinationLow))cleanTags.push(destination);
+  note.aiTags=[...cleanTags,_filedFolderTag(destination)];
+  note.updatedAt=Date.now();
+  _pendingFilingMotion={
+    noteId:note.id,
+    source:drillAiTag,
+    destination,
+    title:note.title,
+    body:_notePreview(note)||(note.body||'').slice(0,85)
+  };
+  saveNotes(notes);
+  loadHomeFeed();
+  loadNotepad();
+  _drillP1();
+  requestAnimationFrame(_runFilingMotion);
 }
 
 // ── STRIPES (oklch) ──
@@ -2239,6 +2504,7 @@ function _notePreview(n){
 }
 
 function loadNotes(){
+  migrateLegacyFolderPlacements();
   drillLevel=0;drillCategory=null;drillAiTag=null;drillNoteId=null;
   _drillRender(0);
   _drillNav();
@@ -2289,12 +2555,18 @@ function _drillSeek(level){
 function _drillNav(){
   const backBtn=document.getElementById('drill-back-btn');
   const crumbs=document.getElementById('drill-crumbs');
+  const agentFolderView=drillLevel===1&&drillAiTag!==null&&!isUserFolderName(drillAiTag);
+  const notesScreen=document.getElementById('s-notes');
+  notesScreen?.classList.toggle('agent-folder-view',agentFolderView);
+  if(!agentFolderView)notesScreen?.classList.remove('placing');
   if(backBtn){backBtn.style.opacity='1';backBtn.style.pointerEvents='all';}
   if(crumbs){
     let h='';
     const cat=drillAiTag?esc('🏷 '+drillAiTag):drillCategory?esc(drillCategory):'Все заметки';
     const note=(drillNoteId?getNotes().find(n=>n.id===drillNoteId):null)||_drillNotes[_drillNoteIdx]||null;
-    if(drillLevel===0){
+    if(agentFolderView){
+      h=`<span class="drill-agent-label">Папка агента</span><span class="drill-agent-title">${esc(_agentFolderDisplayName(drillAiTag))}</span>`;
+    }else if(drillLevel===0){
       h=`<span class="drill-crumb drill-crumb-cur">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span>`;
     }else if(drillLevel===1){
       h=`<span class="drill-crumb" onclick="drillJump(0)">\u0417\u0430\u043c\u0435\u0442\u043a\u0438</span><span class="drill-sep">&rsaquo;</span><span class="drill-crumb drill-crumb-cur">${cat}</span>`;
@@ -2343,10 +2615,10 @@ function _drillP0(){
     userFolders.forEach((f,i)=>{
       const folderName=f.name;
       const fNameLow=folderName.toLowerCase();
-      const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.map(t=>t.toLowerCase()).includes(fNameLow)).length;
-      const col=_folderColor(f.idx!==undefined?f.idx:i);
-      h+=`<div class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
-        <div class="drill-sec-ico" style="background:${col}22;">🗂</div>
+      const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
+      const tint=_folderTint(f.idx!==undefined?f.idx:i,'.10');
+      h+=`<div class="drill-sec-row drill-sec-tag user-section-row" style="background:radial-gradient(ellipse 92% 80% at 10% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
+        <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};"></div>
         <div class="drill-sec-name">${esc(folderName)}</div>
         <div class="drill-sec-count">${cnt}</div>
         <span class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
@@ -2358,11 +2630,10 @@ function _drillP0(){
   // Тег-папки (из AI-анализа)
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
   if(tagFolders.length){
-    const allAiTags=notes.flatMap(n=>Array.isArray(n.aiTags)?n.aiTags.map(t=>t.toLowerCase()):[]);
     // Не показывать тег-папки, если уже показаны как user-folder
     const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
     tagFolders.filter(f=>!userFolderNames.includes(f.tag.toLowerCase())).forEach(f=>{
-      const cnt=allAiTags.filter(t=>t===f.tag.toLowerCase()).length;
+      const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
       h+=`<div class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
         <div class="drill-sec-ico">🏷</div>
         <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
@@ -2396,26 +2667,107 @@ function _drillCardBg(i,total){
   return `oklch(${l} ${c} 210 / ${a})`;
 }
 
+function _agentInboxReceiver(destination){
+  const count=getNotes().filter(note=>getFiledFolderName(note)===destination.toLowerCase()).length;
+  return `<div class="agent-receiver">
+    <span class="agent-receiver-mark">&darr;</span>
+    <span class="agent-receiver-copy">
+      <span class="agent-receiver-overline">Раздел</span>
+      <span class="agent-receiver-name">${esc(destination)}</span>
+    </span>
+    <span class="agent-receiver-count">${count}</span>
+  </div>`;
+}
+function _agentInboxCard(note,index,destination,featured){
+  const preview=_notePreview(note);
+  const suggestion=featured?`<div class="agent-suggestion">
+    <span><span class="agent-suggestion-label">Агент предлагает раздел</span><span class="agent-suggestion-name">${esc(destination)}</span></span>
+    <span class="agent-suggestion-pill">верно</span>
+  </div>`:'';
+  return `<article class="agent-note${featured?' origin':' quiet'}" onclick="drillPickNote(${index})">
+    <div class="agent-note-top">
+      <span class="agent-note-dot"></span>
+      <span class="agent-note-copy">
+        <span class="agent-note-title">${esc(note.title)}</span>
+        ${preview?`<span class="agent-note-body">${esc(preview)}</span>`:''}
+      </span>
+      <span class="agent-note-time">${esc(fmtMeta(note.updatedAt||note.createdAt))}</span>
+    </div>
+    ${suggestion}
+  </article>`;
+}
+function _renderAgentInbox(el,notes,hasMotion){
+  const motion=hasMotion?_pendingFilingMotion:null;
+  let destination=motion?.destination||'';
+  let arranged=[...notes];
+  if(!motion){
+    const focusIndex=arranged.findIndex(note=>!!_suggestAgentDestination(note,drillAiTag));
+    if(focusIndex>=0){
+      const focus=arranged[focusIndex];
+      destination=_suggestAgentDestination(focus,drillAiTag);
+      if(focusIndex>0)arranged=[focus,...arranged.slice(0,focusIndex),...arranged.slice(focusIndex+1)];
+    }
+  }
+  _drillNotes=arranged;
+  if(!arranged.length&&!motion){
+    el.innerHTML='<div class="agent-folder-empty">Всё разобрано.</div>';
+    return;
+  }
+  const head=motion?_filingMotionMarkup(motion):(destination?_agentInboxReceiver(destination):'');
+  const cards=arranged.map((note,index)=>_agentInboxCard(note,index,destination,!motion&&index===0&&!!destination)).join('');
+  let action='';
+  if(destination){
+    const disabled=motion?' disabled':'';
+    const click=motion?'':` onclick="confirmAgentFiling(event,${jsAttr(arranged[0]?.id)},${jsAttr(destination)})"`;
+    action=`<div class="agent-inbox-actions">
+      <div class="agent-inbox-context"><span>Назначение агента</span><strong>${esc(destination)}</strong></div>
+      <div class="agent-save-shell"><button class="agent-save-primary"${disabled}${click}>${motion?'Сохранено':'Сохранить'}</button></div>
+    </div>`;
+  }
+  el.innerHTML=`<div class="agent-inbox">
+    <div class="agent-inbox-board">${head}<div class="agent-note-stack">${cards}</div></div>
+    ${action}
+  </div>`;
+}
+
 function _drillP1(){
   const el=document.getElementById('drill-p1');if(!el)return;
   let notes=getNotes();
   if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
-  if(drillAiTag!==null){const t=drillAiTag.toLowerCase();notes=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.map(x=>x.toLowerCase()).includes(t));}
+  const viewingUserFolder=drillAiTag!==null&&isUserFolderName(drillAiTag);
+  if(drillAiTag!==null){
+    const t=drillAiTag.toLowerCase();
+    notes=viewingUserFolder
+      ?notes.filter(n=>getFiledFolderName(n)===t)
+      :notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.map(x=>x.toLowerCase()).includes(t));
+    if(!viewingUserFolder)notes=notes.filter(n=>!isNoteResolved(n));
+  }
   notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const hasMotion=_pendingFilingMotion&&!viewingUserFolder&&drillAiTag!==null&&_pendingFilingMotion.source.toLowerCase()===drillAiTag.toLowerCase();
+  if(drillAiTag!==null&&!viewingUserFolder){
+    _renderAgentInbox(el,notes,hasMotion);
+    return;
+  }
   _drillNotes=notes;
-  if(!notes.length){el.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--fg-l);font-size:15px;">\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442</div>`;return;}
+  if(!notes.length){
+    const emptyMessage=drillAiTag!==null&&!viewingUserFolder?'\u0412\u0441\u0451 \u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043d\u043e.':'\u0417\u0430\u043c\u0435\u0442\u043e\u043a \u043d\u0435\u0442';
+    el.innerHTML=`<div style="text-align:center;padding:54px 0;color:var(--fg-l);font-size:16px;">${emptyMessage}</div>`;return;
+  }
   const totalNotes=notes.length;
   let h='';
   if(_drillGrid){
-    h='<div class="drill-grid">';
+    h+='<div class="drill-grid">';
     notes.forEach((n,i)=>{
       if(i>=_drillP1Limit)return;
       const preview=_notePreview(n);
-      const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+      const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
+      const hasAi=!!(n.aiSummary||visibleTags.length);
       const hasBell=!!n.reminder;
-      const resolved=isNoteResolved(n);
-      const bg=_drillCardBg(i,notes.length);
-      h+=`<div class="drill-grid-card${resolved?' resolved':''}" style="background:${bg}" onclick="drillPickNote(${i})">
+      const resolved=!viewingUserFolder&&isNoteResolved(n);
+      const sectionStyle=_sectionNoteStyle(n);
+      const cardClass=sectionStyle?' section-glass-note':'';
+      const bg=sectionStyle?sectionStyle:`background:${_drillCardBg(i,notes.length)};`;
+      h+=`<div class="drill-grid-card${resolved?' resolved':''}${cardClass}" style="${bg}" onclick="drillPickNote(${i})">
         <div class="drill-grid-title">${esc(n.title)}</div>
         ${preview?`<div class="drill-grid-preview">${esc(preview)}</div>`:''}
         <div class="drill-grid-foot">
@@ -2431,13 +2783,15 @@ function _drillP1(){
     notes.forEach((n,i)=>{
       if(i>=_drillP1Limit)return;
       const preview=_notePreview(n);
-      const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+      const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
+      const hasAi=!!(n.aiSummary||visibleTags.length);
       const hasBell=!!n.reminder;
-      const resolved=isNoteResolved(n);
+      const resolved=!viewingUserFolder&&isNoteResolved(n);
       const aiBadge=hasAi&&!resolved?`<span class="drill-note-ai">\u2736 AI</span>`:'';
       const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
       const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
-      h+=`<div class="drill-note-row${resolved?' resolved':''}" onclick="drillPickNote(${i})">
+      const sectionStyle=_sectionNoteStyle(n);
+      h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}" ${sectionStyle?`style="${sectionStyle}"`:''} onclick="drillPickNote(${i})">
         <div class="drill-note-body">
           <div class="drill-note-title">${esc(n.title)}</div>
           ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
@@ -2470,10 +2824,11 @@ function _drillP2(){
   if(!n){el.innerHTML=`<div style="padding:20px;color:var(--fg-l);">\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430</div>`;return;}
   const nid=n.id;
   // \u0412\u0441\u0435\u0433\u0434\u0430 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c id \u2014 getNotes() \u0443\u0436\u0435 \u0433\u0430\u0440\u0430\u043d\u0442\u0438\u0440\u0443\u0435\u0442 \u043d\u0430\u043b\u0438\u0447\u0438\u0435 id \u0443 \u0432\u0441\u0435\u0445 \u0437\u0430\u043c\u0435\u0442\u043e\u043a
-  const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+  const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
+  const hasAi=!!(n.aiSummary||visibleTags.length);
   const aiBlock=hasAi?`<div class="drill-detail-ai">
     <div class="drill-detail-ai-hdr">\u2736 AI \u0430\u043d\u0430\u043b\u0438\u0437</div>
-    <div class="drill-detail-ai-body">${esc(n.aiSummary||(Array.isArray(n.aiTags)?n.aiTags.join(', '):''))}</div>
+    <div class="drill-detail-ai-body">${esc(n.aiSummary||visibleTags.join(', '))}</div>
   </div>`:'';
   const editFn=nid?`openNoteSheetById('${nid}')`:`showToast('ID\u00a0\u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d')`;
   const delFn=nid?`delNoteById('${nid}')`:`showToast('ID\u00a0\u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d')`;
@@ -2660,6 +3015,14 @@ function _openSheet(){
   if(spellBtn){spellBtn.classList.remove('spell-on','spell-active','spell-loading');spellBtn.disabled=false;}
   const aiBtn=document.getElementById('sheet-ai-btn');
   if(aiBtn)aiBtn.classList.remove('ai-on');
+  _setSheetAiButtonState('idle');
+  const filingTarget=document.getElementById('sheet-filing-target');
+  if(filingTarget){filingTarget.classList.remove('show');filingTarget.textContent='';}
+  const currentFolder=getNoteUserFolder(EI!==null?getNotes().find(note=>note.id===EI):null);
+  if(filingTarget&&currentFolder){
+    filingTarget.innerHTML=`<span>В разделе</span><strong>${esc(currentFolder.name)}</strong>`;
+    filingTarget.classList.add('show');
+  }
   const aiPanel=document.getElementById('ai-panel');
   if(aiPanel){
     aiPanel.style.display='none';
@@ -2957,6 +3320,8 @@ function showSheetCat(label){
   if(dot)dot.style.background=col;
   if(lbl)lbl.textContent=label||'заметка';
   btn.dataset.label=label||'заметка';
+  const filingTarget=document.getElementById('sheet-filing-target');
+  if(filingTarget){filingTarget.classList.remove('show');filingTarget.textContent='';}
   // Тонируем фон заметки в цвет категории
   const sheet=document.querySelector('#overlay .sheet');
   if(sheet){
@@ -3007,12 +3372,18 @@ function selectUserFolderTag(folderName){
     const lbl=document.getElementById('sheet-cat-label');
     const userFolders=getUserFolders();
     const fi=userFolders.findIndex(f=>f.name.toLowerCase()===folderName.toLowerCase());
-    const col=fi>=0?_folderColor(userFolders[fi].idx!==undefined?userFolders[fi].idx:fi):_folderColor(0);
+    const folderIdx=fi>=0?(userFolders[fi].idx!==undefined?userFolders[fi].idx:fi):0;
+    const col=_folderColor(folderIdx);
     if(dot)dot.style.background=col;
     if(lbl)lbl.textContent=folderName;
-    // Тонируем фон листа в цвет раздела (используем нейтральный hue=180 — бирюзовый)
+    const filingTarget=document.getElementById('sheet-filing-target');
+    if(filingTarget){
+      filingTarget.innerHTML=`<span>Сохранить в раздел</span><strong>${esc(folderName)}</strong>`;
+      filingTarget.classList.add('show');
+    }
+    // Цвет раздела мягко входит в стекло листа после выбора назначения.
     const sheet=document.querySelector('#overlay .sheet');
-    if(sheet)sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.80 0.06 180 / 0.18), transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.012 180 / 0.96)`;
+    if(sheet)sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, ${_folderTint(folderIdx,'.15')}, transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.012 205 / 0.96)`;
   }
   document.getElementById('cat-dropdown').classList.remove('open');
   saveSheetDraft();
@@ -3313,6 +3684,8 @@ function saveSheet(){
   const list=getNotes();
   const existingIdx=EI!==null?list.findIndex(n=>n.id===EI):-1;
   const prev=existingIdx>=0?list[existingIdx]:null;
+  const previousFiledFolder=getFiledFolderName(prev);
+  const prevHadDestination=!!(_selectedUserFolder&&previousFiledFolder===_selectedUserFolder.toLowerCase());
   const aiPanel=document.getElementById('ai-panel');
   let aiTags=Array.isArray(prev?.aiTags)?prev.aiTags:[];
   let aiSummary=prev?.aiSummary||'';
@@ -3329,6 +3702,9 @@ function saveSheet(){
   if(_selectedUserFolder&&!aiTags.map(t=>t.toLowerCase()).includes(_selectedUserFolder.toLowerCase())){
     aiTags=[...aiTags,_selectedUserFolder];
   }
+  aiTags=aiTags.filter(tag=>!_isFiledFolderTag(tag));
+  const filedFolder=_selectedUserFolder||previousFiledFolder;
+  if(filedFolder)aiTags=[...aiTags,_filedFolderTag(filedFolder)];
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
   const ts=Date.now();
@@ -3347,7 +3723,7 @@ function saveSheet(){
   }
   else{item.createdAt=ts;list.push(item);}
   saveNotes(list);
-  if(aiSummary)addToAiMemory(aiSummary,aiTags,item.id);
+  if(aiSummary)addToAiMemory(aiSummary,aiTags.filter(tag=>!_isFiledFolderTag(tag)),item.id);
   clearSheetDraft();
   // Запомнить контекст папки ДО сброса в loadNotes()
   const wasNew=(EI===null); // запомнить ДО closeSheet(), который обнуляет EI
@@ -3355,13 +3731,26 @@ function saveSheet(){
   const _prevCategory=drillCategory;
   const _prevDrillLevel=drillLevel;
   const _wasInNotes=(cur==='notes');
+  const isFilingMove=!!(_selectedUserFolder&&_wasInNotes&&_prevDrillLevel>=1&&_prevAiTag&&!isUserFolderName(_prevAiTag)&&!prevHadDestination);
+  if(isFilingMove){
+    _pendingFilingMotion={
+      noteId:item.id,
+      source:_prevAiTag,
+      destination:_selectedUserFolder,
+      title:item.title,
+      body:(item.body||'').slice(0,85)
+    };
+  }
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
-  showToast(wasNew?'Сохранено ✓':'Изменено ✓');
+  if(!isFilingMove)showToast(wasNew?'Сохранено ✓':'Изменено ✓');
   // Возврат в папку после сохранения (и создания, и редактирования)
   if(_wasInNotes&&_prevDrillLevel>=1){
     setTimeout(()=>{
-      if(_prevAiTag!==null)drillGo(1,{aiTag:_prevAiTag});
+      if(_prevAiTag!==null){
+        drillGo(1,{aiTag:_prevAiTag});
+        if(isFilingMove)requestAnimationFrame(_runFilingMotion);
+      }
       else drillGo(1,{category:_prevCategory}); // null = все заметки
     },50);
   }
@@ -3644,6 +4033,9 @@ function loadHomeFeed(){
   const badge=document.getElementById('notes-count-badge');
   if(badge)badge.textContent=notes.length?'('+notes.length+')':'';
 
+  // Обновить пилл статистики в шапке
+  updateStatsPill();
+
   if(!notes.length){
     _homeFeedNotes=[];
     el.innerHTML=`<div class="hf-empty">Пока заметок нет.<br>Нажмите «Новая заметка» чтобы начать.</div>`;
@@ -3665,7 +4057,8 @@ function loadHomeFeed(){
     const remDt=n.reminder?new Date(n.reminder).getTime():0;
     const remOverdue=remDt&&remDt<=now;
     const remFuture=remDt&&remDt>now;
-    const hasAi=!!(n.aiSummary||(Array.isArray(n.aiTags)&&n.aiTags.length));
+    const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
+    const hasAi=!!(n.aiSummary||visibleTags.length);
     let dotClass='hf-dot-green';
     if(remFuture)dotClass='hf-dot-amber';
     if(remOverdue)dotClass='hf-dot-red';
@@ -3682,7 +4075,9 @@ function loadHomeFeed(){
 
     // Карточка
     const card=document.createElement('button');
-    card.className='hf-card';
+    const sectionStyle=_sectionNoteStyle(n);
+    card.className='hf-card'+(sectionStyle?' section-glass-note':'');
+    if(sectionStyle)card.style.cssText=sectionStyle;
     card.innerHTML=`
       <div class="hf-sig"><div class="hf-dot ${dotClass}"></div></div>
       <div class="hf-body">
@@ -4208,13 +4603,13 @@ function _setAgentState(state){
   btn?.classList.remove('agent-listening','agent-thinking');
   if(state==='listening'){
     btn?.classList.add('agent-listening');
-    if(lbl){lbl.textContent='🎙 Слушаю…';lbl.style.opacity='1';}
+    if(lbl){lbl.textContent='Слушаю...';lbl.style.opacity='1';}
   }else if(state==='transcribing'){
     btn?.classList.add('agent-thinking');
-    if(lbl){lbl.textContent='✦ Расшифровываю…';lbl.style.opacity='1';}
+    if(lbl){lbl.textContent='Записываю...';lbl.style.opacity='1';}
   }else if(state==='thinking'){
     btn?.classList.add('agent-thinking');
-    if(lbl){lbl.textContent='Думаю…';lbl.style.opacity='1';}
+    if(lbl){lbl.textContent='Разбираюсь...';lbl.style.opacity='1';}
   }else{
     if(lbl){lbl.textContent='';lbl.style.opacity='0';}
   }
@@ -4573,7 +4968,7 @@ function _searchNotes(q){
     return (n.title||'').toLowerCase().includes(lq)
       ||(n.body||'').toLowerCase().includes(lq)
       ||(n.aiSummary||'').toLowerCase().includes(lq)
-      ||(n.aiTags||[]).some(t=>t.toLowerCase().includes(lq))
+      ||(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t)).some(t=>t.toLowerCase().includes(lq))
       ||(n.items||[]).some(i=>(i.t||i.text||'').toLowerCase().includes(lq));
   }
   function sortFn(arr){
@@ -4611,7 +5006,7 @@ function _renderSearch(q){
   }
   function renderItem(n,inTrash){
     const previewBody=(n.body||(n.items||[]).map(i=>i.t||i.text||'').join(' ')||'').slice(0,120);
-    const tags=(n.aiTags||[]).slice(0,3).map(t=>`<span class="sr-tag">${esc(t)}</span>`).join('');
+    const tags=(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t)).slice(0,3).map(t=>`<span class="sr-tag">${esc(t)}</span>`).join('');
     const clickFn=inTrash?`closeSearch();go('trash')`:`closeSearch();openNoteSheetById(${JSON.stringify(n.id)})`;
     return `<div class="sr-item${inTrash?' sr-item--trash':''}" onclick="${clickFn}">
       <div class="sr-title">${inTrash?'<span class="sr-trash-ico">🗑</span>':''}${_hl(n.title||'Без названия',q)}</div>
