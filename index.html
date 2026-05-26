@@ -1956,11 +1956,39 @@ html.dark .bubble{
   filter:drop-shadow(0 2px 8px oklch(0.40 0.14 220 / 0.30));
 }
 
-/* ── SPELL FIX BUTTON ── */
-#sheet-spell-btn { color: var(--fg-l); }
-#sheet-spell-btn.spell-active { color: oklch(0.45 0.12 290); background: oklch(0.55 0.12 290 / 0.12); }
-#sheet-spell-btn.spell-active svg { transform: scaleX(-1); }
+/* ── SPELL FIX BUTTON — 3 стадии ── */
+#sheet-spell-btn { color: var(--fg-l); position:relative; }
 #sheet-spell-btn:disabled { opacity: .32; pointer-events: none; }
+#sheet-spell-btn.spell-s1 { color:oklch(0.48 0.10 210);background:oklch(0.52 0.10 210/0.10); }
+#sheet-spell-btn.spell-s2 { color:oklch(0.42 0.12 270);background:oklch(0.55 0.12 270/0.12); }
+#sheet-spell-btn.spell-s3 { color:oklch(0.35 0.14 270);background:oklch(0.55 0.12 270/0.18); }
+/* Pin button */
+.sheet-pin-btn { color:var(--fg-l); }
+.sheet-pin-btn.pinned { color:oklch(0.48 0.14 40);background:oklch(0.55 0.14 40/0.12); }
+/* ── PIN MARK in home feed title ── */
+.hf-pin-mark { display:inline-flex;align-items:center;margin-left:5px;opacity:.45;vertical-align:middle; }
+/* Pinned card — subtle top border accent */
+.hf-card.pinned {
+  border-top:2px solid oklch(0.60 0.10 210 / .35) !important;
+}
+/* ── FEED TOOLBAR ── */
+.hf-toolbar {
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:0 14px 4px;flex-shrink:0;
+}
+.hf-toolbar-btn {
+  width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;color:var(--fg-l);
+  transition:background .12s,color .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.hf-toolbar-btn:active,.hf-toolbar-btn.active { background:oklch(0.52 0.10 210/0.12);color:var(--accent-d); }
+/* ── COMPACT FEED MODE ── */
+.home-feed-wrap.compact .hf-card { padding:9px 12px 9px 10px; }
+.home-feed-wrap.compact .hf-preview { display:none; }
+.home-feed-wrap.compact .hf-body > div:last-child { display:none; }
+.home-feed-wrap.compact .hf-title { font-size:14px;margin-bottom:0; }
 
 /* ── LIST TOGGLE BUTTON ── */
 .sheet-list-toggle { display: none; color: var(--fg-l); }
@@ -2865,9 +2893,9 @@ header{padding:15px 16px 9px;}
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="hstat-pill" id="hstat-pill" onclick="openStats()" title="Статистика">
-        <span class="hstat-emo">❤️</span><span class="hstat-num" id="hstat-hcnt">–</span>
+        <span class="hstat-emo">♥</span><span class="hstat-num" id="hstat-hcnt">–</span>
         <span class="hstat-sep"></span>
-        <span class="hstat-emo">⭐</span><span class="hstat-num" id="hstat-scnt">–</span>
+        <span class="hstat-emo">★</span><span class="hstat-num" id="hstat-scnt">–</span>
       </button>
       <button class="hbtn" onclick="openSearch()" title="Поиск">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -2898,6 +2926,12 @@ header{padding:15px 16px 9px;}
               <span class="jq-label">Помочь проекту</span>
             </button>
           </div>
+        </div>
+        <!-- Feed toolbar -->
+        <div class="hf-toolbar">
+          <button class="hf-toolbar-btn" id="compact-feed-btn" onclick="toggleCompactFeed()" title="Компактный вид">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
         </div>
         <!-- Notification cards feed -->
         <div class="home-feed-wrap" id="home-feed"></div>
@@ -3166,8 +3200,12 @@ header{padding:15px 16px 9px;}
       <button class="sheet-undo-btn sheet-list-toggle" id="sheet-list-toggle-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="toggleListMode()" title="Переключить в обычную заметку">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>
+      <button class="sheet-undo-btn sheet-pin-btn" id="sheet-pin-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="pinToggleFromSheet()" title="Закрепить заметку">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0015 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg>
+      </button>
       <button class="sheet-undo-btn" id="sheet-spell-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="toggleSpellFix()" title="Исправить орфографию и пунктуацию">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span id="spell-stage-dot" style="display:none;position:absolute;bottom:2px;right:2px;font-size:7px;font-weight:700;color:oklch(0.40 0.12 270);line-height:1;"></span>
       </button>
       <button class="sheet-close-btn" onclick="closeSheet()">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -3361,7 +3399,7 @@ header{padding:15px 16px 9px;}
 <script>
 // ── SPELL FIX — переменные состояния ──
 // var (не let/const) — доступны из app.js через typeof-проверку
-var _spellOriginal = null, _spellActive = false;
+var _spellOriginal = null, _spellActive = false, _spellStage = 0;
 // toggleSpellFix() определена в app.js — там есть доступ к sb и SUPABASE_EDGE_URL
 
 // ── TAG FOLDERS ──

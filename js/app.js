@@ -707,21 +707,38 @@ function toggleAiCollapse(){
 
 // ── ИСПРАВЛЕНИЕ ТЕКСТА ──
 // _spellOriginal и _spellActive — var-глобалы из inline-скрипта index.html
+// _spellStage: 0=original, 1=light, 2=medium, 3=full
 async function toggleSpellFix(){
   const btn=document.getElementById('sheet-spell-btn');
   const f=document.getElementById('sh1');
   if(!f)return;
-  if(_spellActive&&_spellOriginal!==null){
+  // Stage 3 → восстановить оригинал
+  if(typeof _spellStage!=='undefined'&&_spellStage>=3&&_spellOriginal!==null){
     f.value=_spellOriginal;
     autoGrowTA(f);onSheetInput();
-    _spellOriginal=null;_spellActive=false;
-    if(btn){btn.classList.remove('spell-active');btn.title='Исправить орфографию и пунктуацию';}
-    showToast('Текст восстановлён ✓');
+    _spellOriginal=null;
+    if(typeof _spellStage!=='undefined')_spellStage=0;
+    _updateSpellBtn(btn);
+    showToast('Текст восстановлен');
     return;
   }
-  const text=f.value.trim();
+  // Если нажимают снова при активном stage 1 или 2 → переход к следующему
+  const curStage=(typeof _spellStage!=='undefined')?_spellStage:0;
+  const nextStage=curStage+1;
+  if(nextStage>3){
+    // Восстановить
+    if(_spellOriginal!==null){f.value=_spellOriginal;autoGrowTA(f);onSheetInput();}
+    _spellOriginal=null;
+    if(typeof _spellStage!=='undefined')_spellStage=0;
+    _updateSpellBtn(btn);
+    showToast('Текст восстановлен');
+    return;
+  }
+  const text=_spellOriginal||f.value.trim();
   if(text.length<5){showToast('Напишите немного больше');return;}
-  if(btn){btn.disabled=true;}
+  // Запомнить оригинал на первом вызове
+  if(curStage===0)_spellOriginal=f.value;
+  if(btn)btn.disabled=true;
   try{
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
@@ -729,20 +746,37 @@ async function toggleSpellFix(){
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'rewrite',payload:{text}})
+      body:JSON.stringify({action:'rewrite',payload:{text,stage:nextStage}})
     });
     if(!res.ok){const e=await res.text();throw new Error(e||'Ошибка сервера');}
     const data=await res.json();
     const rewritten=data.rewritten||data.text||data.result;
     if(!rewritten)throw new Error('Пустой ответ AI');
-    _spellOriginal=f.value;_spellActive=true;
+    if(typeof _spellStage!=='undefined')_spellStage=nextStage;
     f.value=rewritten;
     autoGrowTA(f);onSheetInput();
-    if(btn){btn.disabled=false;btn.classList.add('spell-active');btn.title='Вернуть оригинал';}
-    showToast('Исправлено · нажми снова чтобы вернуть');
+    _updateSpellBtn(btn);
+    const msgs=['','Ошибки исправлены · нажми ещё','Формулировка улучшена · нажми ещё','Полностью переписано · нажми чтобы вернуть'];
+    showToast(msgs[nextStage]);
   }catch(e){
-    if(btn){btn.disabled=false;}
+    if(btn)btn.disabled=false;
     showToast(String(e?.message||'Не удалось исправить текст'));
+  }
+}
+function _updateSpellBtn(btn){
+  if(!btn)return;
+  btn.disabled=false;
+  const dot=document.getElementById('spell-stage-dot');
+  const stage=(typeof _spellStage!=='undefined')?_spellStage:0;
+  btn.classList.remove('spell-s1','spell-s2','spell-s3','spell-active');
+  if(stage===0){
+    btn.title='Исправить орфографию и пунктуацию';
+    if(dot)dot.style.display='none';
+  }else{
+    btn.classList.add('spell-s'+stage);
+    const titles=['','Ошибки исправлены · нажми ещё','Улучшена формулировка · нажми ещё','Полностью переписано · нажми чтобы вернуть'];
+    btn.title=titles[stage];
+    if(dot){dot.textContent=stage;dot.style.display='inline';}
   }
 }
 function _scrollToAiPanel(){
@@ -874,9 +908,7 @@ function _renderAiResult(summary,tags,actions,panel,text){
   }
   const settings=getReminderSettings();
   const reminderAlreadySet=!!(document.getElementById('sheet-reminder-in')?.value);
-  if(settings.aiSuggest&&hasTimeHint(text||'')&&!reminderAlreadySet){
-    html+=`<div class="ai-section"><button class="ai-remind-btn" onclick="applyAiReminder()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>AI замечает время — поставить напоминание?</button></div>`;
-  }
+  // bell hint removed — too aggressive
   html+='</div>';
   if(bodyEl){
     bodyEl.innerHTML=html;
@@ -2695,7 +2727,35 @@ function promoteToSection(tag){
   showToast(`«${sectionName}» теперь в Архиве`+(filed?` · ${filed} заметок разобрались`:''));
 }
 
-function _drillCardBg(i,total){
+
+
+// ── ЗАКРЕПЛЕНИЕ ЗАМЕТОК ──
+function pinToggleNote(id){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===id);
+  if(!n)return;
+  n.pinned=!n.pinned;
+  n.pinnedAt=n.pinned?Date.now():null;
+  n.updatedAt=Date.now();
+  saveNotes(notes);
+  loadHomeFeed();loadNotes();
+  showToast(n.pinned?'Заметка закреплена':'Откреплено');
+}
+function pinToggleFromSheet(){
+  // EI — глобальный id текущей открытой заметки (из sheet)
+  if(typeof EI==='undefined'||!EI)return;
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===EI);
+  if(!n)return;
+  n.pinned=!n.pinned;
+  n.pinnedAt=n.pinned?Date.now():null;
+  n.updatedAt=Date.now();
+  saveNotes(notes);
+  loadHomeFeed();
+  const btn=document.getElementById('sheet-pin-btn');
+  if(btn)btn.classList.toggle('pinned',n.pinned);
+  showToast(n.pinned?'Заметка закреплена':'Откреплено');
+}function _drillCardBg(i,total){
   const t=total>1?i/(total-1):0;
   const l=(0.93+t*0.06).toFixed(3);
   const c=(0.065-t*0.06).toFixed(4);
@@ -2703,7 +2763,24 @@ function _drillCardBg(i,total){
   return `oklch(${l} ${c} 210 / ${a})`;
 }
 
-function _agentInboxReceiver(destination){
+fu
+// ── КОМПАКТНЫЙ ВИД ЛЕНТЫ ──
+let _homeFeedCompact=!!localStorage.getItem('rz_compact_feed');
+function toggleCompactFeed(){
+  _homeFeedCompact=!_homeFeedCompact;
+  if(_homeFeedCompact)localStorage.setItem('rz_compact_feed','1');
+  else localStorage.removeItem('rz_compact_feed');
+  const wrap=document.getElementById('home-feed');
+  if(wrap){if(_homeFeedCompact)wrap.classList.add('compact');else wrap.classList.remove('compact');}
+  const btn=document.getElementById('compact-feed-btn');
+  if(btn)btn.classList.toggle('active',_homeFeedCompact);
+}
+function _applyCompactFeedState(){
+  const wrap=document.getElementById('home-feed');
+  const btn=document.getElementById('compact-feed-btn');
+  if(wrap){if(_homeFeedCompact)wrap.classList.add('compact');else wrap.classList.remove('compact');}
+  if(btn)btn.classList.toggle('active',_homeFeedCompact);
+}nction _agentInboxReceiver(destination){
   const count=getNotes().filter(note=>getFiledFolderName(note)===destination.toLowerCase()).length;
   return `<div class="agent-receiver">
     <span class="agent-receiver-mark">&darr;</span>
@@ -2824,7 +2901,7 @@ function _drillP1(){
       const hasBell=!!n.reminder;
       const resolved=!viewingUserFolder&&isNoteResolved(n);
       const aiBadge=hasAi&&!resolved?`<span class="drill-note-ai">\u2736 AI</span>`:'';
-      const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
+      const bellBadge=hasBell?`<span class="drill-note-bell"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
       const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
       const sectionStyle=_sectionNoteStyle(n);
       const tagChips=visibleTags.slice(0,3).map(t=>`<span class="drill-note-tag-chip" onclick="event.stopPropagation();drillGo(1,{aiTag:${jsAttr(t)}})">${esc(t)}</span>`).join('');
@@ -3049,8 +3126,18 @@ function _openSheet(){
   // _spellOriginal и _spellActive — var-глобалы из inline-скрипта index.html
   if(typeof _spellOriginal!=='undefined') _spellOriginal=null;
   if(typeof _spellActive!=='undefined') _spellActive=false;
+  if(typeof _spellStage!=='undefined') _spellStage=0;
   const spellBtn=document.getElementById('sheet-spell-btn');
-  if(spellBtn){spellBtn.classList.remove('spell-on','spell-active','spell-loading');spellBtn.disabled=false;}
+  if(spellBtn){spellBtn.classList.remove('spell-on','spell-active','spell-s1','spell-s2','spell-s3','spell-loading');spellBtn.disabled=false;}
+  const stageDot=document.getElementById('spell-stage-dot');
+  if(stageDot)stageDot.style.display='none';
+  // Показать состояние закрепления для текущей заметки
+  const pinBtn=document.getElementById('sheet-pin-btn');
+  if(pinBtn){
+    const curNote=EI?getNotes().find(x=>x.id===EI):null;
+    pinBtn.classList.toggle('pinned',!!(curNote?.pinned));
+    pinBtn.title=curNote?.pinned?'Открепить заметку':'Закрепить заметку';
+  }
   const aiBtn=document.getElementById('sheet-ai-btn');
   if(aiBtn)aiBtn.classList.remove('ai-on');
   _setSheetAiButtonState('idle');
@@ -4080,13 +4167,16 @@ function loadHomeFeed(){
     return;
   }
 
-  // Сортировка: сначала с ближайшими напоминаниями, потом по дате
+  // Сортировка: закреплённые → с ближайшими напоминаниями → по дате
   const now=Date.now();
-  const withRem=notes.filter(n=>n.reminder&&new Date(n.reminder).getTime()>now)
+  const pinned=notes.filter(n=>n.pinned)
+    .sort((a,b)=>(b.pinnedAt||0)-(a.pinnedAt||0));
+  const unpinned=notes.filter(n=>!n.pinned);
+  const withRem=unpinned.filter(n=>n.reminder&&new Date(n.reminder).getTime()>now)
     .sort((a,b)=>new Date(a.reminder)-new Date(b.reminder));
-  const rest=notes.filter(n=>!n.reminder||new Date(n.reminder).getTime()<=now)
+  const rest=unpinned.filter(n=>!n.reminder||new Date(n.reminder).getTime()<=now)
     .sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
-  const sorted=[...withRem,...rest].slice(0,20);
+  const sorted=[...pinned,...withRem,...rest].slice(0,25);
   _homeFeedNotes=sorted;
 
   el.innerHTML='';
@@ -4116,10 +4206,13 @@ function loadHomeFeed(){
     const sectionStyle=_sectionNoteStyle(n);
     card.className='hf-card'+(sectionStyle?' section-glass-note':'');
     if(sectionStyle)card.style.cssText=sectionStyle;
+    const isPinned=!!n.pinned;
+    const pinIcon=isPinned?`<span class="hf-pin-mark"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0015 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg></span>`:'';
+    if(isPinned)card.classList.add('pinned');
     card.innerHTML=`
       <div class="hf-sig"><div class="hf-dot ${dotClass}"></div></div>
       <div class="hf-body">
-        <div class="hf-title">${esc(title)}</div>
+        <div class="hf-title">${esc(title)}${pinIcon}</div>
         ${preview?`<div class="hf-preview">${esc(preview)}</div>`:''}
         <div style="margin-top:${(hasAi||n.type==='list')?'4px':'0'}">${aiBadge}${typeTag}</div>
       </div>
