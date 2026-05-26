@@ -2783,56 +2783,97 @@ function _drillRender(level){
   if(level===2)_drillP2();
 }
 
+// ── Закрепление AI-папки в разделах ──
+function pinTagFolder(tag){
+  if(typeof getTagFolders!=='function')return;
+  const tagLow=String(tag).toLowerCase();
+  const folders=getTagFolders();
+  const f=folders.find(x=>String(x.tag).toLowerCase()===tagLow);
+  if(!f)return;
+  f.pinned=true;
+  saveTagFolders(folders);
+  loadNotes();
+  showToast(`«${f.label||f.tag}» закреплена в разделах`);
+}
+function unpinTagFolder(tag){
+  if(typeof getTagFolders!=='function')return;
+  const tagLow=String(tag).toLowerCase();
+  const folders=getTagFolders();
+  const f=folders.find(x=>String(x.tag).toLowerCase()===tagLow);
+  if(!f)return;
+  f.pinned=false;
+  saveTagFolders(folders);
+  loadNotes();
+  showToast(`«${f.label||f.tag}» откреплена`);
+}
+
+const _PIN_SVG=`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14"/><path d="M15 5v5l2 3H7l2-3V5"/><line x1="12" y1="2" x2="12" y2="5"/></svg>`;
+const _X_SVG=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
 function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
   const notes=getNotes();
-
-  let h=`<button class="drill-sec-row" onclick="drillGo(1,{category:null})">
-    <div class="drill-sec-ico">📋</div>
-    <div class="drill-sec-name">Все заметки</div>
-    <div class="drill-sec-count">${notes.length}</div>
-    <div class="drill-sec-arr">&rsaquo;</div>
-  </button>`;
-
-  // АРХИВ — пользовательские разделы (постоянные)
   const userFolders=getUserFolders();
-  if(userFolders.length){
-    h+=`<div class="drill-group-hdr">Архив</div>`;
-    userFolders.forEach((f,i)=>{
-      const folderName=f.name;
-      const fNameLow=folderName.toLowerCase();
-      const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
-      const tint=_folderTint(f.idx!==undefined?f.idx:i,'.10');
-      h+=`<div class="drill-sec-row drill-sec-tag user-section-row" style="background:radial-gradient(ellipse 92% 80% at 10% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
-        <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};font-size:0;"></div>
-        <div class="drill-sec-name">${esc(folderName)}</div>
-        <div class="drill-sec-count">${cnt}</div>
-        <button type="button" class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>`;
-    });
-  }
-
-  // ВХОДЯЩИЕ — папки агента (временные, создаются автоматически)
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
   const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
-  const aiOnlyFolders=tagFolders.filter(f=>!userFolderNames.includes(f.tag.toLowerCase()));
+  const pinnedFolders=tagFolders.filter(f=>f.pinned&&!userFolderNames.includes(String(f.tag).toLowerCase()));
+  const aiOnlyFolders=tagFolders.filter(f=>!f.pinned&&!userFolderNames.includes(String(f.tag).toLowerCase()));
+
+  let h='';
+
+  // ── МОИ РАЗДЕЛЫ ──
+  h+=`<div class="drill-group-hdr drill-group-my">Мои разделы</div>`;
+
+  userFolders.forEach((f,i)=>{
+    const folderName=f.name;
+    const fNameLow=folderName.toLowerCase();
+    const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
+    const tint=_folderTint(f.idx!==undefined?f.idx:i,'.10');
+    h+=`<div class="drill-sec-row drill-sec-tag user-section-row" style="background:radial-gradient(ellipse 92% 80% at 10% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
+      <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};font-size:0;"></div>
+      <div class="drill-sec-name">${esc(folderName)}</div>
+      <div class="drill-sec-count">${cnt}</div>
+      <button type="button" class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">${_X_SVG}</button>
+    </div>`;
+  });
+
+  pinnedFolders.forEach(f=>{
+    const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())).length;
+    h+=`<div class="drill-sec-row drill-sec-tag drill-folder-pinned" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
+      <div class="drill-sec-ico drill-ico-pin">📌</div>
+      <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
+      <div class="drill-sec-count">${cnt}</div>
+      <button type="button" class="folder-pin-btn folder-pin-active" title="Открепить" onclick="event.stopPropagation();unpinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
+      <button type="button" class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
+    </div>`;
+  });
+
+  if(!userFolders.length&&!pinnedFolders.length){
+    h+=`<div class="drill-empty-hint">Нет разделов — создай первый или закрепи папку снизу</div>`;
+  }
+  h+=`<button type="button" class="drill-add-section-btn" onclick="openFolderModal()">+ Новый раздел</button>`;
+
+  // ── ВХОДЯЩИЕ ──
   if(aiOnlyFolders.length){
-    h+=`<div class="drill-group-hdr">Входящие</div>`;
+    const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length,0);
+    const badge=totalIncoming>0?` <span class="drill-incoming-badge">${totalIncoming}</span>`:'';
+    h+=`<div class="drill-group-hdr drill-group-incoming">Входящие${badge}</div>`;
     aiOnlyFolders.forEach(f=>{
       const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
       h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
-        <div class="drill-sec-ico" style="font-size:17px;background:oklch(0.52 0.10 202 / .08);">🏷</div>
+        <div class="drill-sec-ico" style="font-size:16px;background:oklch(0.52 0.10 202 / .07);">🏷</div>
         <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
         <div class="drill-sec-count">${cnt}</div>
-        <span class="drill-ai-badge">авт.</span>
-        <button type="button" class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <button type="button" class="folder-pin-btn" title="Закрепить в разделах" onclick="event.stopPropagation();pinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
+        <button type="button" class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
       </div>`;
     });
   }
+
+  // ── ВСЕ ЗАМЕТКИ ──
+  h+=`<button type="button" class="drill-all-notes-btn" onclick="drillGo(1,{category:null})">
+    Все заметки <span class="drill-all-count">${notes.length}</span>
+  </button>`;
 
   el.innerHTML=h;
 }
@@ -3625,31 +3666,49 @@ function toggleCatDropdown(){
   const dd=document.getElementById('cat-dropdown');if(!dd)return;
   if(dd.classList.contains('open')){dd.classList.remove('open');return;}
   const cur=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
-  const stripeOpts=Object.keys(STRIPES).map(l=>`
-    <div class="cat-opt" onclick="selectCat('${l}')">
-      <div class="cat-opt-dot" style="background:${STRIPES[l]};"></div>${l}
-      ${l===cur?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
-    </div>`).join('');
+  const CHECK=`<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
   const userFolders=getUserFolders();
-  const folderOpts=userFolders.length
-    ?'<div class="cat-opt-sep">Архив</div>'+userFolders.map((f,i)=>{
-      const col=_folderColor(f.idx!==undefined?f.idx:i);
-      return `<div class="cat-opt" onclick="selectUserFolderTag(${jsAttr(f.name)})">
-        <div class="cat-opt-dot" style="background:${col};"></div>${esc(f.name)}
-        ${f.name===cur?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
-      </div>`;}).join('')
-    :'';
   const tagFoldersList=typeof getTagFolders==='function'?getTagFolders():[];
+  const pinnedList=tagFoldersList.filter(f=>f.pinned);
+  const unpinnedList=tagFoldersList.filter(f=>!f.pinned);
   const curNote=EI?getNotes().find(n=>n.id===EI):null;
-  const tagFolderOpts=tagFoldersList.length
-    ?'<div class="cat-opt-sep">Входящие</div>'+tagFoldersList.map(f=>{
+
+  // ── МОИ РАЗДЕЛЫ (пользовательские + закреплённые) ──
+  let sectionOpts='<div class="cat-opt-sep">Мои разделы</div>';
+  userFolders.forEach((f,i)=>{
+    const col=_folderColor(f.idx!==undefined?f.idx:i);
+    const isCur=f.name===cur||f.name.toLowerCase()===cur.toLowerCase();
+    sectionOpts+=`<div class="cat-opt" onclick="selectUserFolderTag(${jsAttr(f.name)})">
+      <div class="cat-opt-dot" style="background:${col};"></div>${esc(f.name)}${isCur?CHECK:''}
+    </div>`;
+  });
+  pinnedList.forEach(f=>{
+    const isActive=curNote&&Array.isArray(curNote.aiTags)&&curNote.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase());
+    sectionOpts+=`<div class="cat-opt" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">
+      <div class="cat-opt-dot" style="background:oklch(0.55 0.12 270);"></div>📌 ${esc(f.label||f.tag)}${isActive?CHECK:''}
+    </div>`;
+  });
+  // Встроенные типы (заметка, здоровье, покупки и т.д.)
+  Object.keys(STRIPES).forEach(l=>{
+    const isCur=l===cur;
+    sectionOpts+=`<div class="cat-opt" onclick="selectCat('${l}')">
+      <div class="cat-opt-dot" style="background:${STRIPES[l]};"></div>${l}${isCur?CHECK:''}
+    </div>`;
+  });
+  sectionOpts+=`<div class="cat-opt cat-opt-add" onclick="openFolderModal();document.getElementById('cat-dropdown')?.classList.remove('open')">
+    <div class="cat-opt-dot" style="background:oklch(0.75 0 0);"></div>+ Новый раздел
+  </div>`;
+
+  // ── ВХОДЯЩИЕ (временные AI-папки) ──
+  const incomingOpts=unpinnedList.length
+    ?'<div class="cat-opt-sep">Входящие</div>'+unpinnedList.map(f=>{
       const isActive=curNote&&Array.isArray(curNote.aiTags)&&curNote.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase());
       return `<div class="cat-opt" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">
-        <div class="cat-opt-dot" style="background:oklch(0.55 0.13 290);"></div>${esc(f.label||f.tag)}
-        ${isActive?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+        <div class="cat-opt-dot" style="background:oklch(0.55 0.13 290);"></div>${esc(f.label||f.tag)}${isActive?CHECK:''}
       </div>`;}).join('')
     :'';
-  dd.innerHTML=stripeOpts+folderOpts+tagFolderOpts;
+
+  dd.innerHTML=sectionOpts+incomingOpts;
   dd.classList.add('open');
   setTimeout(()=>document.addEventListener('click',closeCatOnClick,{once:true}),10);
 }
