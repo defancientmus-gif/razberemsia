@@ -2506,7 +2506,7 @@ header{padding:15px 16px 9px;}
 .drill-grid-title{font-size:15px;}
 .drill-grid-preview{font-size:13px;}
 
-.sheet{border-radius:32px;background:linear-gradient(160deg,oklch(0.99 0.008 210 / .96),oklch(0.95 0.018 205 / .96));}
+.sheet{border-radius:32px;}
 .sheet-hdr-row{padding:14px 14px 8px;gap:6px;}
 .sheet-hdr-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:oklch(0.22 0.04 195);}
 .sheet-cat-btn{max-width:128px;border-radius:999px;}
@@ -2553,6 +2553,31 @@ header{padding:15px 16px 9px;}
   box-shadow:0 9px 21px oklch(0.40 0.11 210 / .18);
 }
 .sheet-save:active{background:var(--accent-d);}
+
+/* ── DESKTOP: wider floating window ── */
+@media(min-width:680px){
+  .overlay{
+    padding-top:max(28px,env(safe-area-inset-top,28px));
+    align-items:flex-start;
+  }
+  .sheet{
+    width:min(760px,calc(100vw - 56px));
+    max-width:760px;
+    height:min(88dvh,920px);
+    border-radius:34px;
+    box-shadow:
+      0 32px 90px -24px oklch(0 0 0 / 0.38),
+      0 8px 32px -12px oklch(0.22 0.05 210 / 0.24),
+      inset 0 1px 0 oklch(1 0 0 / 0.85);
+  }
+  .sheet-hdr-row{padding:16px 22px 10px;gap:8px;}
+  .sheet-body-wrap{padding:4px 44px 0;}
+  .tools-row{padding:4px 28px 8px;}
+  .sheet-filing-target{margin:0 22px 9px;}
+  .sheet-agent-row{padding:4px 22px 10px;}
+  .ai-panel{margin:3px 22px 12px;}
+  .sheet-footer{padding:8px 22px calc(env(safe-area-inset-bottom,0px) + 16px);}
+}
 
 @keyframes filing-land{0%{transform:scale(1)}38%{transform:scale(1.13)}100%{transform:scale(1)}}
 .toast.action{
