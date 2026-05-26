@@ -286,6 +286,8 @@ async function saveCloudNow(){
 function setAuthChecking(checking){
   const card=document.querySelector('#auth-screen .auth-card');
   if(card)card.classList.toggle('checking',!!checking);
+  const scr=document.getElementById('auth-screen');
+  if(scr)scr.classList.toggle('checking',!!checking);
 }
 let _vpTimer=null;
 function syncViewportForKeyboard(){
@@ -2707,6 +2709,8 @@ let _selectMode=false;
 let _selectedNoteIds=new Set();
 let _selectLongPressTimer=null;
 let _selectLongPressNid=null;
+let _p0SectCollapsed=localStorage.getItem('rz_p0_sect_col')==='1';
+let _p0InboxCollapsed=localStorage.getItem('rz_p0_inbox_col')==='1';
 
 function toggleDrillGrid(){
   _drillGrid=!_drillGrid;
@@ -2714,6 +2718,7 @@ function toggleDrillGrid(){
   const btn=document.getElementById('drill-grid-btn');
   if(btn)btn.classList.toggle('active',_drillGrid);
   if(drillLevel===1)_drillP1();
+  else if(drillLevel===0)_drillP0();
 }
 
 function _notePreview(n){
@@ -2842,9 +2847,21 @@ function unpinTagFolder(tag){
 
 const _PIN_SVG=`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14"/><path d="M15 5v5l2 3H7l2-3V5"/><line x1="12" y1="2" x2="12" y2="5"/></svg>`;
 const _X_SVG=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const _CHEV_SVG=`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+const _TAG_SVG=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
+const _BOOK_SVG=`<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 
-// Иконки для встроенных категорий в карточках
-const _STRIPE_ICO={здоровье:'🏥',покупки:'🛒',контакт:'👤',событие:'📅',идея:'💡',рецепт:'🍽',адрес:'📍',заметка:'📝'};
+// Lucide-style иконки для встроенных категорий
+const _STRIPE_SVG={
+  здоровье:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  покупки:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+  контакт:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  событие:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  идея:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`,
+  рецепт:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`,
+  адрес:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  заметка:`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+};
 
 function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
@@ -2858,73 +2875,86 @@ function _drillP0(){
   // Встроенные стрипы (здоровье, покупки...) у которых есть заметки
   const stripeEntries=Object.keys(STRIPES).filter(l=>l!=='заметка'&&notes.some(n=>safeLabel(n.label||'заметка')===l));
 
+  // Список / сетка
+  el.classList.toggle('list-mode',!_drillGrid);
+
   let h='';
 
-  // ── МОИ РАЗДЕЛЫ — grid ──
+  // ── МОИ РАЗДЕЛЫ ──
   const hasAny=userFolders.length||pinnedFolders.length||stripeEntries.length;
-  h+=`<div class="sect-hdr-row"><span class="sect-hdr-label">Мои разделы</span><button type="button" class="sect-hdr-add" onclick="openFolderModal()" title="Новый раздел">+</button></div>`;
-  h+=`<div class="sect-grid">`;
+  h+=`<div class="sect-hdr-row" onclick="toggleP0Sect()">
+    <span class="sect-hdr-label">Мои разделы</span>
+    <span class="sect-hdr-chev${_p0SectCollapsed?' collapsed':''}">${_CHEV_SVG}</span>
+  </div>`;
 
-  // Пользовательские разделы
-  userFolders.forEach((f,i)=>{
-    const fNameLow=f.name.toLowerCase();
-    const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
-    const col=_folderColor(f.idx!==undefined?f.idx:i);
-    const tint=_folderTint(f.idx!==undefined?f.idx:i,'.12');
-    const letter=f.name.charAt(0).toUpperCase();
-    // data-nav-folder: navigation via event delegation (iOS-safe)
-    h+=`<div class="sect-card" style="--card-tint:${tint};--card-accent:${col};" data-nav-folder="${esc(f.name)}">
-      <button type="button" class="sect-card-del" onclick="deleteUserFolder(${jsAttr(f.name)})" title="Удалить">${_X_SVG}</button>
-      <div class="sect-card-ico" style="background:${tint};color:${col};">${letter}</div>
-      <div class="sect-card-name">${esc(f.name)}</div>
-      <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
-    </div>`;
-  });
+  if(!_p0SectCollapsed){
+    h+=`<div class="sect-grid">`;
 
-  // Закреплённые папки
-  pinnedFolders.forEach(f=>{
-    const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())).length;
-    h+=`<div class="sect-card sect-card-pinned" data-nav-folder="${esc(f.tag)}">
-      <button type="button" class="sect-card-del" onclick="unpinTagFolder(${JSON.stringify(f.tag)})" title="Открепить">${_PIN_SVG}</button>
-      <div class="sect-card-ico sect-card-ico-pin">📌</div>
-      <div class="sect-card-name">${esc(f.label||f.tag)}</div>
-      <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
-    </div>`;
-  });
+    // Пользовательские разделы
+    userFolders.forEach((f,i)=>{
+      const fNameLow=f.name.toLowerCase();
+      const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
+      const col=_folderColor(f.idx!==undefined?f.idx:i);
+      const tint=_folderTint(f.idx!==undefined?f.idx:i,'.12');
+      const letter=f.name.charAt(0).toUpperCase();
+      h+=`<div class="sect-card" style="--card-tint:${tint};--card-accent:${col};" data-nav-folder="${esc(f.name)}">
+        <button type="button" class="sect-card-del" onclick="deleteUserFolder(${jsAttr(f.name)})" title="Удалить">${_X_SVG}</button>
+        <div class="sect-card-ico" style="background:${tint};color:${col};">${letter}</div>
+        <div class="sect-card-name">${esc(f.name)}</div>
+        <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
+      </div>`;
+    });
 
-  // Встроенные категории (здоровье, покупки...) у которых есть заметки
-  stripeEntries.forEach(l=>{
-    const cnt=notes.filter(n=>safeLabel(n.label||'заметка')===l).length;
-    const col=STRIPES[l];
-    const ico=_STRIPE_ICO[l]||'📁';
-    h+=`<div class="sect-card sect-card-stripe" style="--card-tint:${col.replace(')','/0.10)')};--card-accent:${col};" data-nav-cat="${esc(l)}">
-      <div class="sect-card-ico" style="background:${col.replace(')','/0.13)')};color:${col};">${ico}</div>
-      <div class="sect-card-name">${esc(l.charAt(0).toUpperCase()+l.slice(1))}</div>
-      <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
-    </div>`;
-  });
+    // Закреплённые папки
+    pinnedFolders.forEach(f=>{
+      const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())).length;
+      h+=`<div class="sect-card sect-card-pinned" data-nav-folder="${esc(f.tag)}">
+        <button type="button" class="sect-card-del" onclick="unpinTagFolder(${JSON.stringify(f.tag)})" title="Открепить">${_PIN_SVG}</button>
+        <div class="sect-card-ico sect-card-ico-pin">${_BOOK_SVG}</div>
+        <div class="sect-card-name">${esc(f.label||f.tag)}</div>
+        <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
+      </div>`;
+    });
 
-  if(!hasAny){
-    h+=`<div class="sect-card-empty">Скажи агенту что записать — разделы появятся сами</div>`;
+    // Встроенные категории (здоровье, покупки...) у которых есть заметки
+    stripeEntries.forEach(l=>{
+      const cnt=notes.filter(n=>safeLabel(n.label||'заметка')===l).length;
+      const col=STRIPES[l];
+      const ico=_STRIPE_SVG[l]||_STRIPE_SVG.заметка;
+      h+=`<div class="sect-card sect-card-stripe" style="--card-tint:${col.replace(')','/0.10)')};--card-accent:${col};" data-nav-cat="${esc(l)}">
+        <div class="sect-card-ico" style="background:${col.replace(')','/0.13)')};color:${col};">${ico}</div>
+        <div class="sect-card-name">${esc(l.charAt(0).toUpperCase()+l.slice(1))}</div>
+        <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
+      </div>`;
+    });
+
+    if(!hasAny){
+      h+=`<div class="sect-card-empty">Скажи агенту что записать — разделы появятся сами</div>`;
+    }
+
+    h+=`</div>`;
   }
-
-  h+=`</div>`;
 
   // ── ВХОДЯЩИЕ ──
   if(aiOnlyFolders.length){
     const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length,0);
     const badge=totalIncoming>0?`<span class="drill-incoming-badge">${totalIncoming}</span>`:'';
-    h+=`<div class="sect-hdr-row sect-hdr-incoming"><span class="sect-hdr-label">Входящие</span>${badge}</div>`;
-    aiOnlyFolders.forEach(f=>{
-      const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
-      h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" data-nav-folder="${esc(f.tag)}">
-        <div class="drill-sec-ico" style="font-size:16px;background:oklch(0.52 0.10 202 / .07);">🏷</div>
-        <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
-        <div class="drill-sec-count">${cnt}</div>
-        <button type="button" class="folder-pin-btn" title="Закрепить" onclick="pinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
-        <button type="button" class="folder-del-btn" title="Удалить" onclick="deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
-      </div>`;
-    });
+    h+=`<div class="sect-hdr-row sect-hdr-incoming" onclick="toggleP0Inbox()">
+      <span class="sect-hdr-label">Входящие</span>${badge}
+      <span class="sect-hdr-chev${_p0InboxCollapsed?' collapsed':''}">${_CHEV_SVG}</span>
+    </div>`;
+    if(!_p0InboxCollapsed){
+      aiOnlyFolders.forEach(f=>{
+        const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
+        h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" data-nav-folder="${esc(f.tag)}">
+          <div class="drill-sec-ico" style="background:oklch(0.52 0.10 202 / .07);color:oklch(0.45 0.10 202);">${_TAG_SVG}</div>
+          <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
+          <div class="drill-sec-count">${cnt}</div>
+          <button type="button" class="folder-pin-btn" title="Закрепить" onclick="pinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
+          <button type="button" class="folder-del-btn" title="Удалить" onclick="deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
+        </div>`;
+      });
+    }
   }
 
   // ── ВСЕ ЗАМЕТКИ ──
@@ -2933,6 +2963,17 @@ function _drillP0(){
   </button>`;
 
   el.innerHTML=h;
+}
+
+function toggleP0Sect(){
+  _p0SectCollapsed=!_p0SectCollapsed;
+  localStorage.setItem('rz_p0_sect_col',_p0SectCollapsed?'1':'');
+  _drillP0();
+}
+function toggleP0Inbox(){
+  _p0InboxCollapsed=!_p0InboxCollapsed;
+  localStorage.setItem('rz_p0_inbox_col',_p0InboxCollapsed?'1':'');
+  _drillP0();
 }
 
 // ── Горизонтальный ряд пилюль в заметке ──
@@ -3263,8 +3304,8 @@ function _drillInitP0Nav(){
   if(!p0||p0._p0NavInited)return;
   p0._p0NavInited=true;
   p0.addEventListener('click',e=>{
-    // Кнопки действий обрабатывают себя сами — навигацию не запускаем
-    if(e.target.closest('.sect-card-del,.folder-del-btn,.folder-pin-btn,.sect-hdr-add'))return;
+    // Кнопки действий и заголовки-коллапсеры — навигацию не запускаем
+    if(e.target.closest('.sect-card-del,.folder-del-btn,.folder-pin-btn,.sect-hdr-row'))return;
     const navFolder=e.target.closest('[data-nav-folder]');
     if(navFolder){drillGo(1,{aiTag:navFolder.dataset.navFolder});return;}
     const navCat=e.target.closest('[data-nav-cat]');
@@ -3383,7 +3424,7 @@ function _showMoveToSheet(){
   Object.keys(STRIPES).forEach(l=>{
     if(l==='заметка')return;
     const col=(STRIPES[l]||{}).color||'oklch(0.55 0.10 220)';
-    const ico=_STRIPE_ICO[l]||'📝';
+    const ico=_STRIPE_SVG[l]||_STRIPE_SVG.заметка;
     opts+=`<button class="move-to-opt" onclick="_applyMoveTo('stripe',${jsAttr(l)})">
       <span class="move-to-ico">${ico}</span>${esc(l)}
     </button>`;

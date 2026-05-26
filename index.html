@@ -19,7 +19,7 @@
 <link rel="icon" type="image/png" href="pwa-feather-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
 input,textarea{-webkit-user-select:text;user-select:text;}
@@ -2360,6 +2360,16 @@ html.dark .bubble{
 .sect-card-ico-pin{background:oklch(0.55 0.12 270 / .10)!important;color:oklch(0.50 0.14 270)!important;font-size:16px!important;}
 .sect-card-stripe{background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.005 210 / .46))!important;}
 .sect-card-empty{grid-column:1/-1;padding:8px 4px;font-size:13px;color:var(--fg-l);line-height:1.5;}
+/* Chevron коллапса секций */
+.sect-hdr-row{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.sect-hdr-chev{display:flex;align-items:center;color:var(--fg-l);opacity:.45;transition:transform .22s cubic-bezier(.22,1,.36,1);flex-shrink:0;}
+.sect-hdr-chev.collapsed{transform:rotate(-90deg);}
+/* Список-режим на уровне 0 */
+#drill-p0.list-mode .sect-grid{display:flex;flex-direction:column;gap:7px;}
+#drill-p0.list-mode .sect-card{flex-direction:row;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;}
+#drill-p0.list-mode .sect-card-ico{margin-bottom:0;flex-shrink:0;}
+#drill-p0.list-mode .sect-card-cnt{margin-left:auto;white-space:nowrap;}
+#drill-p0.list-mode .sect-card-del{top:50%;transform:translateY(-50%);}
 /* Кнопки управления папками/разделами */
 .folder-del-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;cursor:pointer;opacity:.35;transition:opacity .15s,background .15s;-webkit-tap-highlight-color:transparent;border:none;background:transparent;padding:0;margin:0;-webkit-appearance:none;}
 .folder-del-btn:active,.folder-del-btn:hover{opacity:.8;background:oklch(0.90 0.08 15/0.18);}
@@ -2586,6 +2596,21 @@ header{padding:15px 16px 9px;}
 .auth-wordmark{
   font-family:'Playfair Display',serif;
   font-size:49px;line-height:1;color:oklch(0.25 0.055 190);
+  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes wm-appear{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes wm-shimmer{0%{background-position:-240% center;}100%{background-position:240% center;}}
+#auth-screen.checking .auth-wordmark{
+  background:linear-gradient(90deg,
+    oklch(0.25 0.055 190) 0%,
+    oklch(0.25 0.055 190) 28%,
+    oklch(0.55 0.15 220) 50%,
+    oklch(0.25 0.055 190) 72%,
+    oklch(0.25 0.055 190) 100%
+  );
+  background-size:280% auto;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both,wm-shimmer 2s linear infinite .55s;
 }
 .auth-logo{margin-bottom:28px;}
 .auth-logo-img{display:none!important;}
@@ -2856,7 +2881,7 @@ header{padding:15px 16px 9px;}
   font-family:'Playfair Display',serif;font-size:27px;line-height:1;color:var(--agent-ink);font-weight:400;
 }
 #drill-more-btn{display:none;}
-.agent-folder-view #drill-grid-btn,.agent-folder-view #drill-add-btn{display:none;}
+.agent-folder-view #drill-add-btn{display:none;}
 .agent-folder-view #drill-more-btn{display:flex;font-size:18px;padding-bottom:9px;color:var(--agent-muted);}
 .agent-folder-view .drill-depth{padding:0 15px 13px;}
 .agent-folder-view .drill-seg{background:oklch(0.85 0.025 210);}
