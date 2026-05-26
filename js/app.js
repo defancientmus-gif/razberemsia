@@ -2988,27 +2988,31 @@ function renderSectPills(){
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
   const pinnedFolders=tagFolders.filter(f=>f.pinned);
 
-  let h='';
+  const pills=[];
 
   // Пользовательские разделы
   userFolders.forEach((f,i)=>{
     const col=_folderColor(f.idx!==undefined?f.idx:i);
     const isActive=isUserFolder&&curLabel.toLowerCase()===f.name.toLowerCase();
-    h+=`<button type="button" class="sect-pill${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:${col};`:''}" onclick="selectSectPill('user',${jsAttr(f.name)})">${esc(f.name)}</button>`;
+    pills.push({isActive,html:`<button type="button" class="sect-pill${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:${col};`:''}" onclick="selectSectPill('user',${jsAttr(f.name)})">${esc(f.name)}</button>`});
   });
 
   // Закреплённые папки
   pinnedFolders.forEach(f=>{
     const isActive=!!curAiTag&&curAiTag.toLowerCase()===f.tag.toLowerCase();
-    h+=`<button type="button" class="sect-pill sect-pill-pinned${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:oklch(0.50 0.14 270);`:''}" onclick="selectSectPill('ai',${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">${esc(f.label||f.tag)}</button>`;
+    pills.push({isActive,html:`<button type="button" class="sect-pill sect-pill-pinned${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:oklch(0.50 0.14 270);`:''}" onclick="selectSectPill('ai',${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">${esc(f.label||f.tag)}</button>`});
   });
 
   // Встроенные типы
   Object.keys(STRIPES).forEach(l=>{
     const isActive=!isUserFolder&&!curAiTag&&curLabel===l;
-    h+=`<button type="button" class="sect-pill${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:${STRIPES[l]};`:''}" onclick="selectSectPill('cat','${l}')">${l}</button>`;
+    pills.push({isActive,html:`<button type="button" class="sect-pill${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:${STRIPES[l]};`:''}" onclick="selectSectPill('cat','${l}')">${l}</button>`});
   });
 
+  // Активная — первой, остальные в исходном порядке
+  pills.sort((a,b)=>Number(b.isActive)-Number(a.isActive));
+
+  let h=pills.map(p=>p.html).join('');
   h+=`<button type="button" class="sect-pill sect-pill-add" onclick="openFolderModal()">+ раздел</button>`;
   row.innerHTML=h;
 }
