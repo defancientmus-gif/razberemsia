@@ -2434,24 +2434,69 @@ function _filingMotionMarkup(motion){
     </article>
   </div>`;
 }
+function _makeFlightAnimation(sourceEl,targetEl,container){
+  const cBox=container.getBoundingClientRect();
+  const sBox=sourceEl.getBoundingClientRect();
+  const tBox=targetEl.getBoundingClientRect();
+  const clone=sourceEl.cloneNode(true);
+  Object.assign(clone.style,{
+    position:'absolute',zIndex:'25',pointerEvents:'none',margin:'0',
+    left:(sBox.left-cBox.left)+'px',top:(sBox.top-cBox.top)+'px',
+    width:sBox.width+'px',height:sBox.height+'px',
+    boxShadow:'0 16px 34px oklch(0.37 0.06 210/.17),inset 0 1px 0 #fff'
+  });
+  container.appendChild(clone);
+  const dx=(tBox.left+tBox.width/2)-(sBox.left+sBox.width/2);
+  const dy=(tBox.top+tBox.height/2)-(sBox.top+sBox.height/2);
+  const bend=-46;
+  const anim=clone.animate([
+    {transform:'translate(0,0) scale(1)',opacity:1},
+    {transform:`translate(${dx*.48}px,${dy*.40+bend}px) scale(.70)`,opacity:.90,offset:.52},
+    {transform:`translate(${dx}px,${dy}px) scale(.08)`,opacity:.08}
+  ],{duration:1450,easing:'cubic-bezier(.25,.78,.22,1)',fill:'forwards'});
+  return anim.finished.then(()=>clone.remove());
+}
 function _runFilingMotion(){
   const motion=_pendingFilingMotion;
   const stage=document.getElementById('filing-transfer');
   if(!motion||!stage)return;
   document.getElementById('s-notes')?.classList.add('placing');
-  setTimeout(()=>stage.classList.add('routing'),820);
+  const ghostEl=stage.querySelector('.filing-ghost');
+  const receiverEl=stage.querySelector('.agent-receiver');
+  const container=stage.closest('.agent-inbox')||document.getElementById('s-notes');
   setTimeout(()=>{
-    stage.classList.add('landed');
-    showActionToast(`Сохранено в «${motion.destination}»`,'Отменить',()=>_undoFilingMotion(motion));
-  },2340);
-  setTimeout(()=>stage.classList.add('folding'),2680);
-  setTimeout(()=>stage.classList.add('vanishing'),3900);
-  setTimeout(()=>{
-    if(_pendingFilingMotion===motion)_pendingFilingMotion=null;
-    document.getElementById('s-notes')?.classList.remove('placing');
-    if(cur==='notes'&&drillLevel===1&&drillAiTag&&drillAiTag.toLowerCase()===motion.source.toLowerCase())_drillP1();
-    else stage.remove();
-  },4550);
+    if(ghostEl&&receiverEl&&container&&typeof Element.prototype.animate==='function'){
+      // Настоящий перелёт: клон карточки летит к ресиверу по дуге (WAAPI)
+      ghostEl.style.opacity='0';
+      _makeFlightAnimation(ghostEl,receiverEl,container).then(()=>{
+        stage.classList.add('landed');
+        showActionToast(`Сохранено в «${motion.destination}»`,'Отменить',()=>_undoFilingMotion(motion));
+        setTimeout(()=>stage.classList.add('folding'),1300);
+        setTimeout(()=>stage.classList.add('vanishing'),1650);
+        setTimeout(()=>{
+          if(_pendingFilingMotion===motion)_pendingFilingMotion=null;
+          document.getElementById('s-notes')?.classList.remove('placing');
+          if(cur==='notes'&&drillLevel===1&&drillAiTag&&drillAiTag.toLowerCase()===motion.source.toLowerCase())_drillP1();
+          else stage.remove();
+        },2420);
+      });
+    } else {
+      // CSS-fallback для старых браузеров
+      stage.classList.add('routing');
+      setTimeout(()=>{
+        stage.classList.add('landed');
+        showActionToast(`Сохранено в «${motion.destination}»`,'Отменить',()=>_undoFilingMotion(motion));
+      },1520);
+      setTimeout(()=>stage.classList.add('folding'),1860);
+      setTimeout(()=>stage.classList.add('vanishing'),3080);
+      setTimeout(()=>{
+        if(_pendingFilingMotion===motion)_pendingFilingMotion=null;
+        document.getElementById('s-notes')?.classList.remove('placing');
+        if(cur==='notes'&&drillLevel===1&&drillAiTag&&drillAiTag.toLowerCase()===motion.source.toLowerCase())_drillP1();
+        else stage.remove();
+      },3730);
+    }
+  },240);
 }
 function _undoFilingMotion(motion){
   const notes=getNotes();
@@ -2870,9 +2915,10 @@ function _renderAgentInbox(el,notes,hasMotion){
   if(destination){
     const disabled=motion?' disabled':'';
     const click=motion?'':` onclick="confirmAgentFiling(event,${jsAttr(arranged[0]?.id)},${jsAttr(destination)})"`;
+    const btnLabel=motion?'Сохранено ✓':'В '+destination;
     action=`<div class="agent-inbox-actions">
       <div class="agent-inbox-context"><span>Назначение агента</span><strong>${esc(destination)}</strong></div>
-      <div class="agent-save-shell"><button class="agent-save-primary"${disabled}${click}>${motion?'Сохранено':'Сохранить'}</button></div>
+      <div class="agent-save-shell"><button class="agent-save-primary"${disabled}${click}>${btnLabel}</button></div>
     </div>`;
   }
   el.innerHTML=`<div class="agent-inbox">
