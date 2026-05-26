@@ -316,7 +316,9 @@ function showAuthErr(msg){
   if(errEl){errEl.textContent=msg;errEl.style.display='block';}
 }
 async function enterUser(user){
-  CU=user;migrateLegacyLocal();await loadCloudData();
+  CU=user;migrateLegacyLocal();
+  // Таймаут 7с: если облако не ответило — запускаем с локальными данными (не висим на логотипе)
+  await Promise.race([loadCloudData(),new Promise(r=>setTimeout(r,7000))]);
   showApp();updUI(user);loadAll();
   _maybeOnboard();
   // Восстановить push-подписку при каждом логине (endpoint может смениться)
@@ -2625,9 +2627,11 @@ function _drillNav(){
 }
 
 function _drillRender(level){
-  if(level===0)_drillP0();
-  if(level===1)_drillP1();
-  if(level===2)_drillP2();
+  try{
+    if(level===0)_drillP0();
+    if(level===1)_drillP1();
+    if(level===2)_drillP2();
+  }catch(e){console.error('_drillRender error',e);}
 }
 
 function _drillP0(){
