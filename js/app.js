@@ -2764,7 +2764,6 @@ function pinToggleFromSheet(){
   return `oklch(${l} ${c} 210 / ${a})`;
 }
 
-fu
 // ── КОМПАКТНЫЙ ВИД ЛЕНТЫ ──
 let _homeFeedCompact=!!localStorage.getItem('rz_compact_feed');
 function toggleCompactFeed(){
