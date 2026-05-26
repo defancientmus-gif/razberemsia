@@ -2322,7 +2322,7 @@ function isUserFolderName(name){
   return !!value&&getUserFolders().some(folder=>String(folder.name||'').toLowerCase()===value);
 }
 // Palette for user-created folders
-const _FOLDER_COLORS=['oklch(0.58 0.12 180)','oklch(0.58 0.12 60)','oklch(0.58 0.12 300)','oklch(0.58 0.12 25)','oklch(0.58 0.12 140)','oklch(0.58 0.12 220)'];
+const _FOLDER_COLORS=['oklch(0.58 0.12 180)','oklch(0.58 0.12 60)','oklch(0.58 0.12 300)','oklch(0.58 0.12 25)','oklch(0.55 0.12 270)','oklch(0.58 0.12 220)'];
 function _folderColor(idx){return _FOLDER_COLORS[idx%_FOLDER_COLORS.length];}
 function _folderTint(idx,alpha){
   return _folderColor(idx).replace(/\)$/,` / ${alpha})`);
@@ -3602,7 +3602,7 @@ function showSheetCat(label){
   // Тонируем фон заметки в цвет категории
   const sheet=document.querySelector('#overlay .sheet');
   if(sheet){
-    const h=SHEET_HUES[label]||'150';
+    const h=SHEET_HUES[label]||'210';
     const c=SHEET_CHROMAS[label]||'0.010';
     const chroma2=parseFloat(c)*2.5;
     sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 ${chroma2.toFixed(3)} ${h} / 0.22), transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 ${c} ${h} / 0.96)`;
@@ -4388,7 +4388,7 @@ function loadHomeFeed(){
     const remFuture=remDt&&remDt>now;
     const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
     const hasAi=!!(n.aiSummary||visibleTags.length);
-    let dotClass='hf-dot-green';
+    let dotClass=hasAi?'hf-dot-green':'hf-dot-none';
     if(remFuture)dotClass='hf-dot-amber';
     if(remOverdue)dotClass='hf-dot-red';
 
