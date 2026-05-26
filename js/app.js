@@ -742,6 +742,7 @@ function toggleAiCollapse(){
   const isCollapsed=panel.classList.contains('collapsed');
   if(!isCollapsed&&body){
     // Закрываем: блокируем overflow перед анимацией
+    panel.style.overflow='hidden';
     body.style.overflow='hidden';
     body.style.maxHeight=body.scrollHeight+'px';
     requestAnimationFrame(()=>{body.style.maxHeight='0px';});
@@ -755,6 +756,7 @@ function toggleAiCollapse(){
         body.style.maxHeight='';
         // Открыли — разрешаем скроллу пробрасываться до sheet-scroll-area
         body.style.overflow='visible';
+        panel.style.overflow='visible';
       },320);
     });
   }
@@ -3219,6 +3221,8 @@ function openNoteSheetById(id){
 function _openNoteWith(n){
   if(n.type==='list'){openListSheet(n.id);return;}
   ST='note';EI=n.id||null;
+  const delBtn=document.getElementById('tool-delete-btn');
+  if(delBtn)delBtn.style.display='inline-flex';
   document.getElementById('sheet-title').textContent='Заметка';
   document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
   document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' символов';
@@ -3233,6 +3237,8 @@ function _openNoteWith(n){
 
 function openSheet(type){
   ST=type;EI=null;_chatNoteId=null;
+  const delBtn=document.getElementById('tool-delete-btn');
+  if(delBtn)delBtn.style.display='none';
   document.getElementById('sheet-title').textContent='Новая заметка';
   document.getElementById('sheet-body').innerHTML=noteForm('');
   document.getElementById('sheet-char-count').textContent='0 символов';
@@ -4017,6 +4023,16 @@ function saveSheet(){
 
 function editNote(i){openNoteSheet(i);}
 function editNoteById(id){openNoteSheetById(id);}
+
+// Удалить заметку прямо из открытого листа
+function deleteOpenNote(){
+  if(!EI)return;
+  const id=EI;
+  closeSheet();
+  setTimeout(()=>{
+    delNoteById(id);
+  },260);
+}
 
 // ── TRASH (мягкое удаление) ──
 function delNoteById(id){
