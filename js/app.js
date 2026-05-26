@@ -4930,26 +4930,50 @@ function _showAgentCard(intent,response,params,options){
   const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎'};
   const autoClose=!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD'].includes(intent);
 
-  // Кнопка «Открыть заметку» для интентов с noteIndex
+  // ── КНОПКИ НАВИГАЦИИ — ведут к тому что агент только что создал/нашёл ──
   let openBtn='';
-  if(['OPEN_NOTE','ANALYZE_NOTE','TAG_NOTE','CREATE_NOTE','READ_NOTE_ALOUD'].includes(intent)&&typeof params?.noteIndex==='number'){
+
+  if(intent==='CREATE_NOTE'){
+    // Если заметка сразу попала в раздел — ведём туда
+    if(params?.section){
+      openBtn=`<button class="agent-card-open" onclick="_agentOpenFolder(${jsAttr(params.section)})">Открыть в «${esc(String(params.section).slice(0,25))}»</button>`;
+    } else {
+      // Ведём к самой свежей заметке (index 0 после prepend)
+      const newNote=getNotes()[0];
+      const noteTitle=newNote?.title||'заметку';
+      const noteId=newNote?.id||'';
+      openBtn=noteId
+        ?`<button class="agent-card-open" onclick="document.getElementById('agent-card')?.remove();openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
+        :`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
+    }
+  } else if(['SET_REMINDER','SET_RECURRING'].includes(intent)){
+    const newNote=getNotes()[0];
+    const noteTitle=newNote?.title||'напоминание';
+    const noteId=newNote?.id||'';
+    openBtn=noteId
+      ?`<button class="agent-card-open" onclick="document.getElementById('agent-card')?.remove();openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
+      :`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть напоминание</button>`;
+  } else if(['OPEN_NOTE','ANALYZE_NOTE','TAG_NOTE','READ_NOTE_ALOUD'].includes(intent)&&typeof params?.noteIndex==='number'){
     const noteTitle=getNotes()[params.noteIndex]?.title||'заметку';
-    openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(${params.noteIndex})">Открыть «${esc(noteTitle.slice(0,30))}»</button>`;
-  } else if(intent==='CREATE_NOTE'){
-    // Последняя созданная заметка — index 0
-    openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
+    openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(${params.noteIndex})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`;
+  } else if(intent==='FIND_NOTES'&&typeof params?.noteIndex==='number'){
+    const noteTitle=getNotes()[params.noteIndex]?.title||'заметку';
+    openBtn=`<button class="agent-card-open" onclick="_agentOpenNote(${params.noteIndex})">Перейти к «${esc(noteTitle.slice(0,28))}»</button>`;
+  }
+
+  // CREATE_TAG_FOLDER — открыть папку + промоут в архив
+  let openFolderBtn='';
+  let promoteBtn='';
+  if(intent==='CREATE_TAG_FOLDER'&&params?.tag){
+    const folderLabel=params.label||params.tag;
+    openFolderBtn=`<button class="agent-card-open" onclick="_agentOpenFolder(${jsAttr(params.tag)})">Открыть «${esc(String(folderLabel).slice(0,25))}»</button>`;
+    promoteBtn=`<button class="agent-card-promote" onclick="promoteToSection(${jsAttr(params.tag)});this.closest('.agent-card').remove();">📚 В Архив</button>`;
   }
 
   // Кнопка «Сохранить план» для MAKE_PLAN
   let savePlanBtn='';
   if(intent==='MAKE_PLAN'&&response&&response.length>20){
     savePlanBtn=`<button class="agent-card-open" onclick="_agentSavePlan(${jsAttr(response)})">Сохранить план</button>`;
-  }
-
-  // Кнопка «В Архив» для CREATE_TAG_FOLDER — повысить папку до постоянного раздела
-  let promoteBtn='';
-  if(intent==='CREATE_TAG_FOLDER'&&params?.tag){
-    promoteBtn=`<button class="agent-card-promote" onclick="promoteToSection(${jsAttr(params.tag)});this.closest('.agent-card').remove();">📚 Добавить в Архив</button>`;
   }
 
   const isClarify=intent==='CLARIFY';
@@ -4979,6 +5003,7 @@ function _showAgentCard(intent,response,params,options){
     <div class="agent-card-txt">${esc(response)}</div>
     ${optBtns}
     ${openBtn}
+    ${openFolderBtn}
     ${savePlanBtn}
     ${promoteBtn}
     ${closeBtn}
@@ -4990,6 +5015,14 @@ function _showAgentCard(intent,response,params,options){
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
   if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},7000);
+}
+
+// Переход к папке или разделу из карточки агента
+function _agentOpenFolder(tag){
+  document.getElementById('agent-card')?.remove();
+  go('notes');
+  // Небольшая пауза чтобы секция успела активироваться
+  setTimeout(()=>{drillGo(1,{aiTag:tag});},160);
 }
 
 function _agentOpenNote(idx){
