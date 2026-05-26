@@ -4017,7 +4017,9 @@ function saveSheet(){
     aiTags=[...aiTags,_selectedAiTag];
   }
   aiTags=aiTags.filter(tag=>!_isFiledFolderTag(tag));
-  const filedFolder=_selectedUserFolder||previousFiledFolder;
+  // Если создаём из раздела — добавить _filed_in: даже если пилюля не переключалась
+  const drillFolderCtx=existingIdx<0&&drillAiTag&&isUserFolderName(drillAiTag)?drillAiTag:'';
+  const filedFolder=_selectedUserFolder||drillFolderCtx||previousFiledFolder;
   if(filedFolder)aiTags=[...aiTags,_filedFolderTag(filedFolder)];
   const words=v1.trim().split(/\s+/);
   const title=words.slice(0,6).join(' ')+(words.length>6?'...':'');
