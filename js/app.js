@@ -2469,6 +2469,17 @@ function openDrillAdd(){
 function deleteUserFolder(name){
   const folders=getUserFolders().filter(f=>f.name!==name);
   saveUserFolders(folders);
+  // Чистим _filed_in: теги в заметках, чтобы не зависали как "разобрались"
+  const nameLow=String(name).toLowerCase();
+  const notes=getNotes();
+  let changed=false;
+  notes.forEach(n=>{
+    if(!Array.isArray(n.aiTags))return;
+    const before=n.aiTags.length;
+    n.aiTags=n.aiTags.filter(t=>t.toLowerCase()!==_filedFolderTag(nameLow));
+    if(n.aiTags.length!==before){n.updatedAt=Date.now();changed=true;}
+  });
+  if(changed)saveNotes(notes);
   loadNotes();
   showToast('Раздел удалён');
 }
@@ -2796,9 +2807,9 @@ function _drillP0(){
         <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};font-size:0;"></div>
         <div class="drill-sec-name">${esc(folderName)}</div>
         <div class="drill-sec-count">${cnt}</div>
-        <span class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
+        <button type="button" class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </span>
+        </button>
       </div>`;
     });
   }
@@ -2816,9 +2827,9 @@ function _drillP0(){
         <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
         <div class="drill-sec-count">${cnt}</div>
         <span class="drill-ai-badge">авт.</span>
-        <span class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">
+        <button type="button" class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </span>
+        </button>
       </div>`;
     });
   }
@@ -2828,11 +2839,12 @@ function _drillP0(){
 
 function deleteTagFolder(tag){
   if(typeof getTagFolders!=='function')return;
+  const tagLow=String(tag).toLowerCase();
   const folders=getTagFolders();
-  const f=folders.find(x=>x.tag===tag);
+  const f=folders.find(x=>String(x.tag).toLowerCase()===tagLow);
   if(!f)return;
   const label=f.label||f.tag;
-  saveTagFolders(folders.filter(x=>x.tag!==tag));
+  saveTagFolders(folders.filter(x=>String(x.tag).toLowerCase()!==tagLow));
   loadNotes();
   showToast(`Папка «${label}» удалена`);
 }
