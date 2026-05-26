@@ -686,6 +686,8 @@ function toggleAiCollapse(){
   const btn=document.getElementById('ai-collapse-btn');
   const isCollapsed=panel.classList.contains('collapsed');
   if(!isCollapsed&&body){
+    // Закрываем: блокируем overflow перед анимацией
+    body.style.overflow='hidden';
     body.style.maxHeight=body.scrollHeight+'px';
     requestAnimationFrame(()=>{body.style.maxHeight='0px';});
   }
@@ -694,7 +696,11 @@ function toggleAiCollapse(){
   if(isCollapsed&&body){
     requestAnimationFrame(()=>{
       body.style.maxHeight=body.scrollHeight+'px';
-      setTimeout(()=>{body.style.maxHeight='';},320);
+      setTimeout(()=>{
+        body.style.maxHeight='';
+        // Открыли — разрешаем скроллу пробрасываться до sheet-scroll-area
+        body.style.overflow='visible';
+      },320);
     });
   }
 }
@@ -4652,10 +4658,12 @@ async function _processAgentQuery(text,alts=[]){
     }));
     // Отправляем альтернативы только если они отличаются от основного текста
     const alternatives=alts.filter(a=>a&&a!==text).slice(0,2);
+    // Разделы пользователя — агент знает куда предложить сохранить
+    const userFolders=(getUserFolders?.()??[]).map(f=>f.name).filter(Boolean);
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes}}),
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders}}),
       signal:ac.signal
     });
     _cleanTimers();
@@ -4698,8 +4706,13 @@ function _runSingleIntent(intent,params,originalText){
   if(intent==='CREATE_NOTE'){
     const ts=Date.now();const notes=getNotes();const id=genId();
     const auto=analyzeText(params.body||originalText);
+    const aiTags=[];
+    if(params.section&&isUserFolderName?.(params.section)){
+      aiTags.push(_filedFolderTag(params.section));
+    }
     notes.push({id,title:params.title||auto.title,body:params.body||originalText,
-      label:auto.label||'заметка',createdAt:ts,updatedAt:ts,fromPad:true});
+      label:auto.label||'заметка',createdAt:ts,updatedAt:ts,fromPad:true,
+      ...(aiTags.length?{aiTags}:{})});
     saveNotes(notes);loadHomeFeed();loadNotes();loadNotepad();
   }
 
