@@ -3576,6 +3576,7 @@ function showSheetCat(label){
   if(!btn)return;
   btn.style.display='inline-flex';
   delete btn.dataset.userFolder; // сброс флага пользовательского раздела
+  delete btn.dataset.aiTagFolder; // сброс флага AI-папки
   const col=STRIPES[label||'заметка']||STRIPES.заметка;
   if(dot)dot.style.background=col;
   if(lbl)lbl.textContent=label||'заметка';
@@ -3603,14 +3604,24 @@ function toggleCatDropdown(){
     </div>`).join('');
   const userFolders=getUserFolders();
   const folderOpts=userFolders.length
-    ?'<div class="cat-opt-sep">Разделы</div>'+userFolders.map((f,i)=>{
+    ?'<div class="cat-opt-sep">Архив</div>'+userFolders.map((f,i)=>{
       const col=_folderColor(f.idx!==undefined?f.idx:i);
       return `<div class="cat-opt" onclick="selectUserFolderTag(${jsAttr(f.name)})">
         <div class="cat-opt-dot" style="background:${col};"></div>${esc(f.name)}
         ${f.name===cur?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
       </div>`;}).join('')
     :'';
-  dd.innerHTML=stripeOpts+folderOpts;
+  const tagFoldersList=typeof getTagFolders==='function'?getTagFolders():[];
+  const curNote=EI?getNotes().find(n=>n.id===EI):null;
+  const tagFolderOpts=tagFoldersList.length
+    ?'<div class="cat-opt-sep">Входящие</div>'+tagFoldersList.map(f=>{
+      const isActive=curNote&&Array.isArray(curNote.aiTags)&&curNote.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase());
+      return `<div class="cat-opt" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">
+        <div class="cat-opt-dot" style="background:oklch(0.55 0.13 290);"></div>${esc(f.label||f.tag)}
+        ${isActive?'<svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-d)" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>`;}).join('')
+    :'';
+  dd.innerHTML=stripeOpts+folderOpts+tagFolderOpts;
   dd.classList.add('open');
   setTimeout(()=>document.addEventListener('click',closeCatOnClick,{once:true}),10);
 }
@@ -3646,6 +3657,28 @@ function selectUserFolderTag(folderName){
     if(sheet)sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, ${_folderTint(folderIdx,'.15')}, transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.012 205 / 0.96)`;
   }
   document.getElementById('cat-dropdown').classList.remove('open');
+  saveSheetDraft();
+}
+
+function selectAiTagFolder(tag,label){
+  const btn=document.getElementById('sheet-cat-btn');
+  if(btn){
+    btn.dataset.label=label;
+    btn.dataset.aiTagFolder=tag;
+    btn.dataset.userFolder='1';
+    const dot=document.getElementById('sheet-cat-dot');
+    const lbl=document.getElementById('sheet-cat-label');
+    if(dot)dot.style.background='oklch(0.55 0.13 290)';
+    if(lbl)lbl.textContent=label;
+    const filingTarget=document.getElementById('sheet-filing-target');
+    if(filingTarget){
+      filingTarget.innerHTML=`<span>Добавить в папку</span><strong>${esc(label)}</strong>`;
+      filingTarget.classList.add('show');
+    }
+    const sheet=document.querySelector('#overlay .sheet');
+    if(sheet)sheet.style.background='radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.55 0.13 290 / .12), transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.010 290 / 0.96)';
+  }
+  document.getElementById('cat-dropdown')?.classList.remove('open');
   saveSheetDraft();
 }
 
@@ -3936,8 +3969,9 @@ function saveSheet(){
   const v1=f?f.value:'';
   const catBtn=document.getElementById('sheet-cat-btn');
   const isUserFolder=catBtn?.dataset.userFolder==='1';
+  const _selectedAiTag=catBtn?.dataset.aiTagFolder||'';
   const v3=isUserFolder?'заметка':safeLabel(catBtn?catBtn.dataset.label||'заметка':'заметка');
-  const _selectedUserFolder=isUserFolder?(catBtn?.dataset.label||''):'';
+  const _selectedUserFolder=(isUserFolder&&!_selectedAiTag)?(catBtn?.dataset.label||''):'';
   const reminderEl=document.getElementById('sheet-reminder-in');
   const v2=reminderEl?reminderEl.value:'';
   if(!v1.trim()){showToast('Напишите текст');return;}
@@ -3961,6 +3995,10 @@ function saveSheet(){
   // Если пользователь выбрал раздел из пикера — добавляем тег
   if(_selectedUserFolder&&!aiTags.map(t=>t.toLowerCase()).includes(_selectedUserFolder.toLowerCase())){
     aiTags=[...aiTags,_selectedUserFolder];
+  }
+  // Если пользователь выбрал AI-папку из пикера — добавляем её тег
+  if(_selectedAiTag&&!aiTags.map(t=>t.toLowerCase()).includes(_selectedAiTag.toLowerCase())){
+    aiTags=[...aiTags,_selectedAiTag];
   }
   aiTags=aiTags.filter(tag=>!_isFiledFolderTag(tag));
   const filedFolder=_selectedUserFolder||previousFiledFolder;
