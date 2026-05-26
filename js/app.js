@@ -2275,6 +2275,36 @@ function _sectionNoteStyle(note){
   const line=_folderTint(folder.colorIndex,'.11');
   return `--section-line:${line};background:radial-gradient(ellipse 86% 72% at 12% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .84),oklch(0.965 0.012 210 / .73));`;
 }
+// Одноразовая очистка дублей рекуррентных заметок (fix для старых данных)
+function _deduplicateRecurringNotes(){
+  const key=scopedKey('rz_recurring_dedup_v1');
+  if(localStorage.getItem(key))return;
+  const notes=getNotes();
+  const seen={};
+  const toKeep=[];
+  const toTrash=[];
+  notes.forEach(n=>{
+    const titleKey=(n.title||'').toLowerCase().trim();
+    if(n.recurring&&titleKey){
+      if(!seen[titleKey]){seen[titleKey]=true;toKeep.push(n);}
+      else toTrash.push(n); // дубль — в корзину
+    } else {
+      toKeep.push(n);
+    }
+  });
+  if(toTrash.length>0){
+    const now=Date.now();
+    const trash=getTrash();
+    toTrash.forEach(n=>{n._deletedAt=now;trash.unshift(n);});
+    while(trash.length>200)trash.pop();
+    saveTrash(trash);
+    saveNotes(toKeep);
+    loadHomeFeed&&loadHomeFeed();
+    showToast&&showToast('Убрал '+toTrash.length+' дублей напоминания');
+  }
+  localStorage.setItem(key,'1');
+}
+
 function migrateLegacyFolderPlacements(){
   const key=scopedKey('rz_filed_folder_migrated_v1');
   if(localStorage.getItem(key))return;
@@ -4907,13 +4937,23 @@ function _runSingleIntent(intent,params,originalText){
     const title=params.title||originalText;
     const times=Array.isArray(params.times)&&params.times.length?params.times:['09:00'];
     const nextTs=_nextRecurringTime(times);
-    const ts=Date.now();const id=genId();
     const notes=getNotes();
-    notes.push({id,title,body:title,label:'заметка',
-      reminder:_tsToIso(nextTs),recurring:{times,days:params.days||'daily'},
-      createdAt:ts,updatedAt:ts});
-    saveNotes(notes);
-    _handleReminderAfterSave(nextTs,id,title,title);
+    // Не создавать дубль — если уже есть повторяющаяся заметка с таким названием, обновить её
+    const existIdx=notes.findIndex(n=>n.recurring&&(n.title||'').toLowerCase().trim()===(title||'').toLowerCase().trim());
+    if(existIdx>=0){
+      notes[existIdx].recurring={times,days:params.days||'daily'};
+      notes[existIdx].reminder=_tsToIso(nextTs);
+      notes[existIdx].updatedAt=Date.now();
+      saveNotes(notes);
+      _handleReminderAfterSave(nextTs,notes[existIdx].id,title,title);
+    } else {
+      const ts=Date.now();const id=genId();
+      notes.push({id,title,body:title,label:'заметка',
+        reminder:_tsToIso(nextTs),recurring:{times,days:params.days||'daily'},
+        createdAt:ts,updatedAt:ts});
+      saveNotes(notes);
+      _handleReminderAfterSave(nextTs,id,title,title);
+    }
     loadHomeFeed();loadNotes();
   }
 
@@ -5260,6 +5300,7 @@ async function _cleanupPastReminders(){
 
 // ── LOAD ALL ──
 function loadAll(){
+  _deduplicateRecurringNotes();
   loadHomeFeed();
   loadNotes();
   loadNotepad();
