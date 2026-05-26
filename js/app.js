@@ -663,7 +663,7 @@ function go(id){
   cur=id;n.scrollTop=0;
   if(id!=='notes')document.getElementById('main-app')?.classList.remove('agent-folder-shell');
   if(id==='home')loadHomeFeed();
-  if(id==='notes'){renderNotifBanner();loadNotes();}
+  if(id==='notes'){renderNotifBanner();loadNotes();_pullCloudIfStale();}
   if(id==='notepad')loadNotepad();
   if(id==='trash')loadTrash();
 }
@@ -1402,7 +1402,7 @@ let _lastPullAt=0;
 async function _pullCloudIfStale(){
   if(!cloudAllowed()||!CU)return;
   const age=Date.now()-_lastPullAt;
-  if(age<30000)return; // не чаще раза в 30 секунд
+  if(age<12000)return; // не чаще раза в 12 секунд
   _lastPullAt=Date.now();
   try{
     const {data}=await sb.from('user_state')
@@ -2872,8 +2872,9 @@ function _drillP0(){
     const col=_folderColor(f.idx!==undefined?f.idx:i);
     const tint=_folderTint(f.idx!==undefined?f.idx:i,'.12');
     const letter=f.name.charAt(0).toUpperCase();
-    h+=`<div class="sect-card" style="--card-tint:${tint};--card-accent:${col};" onclick="drillGo(1,{aiTag:${jsAttr(f.name)}})">
-      <button type="button" class="sect-card-del" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(f.name)})" title="Удалить">${_X_SVG}</button>
+    // data-nav-folder: navigation via event delegation (iOS-safe)
+    h+=`<div class="sect-card" style="--card-tint:${tint};--card-accent:${col};" data-nav-folder="${esc(f.name)}">
+      <button type="button" class="sect-card-del" onclick="deleteUserFolder(${jsAttr(f.name)})" title="Удалить">${_X_SVG}</button>
       <div class="sect-card-ico" style="background:${tint};color:${col};">${letter}</div>
       <div class="sect-card-name">${esc(f.name)}</div>
       <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
@@ -2883,8 +2884,8 @@ function _drillP0(){
   // Закреплённые папки
   pinnedFolders.forEach(f=>{
     const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())).length;
-    h+=`<div class="sect-card sect-card-pinned" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
-      <button type="button" class="sect-card-del" onclick="event.stopPropagation();unpinTagFolder(${JSON.stringify(f.tag)})" title="Открепить">${_PIN_SVG}</button>
+    h+=`<div class="sect-card sect-card-pinned" data-nav-folder="${esc(f.tag)}">
+      <button type="button" class="sect-card-del" onclick="unpinTagFolder(${JSON.stringify(f.tag)})" title="Открепить">${_PIN_SVG}</button>
       <div class="sect-card-ico sect-card-ico-pin">📌</div>
       <div class="sect-card-name">${esc(f.label||f.tag)}</div>
       <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
@@ -2896,7 +2897,7 @@ function _drillP0(){
     const cnt=notes.filter(n=>safeLabel(n.label||'заметка')===l).length;
     const col=STRIPES[l];
     const ico=_STRIPE_ICO[l]||'📁';
-    h+=`<div class="sect-card sect-card-stripe" style="--card-tint:${col.replace(')','/0.10)')};--card-accent:${col};" onclick="drillGo(1,{category:${jsAttr(l)}})">
+    h+=`<div class="sect-card sect-card-stripe" style="--card-tint:${col.replace(')','/0.10)')};--card-accent:${col};" data-nav-cat="${esc(l)}">
       <div class="sect-card-ico" style="background:${col.replace(')','/0.13)')};color:${col};">${ico}</div>
       <div class="sect-card-name">${esc(l.charAt(0).toUpperCase()+l.slice(1))}</div>
       <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
@@ -2916,12 +2917,12 @@ function _drillP0(){
     h+=`<div class="sect-hdr-row sect-hdr-incoming"><span class="sect-hdr-label">Входящие</span>${badge}</div>`;
     aiOnlyFolders.forEach(f=>{
       const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
-      h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
+      h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" data-nav-folder="${esc(f.tag)}">
         <div class="drill-sec-ico" style="font-size:16px;background:oklch(0.52 0.10 202 / .07);">🏷</div>
         <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
         <div class="drill-sec-count">${cnt}</div>
-        <button type="button" class="folder-pin-btn" title="Закрепить" onclick="event.stopPropagation();pinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
-        <button type="button" class="folder-del-btn" title="Удалить" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
+        <button type="button" class="folder-pin-btn" title="Закрепить" onclick="pinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
+        <button type="button" class="folder-del-btn" title="Удалить" onclick="deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
       </div>`;
     });
   }
@@ -3256,6 +3257,21 @@ function _drillP2(){
   </div>`;
 }
 
+// ── Event delegation для drill-p0: iOS-safe навигация по карточкам ──
+function _drillInitP0Nav(){
+  const p0=document.getElementById('drill-p0');
+  if(!p0||p0._p0NavInited)return;
+  p0._p0NavInited=true;
+  p0.addEventListener('click',e=>{
+    // Кнопки действий обрабатывают себя сами — навигацию не запускаем
+    if(e.target.closest('.sect-card-del,.folder-del-btn,.folder-pin-btn,.sect-hdr-add'))return;
+    const navFolder=e.target.closest('[data-nav-folder]');
+    if(navFolder){drillGo(1,{aiTag:navFolder.dataset.navFolder});return;}
+    const navCat=e.target.closest('[data-nav-cat]');
+    if(navCat){drillGo(1,{category:navCat.dataset.navCat||null});return;}
+  });
+}
+
 function _drillInitSwipe(){
   const el=document.getElementById('s-notes');if(!el)return;
   el.addEventListener('touchstart',e=>{_drillTouchX=e.touches[0].clientX;},{passive:true});
@@ -3278,6 +3294,7 @@ function _drillInitSwipe(){
     },{passive:true});
   }
   _drillInitSelect();
+  _drillInitP0Nav();
 }
 
 // ── Multi-select: long-press → выбор заметок ──
@@ -3896,7 +3913,8 @@ function showSheetCat(label){
   const dot=document.getElementById('sheet-cat-dot');
   const lbl=document.getElementById('sheet-cat-label');
   if(!btn)return;
-  btn.style.display='inline-flex';
+  // btn остаётся скрытым — он хранилище данных, sect-pill-row отображает состояние
+  btn.style.display='none';
   delete btn.dataset.userFolder; // сброс флага пользовательского раздела
   delete btn.dataset.aiTagFolder; // сброс флага AI-папки
   const col=STRIPES[label||'заметка']||STRIPES.заметка;
