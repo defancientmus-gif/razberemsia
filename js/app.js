@@ -2601,32 +2601,26 @@ function _drillRender(level){
 function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
   const notes=getNotes();
-  const counts={};
-  notes.forEach(n=>{const l=safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430');counts[l]=(counts[l]||0)+1;});
+
+  // "Все заметки" — всегда первым
   let h=`<button class="drill-sec-row" onclick="drillGo(1,{category:null})">
-    <div class="drill-sec-ico">\u{1F4CB}</div>
-    <div class="drill-sec-name">\u0412\u0441\u0435 \u0437\u0430\u043c\u0435\u0442\u043a\u0438</div>
+    <div class="drill-sec-ico">📋</div>
+    <div class="drill-sec-name">Все заметки</div>
     <div class="drill-sec-count">${notes.length}</div>
     <div class="drill-sec-arr">&rsaquo;</div>
   </button>`;
-  Object.entries(counts).forEach(([l,c])=>{
-    h+=`<button class="drill-sec-row" onclick="drillGo(1,{category:${jsAttr(l)}})">
-      <div class="drill-sec-ico">${catIcon(l)}</div>
-      <div class="drill-sec-name">${esc(l)}</div>
-      <div class="drill-sec-count">${c}</div>
-      <div class="drill-sec-arr">&rsaquo;</div>
-    </button>`;
-  });
-  // Пользовательские разделы (созданные через +)
+
+  // АРХИВ — пользовательские разделы (постоянные)
   const userFolders=getUserFolders();
   if(userFolders.length){
+    h+=`<div class="drill-group-hdr">Архив</div>`;
     userFolders.forEach((f,i)=>{
       const folderName=f.name;
       const fNameLow=folderName.toLowerCase();
       const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
       const tint=_folderTint(f.idx!==undefined?f.idx:i,'.10');
       h+=`<div class="drill-sec-row drill-sec-tag user-section-row" style="background:radial-gradient(ellipse 92% 80% at 10% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
-        <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};"></div>
+        <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};font-size:0;"></div>
         <div class="drill-sec-name">${esc(folderName)}</div>
         <div class="drill-sec-count">${cnt}</div>
         <span class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
@@ -2635,23 +2629,27 @@ function _drillP0(){
       </div>`;
     });
   }
-  // Тег-папки (из AI-анализа)
+
+  // ВХОДЯЩИЕ — папки агента (временные, создаются автоматически)
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
-  if(tagFolders.length){
-    // Не показывать тег-папки, если уже показаны как user-folder
-    const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
-    tagFolders.filter(f=>!userFolderNames.includes(f.tag.toLowerCase())).forEach(f=>{
+  const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
+  const aiOnlyFolders=tagFolders.filter(f=>!userFolderNames.includes(f.tag.toLowerCase()));
+  if(aiOnlyFolders.length){
+    h+=`<div class="drill-group-hdr">Входящие</div>`;
+    aiOnlyFolders.forEach(f=>{
       const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
-      h+=`<div class="drill-sec-row drill-sec-tag" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
-        <div class="drill-sec-ico">🏷</div>
+      h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
+        <div class="drill-sec-ico" style="font-size:17px;background:oklch(0.52 0.10 202 / .08);">🏷</div>
         <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
         <div class="drill-sec-count">${cnt}</div>
+        <span class="drill-ai-badge">авт.</span>
         <span class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </span>
       </div>`;
     });
   }
+
   el.innerHTML=h;
 }
 
@@ -2665,6 +2663,36 @@ function deleteTagFolder(tag){
   localStorage.setItem('rz_tag_folders',JSON.stringify(newFolders));
   loadNotes();
   showToast(`Папка «${label}» удалена`);
+}
+
+// Повысить AI-папку до постоянного Раздела (архива)
+function promoteToSection(tag){
+  const tFolders=typeof getTagFolders==='function'?getTagFolders():[];
+  const f=tFolders.find(x=>x.tag.toLowerCase()===String(tag).toLowerCase());
+  const raw=f?f.label||f.tag:tag;
+  const sectionName=raw.charAt(0).toUpperCase()+raw.slice(1);
+  const existing=getUserFolders();
+  if(existing.some(x=>x.name.toLowerCase()===sectionName.toLowerCase())){
+    showToast(`Раздел «${sectionName}» уже есть`);return;
+  }
+  const newFolders=[...existing,{name:sectionName,createdAt:Date.now(),idx:existing.length}];
+  saveUserFolders(newFolders);
+  const notes=getNotes();
+  let filed=0;
+  notes.forEach(n=>{
+    if(Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===String(tag).toLowerCase())){
+      if(!getFiledFolderName(n)){
+        n.aiTags=[...n.aiTags,_filedFolderTag(sectionName)];
+        n.updatedAt=Date.now();filed++;
+      }
+    }
+  });
+  saveNotes(notes);
+  if(typeof getTagFolders==='function'){
+    localStorage.setItem('rz_tag_folders',JSON.stringify(tFolders.filter(x=>x.tag.toLowerCase()!==String(tag).toLowerCase())));
+  }
+  loadNotes();loadHomeFeed();
+  showToast(`«${sectionName}» теперь в Архиве`+(filed?` · ${filed} заметок разобрались`:''));
 }
 
 function _drillCardBg(i,total){
@@ -2799,6 +2827,7 @@ function _drillP1(){
       const bellBadge=hasBell?`<span class="drill-note-bell">\u{1F514}</span>`:'';
       const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
       const sectionStyle=_sectionNoteStyle(n);
+      const tagChips=visibleTags.slice(0,3).map(t=>`<span class="drill-note-tag-chip" onclick="event.stopPropagation();drillGo(1,{aiTag:${jsAttr(t)}})">${esc(t)}</span>`).join('');
       h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}" ${sectionStyle?`style="${sectionStyle}"`:''} onclick="drillPickNote(${i})">
         <div class="drill-note-body">
           <div class="drill-note-title">${esc(n.title)}</div>
@@ -2807,6 +2836,7 @@ function _drillP1(){
             <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
             ${bellBadge}${aiBadge}
           </div>
+          ${tagChips?`<div class="drill-note-tags">${tagChips}</div>`:''}
         </div>
         ${resolvedBadge}
       </div>`;
@@ -4916,6 +4946,12 @@ function _showAgentCard(intent,response,params,options){
     savePlanBtn=`<button class="agent-card-open" onclick="_agentSavePlan(${jsAttr(response)})">Сохранить план</button>`;
   }
 
+  // Кнопка «В Архив» для CREATE_TAG_FOLDER — повысить папку до постоянного раздела
+  let promoteBtn='';
+  if(intent==='CREATE_TAG_FOLDER'&&params?.tag){
+    promoteBtn=`<button class="agent-card-promote" onclick="promoteToSection(${jsAttr(params.tag)});this.closest('.agent-card').remove();">📚 Добавить в Архив</button>`;
+  }
+
   const isClarify=intent==='CLARIFY';
   const hasOpts=Array.isArray(options)&&options.length;
 
@@ -4944,6 +4980,7 @@ function _showAgentCard(intent,response,params,options){
     ${optBtns}
     ${openBtn}
     ${savePlanBtn}
+    ${promoteBtn}
     ${closeBtn}
   </div>`;
   // Клик на затемнённый фон = закрыть (только для autoClose карточек)

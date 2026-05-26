@@ -2224,6 +2224,53 @@ html.dark .bubble{
 .drill-note-ai{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:oklch(0.35 0.14 270);background:oklch(0.40 0.14 270/0.10);border:1px solid oklch(0.40 0.14 270/0.20);border-radius:5px;padding:1px 6px;margin-left:auto;}
 .drill-note-bell{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210/0.10);border:1px solid oklch(0.52 0.10 210/0.20);border-radius:5px;padding:1px 6px;}
 .drill-note-arr{color:var(--fg-l);font-size:18px;flex-shrink:0;padding-top:1px;}
+/* ── ИЕРАРХИЯ РАЗДЕЛОВ / ПАПОК ── */
+/* Заголовок группы — разделитель между АРХИВ / ВХОДЯЩИЕ */
+.drill-group-hdr{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:oklch(0.48 0.08 210 / .55);
+  padding:14px 4px 6px;
+  display:flex;align-items:center;gap:8px;
+}
+.drill-group-hdr::after{content:'';flex:1;height:1px;background:oklch(0.70 0.04 210 / .20);}
+/* Папки агента — менее яркие, "входящие" */
+.drill-folder-ai{
+  background:linear-gradient(158deg, oklch(1 0 0 / .58) 0%, oklch(0.978 0.006 210 / .50) 100%) !important;
+  border-color:oklch(1 0 0 / .50) !important;
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .72),0 2px 7px -3px oklch(0.32 0.030 210 / .07) !important;
+}
+/* Бейдж "авт." на AI-папках */
+.drill-ai-badge{
+  font-size:9px;font-weight:700;letter-spacing:.03em;
+  color:oklch(0.50 0.09 202 / .65);
+  background:oklch(0.52 0.10 202 / .09);
+  border:1px solid oklch(0.52 0.10 202 / .20);
+  border-radius:5px;padding:1px 6px;
+  flex-shrink:0;margin-right:2px;
+}
+/* Теги-чипы внутри строки заметки */
+.drill-note-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.drill-note-tag-chip{
+  font-size:10px;font-weight:600;
+  color:oklch(0.38 0.11 270);
+  background:oklch(0.55 0.12 270 / .09);
+  border:1px solid oklch(0.55 0.12 270 / .18);
+  border-radius:5px;padding:2px 7px;
+  cursor:pointer;transition:background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.drill-note-tag-chip:active{background:oklch(0.55 0.12 270 / .20);}
+/* Кнопка "В Архив" на карточке агента */
+.agent-card-promote{
+  display:block;width:100%;text-align:center;
+  padding:10px 16px;margin-top:6px;
+  background:linear-gradient(135deg,oklch(0.52 0.10 210 / .10),oklch(0.52 0.10 210 / .06));
+  border:1.5px solid oklch(0.52 0.10 210 / .25);
+  border-radius:12px;
+  font-size:14px;font-weight:600;color:oklch(0.32 0.10 210);
+  font-family:var(--sys);cursor:pointer;
+  transition:background .15s;
+}
 
 /* ── "РАЗОБРАЛИСЬ" — метка проработанных заметок ── */
 .drill-note-row.resolved,.drill-grid-card.resolved{opacity:0.60;}
