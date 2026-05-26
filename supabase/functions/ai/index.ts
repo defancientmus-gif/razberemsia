@@ -1,15 +1,16 @@
 // supabase/functions/ai/index.ts
 // Деплой: supabase functions deploy ai --no-verify-jwt
-// Secrets: ANTHROPIC_API_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
+// Secrets: ANTHROPIC_API_KEY, GROQ_API_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const ANTHROPIC_KEY  = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
+const ANTHROPIC_KEY   = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const ANTHROPIC_MODEL = Deno.env.get('ANTHROPIC_MODEL')?.trim() || 'claude-haiku-4-5-20251001';
-const SB_URL         = Deno.env.get('SUPABASE_URL') ?? '';
-const SB_ANON        = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-const GITHUB_TOKEN   = Deno.env.get('GITHUB_TOKEN') ?? '';
-const GITHUB_REPO    = Deno.env.get('GITHUB_REPO') ?? 'defancientmus-gif/razberemsia';
+const GROQ_KEY        = Deno.env.get('GROQ_API_KEY') ?? '';
+const SB_URL          = Deno.env.get('SUPABASE_URL') ?? '';
+const SB_ANON         = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const GITHUB_TOKEN    = Deno.env.get('GITHUB_TOKEN') ?? '';
+const GITHUB_REPO     = Deno.env.get('GITHUB_REPO') ?? 'defancientmus-gif/razberemsia';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -369,6 +370,242 @@ _Сохранено автоматически приложением «Разб
     if (!noteId) return json({ error: 'Missing noteId' }, 400);
     await sb.from('reminders').delete().eq('user_id', user.id).eq('note_id', noteId);
     return json({ ok: true });
+  }
+
+  // ── AGENT QUERY ──
+  if (action === 'agent_query') {
+    const { text, memoryContext, alternatives } = payload ?? {};
+    if (typeof text !== 'string' || text.trim().length < 1) return json({ error: 'Empty query' }, 400);
+    const safeText = text.trim().slice(0, 800);
+
+    // Альтернативные варианты распознавания речи (топ-3 от браузера)
+    const altsBlock = Array.isArray(alternatives) && alternatives.length > 0
+      ? `\nАльтернативные варианты распознавания: ${alternatives.filter(a => typeof a==='string' && a !== text).slice(0,2).map(a=>`«${a}»`).join(', ')}\n(Если основной текст странный или не имеет смысла — используй альтернативы для понимания намерения.)\n`
+      : '';
+
+    const memLines = normalizeArray(memoryContext, 5).map((s) => (s as string).slice(0, 120));
+    const memBlock = memLines.length > 0
+      ? `\nПомни — человек раньше записывал:\n${memLines.join('\n')}\n`
+      : '';
+
+    const { recentNotes, userFolders } = payload ?? {};
+    type NoteCtx = {index:number,title:string,body:string,hasReminder?:boolean,isRecurring?:boolean,reminderTime?:string|null};
+    // Форматируем время напоминания для DAILY_BRIEFING
+    const todayStr2 = new Date().toISOString().slice(0,10);
+    const notesLines = Array.isArray(recentNotes) && recentNotes.length > 0
+      ? '\nЗаметки пользователя:\n' + (recentNotes as NoteCtx[]).map(n => {
+          let timeLabel = '';
+          if(n.isRecurring) timeLabel = ' 🔁';
+          else if(n.reminderTime){
+            const isToday = String(n.reminderTime).startsWith(todayStr2);
+            const timeStr = String(n.reminderTime).slice(11,16);
+            timeLabel = isToday ? ` 🔔 сегодня ${timeStr}` : ` 🔔 ${n.reminderTime.slice(0,10)} ${timeStr}`;
+          }
+          return `[${n.index}] «${n.title}»${timeLabel}${n.body?' — '+n.body:''}`;
+        }).join('\n') + '\n'
+      : '';
+
+    const foldersBlock = Array.isArray(userFolders) && (userFolders as string[]).length > 0
+      ? `\n═══ РАЗДЕЛЫ ПОЛЬЗОВАТЕЛЯ ═══\nПользователь создал разделы: ${(userFolders as string[]).join(', ')}\nПри CREATE_NOTE — если тема ЯВНО совпадает с разделом, добавь в params поле "section": "ИмяРаздела"\nСовпадение должно быть чётким (финансы/деньги → Финансы, врач/здоровье → Здоровье). При малейшем сомнении — НЕ ставить section.\n`
+      : '';
+
+    const prompt = `Ты голосовой агент «Разберёмся». Выполни запрос и верни JSON.
+
+═══ ДОСТУПНЫЕ ДЕЙСТВИЯ ═══
+CREATE_NOTE       — записать / запомнить / создать заметку (ДЕЙСТВИЕ ПО УМОЛЧАНИЮ при сомнениях)
+SET_REMINDER      — одно напоминание в конкретное время
+SET_RECURRING     — повторяющееся напоминание (каждый час / день)
+DELETE_REMINDER   — удалить / отменить напоминание (оставить заметку)
+READ_NOTE_ALOUD   — прочитай / озвучь заметку
+DAILY_BRIEFING    — что у меня сегодня / расскажи что запланировано / сводка дня
+MAKE_PLAN         — составь план / маршрут / список дел по заметкам
+FIND_NOTES        — найди / покажи / ищи заметки по теме или тексту
+DELETE_NOTE       — удалить заметку в корзину
+CLARIFY           — запрос размытый, нужно уточнить
+CREATE_TAG_FOLDER — ТОЛЬКО если явно сказано «папку», «раздел» или «категорию»
+TAG_NOTE          — добавить тег к заметке (только если явно упомянуты «тег», «папка», «категория»)
+OPEN_NOTE         — открыть / показать заметку
+ANALYZE_NOTE      — проанализировать заметку через AI
+QUESTION          — ответить на вопрос
+FIND_DOCTOR       — найти врача / клинику
+
+═══ ФОРМАТ ОТВЕТА ═══
+Верни ТОЛЬКО JSON без markdown:
+{
+  "actions": [
+    {"intent": "ACTION", "params": {...}}
+  ],
+  "response": "тёплый ответ что сделано, одно предложение",
+  "options": []
+}
+
+ВАЖНО: "options" — всегда в корне JSON, никогда не внутри params!
+Для CLARIFY пример:
+{
+  "actions": [{"intent": "CLARIFY", "params": {}}],
+  "response": "Уточни когда напомнить?",
+  "options": [
+    {"label": "Через час", "query": "напомни [что] через час"},
+    {"label": "Сегодня вечером", "query": "напомни [что] сегодня в 19:00"},
+    {"label": "Завтра утром", "query": "напомни [что] завтра в 9:00"},
+    {"label": "Выбрать время", "query": "напомни [что] — укажи время"}
+  ]
+}
+
+═══ ПАРАМЕТРЫ ПО ДЕЙСТВИЯМ ═══
+CREATE_NOTE:       {"title": "заголовок", "body": "текст", "section": "ИмяРаздела (опционально)"}
+SET_REMINDER:      {"title": "текст", "when": "описание времени"}
+SET_RECURRING:     {"title": "текст", "times": ["09:00","13:00"], "days": "daily"}
+CREATE_TAG_FOLDER:  {"tag": "название_строчными", "label": "Название"}
+TAG_NOTE:           {"tag": "название_строчными", "label": "Название", "noteIndex": 0}
+OPEN_NOTE:          {"noteIndex": 0}
+ANALYZE_NOTE:       {"noteIndex": 0}
+DELETE_REMINDER:    {"noteIndex": 0} или {"pattern": "пить воду", "all": true}
+DELETE_NOTE:        {"noteIndex": 0} или {"pattern": "пить воду", "all": true}
+CLARIFY:            {} — options в корне JSON (см. пример формата выше!)
+FIND_DOCTOR:        {"specialty": "специальность"}
+READ_NOTE_ALOUD:   {"noteIndex": 0}
+DAILY_BRIEFING:    {}
+MAKE_PLAN:         {"focus": "кратко о чём план", "title": "заголовок плана"}
+FIND_NOTES:        {"query": "поисковый запрос"}
+
+noteIndex: 0 = последняя заметка. "all": true + "pattern" — найти все совпадения по названию.
+Для "удали напоминание пить воду" → DELETE_REMINDER с pattern.
+Для "удали заметку пить воду" → DELETE_NOTE с pattern.
+Для "удали все напоминания пить воду" → DELETE_REMINDER, all: true, pattern: "пить воду".
+
+═══ ПРАВИЛА SET_RECURRING (ВАЖНО) ═══
+SET_RECURRING — для ЛЮБОГО повторяющегося напоминания. НИКОГДА не делай несколько SET_REMINDER вместо одного SET_RECURRING.
+"times" — массив ВСЕХ слотов в течение дня (бодрствующие часы: 08:00–22:00):
+  "каждые 2 часа" → times: ["08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"]
+  "каждый час"    → times: ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"]
+  "каждые 3 часа" → times: ["09:00","12:00","15:00","18:00","21:00"]
+  "каждые 4 часа" → times: ["08:00","12:00","16:00","20:00"]
+  "утром и вечером" → times: ["08:00","20:00"]
+  "три раза в день" → times: ["09:00","14:00","20:00"]
+  "каждый день в 9" → times: ["09:00"]
+НЕ выбирай слоты от текущего времени — всегда генерируй полный суточный ритм.
+
+═══ ЖЁСТКИЕ ПРАВИЛА ПАПОК ═══
+CREATE_TAG_FOLDER и TAG_NOTE — ТОЛЬКО при явном упоминании слов: «папку», «папка», «раздел», «категорию», «тег», «ярлык».
+Если этих слов нет — НИКОГДА не создавай папку. Используй CREATE_NOTE или CLARIFY.
+Примеры ошибок которых нельзя делать:
+— "напомни про врача" → НЕ создавать папку «врач», а SET_REMINDER или CLARIFY
+— "запиши встречу с клиентом" → НЕ CREATE_TAG_FOLDER, а CREATE_NOTE
+— "дела на завтра" → НЕ создавать папку «дела», а CREATE_NOTE
+
+═══ ПРАВИЛА ПРИ ПЛОХОМ РАСПОЗНАВАНИИ ═══
+Голосовой ввод может ошибаться. Если запрос странный — попробуй понять смысл по контексту и альтернативам.
+Принцип: «записать / запомнить / напомни» + существительное → скорее всего CREATE_NOTE или SET_REMINDER.
+Если смысл совсем непонятен — CLARIFY, НЕ CREATE_TAG_FOLDER.
+
+═══ ПРАВИЛА МНОЖЕСТВЕННЫХ ДЕЙСТВИЙ ═══
+Используй несколько действий в "actions" когда пользователь просит сделать несколько вещей сразу:
+— "создай папку X и добавь туда заметку" → [CREATE_TAG_FOLDER, TAG_NOTE]
+— "запиши и напомни мне в 18:00" → [CREATE_NOTE, SET_REMINDER с noteIndex новой заметки]
+— "открой и проанализируй" → [OPEN_NOTE, ANALYZE_NOTE]
+
+═══ ПРАВИЛА УТОЧНЕНИЯ ═══
+CLARIFY когда: "напоминай", "каждый день", "регулярно" без конкретики по времени.
+НЕ делай CLARIFY если ритм понятен ("каждые 2 часа", "каждый день в 9" — это уже конкретно).
+Для "напомни позвонить врачу" без времени — CLARIFY с 4 вариантами времени:
+  options: [
+    {"label": "Через час", "query": "напомни позвонить врачу через час"},
+    {"label": "Сегодня вечером", "query": "напомни позвонить врачу сегодня вечером в 19:00"},
+    {"label": "Завтра утром", "query": "напомни позвонить врачу завтра утром в 9:00"},
+    {"label": "Выбрать время", "query": "напомни позвонить врачу — укажи время"}
+  ]
+options: 3-4 варианта, query — полная готовая команда.
+НЕ давай советов по здоровью — только помогай настроить напоминание.
+
+═══ ПРАВИЛА ДЛЯ НОВЫХ ДЕЙСТВИЙ ═══
+READ_NOTE_ALOUD: noteIndex = номер заметки из списка. Ответ: "Озвучиваю: «Название»".
+DAILY_BRIEFING: посмотри на заметки с полем reminderTime — это сегодняшние планы. Ответ: дружеская сводка "Сегодня у вас: ..." или "На сегодня ничего не запланировано". Кратко, 3-5 предложений.
+MAKE_PLAN: используй тела заметок как контекст и составь конкретный план или маршрут. Ответ = сам план (список шагов или пунктов маршрута). Не говори "вот план", сразу давай содержание. До 300 слов. Тёплый, практичный тон.
+${foldersBlock}${memBlock}${notesLines}${altsBlock}
+Запрос пользователя: «${safeText}»`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: ANTHROPIC_MODEL, max_tokens: 700, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) return json({ error: data?.error?.message || 'Anthropic error' }, res.status);
+
+    const raw    = data.content?.[0]?.text ?? '{}';
+    const parsed = parseJsonObject(raw);
+    if (!parsed) return json({ error: 'AI returned invalid response' }, 502);
+
+    const options = Array.isArray(parsed.options)
+      ? parsed.options.filter((o: unknown) => o && typeof (o as Record<string,unknown>).label === 'string').slice(0, 4)
+      : [];
+
+    // Поддержка нового формата actions[] и старого формата intent/params
+    type Action = { intent: string; params: Record<string, unknown> };
+    let actions: Action[] = [];
+    if (Array.isArray(parsed.actions) && parsed.actions.length > 0) {
+      actions = parsed.actions
+        .filter((a: unknown) => a && typeof (a as Action).intent === 'string')
+        .map((a: Action) => ({ intent: a.intent.trim(), params: a.params || {} }))
+        .slice(0, 5);
+    } else if (typeof parsed.intent === 'string') {
+      // Старый формат — оборачиваем в массив
+      actions = [{ intent: parsed.intent.trim(), params: parsed.params || {} }];
+    }
+    if (!actions.length) actions = [{ intent: 'QUESTION', params: {} }];
+
+    return json({
+      // Обратная совместимость
+      intent:   actions[0].intent,
+      params:   actions[0].params,
+      // Новый формат
+      actions,
+      response: typeof parsed.response === 'string' ? parsed.response.trim() : '',
+      options,
+    });
+  }
+
+  // ── TRANSCRIBE — Groq Whisper ──
+  if (action === 'transcribe') {
+    if (!GROQ_KEY) return json({ error: 'GROQ_API_KEY not configured' }, 500);
+
+    const { audio_base64, mime_type } = payload ?? {};
+    if (typeof audio_base64 !== 'string' || audio_base64.length < 100) {
+      return json({ error: 'No audio data' }, 400);
+    }
+
+    // base64 → Uint8Array
+    const binaryStr = atob(audio_base64);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+    // Определяем расширение по MIME-типу (Groq требует расширение в имени файла)
+    const safeType = typeof mime_type === 'string' ? mime_type : 'audio/webm';
+    const ext = safeType.includes('mp4') || safeType.includes('m4a') ? 'm4a'
+              : safeType.includes('ogg') ? 'ogg'
+              : 'webm';
+
+    const form = new FormData();
+    form.append('file', new File([bytes], `audio.${ext}`, { type: safeType }));
+    form.append('model', 'whisper-large-v3-turbo');
+    form.append('language', 'ru');
+    form.append('response_format', 'json');
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
+      body: form,
+    });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      console.error('Groq transcription error:', errText);
+      return json({ error: 'Transcription failed' }, 500);
+    }
+
+    const result = await groqRes.json();
+    return json({ text: (result.text ?? '').trim() });
   }
 
   return json({ error: 'Unknown action' }, 400);
