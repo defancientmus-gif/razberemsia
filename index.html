@@ -767,20 +767,21 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 @media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
 
 /* ── HOME ACTION ROW ── */
-.home-act-row{display:flex;align-items:center;gap:6px;margin-top:8px;overflow:visible;}
-/* Боковые кнопки: видимые на любом фоне */
+.home-act-row{display:flex;align-items:flex-end;gap:8px;overflow:visible;}
+/* Боковые кнопки — матовый хрусталь, спокойнее центра */
 .home-act-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
-  padding:12px 6px;border-radius:16px;border:none;cursor:pointer;
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:11px 6px 10px;border-radius:20px;border:none;cursor:pointer;
   font-family:var(--sys);-webkit-appearance:none;
-  background:oklch(1 0 0/0.70);
-  box-shadow:0 1px 4px oklch(0 0 0/0.07),inset 0 1px 0 oklch(1 0 0/0.80);
-  border:0.5px solid oklch(0.82 0.04 210/0.70);
-  transition:transform .1s;
+  background:linear-gradient(155deg,oklch(1 0 0/.70),oklch(0.98 0.008 215/.55));
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid oklch(0.94 0.01 210/.60);
+  box-shadow:0 2px 8px oklch(0 0 0/.06),inset 0 1.5px 0 oklch(1 0 0/.85);
+  transition:transform .1s,box-shadow .1s;
 }
-.home-act-btn:active{transform:scale(.94);}
-.home-act-btn svg{width:22px;height:22px;stroke:oklch(0.38 0.10 220);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.home-act-btn span{font-size:10px;font-weight:600;color:oklch(0.38 0.10 220);letter-spacing:.01em;}
+.home-act-btn:active{transform:scale(.93);box-shadow:0 1px 4px oklch(0 0 0/.06),inset 0 1px 0 oklch(1 0 0/.75);}
+.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.40 0.09 220);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.home-act-btn span{font-size:10px;font-weight:600;color:oklch(0.42 0.08 220);letter-spacing:.02em;text-transform:uppercase;}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.62 0.22 25);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
 /* ── ПОРТАЛ РАЗБЕРЁМСЯ ── liquid glass agent ── */
@@ -991,57 +992,95 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 }
 
 /* ── NEW NOTE BUTTON (wide, hold=voice) ── */
+/* ── ЦЕНТРАЛЬНАЯ КНОПКА — матовый хрусталь, поднята над баром ── */
 .new-note-btn{
-  width:100%;display:flex;align-items:center;justify-content:center;gap:12px;
-  padding:18px 24px;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
-  border-radius:22px;
-  background:
-    radial-gradient(ellipse 90% 55% at 28% 20%, oklch(1 0 0 / 0.60) 0%, transparent 55%),
-    oklch(0.95 0.020 210);
-  border:1px solid oklch(0.90 0.020 210 / 0.70);
+  flex:0 0 84px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:15px 8px 12px;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
+  border-radius:24px;
+  background:linear-gradient(148deg,oklch(1 0 0/.82),oklch(0.96 0.022 210/.68));
+  backdrop-filter:blur(14px) saturate(1.3);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border:1px solid oklch(0.95 0.025 210/.78);
   box-shadow:
-    0 4px 20px -6px oklch(0 0 0 / 0.07),
-    inset 0 1px 0 oklch(1 0 0 / 0.50);
-  transition:background .25s,border-color .25s,box-shadow .25s,transform .15s;
+    0 12px 36px oklch(0.52 0.12 210/.22),
+    0 2px 8px oklch(0 0 0/.06),
+    inset 0 2px 0 oklch(1 0 0/.95);
+  transform:translateY(-14px);
   position:relative;overflow:hidden;-webkit-touch-callout:none;
+  animation:nnb-ambient 3.8s ease-in-out infinite;
+  transition:transform .14s,box-shadow .14s;
+  z-index:5;
 }
-.new-note-btn::before{content:'';position:absolute;top:10px;left:20px;width:28px;height:14px;border-radius:50%;background:oklch(1 0 0 / 0.50);transform:rotate(-18deg);filter:blur(1.5px);pointer-events:none;}
+/* Блик хрусталя — верхний левый */
+.new-note-btn::before{
+  content:'';position:absolute;top:8px;left:14px;
+  width:22px;height:9px;border-radius:50%;
+  background:oklch(1 0 0/0.60);
+  transform:rotate(-22deg);filter:blur(2px);
+  pointer-events:none;
+}
+/* Фоновое свечение кнопки */
+.new-note-btn::after{
+  content:'';position:absolute;bottom:-18px;left:50%;
+  width:56px;height:20px;
+  background:oklch(0.52 0.14 210/0.18);
+  border-radius:50%;filter:blur(10px);
+  transform:translateX(-50%);
+  pointer-events:none;
+  animation:nnb-glow-flicker 3.8s ease-in-out infinite;
+}
+@keyframes nnb-ambient{
+  0%,100%{box-shadow:0 12px 36px oklch(0.52 0.12 210/.20),0 2px 8px oklch(0 0 0/.06),inset 0 2px 0 oklch(1 0 0/.95);}
+  50%{box-shadow:0 14px 42px oklch(0.52 0.14 210/.32),0 2px 10px oklch(0 0 0/.06),inset 0 2px 0 oklch(1 0 0/.95);}
+}
+@keyframes nnb-glow-flicker{
+  0%,100%{opacity:.8;transform:translateX(-50%) scaleX(1);}
+  50%{opacity:1;transform:translateX(-50%) scaleX(1.15);}
+}
+/* Запись — удержание */
 .new-note-btn.holding{
-  background:radial-gradient(circle at 25% 30%, oklch(1 0 0 / 0.45) 0%, transparent 50%),oklch(0.95 0.06 25 / 0.45);
-  border-color:oklch(0.65 0.18 25 / 0.55);
-  transform:scale(0.97);
+  background:linear-gradient(148deg,oklch(1 0 0/.72),oklch(0.96 0.08 25/.52));
+  border-color:oklch(0.65 0.18 25/.60);
+  transform:translateY(-14px) scale(0.96);
   animation:rec-border-pulse 1.2s ease-in-out infinite;
 }
+/* Хендсфри */
 .new-note-btn.handsfree{
-  background:oklch(0.93 0.08 25 / 0.40);
-  border-color:oklch(0.62 0.20 25 / 0.70);
+  background:linear-gradient(148deg,oklch(1 0 0/.68),oklch(0.94 0.10 25/.48));
+  border-color:oklch(0.62 0.20 25/.72);
+  transform:translateY(-14px);
   animation:rec-border-pulse 0.9s ease-in-out infinite;
 }
 @keyframes rec-border-pulse{
-  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25 / 0.18), 0 0 0 5px oklch(0.65 0.18 25 / 0.06), 0 6px 28px -4px oklch(0.55 0.20 25 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.18);}
-  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25 / 0.30), 0 0 0 8px oklch(0.65 0.18 25 / 0.10), 0 6px 28px -4px oklch(0.55 0.20 25 / 0.30), inset 0 1px 0 oklch(1 0 0 / 0.18);}
+  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25/.22),0 0 0 6px oklch(0.65 0.18 25/.08),0 10px 30px oklch(0.55 0.20 25/.22),inset 0 2px 0 oklch(1 0 0/.80);}
+  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25/.38),0 0 0 9px oklch(0.65 0.18 25/.12),0 12px 36px oklch(0.55 0.20 25/.35),inset 0 2px 0 oklch(1 0 0/.80);}
 }
-.new-note-btn:not(.holding):not(.handsfree):active{transform:scale(.98);}
-.nnb-feather{display:flex;align-items:center;}
-.nnb-feather svg{width:20px;height:20px;stroke:var(--accent-d);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s;filter:drop-shadow(0 2px 5px oklch(0.54 0.13 210 / 0.20));}
-.new-note-btn.holding .nnb-feather svg,.new-note-btn.handsfree .nnb-feather svg{stroke:oklch(0.45 0.18 25);}
-.nnb-text{font-size:16px;font-weight:600;color:var(--fg);transition:color .25s;letter-spacing:-.2px;}
-.new-note-btn.holding .nnb-text,.new-note-btn.handsfree .nnb-text{color:oklch(0.35 0.14 25);}
-.nnb-hint{font-size:12px;color:oklch(0.52 0.012 210 / 0.38);transition:opacity .25s;}
-.new-note-btn.holding .nnb-hint,.new-note-btn.handsfree .nnb-hint{opacity:0;}
-.nnb-mic svg{width:15px;height:15px;stroke:oklch(0.52 0.012 210 / 0.40);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s;}
-.new-note-btn.holding .nnb-mic svg,.new-note-btn.handsfree .nnb-mic svg{stroke:oklch(0.50 0.18 25 / 0.80);}
-.nnb-lock{display:none;align-items:center;gap:4px;}
-.new-note-btn.handsfree .nnb-lock{display:flex;}
-.nnb-lock svg{width:13px;height:13px;stroke:oklch(0.45 0.18 25 / 0.80);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.nnb-lock-txt{font-size:11px;color:oklch(0.45 0.14 25 / 0.80);}
-
-/* Подсказка «потяни вверх» во время записи */
-.nnb-up-arrow{display:none;align-items:center;gap:3px;font-size:11px;font-weight:600;color:oklch(0.45 0.14 25 / 0.85);}
+.new-note-btn:not(.holding):not(.handsfree):active{
+  transform:translateY(-14px) scale(.95);
+  animation:none;
+}
+/* Иконка + искра ИИ */
+.nnb-ico{display:flex;align-items:center;justify-content:center;position:relative;}
+.nnb-ico svg{width:22px;height:22px;stroke:oklch(0.38 0.12 220);stroke-width:1.65;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s;filter:drop-shadow(0 1px 4px oklch(0.52 0.12 210/0.18));}
+.new-note-btn.holding .nnb-ico svg,.new-note-btn.handsfree .nnb-ico svg{stroke:oklch(0.42 0.18 25);}
+.nnb-spark{position:absolute;top:-5px;right:-7px;font-size:10px;color:oklch(0.52 0.14 210);line-height:1;animation:spark-spin 6s linear infinite;pointer-events:none;}
+@keyframes spark-spin{0%{transform:rotate(0deg) scale(1);opacity:.65;}50%{transform:rotate(180deg) scale(1.2);opacity:1;}100%{transform:rotate(360deg) scale(1);opacity:.65;}}
+.new-note-btn.holding .nnb-spark,.new-note-btn.handsfree .nnb-spark{color:oklch(0.50 0.18 25);animation:none;}
+/* Текст */
+.nnb-text{font-size:11px;font-weight:700;color:oklch(0.38 0.08 220);letter-spacing:.03em;text-transform:uppercase;transition:color .25s;}
+.new-note-btn.holding .nnb-text,.new-note-btn.handsfree .nnb-text{color:oklch(0.38 0.14 25);}
+/* Стрелка «потяни вверх» */
+.nnb-up-arrow{display:none;align-items:center;gap:2px;font-size:10px;font-weight:600;color:oklch(0.42 0.14 25/.85);}
 .new-note-btn.holding .nnb-up-arrow{display:flex;animation:swipe-up-bounce .55s ease-in-out infinite;}
 .new-note-btn.handsfree .nnb-up-arrow{display:none;}
-.nnb-up-arrow svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.nnb-up-arrow svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 @keyframes swipe-up-bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+/* Хендсфри замок */
+.nnb-lock{display:none;align-items:center;gap:3px;}
+.new-note-btn.handsfree .nnb-lock{display:flex;}
+.nnb-lock svg{width:12px;height:12px;stroke:oklch(0.42 0.14 25/.82);stroke-width:2;fill:none;stroke-linecap:round;}
+.nnb-lock-txt{font-size:10px;color:oklch(0.42 0.14 25/.82);}
 
 .home-voice-label{font-size:11px;color:var(--fg-l);text-align:center;margin-top:5px;letter-spacing:.01em;transition:color .3s;min-height:16px;}
 .home-voice-label.rec{color:oklch(0.50 0.16 25 / 0.70);}
@@ -2583,23 +2622,17 @@ header{padding:15px 16px 9px;}
   box-shadow:none;padding:6px 14px max(env(safe-area-inset-bottom,10px),10px);
 }
 .new-note-btn{
-  border-radius:18px;padding:10px 20px;
-  background:linear-gradient(158deg,oklch(1 0 0 / .60),oklch(0.96 0.018 207 / .46));
-  border-color:oklch(1 0 0 / .62);
+  flex:0 0 96px;transform:translateY(-10px);
+  background:linear-gradient(148deg,oklch(1 0 0/.72),oklch(0.96 0.020 210/.56));
+  border-color:oklch(1 0 0/.65);
 }
 .new-note-btn::before{display:none;}
-.nnb-text{font-size:16px;}
-.home-act-row{gap:8px;margin-top:6px;max-width:360px;margin-left:auto;margin-right:auto;}
+.home-act-row{gap:10px;margin-top:4px;max-width:380px;margin-left:auto;margin-right:auto;}
 .home-act-btn{
-  flex:0 0 120px;padding:9px 6px;height:auto;border-radius:16px;justify-content:center;
-  background:linear-gradient(160deg,oklch(1 0 0 / .60),oklch(0.96 0.014 210 / .44));
-  border:1px solid oklch(1 0 0 / .58);box-shadow:inset 0 1px 0 oklch(1 0 0 / .80);
+  flex:0 0 110px;padding:10px 8px;border-radius:18px;
+  background:linear-gradient(155deg,oklch(1 0 0/.64),oklch(0.97 0.008 215/.50));
+  border:1px solid oklch(1 0 0/.58);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.85);
 }
-.home-act-btn span{font-size:11px;color:var(--fg-m);}
-.home-act-btn svg{stroke:var(--accent-d);width:20px;height:20px;}
-.rz-portal-slot{height:auto;flex:1;max-width:100px;}
-.rz-portal-wrap{position:relative;top:auto;left:auto;transform:none;height:100%;justify-content:center;align-items:center;}
-.rz-portal-ball{width:64px;height:64px;}
 .rz-portal{
   background:
     radial-gradient(circle at 30% 22%, oklch(1 0 0 / .94), transparent 22%),
@@ -3165,35 +3198,28 @@ header{padding:15px 16px 9px;}
         </div>
         <!-- Notification cards feed -->
         <div class="home-feed-wrap" id="home-feed"></div>
-        <!-- Bottom bar -->
+        <!-- Bottom bar — 3 кнопки: Голос | Заметка↑ | Напомнить -->
         <div class="home-bar">
-          <!-- Широкая кнопка новой заметки -->
-          <button class="new-note-btn" id="new-note-btn"
-            oncontextmenu="return false"
-            onpointerdown="nnbPointerDown(event)"
-            onpointerup="nnbPointerUp(event)"
-            onpointercancel="nnbPointerCancel(event)"
-            onpointermove="nnbPointerMove(event)">
-            <span class="nnb-text">Новая заметка</span>
-            <span class="nnb-up-arrow"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>замок</span>
-            <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
-          </button>
-          <!-- 2 боковых действия + пространство под портал -->
           <div class="home-act-row">
             <button class="home-act-btn" onclick="toggleVoice()">
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               <span>Голос</span>
             </button>
-            <div class="rz-portal-slot">
-              <div class="rz-portal-wrap">
-                <div class="rz-portal-ball">
-                  <button class="rz-portal" onclick="agentTap()" aria-label="Разберёмся">
-                    <span class="rz-portal-glass" aria-hidden="true"></span>
-                  </button>
-                </div>
-                <span class="rz-portal-lbl">Разберёмся</span>
-              </div>
-            </div>
+            <!-- Центральная кнопка: тап = заметка, удержи = голосовой ввод -->
+            <button class="new-note-btn" id="new-note-btn"
+              oncontextmenu="return false"
+              onpointerdown="nnbPointerDown(event)"
+              onpointerup="nnbPointerUp(event)"
+              onpointercancel="nnbPointerCancel(event)"
+              onpointermove="nnbPointerMove(event)">
+              <span class="nnb-ico">
+                <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span class="nnb-spark">✦</span>
+              </span>
+              <span class="nnb-text">Заметка</span>
+              <span class="nnb-up-arrow"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
+              <span class="nnb-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="nnb-lock-txt">хендсфри</span></span>
+            </button>
             <button class="home-act-btn" onclick="openReminderPanel()">
               <span style="position:relative;display:inline-flex;">
                 <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
