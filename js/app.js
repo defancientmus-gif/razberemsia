@@ -2781,7 +2781,8 @@ function _applyCompactFeedState(){
   const btn=document.getElementById('compact-feed-btn');
   if(wrap){if(_homeFeedCompact)wrap.classList.add('compact');else wrap.classList.remove('compact');}
   if(btn)btn.classList.toggle('active',_homeFeedCompact);
-}nction _agentInboxReceiver(destination){
+}
+function _agentInboxReceiver(destination){
   const count=getNotes().filter(note=>getFiledFolderName(note)===destination.toLowerCase()).length;
   return `<div class="agent-receiver">
     <span class="agent-receiver-mark">&darr;</span>
