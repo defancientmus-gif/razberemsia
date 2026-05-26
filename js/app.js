@@ -158,6 +158,51 @@ function isMissingAiMemoryColumn(error){
   const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
   return msg.includes('ai_memory')&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
 }
+function _mergeCloudFolders(cloudUserFolders,cloudTagFolders){
+  // Правило: облако побеждает только если непустое.
+  // Если облако вернуло [] (новые колонки с дефолтом) — НЕ перезаписываем локальные данные.
+  if(Array.isArray(cloudUserFolders)){
+    const local=getUserFolders();
+    if(cloudUserFolders.length>0){
+      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(cloudUserFolders));
+    } else if(local.length>0){
+      // Локальные есть, облако пустое — синхронизируем в облако
+      queueCloudSave();
+    }
+  }
+  if(Array.isArray(cloudTagFolders)){
+    const localTags=typeof getTagFolders==='function'?getTagFolders():[];
+    if(cloudTagFolders.length>0){
+      localStorage.setItem('rz_tag_folders',JSON.stringify(cloudTagFolders));
+    } else if(localTags.length>0){
+      queueCloudSave();
+    }
+  }
+  // Если после мёрджа разделы всё ещё пустые — восстанавливаем из тегов заметок
+  const afterMerge=getUserFolders();
+  if(!afterMerge.length){
+    _recoverUserFoldersFromNotes();
+  }
+}
+function _recoverUserFoldersFromNotes(){
+  // Восстанавливает разделы пользователя из тегов _filed_in:ИМЯ в заметках
+  const notes=getNotes();
+  const seen=new Set();
+  const recovered=[];
+  notes.forEach(n=>{
+    const filed=getFiledFolderName(n);
+    if(filed&&!seen.has(filed)){
+      seen.add(filed);
+      const displayName=filed.charAt(0).toUpperCase()+filed.slice(1);
+      recovered.push({name:displayName,createdAt:Date.now(),idx:recovered.length});
+    }
+  });
+  if(recovered.length>0){
+    localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(recovered));
+    console.info('[rz] Восстановлено разделов из заметок:',recovered.length);
+    queueCloudSave();
+  }
+}
 function isMissingFoldersColumns(error){
   const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
   return (msg.includes('user_folders')||msg.includes('tag_folders'))&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
@@ -178,8 +223,9 @@ async function loadCloudData(){
       if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
       if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
       if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-      if(Array.isArray(data.user_folders))localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(data.user_folders));
-      if(Array.isArray(data.tag_folders))localStorage.setItem('rz_tag_folders',JSON.stringify(data.tag_folders));
+      // Папки: облако побеждает только если там что-то есть.
+      // Если облако вернуло [] (новые колонки с дефолтом) — сохраняем локальные данные.
+      _mergeCloudFolders(data.user_folders,data.tag_folders);
       if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
     } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
       await saveCloudNow();
@@ -206,8 +252,7 @@ async function loadCloudData(){
           if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
           if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
           if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-          if(Array.isArray(data.user_folders))localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(data.user_folders));
-          if(Array.isArray(data.tag_folders))localStorage.setItem('rz_tag_folders',JSON.stringify(data.tag_folders));
+          _mergeCloudFolders(data.user_folders,data.tag_folders);
           if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
           loadAll(); // обновляем UI с данными из облака
         }
