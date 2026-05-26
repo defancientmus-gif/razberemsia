@@ -2675,6 +2675,10 @@ let _drillSwipeInited=false;
 let _drillGrid=(()=>{const v=localStorage.getItem('rz_drill_grid');return v!==null?v==='1':true;})();
 let _drillP1Limit=10;
 let _drillHandledSwipe=false; // флаг: drill-свайп обработан, не дублировать в глобальном хендлере
+let _selectMode=false;
+let _selectedNoteIds=new Set();
+let _selectLongPressTimer=null;
+let _selectLongPressNid=null;
 
 function toggleDrillGrid(){
   _drillGrid=!_drillGrid;
@@ -2720,6 +2724,7 @@ function drillGo(level,data){
 
 function drillPickNote(i){
   const n=_drillNotes[i];if(!n)return;
+  if(_selectMode){toggleNoteSelect(n.id);return;}
   // Сразу открываем заметку — уровень 2 пропускаем
   if(n.id)openNoteSheetById(n.id);
   else openNoteSheet(getNotes().findIndex(x=>x===n));
@@ -3142,7 +3147,9 @@ function _drillP1(){
       const sectionStyle=_sectionNoteStyle(n);
       const cardClass=sectionStyle?' section-glass-note':'';
       const bg=sectionStyle?sectionStyle:`background:${_drillCardBg(i,notes.length)};`;
-      h+=`<div class="drill-grid-card${resolved?' resolved':''}${cardClass}" style="${bg}" onclick="drillPickNote(${i})">
+      const selGrid=_selectMode&&_selectedNoteIds.has(n.id);
+      h+=`<div class="drill-grid-card${resolved?' resolved':''}${cardClass}${selGrid?' note-selected':''}" style="${bg}" data-nid="${esc(n.id)}" onclick="drillPickNote(${i})">
+        <div class="note-select-circle${selGrid?' note-sel-checked':''}"></div>
         <div class="drill-grid-title">${esc(n.title)}</div>
         ${preview?`<div class="drill-grid-preview">${esc(preview)}</div>`:''}
         <div class="drill-grid-foot">
@@ -3167,7 +3174,9 @@ function _drillP1(){
       const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
       const sectionStyle=_sectionNoteStyle(n);
       const tagChips=visibleTags.slice(0,3).map(t=>`<span class="drill-note-tag-chip" onclick="event.stopPropagation();drillGo(1,{aiTag:${jsAttr(t)}})">${esc(t)}</span>`).join('');
-      h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}" ${sectionStyle?`style="${sectionStyle}"`:''} onclick="drillPickNote(${i})">
+      const selRow=_selectMode&&_selectedNoteIds.has(n.id);
+      h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}${selRow?' note-selected':''}" ${sectionStyle?`style="${sectionStyle}"`:''} data-nid="${esc(n.id)}" onclick="drillPickNote(${i})">
+        <div class="note-select-circle${selRow?' note-sel-checked':''}"></div>
         <div class="drill-note-body">
           <div class="drill-note-title">${esc(n.title)}</div>
           ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
@@ -3227,6 +3236,7 @@ function _drillInitSwipe(){
   el.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-_drillTouchX;
     if(dx>60&&drillLevel>0){
+      if(_selectMode){_exitSelectMode();return;}
       _drillHandledSwipe=true;
       drillBack();
       // Авто-сброс флага если document handler не успел (edge case)
@@ -3241,6 +3251,155 @@ function _drillInitSwipe(){
       fab.style.display=p1.scrollTop>150?'flex':'none';
     },{passive:true});
   }
+  _drillInitSelect();
+}
+
+// ── Multi-select: long-press → выбор заметок ──
+function _drillInitSelect(){
+  const p1=document.getElementById('drill-p1');if(!p1)return;
+  p1.addEventListener('pointerdown',e=>{
+    const card=e.target.closest('[data-nid]');if(!card)return;
+    if(e.target.closest('.drill-note-tag-chip'))return; // теги не триггерят выбор
+    _selectLongPressNid=card.dataset.nid;
+    _selectLongPressTimer=setTimeout(()=>{
+      _selectLongPressNid=null;
+      _enterSelectMode(card.dataset.nid);
+      if(navigator.vibrate)navigator.vibrate(40);
+    },480);
+  },{passive:true});
+  const cancel=()=>{
+    if(_selectLongPressTimer){clearTimeout(_selectLongPressTimer);_selectLongPressTimer=null;}
+  };
+  p1.addEventListener('pointerup',cancel,{passive:true});
+  p1.addEventListener('pointercancel',cancel,{passive:true});
+  p1.addEventListener('pointermove',e=>{
+    if(_selectLongPressTimer){
+      const r=e.target.closest('[data-nid]');
+      if(!r||r.dataset.nid!==_selectLongPressNid)cancel();
+    }
+  },{passive:true});
+}
+
+function _enterSelectMode(nid){
+  _selectMode=true;
+  _selectedNoteIds=new Set(nid?[nid]:[]);
+  document.getElementById('s-notes')?.classList.add('select-mode');
+  _drillP1();
+  _updateSelectBar();
+  _showMultiselectHint();
+}
+
+function toggleNoteSelect(nid){
+  if(_selectedNoteIds.has(nid))_selectedNoteIds.delete(nid);
+  else _selectedNoteIds.add(nid);
+  // Перекрашиваем карточку без полного ре-рендера
+  document.querySelectorAll(`#drill-p1 [data-nid]`).forEach(el=>{
+    if(el.dataset.nid!==nid)return;
+    const sel=_selectedNoteIds.has(nid);
+    el.classList.toggle('note-selected',sel);
+    const circle=el.querySelector('.note-select-circle');
+    if(circle)circle.classList.toggle('note-sel-checked',sel);
+  });
+  _updateSelectBar();
+}
+
+function _exitSelectMode(){
+  _selectMode=false;
+  _selectedNoteIds=new Set();
+  document.getElementById('s-notes')?.classList.remove('select-mode');
+  _updateSelectBar();
+  _drillP1();
+}
+
+function _updateSelectBar(){
+  const bar=document.getElementById('select-bar');if(!bar)return;
+  bar.style.display=_selectMode?'flex':'none';
+  const lbl=bar.querySelector('.select-bar-count');
+  if(lbl)lbl.textContent=`Выбрано ${_selectedNoteIds.size}`;
+  const btn=bar.querySelector('.select-bar-move');
+  if(btn)btn.disabled=_selectedNoteIds.size===0;
+}
+
+function moveSelectedNotes(){
+  if(!_selectedNoteIds.size)return;
+  _showMoveToSheet();
+}
+
+function _showMoveToSheet(){
+  const existing=document.getElementById('move-to-sheet');
+  if(existing)existing.remove();
+  // Список назначений: разделы пользователя + страйпы
+  const userFolders=typeof getUserFolders==='function'?getUserFolders():[];
+  let opts='';
+  userFolders.forEach(f=>{
+    const col=f.color||'oklch(0.55 0.10 210)';
+    opts+=`<button class="move-to-opt" onclick="_applyMoveTo('user',${jsAttr(f.name)})">
+      <span class="move-to-dot" style="background:${col}"></span>${esc(f.name)}
+    </button>`;
+  });
+  Object.keys(STRIPES).forEach(l=>{
+    if(l==='заметка')return;
+    const col=(STRIPES[l]||{}).color||'oklch(0.55 0.10 220)';
+    const ico=_STRIPE_ICO[l]||'📝';
+    opts+=`<button class="move-to-opt" onclick="_applyMoveTo('stripe',${jsAttr(l)})">
+      <span class="move-to-ico">${ico}</span>${esc(l)}
+    </button>`;
+  });
+  const sheet=document.createElement('div');
+  sheet.id='move-to-sheet';
+  sheet.className='move-to-sheet';
+  sheet.innerHTML=`
+    <div class="move-to-backdrop" onclick="_closeMoveToSheet()"></div>
+    <div class="move-to-panel">
+      <div class="move-to-hdr">Переместить в…</div>
+      <div class="move-to-list">${opts}</div>
+      <button class="move-to-cancel" onclick="_closeMoveToSheet()">Отмена</button>
+    </div>`;
+  document.body.appendChild(sheet);
+  requestAnimationFrame(()=>sheet.classList.add('open'));
+}
+
+function _closeMoveToSheet(){
+  const s=document.getElementById('move-to-sheet');
+  if(!s)return;
+  s.classList.remove('open');
+  setTimeout(()=>s.remove(),280);
+}
+
+function _applyMoveTo(type,value){
+  const notes=getNotes();
+  const ids=new Set(_selectedNoteIds);
+  let changed=false;
+  notes.forEach(n=>{
+    if(!ids.has(n.id))return;
+    if(type==='user'){
+      n.aiTags=(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t));
+      n.aiTags.push(_filedFolderTag(value));
+    } else if(type==='stripe'){
+      n.label=value;
+    }
+    n.updatedAt=Date.now();
+    changed=true;
+  });
+  if(changed)saveNotes(notes);
+  _closeMoveToSheet();
+  setTimeout(()=>{
+    _exitSelectMode();
+    showToast(`Перемещено: ${ids.size}`);
+  },200);
+}
+
+function _showMultiselectHint(){
+  if(localStorage.getItem('rz_multiselect_hint_shown'))return;
+  localStorage.setItem('rz_multiselect_hint_shown','1');
+  const hint=document.createElement('div');
+  hint.className='multiselect-hint';
+  hint.textContent='Тапни на заметку — добавь в выбор';
+  const sn=document.getElementById('s-notes');
+  if(!sn)return;
+  sn.appendChild(hint);
+  requestAnimationFrame(()=>hint.classList.add('show'));
+  setTimeout(()=>{hint.classList.remove('show');setTimeout(()=>hint.remove(),400);},3500);
 }
 
 function renderStatChips(){}

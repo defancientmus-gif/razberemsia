@@ -2389,6 +2389,49 @@ html.dark .bubble{
 /* Scroll-to-top FAB */
 #drill-top-fab{display:none;position:absolute;bottom:24px;right:16px;width:42px;height:42px;border-radius:50%;background:oklch(0.52 0.10 210);color:white;border:none;font-size:20px;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 3px 12px oklch(0 0 0 / 0.18);transition:opacity .2s;-webkit-tap-highlight-color:transparent;}
 #drill-top-fab:active{opacity:.75;}
+
+/* ── Multi-select ── */
+/* Ghost checkbox circle on every note card */
+.note-select-circle{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;border:1.5px solid oklch(0.68 0.06 220/0.35);background:transparent;flex-shrink:0;pointer-events:none;opacity:0;transition:opacity .18s,border-color .18s,background .18s;}
+/* Reveal ghost on hover (desktop) */
+.drill-note-row:hover .note-select-circle,.drill-grid-card:hover .note-select-circle{opacity:0.35;}
+/* In select mode — always visible */
+#s-notes.select-mode .note-select-circle{opacity:1;}
+/* Checked state */
+.note-sel-checked{border-color:oklch(0.52 0.14 210)!important;background:oklch(0.52 0.14 210)!important;opacity:1!important;}
+.note-sel-checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+/* Selected card ring */
+.drill-note-row.note-selected{outline:2px solid oklch(0.52 0.14 210/0.6);outline-offset:-1px;border-radius:16px;}
+.drill-grid-card.note-selected{outline:2px solid oklch(0.52 0.14 210/0.6);outline-offset:-1px;}
+/* Shift card content right when circles visible */
+#s-notes.select-mode .drill-note-body{padding-left:28px;}
+#s-notes.select-mode .drill-grid-title,
+#s-notes.select-mode .drill-grid-preview{padding-left:26px;}
+/* Select action bar */
+.select-bar{position:absolute;bottom:0;left:0;right:0;height:62px;background:oklch(0.17 0.025 220);display:flex;align-items:center;gap:10px;padding:0 16px;z-index:40;box-shadow:0 -2px 20px oklch(0 0 0/0.28);border-top:1px solid oklch(0.30 0.06 220/0.5);}
+.select-bar-count{flex:1;color:oklch(0.95 0.01 210);font-size:15px;font-weight:600;}
+.select-bar-move{background:oklch(0.52 0.14 210);color:#fff;border:none;border-radius:14px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;}
+.select-bar-move:active{opacity:.75;}
+.select-bar-move:disabled{opacity:.4;}
+.select-bar-cancel{background:transparent;color:oklch(0.65 0.06 220);border:1px solid oklch(0.40 0.05 220/0.60);border-radius:14px;padding:9px 16px;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.select-bar-cancel:active{opacity:.7;}
+/* Move-to bottom sheet */
+.move-to-sheet{position:fixed;inset:0;z-index:900;pointer-events:none;}
+.move-to-sheet.open{pointer-events:auto;}
+.move-to-backdrop{position:absolute;inset:0;background:oklch(0 0 0/0);transition:background .28s;}
+.move-to-sheet.open .move-to-backdrop{background:oklch(0 0 0/0.45);}
+.move-to-panel{position:absolute;bottom:0;left:0;right:0;background:oklch(0.14 0.02 210);border-radius:22px 22px 0 0;padding:0 0 env(safe-area-inset-bottom,8px);transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.46,1);}
+.move-to-sheet.open .move-to-panel{transform:translateY(0);}
+.move-to-hdr{padding:20px 20px 10px;font-size:17px;font-weight:700;color:oklch(0.92 0.01 210);}
+.move-to-list{display:flex;flex-direction:column;gap:4px;padding:0 12px;max-height:55vh;overflow-y:auto;}
+.move-to-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;background:oklch(0.19 0.025 220);border:none;border-radius:14px;font-size:15px;font-weight:500;color:oklch(0.90 0.01 220);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:background .12s;}
+.move-to-opt:active{background:oklch(0.24 0.04 220);}
+.move-to-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.move-to-ico{font-size:18px;flex-shrink:0;width:24px;text-align:center;}
+.move-to-cancel{display:block;width:calc(100% - 24px);margin:12px 12px 8px;padding:15px;background:oklch(0.22 0.02 220);border:none;border-radius:16px;font-size:16px;font-weight:600;color:oklch(0.75 0.05 220);cursor:pointer;}
+/* One-time hint tooltip */
+.multiselect-hint{position:absolute;bottom:72px;left:50%;transform:translateX(-50%) translateY(8px);background:oklch(0.20 0.04 220/0.95);color:oklch(0.92 0.01 210);font-size:13px;font-weight:500;padding:8px 18px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;z-index:50;}
+.multiselect-hint.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .drill-note-ai{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:oklch(0.35 0.14 270);background:oklch(0.40 0.14 270/0.10);border:1px solid oklch(0.40 0.14 270/0.20);border-radius:5px;padding:1px 6px;margin-left:auto;}
 .drill-note-bell{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--accent-d);background:oklch(0.52 0.10 210/0.10);border:1px solid oklch(0.52 0.10 210/0.20);border-radius:5px;padding:1px 6px;}
 .drill-note-arr{color:var(--fg-l);font-size:18px;flex-shrink:0;padding-top:1px;}
@@ -3215,6 +3258,12 @@ header{padding:15px 16px 9px;}
       <button id="drill-top-fab" onclick="var p=document.getElementById('drill-p1');p.scrollTop=0;this.style.display='none'" title="Наверх">
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
       </button>
+      <!-- Multi-select action bar -->
+      <div id="select-bar" class="select-bar" style="display:none">
+        <span class="select-bar-count">Выбрано 0</span>
+        <button class="select-bar-move" onclick="moveSelectedNotes()">Переместить</button>
+        <button class="select-bar-cancel" onclick="_exitSelectMode()">Отмена</button>
+      </div>
     </div>
 
     <!-- NOTEPAD -->
