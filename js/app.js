@@ -2633,32 +2633,47 @@ function _drillRender(level){
 function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
   const notes=getNotes();
+  el.innerHTML='';
 
   // "Все заметки" — всегда первым
-  let h=`<button class="drill-sec-row" onclick="drillGo(1,{category:null})">
-    <div class="drill-sec-ico">📋</div>
-    <div class="drill-sec-name">Все заметки</div>
-    <div class="drill-sec-count">${notes.length}</div>
-    <div class="drill-sec-arr">&rsaquo;</div>
-  </button>`;
+  const allBtn=document.createElement('button');
+  allBtn.className='drill-sec-row';
+  allBtn.innerHTML=`<div class="drill-sec-ico">📋</div><div class="drill-sec-name">Все заметки</div><div class="drill-sec-count">${notes.length}</div><div class="drill-sec-arr">&rsaquo;</div>`;
+  allBtn.onclick=()=>drillGo(1,{category:null});
+  el.appendChild(allBtn);
 
   // АРХИВ — пользовательские разделы (постоянные)
   const userFolders=getUserFolders();
   if(userFolders.length){
-    h+=`<div class="drill-group-hdr">Архив</div>`;
+    const archHdr=document.createElement('div');
+    archHdr.className='drill-group-hdr';
+    archHdr.textContent='Архив';
+    el.appendChild(archHdr);
     userFolders.forEach((f,i)=>{
       const folderName=f.name;
       const fNameLow=folderName.toLowerCase();
       const cnt=notes.filter(n=>getFiledFolderName(n)===fNameLow).length;
       const tint=_folderTint(f.idx!==undefined?f.idx:i,'.10');
-      h+=`<div class="drill-sec-row drill-sec-tag user-section-row" style="background:radial-gradient(ellipse 92% 80% at 10% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));" onclick="drillGo(1,{aiTag:${jsAttr(folderName)}})">
-        <div class="drill-sec-ico" style="background:${_folderTint(f.idx!==undefined?f.idx:i,'.14')};font-size:0;"></div>
-        <div class="drill-sec-name">${esc(folderName)}</div>
-        <div class="drill-sec-count">${cnt}</div>
-        <span class="folder-del-btn" title="Удалить раздел" onclick="event.stopPropagation();deleteUserFolder(${jsAttr(folderName)})">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </span>
-      </div>`;
+      const icoTint=_folderTint(f.idx!==undefined?f.idx:i,'.14');
+
+      const wrap=document.createElement('div');
+      wrap.className='drill-row-wrap';
+
+      const delPanel=document.createElement('div');
+      delPanel.className='hf-del-panel';
+      delPanel.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
+      delPanel._onDelete=()=>deleteUserFolder(folderName);
+
+      const row=document.createElement('div');
+      row.className='drill-sec-row drill-sec-tag user-section-row';
+      row.style.cssText=`background:radial-gradient(ellipse 92% 80% at 10% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));`;
+      row.innerHTML=`<div class="drill-sec-ico" style="background:${icoTint};font-size:0;"></div><div class="drill-sec-name">${esc(folderName)}</div><div class="drill-sec-count">${cnt}</div><div class="drill-sec-arr">&rsaquo;</div>`;
+      row.onclick=()=>drillGo(1,{aiTag:folderName});
+
+      _makeSwipeAttach(row,delPanel);
+      wrap.appendChild(delPanel);
+      wrap.appendChild(row);
+      el.appendChild(wrap);
     });
   }
 
@@ -2667,22 +2682,32 @@ function _drillP0(){
   const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
   const aiOnlyFolders=tagFolders.filter(f=>!userFolderNames.includes(f.tag.toLowerCase()));
   if(aiOnlyFolders.length){
-    h+=`<div class="drill-group-hdr">Входящие</div>`;
+    const inboxHdr=document.createElement('div');
+    inboxHdr.className='drill-group-hdr';
+    inboxHdr.textContent='Входящие';
+    el.appendChild(inboxHdr);
     aiOnlyFolders.forEach(f=>{
       const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
-      h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" onclick="drillGo(1,{aiTag:${jsAttr(f.tag)}})">
-        <div class="drill-sec-ico" style="font-size:17px;background:oklch(0.52 0.10 202 / .08);">🏷</div>
-        <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
-        <div class="drill-sec-count">${cnt}</div>
-        <span class="drill-ai-badge">авт.</span>
-        <span class="folder-del-btn" title="Удалить папку" onclick="event.stopPropagation();deleteTagFolder(${JSON.stringify(f.tag)})">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </span>
-      </div>`;
+
+      const wrap=document.createElement('div');
+      wrap.className='drill-row-wrap';
+
+      const delPanel=document.createElement('div');
+      delPanel.className='hf-del-panel';
+      delPanel.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
+      delPanel._onDelete=()=>deleteTagFolder(f.tag);
+
+      const row=document.createElement('div');
+      row.className='drill-sec-row drill-sec-tag drill-folder-ai';
+      row.innerHTML=`<div class="drill-sec-ico" style="font-size:17px;background:oklch(0.52 0.10 202 / .08);">&#x1F3F7;</div><div class="drill-sec-name">${esc(f.label||f.tag)}</div><div class="drill-sec-count">${cnt}</div><span class="drill-ai-badge">авт.</span><div class="drill-sec-arr">&rsaquo;</div>`;
+      row.onclick=()=>drillGo(1,{aiTag:f.tag});
+
+      _makeSwipeAttach(row,delPanel);
+      wrap.appendChild(delPanel);
+      wrap.appendChild(row);
+      el.appendChild(wrap);
     });
   }
-
-  el.innerHTML=h;
 }
 
 function deleteTagFolder(tag){
@@ -5021,7 +5046,9 @@ function _showAgentCardDebounced(intent,response,params,options){
 function _showAgentCard(intent,response,params,options){
   document.getElementById('agent-card')?.remove();
   const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎'};
-  const autoClose=!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD'].includes(intent);
+  const hasOpts=Array.isArray(options)&&options.length>0;
+  // Не закрываем автоматически если есть варианты выбора — пользователь должен успеть нажать
+  const autoClose=!hasOpts&&!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD','CREATE_TAG_FOLDER'].includes(intent);
 
   // ── КНОПКИ НАВИГАЦИИ — ведут к тому что агент только что создал/нашёл ──
   let openBtn='';
@@ -5070,7 +5097,6 @@ function _showAgentCard(intent,response,params,options){
   }
 
   const isClarify=intent==='CLARIFY';
-  const hasOpts=Array.isArray(options)&&options.length;
 
   // Кнопки-опции
   const optBtns=hasOpts

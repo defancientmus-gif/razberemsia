@@ -2254,6 +2254,10 @@ html.dark .bubble{
 .drill-note-arr{color:var(--fg-l);font-size:18px;flex-shrink:0;padding-top:1px;}
 /* ── ИЕРАРХИЯ РАЗДЕЛОВ / ПАПОК ── */
 /* Заголовок группы — разделитель между АРХИВ / ВХОДЯЩИЕ */
+/* Swipe-to-delete обёртка для строк папок/разделов */
+.drill-row-wrap{position:relative;overflow:hidden;border-radius:16px;margin-bottom:6px;}
+.drill-row-wrap .drill-sec-row{border-radius:0;margin-bottom:0;}
+.drill-row-wrap .hf-del-panel{border-radius:0 16px 16px 0;}
 .drill-group-hdr{
   font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:oklch(0.48 0.08 210 / .55);
