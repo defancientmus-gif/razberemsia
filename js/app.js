@@ -3186,12 +3186,19 @@ function _renderAgentInbox(el,notes){
   el.innerHTML=`<div class="agent-inbox">
     <div class="agent-inbox-board"><div class="agent-note-stack">${cards}</div></div>
   </div>`;
-  // Swipe-to-delete на каждой карточке
+  // Swipe-to-delete: оборачиваем каждую карточку в wrapper
+  // Структура: wrapper(overflow:hidden) → [xEl(absolute), card(slides)]
   el.querySelectorAll('.agent-note[data-nid]').forEach(card=>{
     const nid=card.dataset.nid;
+    // Wrapper — держит overflow:hidden, панель и карточка внутри как соседи
+    const wrapper=document.createElement('div');
+    wrapper.className='agent-note-wrap';
+    card.parentNode.insertBefore(wrapper,card);
+    wrapper.appendChild(card);
+    // Панель удаления — позиционируется абсолютно внутри wrapper
     const xEl=document.createElement('div');
     xEl.className='hf-del-panel';
-    xEl.style.borderRadius='0 16px 16px 0';
+    xEl.style.borderRadius='0 19px 19px 0';
     xEl.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
     xEl._onDelete=()=>{
       const all=getNotes();
@@ -3199,9 +3206,9 @@ function _renderAgentInbox(el,notes){
       if(idx>=0){const d=all.splice(idx,1)[0];d._deletedAt=Date.now();const tr=getTrash();tr.unshift(d);if(tr.length>50)tr.pop();saveTrash(tr);saveNotes(all);if(d.reminder)_deleteReminderFromServer(d.id);}
       scheduleAll();loadHomeFeed();loadNotepad();
       showToast('В корзину · можно восстановить');updTrashBadge();
-      _drillP1(); // обновить список без перехода
+      _drillP1();
     };
-    card.appendChild(xEl);
+    wrapper.insertBefore(xEl,card); // панель за карточкой в DOM-порядке
     _makeSwipeAttach(card,xEl);
   });
 }
