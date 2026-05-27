@@ -767,7 +767,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 @media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
 
 /* ── HOME ACTION ROW ── */
-.home-act-row{display:flex;align-items:flex-end;gap:8px;overflow:visible;}
+.home-act-row{display:flex;align-items:center;gap:8px;overflow:visible;}
 /* Боковые кнопки — матовый хрусталь, спокойнее центра */
 .home-act-btn{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -1002,11 +1002,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   -webkit-backdrop-filter:blur(18px) saturate(1.5);
   border:1px solid oklch(0.96 0.022 210/.88);
   box-shadow:
-    0 28px 56px oklch(0.52 0.14 210/.30),
-    0 8px 22px oklch(0 0 0/.10),
-    0 2px 5px oklch(0 0 0/.06),
-    inset 0 2.5px 0 oklch(1 0 0/.98),
-    inset 0 -1px 0 oklch(0.85 0.02 210/.18);
+    0 -5px 20px oklch(0.52 0.14 210/.14),
+    0 3px 8px oklch(0 0 0/.10),
+    inset 0 2.5px 0 oklch(1 0 0/.96),
+    inset 0 -2px 0 oklch(0.82 0.04 210/.22),
+    inset 1.5px 0 0 oklch(1 0 0/.55),
+    inset -1.5px 0 0 oklch(1 0 0/.55);
   transform:perspective(700px) rotateX(-5deg) translateY(-16px);
   position:relative;overflow:hidden;-webkit-touch-callout:none;
   animation:nnb-float 4s ease-in-out infinite;
@@ -1021,24 +1022,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   transform:rotate(-20deg);filter:blur(2.5px);
   pointer-events:none;
 }
-/* Аура — тень от «висящей» кнопки, имитирует глубину */
-.new-note-btn::after{
-  content:'';position:absolute;bottom:-28px;left:50%;
-  width:72px;height:28px;
-  background:oklch(0.52 0.14 210/.22);
-  border-radius:50%;filter:blur(16px);
-  transform:translateX(-50%);
-  pointer-events:none;
-  animation:nnb-aura 4s ease-in-out infinite;
-}
-/* Плавание по Z — меняется и угол и высота, создаётся иллюзия глубины */
+/* ::after не нужен — убран чтобы не течь в backdrop-filter панели */
+.new-note-btn::after{content:none;}
+/* Плавание: только transform + upward glow (не вниз, не в панель) */
 @keyframes nnb-float{
-  0%,100%{transform:perspective(700px) rotateX(-5deg) translateY(-16px);box-shadow:0 28px 56px oklch(0.52 0.14 210/.28),0 8px 22px oklch(0 0 0/.09),0 2px 5px oklch(0 0 0/.05),inset 0 2.5px 0 oklch(1 0 0/.98),inset 0 -1px 0 oklch(0.85 0.02 210/.18);}
-  50%{transform:perspective(700px) rotateX(-6deg) translateY(-20px);box-shadow:0 38px 72px oklch(0.52 0.16 210/.40),0 12px 28px oklch(0 0 0/.09),0 2px 5px oklch(0 0 0/.05),inset 0 2.5px 0 oklch(1 0 0/.98),inset 0 -1px 0 oklch(0.85 0.02 210/.18);}
-}
-@keyframes nnb-aura{
-  0%,100%{opacity:.75;transform:translateX(-50%) scaleX(1.0);}
-  50%{opacity:1;transform:translateX(-50%) scaleX(1.35);}
+  0%,100%{transform:perspective(700px) rotateX(-5deg) translateY(-16px);box-shadow:0 -5px 20px oklch(0.52 0.14 210/.12),0 3px 8px oklch(0 0 0/.09),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
+  50%{transform:perspective(700px) rotateX(-6deg) translateY(-20px);box-shadow:0 -10px 32px oklch(0.52 0.16 210/.22),0 3px 8px oklch(0 0 0/.09),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
 }
 /* Агент слушает — удержание */
 .new-note-btn.holding{
@@ -1048,8 +1037,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   animation:rec-border-pulse 1.1s ease-in-out infinite;
 }
 @keyframes rec-border-pulse{
-  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25/.24),0 0 0 7px oklch(0.65 0.18 25/.09),0 20px 44px oklch(0.55 0.20 25/.26),inset 0 2.5px 0 oklch(1 0 0/.85);}
-  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25/.44),0 0 0 11px oklch(0.65 0.18 25/.14),0 24px 52px oklch(0.55 0.20 25/.42),inset 0 2.5px 0 oklch(1 0 0/.85);}
+  0%,100%{box-shadow:0 0 0 2px oklch(0.65 0.18 25/.24),0 0 0 7px oklch(0.65 0.18 25/.09),0 -4px 14px oklch(0.55 0.20 25/.18),inset 0 2.5px 0 oklch(1 0 0/.85);}
+  50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25/.44),0 0 0 11px oklch(0.65 0.18 25/.14),0 -7px 22px oklch(0.55 0.20 25/.32),inset 0 2.5px 0 oklch(1 0 0/.85);}
 }
 .new-note-btn:not(.holding):active{
   transform:perspective(700px) rotateX(-3deg) translateY(-12px) scale(.96);
@@ -2653,7 +2642,7 @@ header{padding:15px 16px 9px;}
 .new-note-btn::before{display:none;}
 .new-note-btn.holding{transform:perspective(700px) rotateX(-5deg) translateY(-10px) scale(.96)!important;}
 .new-note-btn:not(.holding):active{transform:perspective(700px) rotateX(-3deg) translateY(-7px) scale(.96)!important;}
-.home-act-row{gap:10px;margin-top:4px;max-width:380px;margin-left:auto;margin-right:auto;}
+.home-act-row{gap:10px;margin-top:4px;max-width:380px;margin-left:auto;margin-right:auto;align-items:center;}
 .home-act-btn{
   flex:0 0 110px;padding:10px 8px;border-radius:18px;
   background:linear-gradient(155deg,oklch(1 0 0/.64),oklch(0.97 0.008 215/.50));
