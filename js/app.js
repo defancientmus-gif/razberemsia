@@ -5254,6 +5254,8 @@ function stopHomeVoice(){
 
 // ── VOICE AGENT (portal button) ──
 let _agentRec=null,_agentRecording=false,_agentCollected='';
+let _agentAlts=[];
+let _agentStopWAV=null; // функция остановки AudioContext-записи
 
 function agentTap(){
   // Разблокировка TTS на iOS — должна быть в обработчике жеста
@@ -5265,87 +5267,103 @@ function agentTap(){
   _agentRecording?stopAgentVoice():startAgentVoice();
 }
 
-let _agentAlts=[];
-let _agentMediaRec=null;
-let _agentAudioChunks=[];
-let _agentAudioMime='audio/webm';
-
-// ── AGENT VOICE — Whisper (основной) + Web Speech (fallback) ──
+// ── AGENT VOICE — Yandex SpeechKit (основной) + Groq Whisper (резерв) ──
+// Запись: AudioContext → WAV → единый формат для обоих провайдеров
 function startAgentVoice(){
-  if(_agentRecording||_agentRec||_agentMediaRec)return;
+  if(_agentRecording||_agentRec||_agentStopWAV)return;
   if(!CU){showToast('Сначала войдите в аккаунт');return;}
-  // Используем Whisper если MediaRecorder доступен
-  if(window.MediaRecorder&&navigator.mediaDevices?.getUserMedia){
-    _startAgentVoiceWhisper();
+  if(navigator.mediaDevices?.getUserMedia&&(window.AudioContext||window.webkitAudioContext)){
+    _startAgentVoiceWAV();
   } else {
-    _startAgentVoiceSR();
+    _startAgentVoiceSR(); // абсолютный fallback для очень старых браузеров
   }
 }
 
-async function _startAgentVoiceWhisper(){
+// WAV-энкодер: Float32Array → ArrayBuffer (WAV/PCM)
+function _encodeWAV(samples,sampleRate){
+  const buf=new ArrayBuffer(44+samples.length*2);
+  const v=new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+samples.length*2,true);ws(8,'WAVE');
+  ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sampleRate,true);v.setUint32(28,sampleRate*2,true);
+  v.setUint16(32,2,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,samples.length*2,true);
+  let off=44;
+  for(let i=0;i<samples.length;i++,off+=2){
+    const s=Math.max(-1,Math.min(1,samples[i]));
+    v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);
+  }
+  return buf;
+}
+
+function _bufToBase64(buf){
+  const b=new Uint8Array(buf);let s='';
+  for(let i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);
+  return btoa(s);
+}
+
+async function _startAgentVoiceWAV(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    const mimes=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
-    _agentAudioMime=mimes.find(t=>MediaRecorder.isTypeSupported(t))||'';
-    _agentAudioChunks=[];
-    const opts=_agentAudioMime?{mimeType:_agentAudioMime}:{};
-    _agentMediaRec=new MediaRecorder(stream,opts);
-    if(!_agentAudioMime)_agentAudioMime=_agentMediaRec.mimeType||'audio/webm';
+    const AC=window.AudioContext||window.webkitAudioContext;
+    const ctx=new AC({sampleRate:16000});
+    const actualRate=ctx.sampleRate;
+    const src=ctx.createMediaStreamSource(stream);
+    const proc=ctx.createScriptProcessor(4096,1,1);
+    const gain=ctx.createGain();gain.gain.value=0; // без фидбека в колонки
+    const chunks=[];
+    proc.onaudioprocess=e=>{chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));};
+    src.connect(proc);proc.connect(gain);gain.connect(ctx.destination);
+    _agentRecording=true;_setAgentState('listening');
 
-    _agentMediaRec.ondataavailable=e=>{if(e.data.size>0)_agentAudioChunks.push(e.data);};
+    _agentStopWAV=async()=>{
+      _agentStopWAV=null;
+      proc.disconnect();src.disconnect();stream.getTracks().forEach(t=>t.stop());
+      ctx.close();_agentRecording=false;
 
-    _agentMediaRec.onstop=async()=>{
-      stream.getTracks().forEach(t=>t.stop());
-      const blob=new Blob(_agentAudioChunks,{type:_agentAudioMime});
-      _agentMediaRec=null;_agentRecording=false;
+      const total=chunks.reduce((s,c)=>s+c.length,0);
+      if(total<actualRate*0.3){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
 
-      if(blob.size<500){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
+      const pcm=new Float32Array(total);let off=0;
+      chunks.forEach(c=>{pcm.set(c,off);off+=c.length;});
+      const wav=_encodeWAV(pcm,actualRate);
+      const b64=_bufToBase64(wav);
 
       _setAgentState('transcribing');
       try{
-        // blob → base64
-        const base64=await new Promise((res,rej)=>{
-          const reader=new FileReader();
-          reader.onload=()=>res(reader.result.split(',')[1]);
-          reader.onerror=rej;
-          reader.readAsDataURL(blob);
-        });
         const sess=await sb.auth.getSession();
         const token=sess?.data?.session?.access_token;
         if(!token){showToast('Войдите в аккаунт');_setAgentState('idle');return;}
-
         const res=await fetch(SUPABASE_EDGE_URL,{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({action:'transcribe',payload:{audio_base64:base64,mime_type:_agentAudioMime}})
+          body:JSON.stringify({action:'transcribe',payload:{audio_base64:b64,mime_type:'audio/wav',sample_rate:actualRate}})
         });
         const data=await res.json();
         if(!res.ok||data.error){
-          // Groq недоступен — тихо переходим на встроенное распознавание
-          console.warn('[rz] Groq unavailable, fallback SR:',data.groq_status,data.error);
-          _startAgentVoiceSR();return;
+          console.warn('[rz] transcribe failed:',data.error);
+          showToast('Не удалось распознать — попробуйте ещё раз');
+          _setAgentState('idle');return;
         }
         const text=(data.text||'').trim();
         if(!text){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
-
         showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');
         _processAgentQuery(text,[]);
       }catch(e){
-        console.warn('[rz] Whisper error, fallback SR:',e);
-        _startAgentVoiceSR();
+        console.warn('[rz] transcribe network error:',e);
+        showToast('Нет сети — попробуйте ещё раз');
+        _setAgentState('idle');
       }
     };
-
-    _agentMediaRec.start();
-    _agentRecording=true;
-    _setAgentState('listening');
   }catch(e){
-    console.warn('MediaRecorder unavailable, falling back to SR:',e);
-    _startAgentVoiceSR();
+    console.warn('[rz] AudioContext unavailable:',e);
+    showToast('Нет доступа к микрофону');
+    _setAgentState('idle');
   }
 }
 
-// Fallback: старый Web Speech API
+// Абсолютный fallback: Web Speech API (только если AudioContext недоступен)
 function _startAgentVoiceSR(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Голосовой ввод не поддерживается');return;}
@@ -5368,19 +5386,14 @@ function _startAgentVoiceSR(){
   _agentRec.onend=()=>{
     _agentRecording=false;_agentRec=null;
     const text=_agentCollected.trim();
-    if(text){
-      showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');
-      _processAgentQuery(text,_agentAlts);
-    } else {
-      showToast('Не услышал — попробуйте ещё раз');
-      _setAgentState('idle');
-    }
+    if(text){showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');_processAgentQuery(text,_agentAlts);}
+    else{showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');}
   };
   _agentRec.start();
 }
 
 function stopAgentVoice(){
-  if(_agentMediaRec){try{_agentMediaRec.stop();}catch(e){}}
+  if(_agentStopWAV){_agentStopWAV();}
   else if(_agentRec){try{_agentRec.stop();}catch(e){}}
 }
 
