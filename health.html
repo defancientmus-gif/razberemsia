@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Разберёмся — Здоровье системы</title>
+<style>
+  :root {
+    --bg:        oklch(0.10 0.015 240);
+    --surface:   oklch(0.14 0.018 240);
+    --surface2:  oklch(0.17 0.018 240);
+    --border:    oklch(0.22 0.020 240);
+    --text:      oklch(0.88 0.012 240);
+    --muted:     oklch(0.50 0.015 240);
+    --green:     oklch(0.72 0.18 145);
+    --yellow:    oklch(0.78 0.16 80);
+    --red:       oklch(0.64 0.22 25);
+    --accent:    oklch(0.60 0.18 210);
+    --green-glow:  oklch(0.72 0.18 145 / 0.15);
+    --yellow-glow: oklch(0.78 0.16 80  / 0.15);
+    --red-glow:    oklch(0.64 0.22 25  / 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'SF Pro Text', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 28px 16px 64px;
+  }
+
+  /* ── HEADER ── */
+  .hdr { text-align: center; margin-bottom: 28px; }
+  .hdr-logo { font-size: 13px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .hdr-title { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; color: oklch(0.92 0.015 240); }
+  .hdr-meta {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-top: 10px; padding: 4px 14px; border-radius: 20px;
+    background: oklch(0.60 0.18 210 / 0.12); border: 1px solid oklch(0.60 0.18 210 / 0.30);
+    font-size: 12px; color: var(--accent);
+  }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; color: var(--green);
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 6px var(--green); animation: pulse-g 2s ease-in-out infinite; }
+
+  /* ── LIVE SERVICES PANEL ── */
+  .live-panel {
+    max-width: 680px; margin: 0 auto 32px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px 22px;
+  }
+  .live-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .live-panel-title { font-size: 13px; font-weight: 700; color: oklch(0.70 0.015 240); text-transform: uppercase; letter-spacing: 0.6px; }
+  .refresh-btn {
+    background: none; border: 1px solid var(--border); border-radius: 10px;
+    color: var(--muted); font-size: 12px; padding: 4px 12px; cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .refresh-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 480px) { .services-grid { grid-template-columns: 1fr; } }
+
+  .svc-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    transition: border-color .3s;
+  }
+  .svc-card.ok  { border-color: oklch(0.72 0.18 145 / 0.30); background: var(--green-glow); }
+  .svc-card.err { border-color: oklch(0.64 0.22 25  / 0.30); background: var(--red-glow); }
+  .svc-card.checking { opacity: 0.6; }
+
+  .svc-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    background: var(--border);
+  }
+  .svc-card.ok  .svc-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .svc-card.err .svc-dot { background: var(--red);   box-shadow: 0 0 8px var(--red); animation: pulse-r 2s ease-in-out infinite; }
+  .svc-card.checking .svc-dot { animation: spin-dot 1s linear infinite; }
+
+  .svc-info { flex: 1; min-width: 0; }
+  .svc-name { font-size: 13px; font-weight: 600; }
+  .svc-detail { font-size: 11px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .svc-ping { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  .svc-card.ok  .svc-ping { color: var(--green); }
+
+  .last-check { font-size: 11px; color: var(--muted); text-align: right; margin-top: 12px; }
+
+  /* ── SUMMARY ── */
+  .summary {
+    display: flex; gap: 10px; justify-content: center;
+    margin-bottom: 28px; flex-wrap: wrap; max-width: 680px; margin-inline: auto;
+  }
+  .s-chip {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 16px; border-radius: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .s-dot.g { background: var(--green); box-shadow: 0 0 7px var(--green); }
+  .s-dot.y { background: var(--yellow); box-shadow: 0 0 7px var(--yellow); }
+  .s-dot.r { background: var(--red); box-shadow: 0 0 7px var(--red); }
+  .s-count { font-size: 17px; font-weight: 700; }
+  .s-label { font-size: 12px; color: var(--muted); }
+
+  /* ── HEALTH BAR ── */
+  .hbar-wrap { max-width: 680px; margin: 0 auto 32px; }
+  .hbar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .hbar { height: 7px; border-radius: 7px; background: var(--border); overflow: hidden; display: flex; }
+  .hbar-g { background: var(--green); flex: 25; }
+  .hbar-y { background: var(--yellow); flex: 10; margin-left: 2px; }
+  .hbar-r { background: var(--red);    flex: 6;  margin-left: 2px; }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px; max-width: 980px; margin: 0 auto;
+  }
+
+  /* ── BLOCK ── */
+  .block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 17px 18px 15px; position: relative; overflow: hidden;
+  }
+  .block-head { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
+  .block-icon { font-size: 19px; line-height: 1; flex-shrink: 0; }
+  .block-title { font-size: 13px; font-weight: 700; flex: 1; }
+  .badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .badge-r { background: var(--red-glow);    color: var(--red);    border: 1px solid oklch(0.64 0.22 25 / 0.28); }
+  .badge-y { background: var(--yellow-glow); color: var(--yellow); border: 1px solid oklch(0.78 0.16 80 / 0.28); }
+  .badge-g { background: var(--green-glow);  color: var(--green);  border: 1px solid oklch(0.72 0.18 145 / 0.28); }
+
+  .items { display: flex; flex-direction: column; gap: 5px; }
+  .item { display: flex; align-items: flex-start; gap: 9px; padding: 5px 7px; border-radius: 9px; transition: background .15s; }
+  .item:hover { background: oklch(1 0 0 / 0.04); }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .dot.g { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .dot.y { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
+  .dot.r { background: var(--red); box-shadow: 0 0 5px var(--red); animation: pulse-r 2.2s ease-in-out infinite; }
+
+  .item-name { font-size: 13px; font-weight: 500; line-height: 1.3; }
+  .item-note { font-size: 11px; color: var(--muted); margin-top: 1px; line-height: 1.35; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; gap: 18px; justify-content: center;
+    margin: 32px auto 0; flex-wrap: wrap; max-width: 680px;
+  }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+
+  /* ── VERSION ── */
+  .version-row { text-align: center; margin-top: 28px; font-size: 11px; color: oklch(0.35 0.010 240); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes pulse-g { 0%,100%{box-shadow:0 0 5px var(--green);}  50%{box-shadow:0 0 14px var(--green);} }
+  @keyframes pulse-r { 0%,100%{box-shadow:0 0 4px var(--red);opacity:1;} 50%{box-shadow:0 0 13px var(--red);opacity:.65;} }
+  @keyframes spin-dot { to { transform: rotate(360deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">Разберёмся</div>
+  <div class="hdr-title">Карта здоровья системы</div>
+  <div class="hdr-meta">
+    <span class="live-badge"><span class="live-dot"></span>Live</span>
+    <span id="ver-badge">rz-v250</span>
+    <span id="date-badge"></span>
+  </div>
+</div>
+
+<!-- ─── LIVE SERVICES ─────────────────────────────────────── -->
+<div class="live-panel">
+  <div class="live-panel-head">
+    <span class="live-panel-title">Сервисы — проверено сейчас</span>
+    <button class="refresh-btn" id="refresh-btn" onclick="checkLive()">↻ Обновить</button>
+  </div>
+  <div class="services-grid" id="services-grid">
+    <div class="svc-card checking" id="svc-yandex">
+      <div class="svc-dot"></div>
+      <div class="svc-info"><div class="svc-name">Yandex SpeechKit</div><div class="svc-detail">проверяем…</div></div>
+    </div>
+    <div class="svc-card checking" id="svc-groq">
+      <div class="svc-dot"></div>
+      <div class="svc-info"><div class="svc-name">Groq (резервный STT)</div><div class="svc-detail">проверяем…</div></div>
+    </div>
+    <div class="svc-card checking" id="svc-supabase">
+      <div class="svc-dot"></div>
+      <div class="svc-info"><div class="svc-name">Supabase / Edge Function</div><div class="svc-detail">проверяем…</div></div>
+    </div>
+    <div class="svc-card checking" id="svc-github">
+      <div class="svc-dot"></div>
+      <div class="svc-info"><div class="svc-name">GitHub Pages (хостинг)</div><div class="svc-detail">проверяем…</div></div>
+    </div>
+  </div>
+  <div class="last-check" id="last-check">—</div>
+</div>
+
+<!-- ─── SUMMARY ─────────────────────────────────────────────── -->
+<div class="summary">
+  <div class="s-chip"><div class="s-dot g"></div><span class="s-count">25</span><span class="s-label">работает</span></div>
+  <div class="s-chip"><div class="s-dot y"></div><span class="s-count">10</span><span class="s-label">нестабильно</span></div>
+  <div class="s-chip"><div class="s-dot r"></div><span class="s-count">6</span><span class="s-label">не готово</span></div>
+</div>
+
+<!-- ─── HEALTH BAR ─────────────────────────────────────────── -->
+<div class="hbar-wrap">
+  <div class="hbar-label"><span>Готовность продукта (функционал)</span><span>61%</span></div>
+  <div class="hbar"><div class="hbar-g"></div><div class="hbar-y"></div><div class="hbar-r"></div></div>
+</div>
+
+<!-- ─── MODULE GRID ───────────────────────────────────────── -->
+<div class="grid">
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">🎙</span><span class="block-title">Голосовой ввод</span><span class="badge badge-y">нестабильно</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Запись аудио (AudioContext WAV)</div><div class="item-note">iOS, Android, Mac, Windows</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Yandex SpeechKit (основной)</div><div class="item-note">Новый — статус выше ↑</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Groq Whisper (резервный)</div><div class="item-note">Статус выше ↑</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">iOS Safari аудио</div><div class="item-note">AudioContext требует жеста пользователя</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">🧠</span><span class="block-title">Агент / AI мозг</span><span class="badge badge-r">есть дыры</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Распознавание намерений</div><div class="item-note">CREATE_NOTE, SET_REMINDER, FIND, BRIEFING…</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Разделы / filing</div><div class="item-note">Знает разделы, пишет section= сразу</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Дата/время пользователя</div><div class="item-note">Починено rz-v249 — нужна верификация</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Выдумывает содержание</div><div class="item-note">Промпт исправлен rz-v250 — нужна верификация</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Голосовой ответ (TTS)</div><div class="item-note">Агент не говорит — только текст</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Серверный DAILY_BRIEFING</div><div class="item-note">Работает только в открытом приложении</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">📝</span><span class="block-title">Заметки</span><span class="badge badge-y">почти готово</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Создание / редактирование</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Чеклисты (list mode)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">AI-анализ и чат внутри заметки</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Поиск по тексту</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Корзина / восстановление</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Разделы (Архив) и папки (Входящие)</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Фото вложения</div><div class="item-note">Нет: ни камера, ни буфер обмена</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">🔔</span><span class="block-title">Напоминания</span><span class="badge badge-r">частично</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Локальные браузерные уведомления</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Циклические (каждый час, каждый день)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Без дублей (ghost fix rz-v243)</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Push когда приложение закрыто</div><div class="item-note">iOS PWA принципиально не поддерживает</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Серверный планировщик (cron)</div><div class="item-note">Нет Edge Worker для фоновых уведомлений</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">☁️</span><span class="block-title">Синхронизация</span><span class="badge badge-y">нестабильно</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Supabase cloud sync</div><div class="item-note">user_state + notes, каждые 30с</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Pull-to-refresh (свайп вниз)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Обновление при возврате в приложение</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Два устройства одновременно</div><div class="item-note">Конфликт: побеждает последняя запись</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Realtime WebSocket</div><div class="item-note">Нет Supabase Realtime — только polling</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">📱</span><span class="block-title">UI / Навигация</span><span class="badge badge-y">почти готово</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Главная лента (home feed)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Drill (разделы → папки → заметки)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Компактный режим / swipe-delete</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Поиск и фильтрация</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Splash без дёрганья (rz-v247)</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Входящие (Inbox) swipe-delete</div><div class="item-note">Новая реализация rz-v248 — не верифицирована</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Event listeners (drill)</div><div class="item-note">Утечка памяти при повторных открытиях</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">🏗</span><span class="block-title">PWA / Инфраструктура</span><span class="badge badge-y">нестабильно</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Service Worker + кэш (rz-vXXX)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Деплой через deploy.sh</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Шрифты в SW кэше</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Offline режим</div><div class="item-note">Базовый кэш, при чистой установке — ошибки</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">iOS Home Screen</div><div class="item-note">Работает, но push недоступен</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">save_idea → путь сломан</div><div class="item-note">Пишет в ideas/ (удалена)</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">🔐</span><span class="block-title">Безопасность / Backend</span><span class="badge badge-y">нестабильно</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Supabase Auth (email OTP)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">RLS на всех таблицах</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">API ключи только в Secrets</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">JWT срок 30 дней</div><div class="item-note">Не настроено в Supabase Auth</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Phone provider включён</div><div class="item-note">Нужно отключить — SMS не используем</div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── LEGEND ────────────────────────────────────────────── -->
+<div class="legend">
+  <div class="leg"><div class="dot g" style="margin-top:0"></div> Работает стабильно</div>
+  <div class="leg"><div class="dot y" style="margin-top:0"></div> Работает / не верифицировано</div>
+  <div class="leg"><div class="dot r" style="margin-top:0"></div> Не реализовано или сломано</div>
+</div>
+
+<div class="version-row">health.html · обновляется с каждым деплоем · <a href="https://defancientmus-gif.github.io/razberemsia/" style="color:inherit;opacity:.5;">открыть приложение</a></div>
+
+<script>
+  const HEALTH_URL = 'https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/health';
+  let _refreshTimer = null;
+  const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 минут
+
+  // Дата в шапке
+  document.getElementById('date-badge').textContent =
+    new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  function setCard(id, ok, name, detail, ping) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'svc-card ' + (ok ? 'ok' : 'err');
+    el.innerHTML = `
+      <div class="svc-dot"></div>
+      <div class="svc-info">
+        <div class="svc-name">${name}</div>
+        <div class="svc-detail">${ok ? '✓ ' : '✗ '}${detail}</div>
+      </div>
+      ${ping ? `<div class="svc-ping">${ping}мс</div>` : ''}
+    `;
+  }
+
+  function setChecking(id, name) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'svc-card checking';
+    el.innerHTML = `
+      <div class="svc-dot"></div>
+      <div class="svc-info">
+        <div class="svc-name">${name}</div>
+        <div class="svc-detail">проверяем…</div>
+      </div>
+    `;
+  }
+
+  async function checkLive() {
+    const btn = document.getElementById('refresh-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '↻ …'; }
+
+    setChecking('svc-yandex',   'Yandex SpeechKit');
+    setChecking('svc-groq',     'Groq (резервный STT)');
+    setChecking('svc-supabase', 'Supabase / Edge Function');
+    setChecking('svc-github',   'GitHub Pages (хостинг)');
+
+    const t = Date.now();
+    let data = null;
+    try {
+      const res = await fetch(HEALTH_URL, { signal: AbortSignal.timeout(15000) });
+      if (res.ok) data = await res.json();
+    } catch (e) {
+      console.warn('health fetch error', e);
+    }
+
+    const edgeLatency = Date.now() - t;
+
+    if (data && data.services) {
+      const s = data.services;
+      setCard('svc-yandex',   s.yandex_stt?.ok,   'Yandex SpeechKit',        s.yandex_stt?.detail ?? '—', s.yandex_stt?.latency_ms);
+      setCard('svc-groq',     s.groq?.ok,          'Groq (резервный STT)',     s.groq?.detail ?? '—',       s.groq?.latency_ms);
+      setCard('svc-supabase', true,                'Supabase / Edge Function', `ответил за ${edgeLatency}мс`, edgeLatency);
+      setCard('svc-github',   true,                'GitHub Pages (хостинг)',   'страница загружена', null);
+    } else {
+      // Edge Function не ответила
+      setCard('svc-yandex',   false, 'Yandex SpeechKit',        'нет данных', null);
+      setCard('svc-groq',     false, 'Groq (резервный STT)',     'нет данных', null);
+      setCard('svc-supabase', false, 'Supabase / Edge Function', `нет ответа (${edgeLatency}мс)`, null);
+      setCard('svc-github',   true,  'GitHub Pages (хостинг)',   'страница загружена', null);
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('last-check').textContent = `Последняя проверка: ${timeStr}`;
+
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Обновить'; }
+
+    // Следующая проверка через 5 мин
+    clearTimeout(_refreshTimer);
+    _refreshTimer = setTimeout(() => checkLive(), REFRESH_INTERVAL);
+  }
+
+  // Запуск при загрузке
+  checkLive();
+</script>
+</body>
+</html>
