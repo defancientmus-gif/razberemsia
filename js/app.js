@@ -5450,13 +5450,21 @@ async function _processAgentQuery(text,alts=[]){
     const _allNotes=getNotes();
     // Для запросов про планы/маршруты/сводку — передаём больше тела заметок
     const needsDeepCtx=/(план|маршрут|что у меня|сегодня|завтра|расскажи|составь|список дел|прочитай|озвучь|сводк|за день|что записал|покажи|всё что|все заметк)/i.test(text);
-    const recentNotes=_allNotes.slice(0,30).map((n,i)=>({
+    const _tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const _fmtDate=(ts)=>{
+      if(!ts)return null;
+      try{return new Date(ts).toLocaleString('sv-SE',{timeZone:_tz}).slice(0,16);}catch{return null;}
+    };
+    const recentNotes=_allNotes.slice(0,40).map((n,i)=>({
       index:i,
       title:n.title||'Без названия',
-      body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,needsDeepCtx?300:100),
+      body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,needsDeepCtx?400:80),
+      createdAt:_fmtDate(n.createdAt||n.id),   // когда создана (локальное время)
+      updatedAt:_fmtDate(n.updatedAt),           // когда последний раз редактирована
       hasReminder:!!n.reminder,
       isRecurring:!!n.recurring,
-      reminderTime:n.reminder||null
+      reminderTime:n.reminder||null,
+      section:n.aiTags?.find(t=>t.startsWith('_filed_in:'))?.slice(10)||null // в каком разделе
     }));
     // Отправляем альтернативы только если они отличаются от основного текста
     const alternatives=alts.filter(a=>a&&a!==text).slice(0,2);
