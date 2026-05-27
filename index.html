@@ -2378,7 +2378,7 @@ html.dark .bubble{
 /* ── Матовый хрусталь: мягкий стеклянный эффект ── */
 .sect-card{border-radius:16px;padding:9px 8px 8px;background:linear-gradient(152deg,oklch(1 0 0 / .70),oklch(0.97 0.007 215 / .52));backdrop-filter:blur(12px) saturate(1.25);-webkit-backdrop-filter:blur(12px) saturate(1.25);border:1px solid oklch(0.95 0.01 210 / .72);box-shadow:0 1px 8px oklch(0 0 0 / .06),inset 0 1.5px 0 oklch(1 0 0 / .92);cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .14s,box-shadow .14s;position:relative;overflow:visible;text-align:left;font-family:var(--sys);-webkit-tap-highlight-color:transparent;}
 /* Тонкая цветная полоска снизу вместо заливки — нет "бледного" эффекта */
-.sect-card::before{content:'';position:absolute;left:10px;right:10px;bottom:0;height:2.5px;background:var(--card-accent,oklch(0.55 0.10 210));border-radius:0 0 2px 2px;opacity:.55;pointer-events:none;}
+.sect-card::before{display:none;}
 .sect-card:active{transform:scale(.96);box-shadow:0 1px 4px oklch(0 0 0/.06),inset 0 1px 0 oklch(1 0 0/.90);}
 .sect-card-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--sys);flex-shrink:0;margin-bottom:2px;position:relative;}
 .sect-card-name{font-size:12.5px;font-weight:600;color:var(--fg);line-height:1.25;position:relative;}
