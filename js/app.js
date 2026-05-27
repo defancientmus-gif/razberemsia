@@ -3604,7 +3604,22 @@ function _openNoteWith(n){
   document.getElementById('sheet-title').textContent='Заметка';
   document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
   document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' символов';
-  showSheetCat(safeLabel(n.label||'заметка'));
+  const _nFiledIn=getFiledFolderName(n);
+  if(_nFiledIn&&isUserFolderName(_nFiledIn)){
+    const _nBtn=document.getElementById('sheet-cat-btn');
+    if(_nBtn){
+      const _ufs=getUserFolders();
+      const _nfi=_ufs.findIndex(f=>f.name.toLowerCase()===_nFiledIn.toLowerCase());
+      const _nDisp=_nfi>=0?_ufs[_nfi].name:(_nFiledIn.charAt(0).toUpperCase()+_nFiledIn.slice(1));
+      const _nIdx=_nfi>=0?(_ufs[_nfi].idx!==undefined?_ufs[_nfi].idx:_nfi):0;
+      _nBtn.dataset.label=_nDisp;_nBtn.dataset.userFolder='1';delete _nBtn.dataset.aiTagFolder;
+      const _nDot=document.getElementById('sheet-cat-dot');
+      const _nLbl=document.getElementById('sheet-cat-label');
+      if(_nDot)_nDot.style.background=_folderColor(_nIdx);
+      if(_nLbl)_nLbl.textContent=_nDisp;
+    }
+    renderSectPills();
+  }else{showSheetCat(safeLabel(n.label||'заметка'));}
   initSheetReminder(n.reminder||'');
   initSheetRecurring(n);
   initSheetUndo(n.body||n.title||'');
