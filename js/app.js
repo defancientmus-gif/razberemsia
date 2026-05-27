@@ -1823,6 +1823,12 @@ function openRemEditForNote(noteId){
   const n=notes.find(x=>x.id===noteId);
   if(!n)return;
   _remEditNoteId=noteId;
+  // Сбрасываем календарь при открытии новой заметки
+  _remCal=null;
+  const _cw=document.getElementById('rem-cal-wrap');
+  if(_cw){_cw.classList.remove('open');_cw.innerHTML='';}
+  const _cr=document.getElementById('rem-edit-custom-row');
+  if(_cr)_cr.classList.remove('expanded');
   const isRec=!!(n.recurring?.times?.length);
   // Заголовок
   const nameEl=document.getElementById('rem-edit-note-name');
@@ -1857,6 +1863,12 @@ function openRemEditForNote(noteId){
 function closeRemEdit(){
   const sheet=document.getElementById('rem-edit-sheet');
   if(sheet)sheet.style.transform='translateY(100%)';
+  // Сбрасываем календарь немедленно
+  _remCal=null;
+  const wrap=document.getElementById('rem-cal-wrap');
+  if(wrap){wrap.classList.remove('open');wrap.innerHTML='';}
+  const row=document.getElementById('rem-edit-custom-row');
+  if(row)row.classList.remove('expanded');
   setTimeout(()=>{
     const ov=document.getElementById('rem-edit-ov');
     if(ov)ov.style.display='none';
@@ -1905,14 +1917,125 @@ function remEditTomorrow(h,m,btn){
   if(btn)btn.classList.add('active');
 }
 
-function remEditOpenDt(){
-  if(!_remEditNoteId)return;
-  const inp=document.getElementById('rem-edit-dt-inp');
-  if(!inp)return;
+// ── КАСТОМНЫЙ КАЛЕНДАРЬ (замена datetime-local) ──
+let _remCal=null; // {year,month,day,hour,min}
+
+function _remCalToggle(){
+  const wrap=document.getElementById('rem-cal-wrap');
+  const row=document.getElementById('rem-edit-custom-row');
+  if(!wrap)return;
+  if(wrap.classList.contains('open')){
+    // Закрыть
+    wrap.classList.remove('open');
+    if(row)row.classList.remove('expanded');
+    _remCal=null;
+    return;
+  }
+  // Инициализировать состояние
   const notes=getNotes();
-  const n=notes.find(x=>x.id===_remEditNoteId);
-  if(n?.reminder){const d=parseDt(n.reminder);if(d&&!isNaN(d.getTime()))inp.value=_rmpLocalStr(d);}
-  inp.click();
+  const n=_remEditNoteId?notes.find(x=>x.id===_remEditNoteId):null;
+  const now=new Date();
+  let base=new Date(now.getTime()+60*60000); // дефолт: +1 час
+  base.setSeconds(0,0);
+  const rm=Math.round(base.getMinutes()/5)*5;
+  if(rm>=60){base.setHours(base.getHours()+1);base.setMinutes(0);}else base.setMinutes(rm);
+  if(n?.reminder){const d=parseDt(n.reminder);if(d&&!isNaN(d.getTime())&&d.getTime()>now.getTime())base=d;}
+  _remCal={year:base.getFullYear(),month:base.getMonth(),day:base.getDate(),hour:base.getHours(),min:base.getMinutes()};
+  _renderRemCal();
+  wrap.classList.add('open');
+  if(row)row.classList.add('expanded');
+  // Скролл вниз чтобы показать календарь
+  setTimeout(()=>{const s=document.getElementById('rem-edit-sheet');if(s)s.scrollTo({top:s.scrollHeight,behavior:'smooth'});},200);
+}
+
+function _renderRemCal(){
+  const wrap=document.getElementById('rem-cal-wrap');
+  if(!wrap||!_remCal)return;
+  const {year,month,day,hour,min}=_remCal;
+  const now=new Date();
+  const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const MS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  const DHDR=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const firstDay=new Date(year,month,1).getDay();
+  const startOff=(firstDay+6)%7;
+  const dInMonth=new Date(year,month+1,0).getDate();
+  const dInPrev=new Date(year,month,0).getDate();
+  let cells='';
+  for(let i=startOff-1;i>=0;i--)cells+=`<div class="rcal-day other">${dInPrev-i}</div>`;
+  for(let d=1;d<=dInMonth;d++){
+    const isToday=year===now.getFullYear()&&month===now.getMonth()&&d===now.getDate();
+    const isSel=d===day;
+    const isPast=new Date(year,month,d,23,59).getTime()<now.getTime()&&!isToday;
+    const wd=new Date(year,month,d).getDay();
+    const isWknd=wd===0||wd===6;
+    let cls='rcal-day'+(isPast?' past':'')+(isToday?' today':'')+(isSel?' sel':'')+(isWknd&&!isSel?' wknd':'');
+    const click=isPast?'':`onclick="_remCalPick(${year},${month},${d})"`;
+    cells+=`<div class="${cls}" ${click}>${d}</div>`;
+  }
+  const total=startOff+dInMonth;
+  const rem=total%7?7-total%7:0;
+  for(let d=1;d<=rem;d++)cells+=`<div class="rcal-day other">${d}</div>`;
+  const hS=String(hour).padStart(2,'0'),mS=String(min).padStart(2,'0');
+  const minusSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const plusSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  wrap.innerHTML=`<div class="rcal">
+    <div class="rcal-hdr">
+      <button class="rcal-nav" onclick="_remCalPrevMonth()">${`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>`}</button>
+      <div class="rcal-month">${MONTHS[month]} ${year}</div>
+      <button class="rcal-nav" onclick="_remCalNextMonth()">${`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`}</button>
+    </div>
+    <div class="rcal-dhdr">${DHDR.map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="rcal-grid">${cells}</div>
+    <div class="rcal-time">
+      <div class="rcal-tpart">
+        <button class="rcal-tb" onclick="_remCalH(-1)">${minusSvg}</button>
+        <div class="rcal-tv">${hS}</div>
+        <button class="rcal-tb" onclick="_remCalH(1)">${plusSvg}</button>
+      </div>
+      <div class="rcal-tsep">:</div>
+      <div class="rcal-tpart">
+        <button class="rcal-tb" onclick="_remCalM(-1)">${minusSvg}</button>
+        <div class="rcal-tv">${mS}</div>
+        <button class="rcal-tb" onclick="_remCalM(1)">${plusSvg}</button>
+      </div>
+    </div>
+    <button class="rcal-save" onclick="_remCalSave()">Напомнить ${hS}:${mS} · ${day} ${MS[month]}</button>
+  </div>`;
+}
+
+function _remCalPick(y,m,d){
+  if(!_remCal)return;
+  _remCal.year=y;_remCal.month=m;_remCal.day=d;_renderRemCal();
+}
+function _remCalPrevMonth(){
+  if(!_remCal)return;
+  _remCal.month--;if(_remCal.month<0){_remCal.month=11;_remCal.year--;}
+  _renderRemCal();
+}
+function _remCalNextMonth(){
+  if(!_remCal)return;
+  _remCal.month++;if(_remCal.month>11){_remCal.month=0;_remCal.year++;}
+  _renderRemCal();
+}
+function _remCalH(delta){
+  if(!_remCal)return;
+  _remCal.hour=(_remCal.hour+delta+24)%24;_renderRemCal();
+}
+function _remCalM(delta){
+  if(!_remCal)return;
+  _remCal.min=(_remCal.min+delta*5+60)%60;_renderRemCal();
+}
+function _remCalSave(){
+  if(!_remCal)return;
+  const {year,month,day,hour,min}=_remCal;
+  const d=new Date(year,month,day,hour,min,0,0);
+  if(d.getTime()<Date.now()){showToast('Время уже прошло — выбери будущее');return;}
+  _remEditSave(_rmpLocalStr(d));
+  _remCal=null;
+  const wrap=document.getElementById('rem-cal-wrap');
+  if(wrap)wrap.classList.remove('open');
+  const row=document.getElementById('rem-edit-custom-row');
+  if(row)row.classList.remove('expanded');
 }
 
 function remEditDtChange(val){
