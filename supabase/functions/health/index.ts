@@ -48,8 +48,10 @@ async function checkGroq(key: string): Promise<{ ok: boolean; latency: number; d
       signal: AbortSignal.timeout(8000),
     });
     const latency = Date.now() - t;
-    if (!r.ok) return { ok: false, latency, detail: `HTTP ${r.status}` };
-    return { ok: true, latency, detail: 'models list OK' };
+    // 401/403 = ключ недействителен; 5xx = сервис лежит; 400/200 = сервис жив
+    if (r.status === 401 || r.status === 403) return { ok: false, latency, detail: 'ключ отклонён' };
+    if (r.status >= 500) return { ok: false, latency, detail: `сервис недоступен (${r.status})` };
+    return { ok: true, latency, detail: `HTTP ${r.status} — сервис доступен` };
   } catch (e) {
     return { ok: false, latency: Date.now() - t, detail: String(e).slice(0, 80) };
   }
