@@ -2572,34 +2572,6 @@ function _agentFolderDisplayName(tag){
   const raw=String(tag||'');
   return raw?raw.charAt(0).toUpperCase()+raw.slice(1):'Папка';
 }
-const _FOLDER_SUGGESTION_HINTS={
-  финанс:['финанс','деньг','руб','банк','оплат','квитанц','чек','расход','долг','счёт','счет','платёж','платеж'],
-  здоров:['здоров','лекар','врач','анализ','аптек','бол','давлен'],
-  дом:['дом','квартир','ремонт','коммун','уборк','мебел'],
-  семь:['семь','мам','пап','ребён','ребен','внук','родител'],
-  покуп:['покуп','куп','заказ','магазин','достав'],
-  работ:['работ','клиент','встреч','проект','задач'],
-  поезд:['поезд','дорог','билет','отпуск','путешеств']
-};
-function _suggestAgentDestination(note,sourceTag){
-  const folders=getUserFolders();
-  if(!folders.length)return '';
-  const text=[sourceTag,_agentFolderDisplayName(sourceTag),note?.title,note?.body,note?.aiSummary,...((note?.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag)))]
-    .join(' ').toLowerCase().replace(/ё/g,'е');
-  let best=null;
-  folders.forEach((folder,index)=>{
-    const name=String(folder.name||'').toLowerCase().replace(/ё/g,'е');
-    let score=0;
-    name.split(/\s+/).filter(part=>part.length>2).forEach(part=>{if(text.includes(part))score+=6;});
-    Object.entries(_FOLDER_SUGGESTION_HINTS).forEach(([root,hints])=>{
-      if(!name.includes(root))return;
-      hints.forEach(hint=>{if(text.includes(hint))score+=2;});
-    });
-    if(!best||score>best.score)best={name:folder.name,score,index};
-  });
-  if(best&&best.score>0)return best.name;
-  return ''; // не предлагаем папку без реального совпадения
-}
 function openFolderModal(){
   const m=document.getElementById('folder-modal');
   const inner=document.getElementById('folder-modal-inner');
@@ -2661,127 +2633,6 @@ function deleteUserFolder(name){
   showToast('Раздел удалён');
 }
 
-let _pendingFilingMotion=null;
-function _filingMotionMarkup(motion){
-  const destinationNotes=getNotes().filter(n=>getFiledFolderName(n)===motion.destination.toLowerCase()).length;
-  return `<div class="agent-inbox-motion" id="filing-transfer">
-    <div class="agent-receiver">
-      <span class="agent-receiver-mark">&darr;</span>
-      <span class="agent-receiver-copy"><span class="agent-receiver-overline">Раздел</span><span class="agent-receiver-name">${esc(motion.destination)}</span></span>
-      <span class="agent-receiver-count">${destinationNotes}</span>
-    </div>
-    <div class="agent-transfer-guide"><span class="agent-transfer-guide-mark">&rarr;</span><span>Сохраняю в раздел «${esc(motion.destination)}»</span></div>
-    <article class="agent-note filing-ghost">
-      <div class="agent-note-top">
-        <span class="agent-note-dot"></span>
-        <span class="agent-note-copy"><span class="agent-note-title">${esc(motion.title)}</span><span class="agent-note-body">${esc(motion.body)}</span></span>
-      </div>
-    </article>
-  </div>`;
-}
-function _makeFlightAnimation(sourceEl,targetEl,container){
-  const cBox=container.getBoundingClientRect();
-  const sBox=sourceEl.getBoundingClientRect();
-  const tBox=targetEl.getBoundingClientRect();
-  const clone=sourceEl.cloneNode(true);
-  Object.assign(clone.style,{
-    position:'absolute',zIndex:'25',pointerEvents:'none',margin:'0',
-    left:(sBox.left-cBox.left)+'px',top:(sBox.top-cBox.top)+'px',
-    width:sBox.width+'px',height:sBox.height+'px',
-    boxShadow:'0 16px 34px oklch(0.37 0.06 210/.17),inset 0 1px 0 #fff'
-  });
-  container.appendChild(clone);
-  const dx=(tBox.left+tBox.width/2)-(sBox.left+sBox.width/2);
-  const dy=(tBox.top+tBox.height/2)-(sBox.top+sBox.height/2);
-  const bend=-46;
-  const anim=clone.animate([
-    {transform:'translate(0,0) scale(1)',opacity:1},
-    {transform:`translate(${dx*.48}px,${dy*.40+bend}px) scale(.70)`,opacity:.90,offset:.52},
-    {transform:`translate(${dx}px,${dy}px) scale(.08)`,opacity:.08}
-  ],{duration:1450,easing:'cubic-bezier(.25,.78,.22,1)',fill:'forwards'});
-  return anim.finished.then(()=>clone.remove());
-}
-function _runFilingMotion(){
-  const motion=_pendingFilingMotion;
-  const stage=document.getElementById('filing-transfer');
-  if(!motion||!stage)return;
-  document.getElementById('s-notes')?.classList.add('placing');
-  const ghostEl=stage.querySelector('.filing-ghost');
-  const receiverEl=stage.querySelector('.agent-receiver');
-  const container=stage.closest('.agent-inbox')||document.getElementById('s-notes');
-  setTimeout(()=>{
-    if(ghostEl&&receiverEl&&container&&typeof Element.prototype.animate==='function'){
-      // Настоящий перелёт: клон карточки летит к ресиверу по дуге (WAAPI)
-      ghostEl.style.opacity='0';
-      _makeFlightAnimation(ghostEl,receiverEl,container).then(()=>{
-        stage.classList.add('landed');
-        showActionToast(`Сохранено в «${motion.destination}»`,'Отменить',()=>_undoFilingMotion(motion));
-        setTimeout(()=>stage.classList.add('folding'),1300);
-        setTimeout(()=>stage.classList.add('vanishing'),1650);
-        setTimeout(()=>{
-          if(_pendingFilingMotion===motion)_pendingFilingMotion=null;
-          document.getElementById('s-notes')?.classList.remove('placing');
-          if(cur==='notes'&&drillLevel===1&&drillAiTag&&drillAiTag.toLowerCase()===motion.source.toLowerCase())_drillP1();
-          else stage.remove();
-        },2420);
-      });
-    } else {
-      // CSS-fallback для старых браузеров
-      stage.classList.add('routing');
-      setTimeout(()=>{
-        stage.classList.add('landed');
-        showActionToast(`Сохранено в «${motion.destination}»`,'Отменить',()=>_undoFilingMotion(motion));
-      },1520);
-      setTimeout(()=>stage.classList.add('folding'),1860);
-      setTimeout(()=>stage.classList.add('vanishing'),3080);
-      setTimeout(()=>{
-        if(_pendingFilingMotion===motion)_pendingFilingMotion=null;
-        document.getElementById('s-notes')?.classList.remove('placing');
-        if(cur==='notes'&&drillLevel===1&&drillAiTag&&drillAiTag.toLowerCase()===motion.source.toLowerCase())_drillP1();
-        else stage.remove();
-      },3730);
-    }
-  },240);
-}
-function _undoFilingMotion(motion){
-  const notes=getNotes();
-  const note=notes.find(n=>n.id===motion.noteId);
-  if(!note)return;
-  note.aiTags=(note.aiTags||[]).filter(tag=>String(tag).toLowerCase()!==_filedFolderTag(motion.destination));
-  note.updatedAt=Date.now();
-  saveNotes(notes);
-  _pendingFilingMotion=null;
-  loadHomeFeed();
-  if(cur==='notes'){
-    if(drillLevel===1)_drillP1();
-    else loadNotes();
-  }
-  showToast('Перемещение отменено');
-}
-function confirmAgentFiling(event,noteId,destination){
-  event?.stopPropagation();
-  if(_pendingFilingMotion||!drillAiTag||isUserFolderName(drillAiTag))return;
-  const notes=getNotes();
-  const note=notes.find(item=>item.id===noteId);
-  if(!note||!destination)return;
-  const destinationLow=destination.toLowerCase();
-  const cleanTags=(note.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
-  if(!cleanTags.some(tag=>String(tag).toLowerCase()===destinationLow))cleanTags.push(destination);
-  note.aiTags=[...cleanTags,_filedFolderTag(destination)];
-  note.updatedAt=Date.now();
-  _pendingFilingMotion={
-    noteId:note.id,
-    source:drillAiTag,
-    destination,
-    title:note.title,
-    body:_notePreview(note)||(note.body||'').slice(0,85)
-  };
-  saveNotes(notes);
-  loadHomeFeed();
-  loadNotepad();
-  _drillP1();
-  requestAnimationFrame(_runFilingMotion);
-}
 
 // ── STRIPES (oklch) ──
 const STRIPES={
@@ -3265,24 +3116,9 @@ function _applyCompactFeedState(){
   if(wrap){if(_homeFeedCompact)wrap.classList.add('compact');else wrap.classList.remove('compact');}
   if(btn)btn.classList.toggle('active',_homeFeedCompact);
 }
-function _agentInboxReceiver(destination){
-  const count=getNotes().filter(note=>getFiledFolderName(note)===destination.toLowerCase()).length;
-  return `<div class="agent-receiver">
-    <span class="agent-receiver-mark">&darr;</span>
-    <span class="agent-receiver-copy">
-      <span class="agent-receiver-overline">Раздел</span>
-      <span class="agent-receiver-name">${esc(destination)}</span>
-    </span>
-    <span class="agent-receiver-count">${count}</span>
-  </div>`;
-}
-function _agentInboxCard(note,index,destination,featured){
+function _agentInboxCard(note,index){
   const preview=_notePreview(note);
-  const suggestion=featured?`<div class="agent-suggestion">
-    <span><span class="agent-suggestion-label">Агент предлагает раздел</span><span class="agent-suggestion-name">${esc(destination)}</span></span>
-    <span class="agent-suggestion-pill">верно</span>
-  </div>`:'';
-  return `<article class="agent-note${featured?' origin':' quiet'}" onclick="drillPickNote(${index})">
+  return `<article class="agent-note" onclick="drillPickNote(${index})">
     <div class="agent-note-top">
       <span class="agent-note-dot"></span>
       <span class="agent-note-copy">
@@ -3291,41 +3127,17 @@ function _agentInboxCard(note,index,destination,featured){
       </span>
       <span class="agent-note-time">${esc(fmtMeta(note.updatedAt||note.createdAt))}</span>
     </div>
-    ${suggestion}
   </article>`;
 }
-function _renderAgentInbox(el,notes,hasMotion){
-  const motion=hasMotion?_pendingFilingMotion:null;
-  let destination=motion?.destination||'';
-  let arranged=[...notes];
-  if(!motion){
-    const focusIndex=arranged.findIndex(note=>!!_suggestAgentDestination(note,drillAiTag));
-    if(focusIndex>=0){
-      const focus=arranged[focusIndex];
-      destination=_suggestAgentDestination(focus,drillAiTag);
-      if(focusIndex>0)arranged=[focus,...arranged.slice(0,focusIndex),...arranged.slice(focusIndex+1)];
-    }
-  }
-  _drillNotes=arranged;
-  if(!arranged.length&&!motion){
+function _renderAgentInbox(el,notes){
+  _drillNotes=notes;
+  if(!notes.length){
     el.innerHTML='<div class="agent-folder-empty">Всё разобрано.</div>';
     return;
   }
-  const head=motion?_filingMotionMarkup(motion):(destination?_agentInboxReceiver(destination):'');
-  const cards=arranged.map((note,index)=>_agentInboxCard(note,index,destination,!motion&&index===0&&!!destination)).join('');
-  let action='';
-  if(destination){
-    const disabled=motion?' disabled':'';
-    const click=motion?'':` onclick="confirmAgentFiling(event,${jsAttr(arranged[0]?.id)},${jsAttr(destination)})"`;
-    const btnLabel=motion?'Сохранено ✓':'В '+destination;
-    action=`<div class="agent-inbox-actions">
-      <div class="agent-inbox-context"><span>Назначение агента</span><strong>${esc(destination)}</strong></div>
-      <div class="agent-save-shell"><button class="agent-save-primary"${disabled}${click}>${btnLabel}</button></div>
-    </div>`;
-  }
+  const cards=notes.map((note,index)=>_agentInboxCard(note,index)).join('');
   el.innerHTML=`<div class="agent-inbox">
-    <div class="agent-inbox-board">${head}<div class="agent-note-stack">${cards}</div></div>
-    ${action}
+    <div class="agent-inbox-board"><div class="agent-note-stack">${cards}</div></div>
   </div>`;
 }
 
@@ -3342,9 +3154,8 @@ function _drillP1(){
     if(!viewingUserFolder)notes=notes.filter(n=>!isNoteResolved(n));
   }
   notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  const hasMotion=_pendingFilingMotion&&!viewingUserFolder&&drillAiTag!==null&&_pendingFilingMotion.source.toLowerCase()===drillAiTag.toLowerCase();
   if(drillAiTag!==null&&!viewingUserFolder){
-    _renderAgentInbox(el,notes,hasMotion);
+    _renderAgentInbox(el,notes);
     return;
   }
   _drillNotes=notes;
@@ -4600,27 +4411,14 @@ function saveSheet(){
   const _prevCategory=drillCategory;
   const _prevDrillLevel=drillLevel;
   const _wasInNotes=(cur==='notes');
-  const isFilingMove=!!(_selectedUserFolder&&_wasInNotes&&_prevDrillLevel>=1&&_prevAiTag&&!isUserFolderName(_prevAiTag)&&!prevHadDestination);
-  if(isFilingMove){
-    _pendingFilingMotion={
-      noteId:item.id,
-      source:_prevAiTag,
-      destination:_selectedUserFolder,
-      title:item.title,
-      body:(item.body||'').slice(0,85)
-    };
-  }
   loadNotes();loadHomeFeed();loadNotepad();
   closeSheet();
-  if(!isFilingMove)showToast(wasNew?'Сохранено ✓':'Изменено ✓');
+  showToast(wasNew?'Сохранено ✓':'Изменено ✓');
   // Возврат в папку после сохранения (и создания, и редактирования)
   if(_wasInNotes&&_prevDrillLevel>=1){
     setTimeout(()=>{
-      if(_prevAiTag!==null){
-        drillGo(1,{aiTag:_prevAiTag});
-        if(isFilingMove)requestAnimationFrame(_runFilingMotion);
-      }
-      else drillGo(1,{category:_prevCategory}); // null = все заметки
+      if(_prevAiTag!==null)drillGo(1,{aiTag:_prevAiTag});
+      else drillGo(1,{category:_prevCategory});
     },50);
   }
   if(v2) _handleReminderAfterSave(v2,item.id,title,v1.trim().slice(0,200));
