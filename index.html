@@ -984,9 +984,9 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* ── HOME BAR — поверхность под порталом ── */
 .home-bar{
   padding:8px 14px 28px;flex-shrink:0;
-  background:oklch(0.94 0.022 210/0.88);
-  border-top:0.5px solid oklch(0.86 0.03 210/0.55);
-  box-shadow:0 -6px 24px oklch(0 0 0/0.05);
+  background:transparent;
+  border-top:none;
+  box-shadow:none;
   position:relative;z-index:2;
   overflow:visible;
 }
@@ -1930,7 +1930,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .trash-item .note-stripe{opacity:0.5;}
 
 /* ── HOME BAR — matches screenshot layout ── */
-.home-bar{padding:6px 14px 28px;flex-shrink:0;background:oklch(0.94 0.022 210/0.88);border-top:0.5px solid oklch(0.86 0.03 210/0.55);box-shadow:0 -6px 24px oklch(0 0 0/0.05);position:relative;z-index:2;overflow:visible;}
+.home-bar{padding:6px 14px 28px;flex-shrink:0;background:transparent;border-top:none;box-shadow:none;position:relative;z-index:2;overflow:visible;}
 
 /* ── ANIMATIONS ── */
 @keyframes fIn{from{opacity:0}to{opacity:1}}
@@ -2627,11 +2627,12 @@ header{padding:15px 16px 9px;}
     0 6px 18px oklch(0.34 0.04 210 / .08);
 }
 .home-bar{
-  background:oklch(0.97 0.010 210 / .18);
-  backdrop-filter:blur(32px) saturate(1.6);
-  -webkit-backdrop-filter:blur(32px) saturate(1.6);
-  border-top:1px solid oklch(1 0 0 / .28);
-  box-shadow:none;padding:6px 14px max(env(safe-area-inset-bottom,10px),10px);
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  border-top:none;
+  box-shadow:none;
+  padding:6px 14px max(env(safe-area-inset-bottom,10px),10px);
 }
 .new-note-btn{
   flex:0 0 96px;
