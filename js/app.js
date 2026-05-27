@@ -5449,7 +5449,7 @@ async function _processAgentQuery(text,alts=[]){
     const memoryContext=getAiMemoryContext?.()??[];
     const _allNotes=getNotes();
     // Для запросов про планы/маршруты/сводку — передаём больше тела заметок
-    const needsDeepCtx=/(план|маршрут|что у меня|сегодня|завтра|расскажи|составь|список дел|прочитай|озвучь)/i.test(text);
+    const needsDeepCtx=/(план|маршрут|что у меня|сегодня|завтра|расскажи|составь|список дел|прочитай|озвучь|сводк|за день|что записал|покажи|всё что|все заметк)/i.test(text);
     const recentNotes=_allNotes.slice(0,30).map((n,i)=>({
       index:i,
       title:n.title||'Без названия',
