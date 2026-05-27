@@ -433,14 +433,17 @@ function onbDone(){
   ov.style.transition='opacity .3s';
   setTimeout(()=>{ov.style.display='none';ov.style.opacity='';ov.style.transition='';},320);
 }
+const _appStartTs=Date.now();
 function showApp(){
   const a=document.getElementById('auth-screen');
-  if(a){
-    a.classList.add('hidden');
-    setTimeout(()=>a.classList.add('gone'),420);
-  }
   const m=document.getElementById('main-app');
-  if(m)m.style.display='flex';
+  // Минимум 600мс — логотип успевает появиться, нет мигания при быстром автологине
+  const elapsed=Date.now()-_appStartTs;
+  const delay=Math.max(0,600-elapsed);
+  if(m)m.style.display='flex'; // рендерим приложение за шторкой
+  setTimeout(()=>{
+    if(a){a.classList.add('hidden');setTimeout(()=>a.classList.add('gone'),420);}
+  },delay);
 }
 function showAuthScr(){
   // auth-screen всегда виден — просто снимаем checking с карточки
@@ -5975,19 +5978,19 @@ window.addEventListener('load',()=>{
 });
 
 // ── INIT ──
-// Лого появляется только когда Playfair Display загружен — без джерка font-swap.
-// document.fonts.load() запускает загрузку и резолвит как только шрифт готов.
+// Логотип появляется только когда Playfair Display загружен И auth-screen ещё активен.
+// Если сессия найдена раньше чем шрифт загрузился — лого не мигает (экран уходит плавно).
 (function(){
   const _showWordmark=()=>{
-    const wm=document.querySelector('.auth-wordmark');
-    if(wm&&!document.getElementById('auth-screen').classList.contains('gone'))
-      wm.classList.add('wm-ready');
+    const scr=document.getElementById('auth-screen');
+    if(!scr||scr.classList.contains('gone')||scr.classList.contains('hidden'))return;
+    const wm=scr.querySelector('.auth-wordmark');
+    if(wm)wm.classList.add('wm-ready');
   };
   if(document.fonts&&document.fonts.load){
     document.fonts.load('400 49px "Playfair Display"')
       .then(_showWordmark).catch(_showWordmark);
   } else {
-    // Старый браузер без Font Loading API — показываем через 300ms
     setTimeout(_showWordmark,300);
   }
 })();

@@ -1286,7 +1286,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .auth-step.active{display:block;}
 
 /* Checking overlay inside card */
-.auth-card.checking .auth-step{display:none;}
+/* visibility:hidden вместо display:none — карточка держит высоту, логотип не прыгает */
+.auth-card.checking .auth-step{visibility:hidden;pointer-events:none;}
 .auth-card.checking .auth-loading{display:block;}
 
 /* Step label */
