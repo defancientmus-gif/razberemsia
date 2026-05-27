@@ -741,7 +741,14 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .home-hdr-date{font-size:11px;color:var(--fg-l);margin-top:2px;}
 
 /* ── HOME FEED (notification cards) ── */
-.home-feed-wrap{flex:1;overflow-y:auto;padding:6px 14px 8px;-webkit-overflow-scrolling:touch;}
+.home-feed-wrap{
+  flex:1;overflow-y:auto;
+  padding:6px 14px 130px; /* отступ снизу = высота home-bar, чтоб заметки не уходили под кнопки */
+  -webkit-overflow-scrolling:touch;
+  /* Мягкое исчезание заметок перед панелью кнопок — без резкой границы */
+  -webkit-mask-image:linear-gradient(to bottom,black calc(100% - 100px),transparent 100%);
+  mask-image:linear-gradient(to bottom,black calc(100% - 100px),transparent 100%);
+}
 .home-feed-wrap::-webkit-scrollbar{display:none;}
 .hf-card{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;background:oklch(1 0 0/0.80);border:0.5px solid oklch(1 0 0/0.92);border-radius:16px;margin-bottom:8px;cursor:pointer;transition:transform .1s;-webkit-appearance:none;width:100%;text-align:left;font-family:var(--sys);box-shadow:0 1px 3px oklch(0.35 0.08 210/0.07),0 4px 14px oklch(0.35 0.08 210/0.05);}
 .hf-card:active{transform:scale(.98);}
@@ -983,11 +990,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 
 /* ── HOME BAR — поверхность под порталом ── */
 .home-bar{
-  padding:8px 14px 28px;flex-shrink:0;
+  /* padding-top: место для кнопки — translateY убран, кнопка должна быть внутри bounds */
+  padding:18px 14px 28px;flex-shrink:0;
   background:transparent;
   border-top:none;
   box-shadow:none;
-  position:relative;z-index:2;
+  position:relative;z-index:10;
   overflow:visible;
 }
 
@@ -1008,7 +1016,9 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
     inset 0 -2px 0 oklch(0.82 0.04 210/.22),
     inset 1.5px 0 0 oklch(1 0 0/.55),
     inset -1.5px 0 0 oklch(1 0 0/.55);
-  transform:perspective(700px) rotateX(-5deg) translateY(-16px);
+  /* translateY убран: iOS клиппирует touch за overflow:hidden родителя.
+     3D-эффект «тянется в высь» даёт rotateX — без буквального подъёма. */
+  transform:perspective(700px) rotateX(-6deg);
   position:relative;overflow:hidden;-webkit-touch-callout:none;
   animation:nnb-float 4s ease-in-out infinite;
   transition:transform .15s,box-shadow .15s;
@@ -1026,14 +1036,14 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .new-note-btn::after{content:none;}
 /* Плавание: только transform + upward glow (не вниз, не в панель) */
 @keyframes nnb-float{
-  0%,100%{transform:perspective(700px) rotateX(-5deg) translateY(-16px);box-shadow:0 -5px 20px oklch(0.52 0.14 210/.12),0 3px 8px oklch(0 0 0/.09),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
-  50%{transform:perspective(700px) rotateX(-6deg) translateY(-20px);box-shadow:0 -10px 32px oklch(0.52 0.16 210/.22),0 3px 8px oklch(0 0 0/.09),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
+  0%,100%{transform:perspective(700px) rotateX(-6deg);box-shadow:0 -4px 18px oklch(0.52 0.14 210/.14),0 4px 12px oklch(0 0 0/.10),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
+  50%{transform:perspective(700px) rotateX(-7deg) scale(1.025);box-shadow:0 -8px 28px oklch(0.52 0.16 210/.22),0 4px 12px oklch(0 0 0/.10),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
 }
 /* Агент слушает — удержание */
 .new-note-btn.holding{
   background:linear-gradient(148deg,oklch(1 0 0/.78),oklch(0.96 0.10 22/.55));
   border-color:oklch(0.65 0.18 25/.65);
-  transform:perspective(700px) rotateX(-5deg) translateY(-16px) scale(0.96);
+  transform:perspective(700px) rotateX(-6deg) scale(0.96);
   animation:rec-border-pulse 1.1s ease-in-out infinite;
 }
 @keyframes rec-border-pulse{
@@ -1041,7 +1051,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   50%{box-shadow:0 0 0 3px oklch(0.65 0.18 25/.44),0 0 0 11px oklch(0.65 0.18 25/.14),0 -7px 22px oklch(0.55 0.20 25/.32),inset 0 2.5px 0 oklch(1 0 0/.85);}
 }
 .new-note-btn:not(.holding):active{
-  transform:perspective(700px) rotateX(-3deg) translateY(-12px) scale(.96);
+  transform:perspective(700px) rotateX(-3deg) scale(.96);
   animation:none;
 }
 /* Иконки: карандаш (default) / sun-ray (agent) */
@@ -2637,20 +2647,25 @@ header{padding:15px 16px 9px;}
   -webkit-backdrop-filter:none;
   border-top:none;
   box-shadow:none;
-  padding:6px 14px max(env(safe-area-inset-bottom,10px),10px);
+  /* padding-top: кнопка должна быть внутри home-bar bounds (iOS touch clip) */
+  padding:14px 14px max(env(safe-area-inset-bottom,14px),14px);
 }
 .new-note-btn{
-  flex:0 0 96px;
-  transform:perspective(700px) rotateX(-5deg) translateY(-10px);
-  background:linear-gradient(148deg,oklch(1 0 0/.72),oklch(0.96 0.020 210/.56));
-  border-color:oklch(1 0 0/.65);
+  flex:0 0 100px;
+  transform:perspective(700px) rotateX(-6deg);
+  background:linear-gradient(148deg,oklch(1 0 0/.78),oklch(0.96 0.022 210/.60));
+  border-color:oklch(1 0 0/.70);
 }
 .new-note-btn::before{display:none;}
-.new-note-btn.holding{transform:perspective(700px) rotateX(-5deg) translateY(-10px) scale(.96)!important;}
-.new-note-btn:not(.holding):active{transform:perspective(700px) rotateX(-3deg) translateY(-7px) scale(.96)!important;}
-.home-act-row{gap:10px;margin-top:4px;max-width:380px;margin-left:auto;margin-right:auto;align-items:center;}
+.new-note-btn.holding{transform:perspective(700px) rotateX(-6deg) scale(.96)!important;}
+.new-note-btn:not(.holding):active{transform:perspective(700px) rotateX(-4deg) scale(.96)!important;}
+.home-act-row{
+  gap:10px;
+  justify-content:center;   /* кнопки по центру */
+  align-items:center;
+}
 .home-act-btn{
-  flex:0 0 110px;padding:10px 8px;border-radius:18px;
+  flex:1;max-width:120px;padding:10px 8px;border-radius:18px;
   background:linear-gradient(155deg,oklch(1 0 0/.64),oklch(0.97 0.008 215/.50));
   border:1px solid oklch(1 0 0/.58);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.85);
 }
