@@ -1400,7 +1400,9 @@ function scheduleAll(){
     const delay=dt.getTime()-Date.now();
     if(delay<=0||delay>7*24*3600*1000)return;
     const tid=setTimeout(()=>{
-      showInAppReminder(n); // только внутренний баннер, SW уже показал системное
+      // Не дублируем если advance-баннер уже показал checkDueReminders
+      const key=n.id+'_'+n.reminder;
+      if(!_shownReminders[key])showInAppReminder(n);
       updateReminderDot();
     },delay);
     _NT.push(tid);
@@ -1658,7 +1660,12 @@ function checkDueReminders(){
       if(nextIso!==n.reminder){
         const list=getNotes();
         const idx=list.findIndex(x=>x.id===n.id);
-        if(idx>=0){list[idx].reminder=nextIso;list[idx].updatedAt=Date.now();saveNotes(list);scheduleAll();}
+        if(idx>=0){
+          list[idx].reminder=nextIso;list[idx].updatedAt=Date.now();saveNotes(list);
+          // Регистрируем новое время на сервере чтоб VAPID-пуш сработал при закрытом приложении
+          _saveReminderToServer(n.id,n.title||'',n.body||'',nextIso);
+          scheduleAll();
+        }
       }
     }
     // Clean shown cache for reminders more than 1h past
@@ -1778,10 +1785,13 @@ function doneReminder(noteId){
   const notes=getNotes();
   const n=notes.find(x=>x.id===noteId);
   if(!n)return;
+  const hadReminder=!!n.reminder;
   n.reminder=null;
   if(n.recurring)n.recurring=null;
   n.updatedAt=Date.now();
   saveNotes(notes);
+  if(hadReminder)_deleteReminderFromServer(noteId);
+  scheduleAll();
   showToast('Выполнено ✓');
   renderReminderPanel();
 }
@@ -1919,6 +1929,7 @@ function remEditDelete(){
   delete notes[idx].recurring;
   notes[idx].updatedAt=Date.now();
   saveNotes(notes);
+  _deleteReminderFromServer(_remEditNoteId);
   scheduleAll();
   renderReminderPanel();
   closeRemEdit();
@@ -1944,7 +1955,9 @@ function remEditRemoveTime(time){
     delete notes[idx].recurring;
     delete notes[idx].reminder;
     notes[idx].updatedAt=Date.now();
-    saveNotes(notes);scheduleAll();renderReminderPanel();
+    saveNotes(notes);
+    _deleteReminderFromServer(_remEditNoteId);
+    scheduleAll();renderReminderPanel();
     closeRemEdit();
     showToast('Повторение отключено');
     return;
@@ -1984,8 +1997,9 @@ function removeNoteReminder(id){
   const notes=getNotes();
   const idx=notes.findIndex(n=>n.id===id);
   if(idx<0)return;
-  notes[idx]={...notes[idx],reminder:null};
+  notes[idx]={...notes[idx],reminder:null,recurring:null};
   saveNotes(notes);
+  _deleteReminderFromServer(id);
   scheduleAll();
   loadNotes();loadHomeFeed();
   renderReminderPanel();
@@ -4522,8 +4536,11 @@ function delNote(i){
     // Держим корзину не более 50 записей
     if(trash.length>50)trash.pop();
     saveTrash(trash);
+    // Снять напоминание с сервера (иначе cron продолжит слать пуши)
+    if(deleted.reminder)_deleteReminderFromServer(deleted.id);
   }
   saveNotes(notes);
+  scheduleAll();
   loadNotes();loadHomeFeed();loadNotepad();
   showToast('В корзину · можно восстановить');
   updTrashBadge();
@@ -4849,8 +4866,8 @@ function loadHomeFeed(){
     delPanel._onDelete=()=>{
       const notes=getNotes();
       const idx=n.id?notes.findIndex(x=>x.id===n.id):notes.findIndex(x=>x===n);
-      if(idx>=0){const del=notes.splice(idx,1)[0];del._deletedAt=Date.now();const tr=getTrash();tr.unshift(del);if(tr.length>50)tr.pop();saveTrash(tr);saveNotes(notes);}
-      loadHomeFeed();loadNotes();
+      if(idx>=0){const del=notes.splice(idx,1)[0];del._deletedAt=Date.now();const tr=getTrash();tr.unshift(del);if(tr.length>50)tr.pop();saveTrash(tr);saveNotes(notes);if(del.reminder)_deleteReminderFromServer(del.id);}
+      scheduleAll();loadHomeFeed();loadNotes();
       showToast('В корзину · можно восстановить');
     };
     _makeSwipeAttach(card,delPanel);
@@ -5542,6 +5559,8 @@ function _runSingleIntent(intent,params,originalText){
       );
       if(trash.length>50)trash.length=50;
       saveNotes(notes);saveTrash(trash);
+      toDelete.forEach(n=>{if(n.reminder)_deleteReminderFromServer(n.id);});
+      scheduleAll();
       loadNotes();loadHomeFeed();loadNotepad();updTrashBadge();
       showToast(count===1?'Заметка в корзине':'В корзину: '+count+' заметок');
     } else showToast('Заметка не найдена');
