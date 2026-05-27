@@ -4866,6 +4866,8 @@ function loadHomeFeed(){
     wrap.appendChild(dDel);
     el.appendChild(wrap);
   });
+  // Восстановить compact-класс и кнопку после каждого рендера
+  _applyCompactFeedState();
 }
 
 function hfOpenNote(i){
