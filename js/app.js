@@ -2757,6 +2757,92 @@ let _selectLongPressNid=null;
 let _p0SectCollapsed=localStorage.getItem('rz_p0_sect_col')==='1';
 let _p0InboxCollapsed=localStorage.getItem('rz_p0_inbox_col')==='1';
 
+// ── AI Context Engine ──────────────────────────────────────────────────────
+// Трекинг поведения: сколько раз открыта каждая заметка, где сейчас пользователь
+let _noteStats=null; // {id:{opens,last}} — lazy-load из localStorage
+let _agentViewCtx={type:'home',name:null,tag:null}; // где сейчас пользователь
+
+function _getNoteStats(){
+  if(!_noteStats){
+    try{_noteStats=JSON.parse(localStorage.getItem('rz_note_stats')||'{}');}
+    catch{_noteStats={};}
+  }
+  return _noteStats;
+}
+
+function _trackNoteOpen(id){
+  if(!id)return;
+  const s=_getNoteStats();
+  if(!s[id])s[id]={opens:0,last:0};
+  s[id].opens++;
+  s[id].last=Date.now();
+  try{localStorage.setItem('rz_note_stats',JSON.stringify(s));}catch{}
+  // Если заметку открыли 5+ раз — она важна, пишем в ai_memory
+  if(s[id].opens===5){
+    const note=getNotes().find(n=>n.id===id);
+    if(note){
+      const mem=getAiMemory();
+      const key=`important:${id}`;
+      if(!mem.find(m=>m.key===key)){
+        mem.push({key,summary:`Важная заметка (открыл 5+ раз): «${(note.title||'').slice(0,60)}»`,ts:Date.now()});
+        if(mem.length>30)mem.shift();
+        _saveAiMemoryRaw(mem);
+      }
+    }
+  }
+}
+
+function _buildAgentContext(){
+  const stats=_getNoteStats();
+  const allNotes=getNotes();
+  const sections=getUserFolders?.()??[];
+  const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
+
+  // Топ часто открываемых заметок
+  const topNotes=allNotes
+    .filter(n=>stats[n.id]?.opens>0)
+    .sort((a,b)=>(stats[b.id]?.opens||0)-(stats[a.id]?.opens||0))
+    .slice(0,5)
+    .map(n=>({
+      title:n.title||'Без названия',
+      opens:stats[n.id]?.opens||0,
+      section:n.aiTags?.find(t=>t.startsWith('_filed_in:'))?.slice(10)||null,
+      hasReminder:!!n.reminder
+    }));
+
+  // Заметок в каждом разделе
+  const sectionStats=sections.map(s=>({
+    name:s.name,
+    noteCount:allNotes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.includes(`_filed_in:${s.name}`)).length
+  }));
+
+  // Заметок в каждой папке входящих
+  const inboxStats=tagFolders.map(f=>({
+    tag:f.tag, label:f.label||f.tag,
+    noteCount:allNotes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.includes(f.tag)).length
+  })).filter(f=>f.noteCount>0);
+
+  // Ближайшие напоминания (до 4)
+  const now=Date.now();
+  const upcoming=allNotes
+    .filter(n=>n.reminder&&new Date(n.reminder).getTime()>now)
+    .sort((a,b)=>new Date(a.reminder).getTime()-new Date(b.reminder).getTime())
+    .slice(0,4)
+    .map(n=>({title:n.title||'',reminder:String(n.reminder).slice(0,16)}));
+
+  return{
+    currentView:_agentViewCtx,
+    topOpenedNotes:topNotes,
+    sectionStats,
+    inboxStats,
+    upcoming,
+    totalNotes:allNotes.length,
+    totalSections:sections.length,
+    totalInbox:tagFolders.length,
+    trashCount:getTrash().length,
+  };
+}
+
 function toggleDrillGrid(){
   _drillGrid=!_drillGrid;
   localStorage.setItem('rz_drill_grid',_drillGrid?'1':'0');
@@ -2795,6 +2881,10 @@ function drillGo(level,data){
   if(data&&data.aiTag!==undefined){drillAiTag=data.aiTag;drillCategory=null;}
   if(data&&data.noteId!==undefined)drillNoteId=data.noteId;
   drillLevel=level;
+  // Обновляем контекст для агента — он знает где пользователь
+  if(level===0)_agentViewCtx={type:'all',name:null,tag:null};
+  else if(data?.category)_agentViewCtx={type:'section',name:data.category,tag:null};
+  else if(data?.aiTag)_agentViewCtx={type:'folder',name:null,tag:data.aiTag};
   _drillRender(level);
   _drillNav();
   _drillSeek(level);
@@ -3625,6 +3715,7 @@ function openNoteSheetById(id){
   const notes=getNotes();
   const n=notes.find(x=>x.id===id);
   if(!n)return;
+  _trackNoteOpen(id);
   _openNoteWith(n);
 }
 function _openNoteWith(n){
@@ -5490,7 +5581,7 @@ async function _processAgentQuery(text,alts=[]){
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone,conversationHistory:_agentHistory.length?_agentHistory:undefined}}),
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone,conversationHistory:_agentHistory.length?_agentHistory:undefined,appContext:_buildAgentContext()}}),
       signal:ac.signal
     });
     _cleanTimers();
