@@ -1440,9 +1440,53 @@ async function _pullCloudIfStale(){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
     if(notifGranted())scheduleAll();
+    _lastPullAt=0; // сбрасываем throttle при возврате в приложение
     _pullCloudIfStale();
   }
 });
+
+// ── Pull-to-refresh на ленте и списке заметок ──
+let _ptrActive=false,_ptrSY=0,_ptrTriggered=false;
+function _initPTR(scrollEl){
+  if(!scrollEl||scrollEl._ptrInited)return;
+  scrollEl._ptrInited=true;
+  const bar=document.getElementById('ptr-bar');
+  const THRESHOLD=72;
+  scrollEl.addEventListener('touchstart',e=>{
+    if(scrollEl.scrollTop===0){_ptrActive=true;_ptrSY=e.touches[0].clientY;_ptrTriggered=false;}
+  },{passive:true});
+  scrollEl.addEventListener('touchmove',e=>{
+    if(!_ptrActive)return;
+    const dy=e.touches[0].clientY-_ptrSY;
+    if(dy>0&&scrollEl.scrollTop===0){
+      const pull=Math.min(dy*0.45,THRESHOLD);
+      if(bar){bar.style.height=pull+'px';}
+      _ptrTriggered=pull>=THRESHOLD*0.75;
+      if(bar)bar.style.opacity=String(Math.min(pull/(THRESHOLD*0.5),1));
+    }
+  },{passive:true});
+  scrollEl.addEventListener('touchend',()=>{
+    if(!_ptrActive)return;
+    _ptrActive=false;
+    if(bar){bar.style.height='0';bar.style.opacity='';}
+    if(_ptrTriggered)_doPTR();
+    _ptrTriggered=false;
+  },{passive:true});
+}
+let _ptrRunning=false;
+async function _doPTR(){
+  if(_ptrRunning)return;
+  _ptrRunning=true;
+  const bar=document.getElementById('ptr-bar');
+  if(bar){bar.style.height='36px';bar.classList.add('spinning');}
+  _lastPullAt=0;
+  CLOUD_READY_UID=null; // принудительно перегружаем с облака
+  await loadCloudData();
+  await new Promise(r=>setTimeout(r,600));
+  if(bar){bar.classList.remove('spinning');bar.style.height='0';}
+  _ptrRunning=false;
+  showToast('Обновлено ✓');
+}
 
 // ── Умная обработка напоминания после сохранения заметки ──
 function _handleReminderAfterSave(reminderVal,noteId,noteTitle,noteBody){
@@ -3118,7 +3162,7 @@ function _applyCompactFeedState(){
 }
 function _agentInboxCard(note,index){
   const preview=_notePreview(note);
-  return `<article class="agent-note" onclick="drillPickNote(${index})">
+  return `<article class="agent-note" onclick="drillPickNote(${index})" data-nid="${esc(note.id)}">
     <div class="agent-note-top">
       <span class="agent-note-dot"></span>
       <span class="agent-note-copy">
@@ -3139,10 +3183,29 @@ function _renderAgentInbox(el,notes){
   el.innerHTML=`<div class="agent-inbox">
     <div class="agent-inbox-board"><div class="agent-note-stack">${cards}</div></div>
   </div>`;
+  // Swipe-to-delete на каждой карточке
+  el.querySelectorAll('.agent-note[data-nid]').forEach(card=>{
+    const nid=card.dataset.nid;
+    const xEl=document.createElement('div');
+    xEl.className='hf-del-panel';
+    xEl.style.borderRadius='0 16px 16px 0';
+    xEl.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
+    xEl._onDelete=()=>{
+      const all=getNotes();
+      const idx=all.findIndex(n=>n.id===nid);
+      if(idx>=0){const d=all.splice(idx,1)[0];d._deletedAt=Date.now();const tr=getTrash();tr.unshift(d);if(tr.length>50)tr.pop();saveTrash(tr);saveNotes(all);if(d.reminder)_deleteReminderFromServer(d.id);}
+      scheduleAll();loadHomeFeed();loadNotepad();
+      showToast('В корзину · можно восстановить');updTrashBadge();
+      _drillP1(); // обновить список без перехода
+    };
+    card.appendChild(xEl);
+    _makeSwipeAttach(card,xEl);
+  });
 }
 
 function _drillP1(){
   const el=document.getElementById('drill-p1');if(!el)return;
+  _initPTR(el);
   let notes=getNotes();
   if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
   const viewingUserFolder=drillAiTag!==null&&isUserFolderName(drillAiTag);
@@ -4806,6 +4869,8 @@ function loadHomeFeed(){
   });
   // Восстановить compact-класс и кнопку после каждого рендера
   _applyCompactFeedState();
+  // PTR на ленте
+  _initPTR(el);
 }
 
 function hfOpenNote(i){
@@ -5256,13 +5321,9 @@ async function _startAgentVoiceWhisper(){
         });
         const data=await res.json();
         if(!res.ok||data.error){
-          if(data.error==='GROQ_API_KEY not configured'){
-            _startAgentVoiceSR();return;
-          }
-          // Логируем реальную ошибку для отладки
-          console.error('[rz] Groq error:',data.groq_status,data.groq_error||data.error);
-          showToast('Ошибка голоса — попробуйте ещё раз');
-          _setAgentState('idle');return;
+          // Groq недоступен — тихо переходим на встроенное распознавание
+          console.warn('[rz] Groq unavailable, fallback SR:',data.groq_status,data.error);
+          _startAgentVoiceSR();return;
         }
         const text=(data.text||'').trim();
         if(!text){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
@@ -5270,9 +5331,8 @@ async function _startAgentVoiceWhisper(){
         showToast('🎙 «'+text.slice(0,50)+(text.length>50?'…':'')+'»');
         _processAgentQuery(text,[]);
       }catch(e){
-        console.error('Whisper transcription error:',e);
-        showToast('Ошибка сети — попробуйте ещё раз');
-        _setAgentState('idle');
+        console.warn('[rz] Whisper error, fallback SR:',e);
+        _startAgentVoiceSR();
       }
     };
 
