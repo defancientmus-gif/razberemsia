@@ -2342,13 +2342,14 @@ html.dark .bubble{
 .sect-hdr-label{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-l);}
 .sect-hdr-add{width:28px;height:28px;border-radius:50%;border:none;background:oklch(0.52 0.10 210 / .12);color:var(--accent);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;transition:background .15s,transform .12s;}
 .sect-hdr-add:active{transform:scale(.88);background:oklch(0.52 0.10 210 / .22);}
-.sect-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 14px;}
+.sect-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 12px 12px;}
 /* ── Матовый хрусталь: мягкий стеклянный эффект ── */
-.sect-card{border-radius:20px;padding:11px 10px 10px;background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.007 215 / .48));backdrop-filter:blur(12px) saturate(1.25);-webkit-backdrop-filter:blur(12px) saturate(1.25);border:1px solid oklch(0.95 0.01 210 / .75);box-shadow:0 1.5px 10px oklch(0 0 0 / .07),inset 0 1.5px 0 oklch(1 0 0 / .90);cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:transform .14s,box-shadow .14s;position:relative;overflow:visible;text-align:left;font-family:var(--sys);-webkit-tap-highlight-color:transparent;}
-.sect-card::before{content:'';position:absolute;inset:0;background:var(--card-tint,transparent);opacity:.45;pointer-events:none;border-radius:inherit;}
-.sect-card:active{transform:scale(.95);box-shadow:0 1px 5px oklch(0 0 0/.06),inset 0 1px 0 oklch(1 0 0/.90);}
-.sect-card-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;font-family:var(--sys);flex-shrink:0;margin-bottom:3px;position:relative;}
-.sect-card-name{font-size:13px;font-weight:600;color:var(--fg);line-height:1.25;position:relative;}
+.sect-card{border-radius:16px;padding:9px 8px 8px;background:linear-gradient(152deg,oklch(1 0 0 / .70),oklch(0.97 0.007 215 / .52));backdrop-filter:blur(12px) saturate(1.25);-webkit-backdrop-filter:blur(12px) saturate(1.25);border:1px solid oklch(0.95 0.01 210 / .72);box-shadow:0 1px 8px oklch(0 0 0 / .06),inset 0 1.5px 0 oklch(1 0 0 / .92);cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .14s,box-shadow .14s;position:relative;overflow:visible;text-align:left;font-family:var(--sys);-webkit-tap-highlight-color:transparent;}
+/* Тонкая цветная полоска снизу вместо заливки — нет "бледного" эффекта */
+.sect-card::before{content:'';position:absolute;left:10px;right:10px;bottom:0;height:2.5px;background:var(--card-accent,oklch(0.55 0.10 210));border-radius:0 0 2px 2px;opacity:.55;pointer-events:none;}
+.sect-card:active{transform:scale(.96);box-shadow:0 1px 4px oklch(0 0 0/.06),inset 0 1px 0 oklch(1 0 0/.90);}
+.sect-card-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--sys);flex-shrink:0;margin-bottom:2px;position:relative;}
+.sect-card-name{font-size:12.5px;font-weight:600;color:var(--fg);line-height:1.25;position:relative;}
 .sect-card-cnt{font-size:10px;color:var(--fg-l);position:relative;}
 /* z-index:2 — выше ::before overlay; touch-action — iOS tap fix */
 .sect-card-del{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.22;-webkit-appearance:none;padding:0;color:var(--fg);transition:opacity .15s,background .15s;z-index:2;touch-action:manipulation;}
@@ -2362,10 +2363,26 @@ html.dark .bubble{
 .sect-hdr-chev{display:flex;align-items:center;color:var(--fg-l);opacity:.45;transition:transform .22s cubic-bezier(.22,1,.36,1);flex-shrink:0;}
 .sect-hdr-chev.collapsed{transform:rotate(-90deg);}
 /* Список-режим на уровне 0 */
-#drill-p0.list-mode .sect-grid{display:flex;flex-direction:column;gap:7px;}
-#drill-p0.list-mode .sect-card{flex-direction:row;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;}
-#drill-p0.list-mode .sect-card-ico{margin-bottom:0;flex-shrink:0;}
-#drill-p0.list-mode .sect-card-cnt{margin-left:auto;white-space:nowrap;}
+/* LIST MODE — чистые строки, никакой «колбасы» */
+#drill-p0.list-mode .sect-grid{display:flex;flex-direction:column;gap:0;padding:0 12px 12px;}
+#drill-p0.list-mode .sect-card{
+  flex-direction:row;align-items:center;gap:11px;
+  padding:9px 10px;border-radius:12px;
+  /* никакой цветной заливки — прозрачный фон */
+  background:oklch(1 0 0 / .38);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:none;box-shadow:none;
+  border-bottom:1px solid oklch(0.88 0.02 210 / .35);
+}
+#drill-p0.list-mode .sect-card:last-child{border-bottom:none;}
+/* В list-mode убираем цветную полоску снизу */
+#drill-p0.list-mode .sect-card::before{display:none;}
+#drill-p0.list-mode .sect-card-ico{
+  width:28px;height:28px;border-radius:8px;
+  margin-bottom:0;flex-shrink:0;
+}
+#drill-p0.list-mode .sect-card-name{font-size:14px;flex:1;}
+#drill-p0.list-mode .sect-card-cnt{margin-left:0;white-space:nowrap;font-size:12px;}
 #drill-p0.list-mode .sect-card-del{top:50%;transform:translateY(-50%);}
 /* Кнопки управления папками/разделами */
 .folder-del-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;cursor:pointer;opacity:.35;transition:opacity .15s,background .15s;-webkit-tap-highlight-color:transparent;border:none;background:transparent;padding:0;margin:0;-webkit-appearance:none;}
