@@ -5465,7 +5465,7 @@ async function _processAgentQuery(text,alts=[]){
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders}}),
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone}}),
       signal:ac.signal
     });
     _cleanTimers();
