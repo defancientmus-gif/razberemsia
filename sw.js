@@ -1,4 +1,4 @@
-const CACHE = 'rz-v235';
+const CACHE = 'rz-v236';
 const ASSETS = [
   './',
   'index.html',
@@ -27,8 +27,29 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// Отдельный долгоживущий кеш для шрифтов (не чистится при обновлении CACHE).
+const FONT_CACHE = 'rz-fonts-v1';
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+
+  // Google Fonts — cache-first, без версии (шрифты не меняются)
+  const url = e.request.url;
+  if (url.includes('fonts.gstatic.com') || url.includes('fonts.googleapis.com')) {
+    e.respondWith(
+      caches.open(FONT_CACHE).then(fc =>
+        fc.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(r => {
+            if (r.ok) fc.put(e.request, r.clone());
+            return r;
+          }).catch(() => cached || new Response('', {status: 503}));
+        })
+      )
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => {
       if (e.request.mode === 'navigate') {

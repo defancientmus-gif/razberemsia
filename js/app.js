@@ -7,6 +7,9 @@ const sb=sbConfigured&&window.supabase?window.supabase.createClient(SUPABASE_URL
 
 let CU=null,ST=null,EI=null;
 let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false;
+// Флаг: если Promise.race timeout выиграл раньше чем пришли облачные данные,
+// loadCloudData не должна перезаписывать localStorage — пользователь уже работает.
+let _cloudStale=false;
 let _cardSwiping=false; // флаг: карточка перехватила свайп, подавить навигацию
 
 function userScope(){return CU&&CU.id?CU.id:'signed-out';}
@@ -219,14 +222,17 @@ async function loadCloudData(){
     }
     if(error)throw error;
     if(data){
-      if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
-      if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
-      if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
-      if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-      // Папки: облако побеждает только если там что-то есть.
-      // Если облако вернуло [] (новые колонки с дефолтом) — сохраняем локальные данные.
-      _mergeCloudFolders(data.user_folders,data.tag_folders);
-      if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
+      // Если timeout уже прошёл (_cloudStale), пользователь работает с локальными данными —
+      // не перезаписываем localStorage: это может затереть только что созданные заметки.
+      if(!_cloudStale){
+        if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
+        if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+        if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
+        if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
+        // Папки: облако побеждает только если там что-то есть.
+        _mergeCloudFolders(data.user_folders,data.tag_folders);
+        if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
+      }
     } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
       await saveCloudNow();
     }
@@ -247,7 +253,7 @@ async function loadCloudData(){
           data=fallback.data;error=fallback.error;
         }
         if(error)throw error;
-        if(data){
+        if(data&&!_cloudStale){
           if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
           if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
           if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
@@ -371,9 +377,13 @@ function showAuthErr(msg){
   if(errEl){errEl.textContent=msg;errEl.style.display='block';}
 }
 async function enterUser(user){
-  CU=user;migrateLegacyLocal();
+  CU=user;migrateLegacyLocal();_cloudStale=false;
   // Таймаут 7с: если облако не ответило — запускаем с локальными данными (не висим на логотипе)
-  await Promise.race([loadCloudData(),new Promise(r=>setTimeout(r,7000))]);
+  // После timeout флаг _cloudStale=true: loadCloudData не перезапишет localStorage пока пользователь работает
+  await Promise.race([
+    loadCloudData(),
+    new Promise(r=>setTimeout(()=>{_cloudStale=true;r();},7000))
+  ]);
   showApp();updUI(user);loadAll();
   _maybeOnboard();
   // Восстановить push-подписку при каждом логине (endpoint может смениться)
@@ -5934,21 +5944,13 @@ window.addEventListener('load',()=>{
     // Принудительно проверяем обновление SW при каждом запуске
     // Это критично для iOS PWA — иначе кэш может не обновляться сутками
     reg.update().catch(()=>{});
-
-    // Если новый SW ожидает активации — сразу активируем
-    reg.addEventListener('updatefound',()=>{
-      const sw=reg.installing;
-      if(!sw)return;
-      sw.addEventListener('statechange',()=>{
-        if(sw.state==='installed'&&navigator.serviceWorker.controller){
-          // Новый SW установлен — перезагружаем страницу чтобы подхватить
-          window.location.reload();
-        }
-      });
-    });
+    // updatefound → НЕ перезагружаем здесь.
+    // skipWaiting() в sw.js → controllerchange → одна перезагрузка ниже.
+    // Без этого было две перезагрузки подряд (мигание при каждом обновлении).
   }).catch(()=>{});
 
-  // Если контроллер сменился (другой SW взял управление) — перезагружаем
+  // Единственный reload — когда новый SW взял управление (после skipWaiting).
+  // refreshing — флаг на текущую страницу, предотвращает двойной вызов.
   let refreshing=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
     if(refreshing)return;
@@ -5958,4 +5960,21 @@ window.addEventListener('load',()=>{
 });
 
 // ── INIT ──
+// Лого появляется только когда Playfair Display загружен — без джерка font-swap.
+// document.fonts.load() запускает загрузку и резолвит как только шрифт готов.
+(function(){
+  const _showWordmark=()=>{
+    const wm=document.querySelector('.auth-wordmark');
+    if(wm&&!document.getElementById('auth-screen').classList.contains('gone'))
+      wm.classList.add('wm-ready');
+  };
+  if(document.fonts&&document.fonts.load){
+    document.fonts.load('400 49px "Playfair Display"')
+      .then(_showWordmark).catch(_showWordmark);
+  } else {
+    // Старый браузер без Font Loading API — показываем через 300ms
+    setTimeout(_showWordmark,300);
+  }
+})();
+
 initAuth();

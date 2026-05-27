@@ -2583,11 +2583,16 @@ header{padding:15px 16px 9px;}
 .auth-wordmark{
   font-family:'Playfair Display',serif;
   font-size:49px;line-height:1;color:oklch(0.25 0.055 190);
+  /* Скрыт до загрузки шрифта — без этого display:swap вызывает джерк */
+  opacity:0;
+}
+/* Шрифт готов → JS добавляет .wm-ready → анимация запускается */
+.auth-wordmark.wm-ready{
   animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes wm-appear{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes wm-shimmer{0%{background-position:-240% center;}100%{background-position:240% center;}}
-#auth-screen.checking .auth-wordmark{
+#auth-screen.checking .auth-wordmark.wm-ready{
   background:linear-gradient(90deg,
     oklch(0.25 0.055 190) 0%,
     oklch(0.25 0.055 190) 28%,
