@@ -5425,6 +5425,23 @@ function _setAgentState(state){
   }
 }
 
+// ── Сессионная память разговора с агентом ─────────────────────────────────
+let _agentHistory=[];      // [{user,agent,intent}] — последние 4 хода
+let _agentHistoryTs=0;     // timestamp последнего хода
+const _HISTORY_TTL=15*60*1000; // 15 мин без активности → сброс
+
+function _pushAgentHistory(userText,agentResponse,intent){
+  const now=Date.now();
+  if(now-_agentHistoryTs>_HISTORY_TTL)_agentHistory=[];  // пауза → чистый лист
+  _agentHistoryTs=now;
+  _agentHistory.push({
+    user:userText.slice(0,160),
+    agent:(agentResponse||'').slice(0,300),
+    intent:intent||''
+  });
+  if(_agentHistory.length>4)_agentHistory.shift();  // держим только 4 хода
+}
+
 async function _processAgentQuery(text,alts=[]){
   _setAgentState('thinking');
 
@@ -5473,7 +5490,7 @@ async function _processAgentQuery(text,alts=[]){
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone}}),
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone,conversationHistory:_agentHistory.length?_agentHistory:undefined}}),
       signal:ac.signal
     });
     _cleanTimers();
@@ -5482,6 +5499,7 @@ async function _processAgentQuery(text,alts=[]){
     _setAgentState('idle');
     if(!res.ok||data.error){showToast('Агент: '+(data.error||'ошибка '+res.status));return;}
     if(!data.intent){showToast('Агент не понял намерение');return;}
+    _pushAgentHistory(text,data.response,data.intent);
     _executeAgentIntent(data,text);
   }catch(e){
     _cleanTimers();
