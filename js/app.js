@@ -161,23 +161,36 @@ function isMissingAiMemoryColumn(error){
   const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
   return msg.includes('ai_memory')&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
 }
-function _mergeCloudFolders(cloudUserFolders,cloudTagFolders){
-  // Правило: облако побеждает только если непустое.
-  // Если облако вернуло [] (новые колонки с дефолтом) — НЕ перезаписываем локальные данные.
+// Timestamp последнего успешного cloud-push (ISO string)
+function _getLocalSyncedAt(){return localStorage.getItem('rz_folders_synced_at')||'';}
+function _setLocalSyncedAt(ts){if(ts)localStorage.setItem('rz_folders_synced_at',ts);}
+
+function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
+  // Last-write-wins: если облако обновилось после последнего нашего push — доверяем облаку
+  // даже если оно вернуло пустой массив (пользователь удалил все папки с другого устройства).
+  const localSyncedAt=_getLocalSyncedAt();
+  const cloudIsNewer=cloudUpdatedAt&&(!localSyncedAt||cloudUpdatedAt>localSyncedAt);
+
   if(Array.isArray(cloudUserFolders)){
     const local=getUserFolders();
-    if(cloudUserFolders.length>0){
+    if(cloudIsNewer){
+      // Облако новее → берём как есть (включая пустой массив = «удалено»)
       localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(cloudUserFolders));
-    } else if(local.length>0){
-      // Локальные есть, облако пустое — синхронизируем в облако
+    } else if(cloudUserFolders.length>0&&!local.length){
+      // Облако не новее, но локально пусто → берём облако (первый вход на новом устройстве)
+      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(cloudUserFolders));
+    } else if(local.length>0&&!cloudUserFolders.length){
+      // Локальные есть, облако пустое и не новее → пушим локальное в облако
       queueCloudSave();
     }
   }
   if(Array.isArray(cloudTagFolders)){
     const localTags=typeof getTagFolders==='function'?getTagFolders():[];
-    if(cloudTagFolders.length>0){
+    if(cloudIsNewer){
       localStorage.setItem('rz_tag_folders',JSON.stringify(cloudTagFolders));
-    } else if(localTags.length>0){
+    } else if(cloudTagFolders.length>0&&!localTags.length){
+      localStorage.setItem('rz_tag_folders',JSON.stringify(cloudTagFolders));
+    } else if(localTags.length>0&&!cloudTagFolders.length){
       queueCloudSave();
     }
   }
@@ -214,7 +227,7 @@ async function loadCloudData(){
   if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
   try{
-    let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name').eq('user_id',CU.id).maybeSingle();
+    let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
     if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
       console.warn('new columns not ready yet, loading cloud state without them');
       const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
@@ -229,8 +242,7 @@ async function loadCloudData(){
         if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
         if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
         if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-        // Папки: облако побеждает только если там что-то есть.
-        _mergeCloudFolders(data.user_folders,data.tag_folders);
+        _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
         if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
       }
     } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
@@ -247,7 +259,7 @@ async function loadCloudData(){
       if(CLOUD_READY_UID===CU?.id)return; // уже загрузилось
       try{
         CLOUD_LOADING=true;
-        let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name').eq('user_id',CU.id).maybeSingle();
+        let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
         if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
           const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
           data=fallback.data;error=fallback.error;
@@ -258,7 +270,7 @@ async function loadCloudData(){
           if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
           if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
           if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-          _mergeCloudFolders(data.user_folders,data.tag_folders);
+          _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
           if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
           loadAll(); // обновляем UI с данными из облака
         }
@@ -285,6 +297,8 @@ async function saveCloudNow(){
       error=fallback.error;
     }
     if(error)throw error;
+    // Запомнить timestamp последнего успешного push (для last-write-wins в _mergeCloudFolders)
+    _setLocalSyncedAt(payload.updated_at);
     // Параллельная синхронизация в таблицу notes (fire-and-forget)
     _syncNotesToTable();
   }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
@@ -1404,7 +1418,7 @@ async function _pullCloudIfStale(){
   _lastPullAt=Date.now();
   try{
     const {data}=await sb.from('user_state')
-      .select('notes,trash,user_folders,tag_folders')
+      .select('notes,trash,user_folders,tag_folders,updated_at')
       .eq('user_id',CU.id).maybeSingle();
     if(!data)return;
     let changed=false;
@@ -1416,7 +1430,7 @@ async function _pullCloudIfStale(){
     if(Array.isArray(data.trash)){
       localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
     }
-    _mergeCloudFolders(data.user_folders,data.tag_folders);
+    _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
     if(changed)loadAll();
     else if(document.getElementById('drill-p0')?.offsetParent!==null)_drillP0(); // обновить разделы
   }catch(_){}
