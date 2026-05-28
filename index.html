@@ -1246,24 +1246,6 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   display:flex;flex-direction:column;align-items:center;gap:12px;
   margin-bottom:10px;
 }
-.auth-logo-mark{
-  display:flex;align-items:center;justify-content:center;
-}
-.auth-logo-mark svg{width:52px;height:52px;stroke:var(--accent-d);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 4px 12px oklch(0.54 0.13 210 / 0.30));}
-.auth-logo-text{
-  font-family:'Playfair Display',serif;
-  font-size:36px;color:var(--fg);letter-spacing:-.5px;line-height:1;
-}
-.auth-tag{
-  font-size:15px;color:var(--fg-l);text-align:center;
-  font-weight:400;letter-spacing:.01em;
-  margin-bottom:2px;
-}
-.auth-ver{
-  font-size:11px;color:oklch(0.52 0.012 210 / 0.40);
-  text-align:center;margin-bottom:0;font-weight:500;letter-spacing:.04em;
-}
-
 /* ── ONBOARDING ── */
 #onboard-overlay{background:oklch(0 0 0 / 0.38);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
 #onboard-sheet{
@@ -1291,7 +1273,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .onb-btn:active{transform:scale(.97);opacity:.9;}
 .onb-skip{background:none;border:none;font-size:13px;color:var(--fg-l);cursor:pointer;padding:4px 0;font-family:var(--sys);-webkit-appearance:none;}
 
-/* Card — при появлении (снятие checking) плавно выезжает */
+/* Card */
 .auth-card{
   width:100%;max-width:380px;margin-top:20px;
   background:oklch(1 0 0 / 0.82);
@@ -1299,20 +1281,14 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   border:1px solid oklch(0.90 0.02 210 / 0.55);
   border-radius:28px;padding:28px 24px 24px;
   box-shadow:0 8px 40px oklch(0 0 0 / 0.08),inset 0 1px 0 oklch(1 0 0 / 0.9);
-  /* Нет анимации при загрузке — карточка ждёт в checking-состоянии */
 }
-/* Когда проверка завершена — карточка появляется */
-.auth-card:not(.checking){
-  animation:authCardIn .40s cubic-bezier(.22,1,.36,1) both;
-}
+/* Во время проверки сессии — карточка скрыта и OUT OF FLOW → логотип по центру */
+.auth-card.checking{display:none;}
+/* Проверка завершена → карточка появляется снизу */
+.auth-card:not(.checking){animation:authCardIn .40s cubic-bezier(.22,1,.36,1) both;}
 @keyframes authCardIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .auth-step{display:none;}
 .auth-step.active{display:block;}
-
-/* Checking overlay inside card */
-/* visibility:hidden вместо display:none — карточка держит высоту, логотип не прыгает */
-.auth-card.checking .auth-step{visibility:hidden;pointer-events:none;}
-.auth-card.checking .auth-loading{display:block;}
 
 /* Step label */
 .auth-lbl{
@@ -2009,7 +1985,6 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 html{transition:filter .35s ease;}
 html.dark{filter:invert(1) hue-rotate(180deg);color-scheme:dark;}
 html.dark img,html.dark video,html.dark canvas{filter:invert(1) hue-rotate(180deg);}
-html.dark .auth-logo-img,html.dark .logo-img{filter:invert(1) hue-rotate(180deg);}
 html.dark .jarvis-feed{
   background:oklch(0.99 0.002 210 / 0.10);
   backdrop-filter:blur(16px) saturate(1.35) brightness(1.02);
@@ -2103,21 +2078,6 @@ html.dark .bubble{
   from{transform:translateX(-380px);}
   to{transform:translateX(calc(100vw + 380px));}
 }
-/* ── LOADING SCREEN — чистый экран с логотипом ── */
-.auth-card.checking { opacity:0; pointer-events:none; transition:opacity .3s; }
-.auth-logo-mark svg { display:none; } /* убираем старое перо */
-.auth-logo-img {
-  width:220px; height:220px; object-fit:contain;
-  mix-blend-mode:multiply;
-  animation: logo-breathe 3s ease-in-out infinite;
-  filter: drop-shadow(0 8px 24px oklch(0.45 0.15 220 / 0.30));
-}
-.auth-logo-text, .auth-tag, .auth-ver { display:none; }
-@keyframes logo-breathe {
-  0%,100% { transform:scale(1);   filter:drop-shadow(0 8px 24px oklch(0.45 0.15 220 / 0.25)); }
-  50%      { transform:scale(1.04); filter:drop-shadow(0 12px 32px oklch(0.45 0.15 220 / 0.45)); }
-}
-
 /* ── AI PORTAL BUTTON — пульсирующие кольца ── */
 .rz-portal-canvas { display:none; } /* canvas больше не нужен */
 .rz-portal {
@@ -2690,7 +2650,6 @@ header{padding:15px 16px 9px;}
   animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both,wm-shimmer 2s linear infinite .55s;
 }
 .auth-logo{margin-bottom:28px;}
-.auth-logo-img{display:none!important;}
 .jarvis-top{padding:7px 14px 3px;}
 .jq-btn,.hf-card,.drill-sec-row,.drill-note-row{
   background:linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .70));

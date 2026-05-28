@@ -4620,7 +4620,7 @@ function saveSheet(){
   const _prevCategory=drillCategory;
   const _prevDrillLevel=drillLevel;
   const _wasInNotes=(cur==='notes');
-  loadNotes();loadHomeFeed();loadNotepad();
+  _reloadViews();
   closeSheet();
   showToast(wasNew?'Сохранено ✓':'Изменено ✓');
   // Возврат в папку после сохранения (и создания, и редактирования)
@@ -4671,7 +4671,7 @@ function delNote(i){
   }
   saveNotes(notes);
   scheduleAll();
-  loadNotes();loadHomeFeed();loadNotepad();
+  _reloadViews();
   showToast('В корзину · можно восстановить');
   updTrashBadge();
 }
@@ -4738,7 +4738,7 @@ function restoreNote(i){
     saveNotes(notes);
   }
   saveTrash(trash);
-  loadTrash();loadNotes();loadHomeFeed();loadNotepad();
+  loadTrash();_reloadViews();
   showToast('Заметка восстановлена ✓');
   updTrashBadge();
 }
@@ -4755,7 +4755,7 @@ function restoreHistory(hi){
     notes[idx]=sn;
     saveNotes(notes);
     showToast('Версия восстановлена ✓');
-    loadTrash();loadNotes();loadHomeFeed();loadNotepad();
+    loadTrash();_reloadViews();
   } else {
     // Note was deleted — restore from history snapshot
     sn._restoredFromHistory=true;
@@ -4763,7 +4763,7 @@ function restoreHistory(hi){
     notes.push(sn);
     saveNotes(notes);
     showToast('Заметка восстановлена из истории ✓');
-    loadTrash();loadNotes();loadHomeFeed();loadNotepad();
+    loadTrash();_reloadViews();
   }
 }
 
@@ -4880,7 +4880,7 @@ function saveNotepad(){
   notes.push({id:nidPad,title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
   saveNotes(notes);
   inp.value='';inp.style.height='auto';
-  loadNotepad();loadNotes();loadHomeFeed();
+  _reloadViews();
   showToast(reminder?`Сохранено · напомним ${fmtDt(reminder)}`:`Сохранено в «${label}» ✓`);
   if(reminder) _handleReminderAfterSave(reminder,nidPad,title,text.slice(0,200));
 }
@@ -5038,7 +5038,7 @@ function delHomeEntry(id,legacyI){
     }
     saveNotes(notes);
   }
-  loadHomeFeed();loadNotes();loadNotepad();
+  _reloadViews();
   showToast('В корзину · можно восстановить');
   updTrashBadge();
 }
@@ -5078,7 +5078,7 @@ function saveHome(){
   notes.push({id:nid,title,body:text,label,reminder:reminder||null,createdAt:ts,updatedAt:ts,fromPad:true});
   saveNotes(notes);
   closeInputSheet();
-  loadHomeFeed();loadNotes();loadNotepad();
+  _reloadViews();
   showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
   if(reminder) _handleReminderAfterSave(reminder,nid,title,text.slice(0,200));
 }
@@ -5381,7 +5381,7 @@ function startHomeVoice(){
       const nidVoice=genId();
       notes.push({id:nidVoice,title:auto.title,body:cleanBody,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
       saveNotes(notes);
-      loadHomeFeed();loadNotes();loadNotepad();
+      _reloadViews();
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
       if(reminder) _handleReminderAfterSave(reminder,nidVoice,auto.title,cleanBody.slice(0,200));
     }
@@ -5677,7 +5677,7 @@ function _runSingleIntent(intent,params,originalText){
     notes.push({id,title:params.title||auto.title,body:params.body||originalText,
       label:auto.label||'заметка',createdAt:ts,updatedAt:ts,fromPad:true,
       ...(aiTags.length?{aiTags}:{})});
-    saveNotes(notes);loadHomeFeed();loadNotes();loadNotepad();
+    saveNotes(notes);_reloadViews();
   }
 
   if(intent==='SET_REMINDER'){
@@ -5727,7 +5727,7 @@ function _runSingleIntent(intent,params,originalText){
       saveNotes(notes);saveTrash(trash);
       toDelete.forEach(n=>{if(n.reminder)_deleteReminderFromServer(n.id);});
       scheduleAll();
-      loadNotes();loadHomeFeed();loadNotepad();updTrashBadge();
+      _reloadViews();updTrashBadge();
       showToast(count===1?'Заметка в корзине':'В корзину: '+count+' заметок');
     } else showToast('Заметка не найдена');
   }
@@ -6109,6 +6109,9 @@ async function _cleanupPastReminders(){
     }
   }catch(e){console.warn('_cleanupPastReminders error',e);}
 }
+
+// Перерисовать все основные списки (без idle tasks)
+function _reloadViews(){_reloadViews();}
 
 // ── LOAD ALL ──
 function loadAll(){
