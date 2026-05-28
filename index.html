@@ -1818,11 +1818,15 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .rcal-day.today:not(.sel){font-weight:800;color:oklch(0.38 0.14 210);}
 .rcal-day.sel{background:oklch(0.40 0.15 270);color:#fff !important;font-weight:700;}
 /* Time picker */
-.rcal-time{display:flex;align-items:center;justify-content:center;gap:8px;background:oklch(1 0 0/0.55);border-radius:14px;padding:12px 14px;margin-bottom:12px;border:1px solid oklch(0.88 0.03 210/0.4);box-shadow:0 1px 6px oklch(0 0 0/0.05);}
-.rcal-tpart{display:flex;align-items:center;gap:6px;}
-.rcal-tb{width:34px;height:34px;border-radius:10px;background:oklch(0.92 0.03 210/0.55);border:1px solid oklch(0.85 0.04 210/0.4);cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;color:var(--fg-m);flex-shrink:0;}
-.rcal-tb:active{background:oklch(0.72 0.08 270/0.3);}
-.rcal-tv{font-size:30px;font-weight:800;color:var(--fg);min-width:46px;text-align:center;font-variant-numeric:tabular-nums;line-height:1;}
+/* ── Барабаны выбора времени (iOS-стиль) ── */
+.rcal-wheels{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;margin:10px 0 12px;height:220px;}
+.rcal-wsel{position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);height:44px;border-radius:12px;background:oklch(0.87 0.03 210/0.5);border:1px solid oklch(0.78 0.05 210/0.3);pointer-events:none;z-index:1;}
+.rcal-wheel-col{flex:1;max-width:100px;height:220px;position:relative;z-index:2;}
+.rcal-wheel{height:220px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 28%,black 72%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,black 28%,black 72%,transparent 100%);}
+.rcal-wheel::-webkit-scrollbar{display:none;}
+.rcal-wp{height:88px;flex-shrink:0;}
+.rcal-wi{height:44px;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg);font-family:var(--sys);cursor:default;user-select:none;-webkit-user-select:none;}
+.rcal-wsep{font-size:28px;font-weight:700;color:var(--fg);line-height:1;flex-shrink:0;margin-bottom:0;z-index:2;position:relative;}
 .rcal-tsep{font-size:28px;font-weight:300;color:var(--fg-l);margin:0 2px;}
 .rcal-save{width:100%;padding:15px;border:none;border-radius:16px;background:oklch(0.40 0.14 270);color:#fff;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;box-shadow:0 4px 18px oklch(0.40 0.14 270/0.30);letter-spacing:.01em;}
 .rcal-save:active{opacity:.88;transform:scale(.98);}

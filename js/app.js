@@ -2145,8 +2145,11 @@ function remEditTomorrow(h,m,btn){
 }
 
 // ── УНИВЕРСАЛЬНЫЙ РЕНДЕР КАЛЕНДАРЯ ──────────────────────────────────────────
-// ctx = 'rem' | 'rmp' | 'qrem' — определяет имена onclick-хендлеров
-function _renderCalInto(wrapId, cal, ctx){
+// ctx = 'rem' | 'rmp' | 'qrem'
+// opts.saveBtn = false → не рисовать кнопку «Напомнить» (для qrem — своя кнопка снаружи)
+const _WH=44; // высота одного элемента барабана, px
+
+function _renderCalInto(wrapId, cal, ctx, opts={}){
   const wrap=document.getElementById(wrapId);
   if(!wrap||!cal)return;
   const {year,month,day,hour,min}=cal;
@@ -2172,11 +2175,15 @@ function _renderCalInto(wrapId, cal, ctx){
   }
   const total=startOff+dInMonth;const rem=total%7?7-total%7:0;
   for(let d=1;d<=rem;d++)cells+=`<div class="rcal-day other">${d}</div>`;
-  const hS=String(hour).padStart(2,'0'),mS=String(min).padStart(2,'0');
-  const minSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  const plsSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  // Барабаны часов и минут
+  const hPad='<div class="rcal-wp"></div>';
+  const hItems=Array.from({length:24},(_,i)=>`<div class="rcal-wi">${String(i).padStart(2,'0')}</div>`).join('');
+  const mItems=Array.from({length:60},(_,i)=>`<div class="rcal-wi">${String(i).padStart(2,'0')}</div>`).join('');
   const lSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>`;
   const rSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+  const hS=String(hour).padStart(2,'0'),mS=String(min).padStart(2,'0');
+  const saveBtn=opts.saveBtn===false?''
+    :`<button class="rcal-save" id="${ctx}-rcal-save" onclick="_${ctx}CalSave()">Напомнить ${hS}:${mS} · ${day} ${MS[month]}</button>`;
   wrap.innerHTML=`<div class="rcal">
     <div class="rcal-hdr">
       <button class="rcal-nav" onclick="_${ctx}CalPrevMonth()">${lSvg}</button>
@@ -2185,21 +2192,59 @@ function _renderCalInto(wrapId, cal, ctx){
     </div>
     <div class="rcal-dhdr">${DHDR.map(d=>`<div>${d}</div>`).join('')}</div>
     <div class="rcal-grid">${cells}</div>
-    <div class="rcal-time">
-      <div class="rcal-tpart">
-        <button class="rcal-tb" onclick="_${ctx}CalH(-1)">${minSvg}</button>
-        <div class="rcal-tv">${hS}</div>
-        <button class="rcal-tb" onclick="_${ctx}CalH(1)">${plsSvg}</button>
+    <div class="rcal-wheels">
+      <div class="rcal-wsel"></div>
+      <div class="rcal-wheel-col">
+        <div class="rcal-wheel" id="${ctx}-hw">${hPad}${hItems}${hPad}</div>
       </div>
-      <div class="rcal-tsep">:</div>
-      <div class="rcal-tpart">
-        <button class="rcal-tb" onclick="_${ctx}CalM(-1)">${minSvg}</button>
-        <div class="rcal-tv">${mS}</div>
-        <button class="rcal-tb" onclick="_${ctx}CalM(1)">${plsSvg}</button>
+      <div class="rcal-wsep">:</div>
+      <div class="rcal-wheel-col">
+        <div class="rcal-wheel" id="${ctx}-mw">${hPad}${mItems}${hPad}</div>
       </div>
     </div>
-    <button class="rcal-save" onclick="_${ctx}CalSave()">Выбрать ${hS}:${mS} · ${day} ${MS[month]}</button>
+    ${saveBtn}
   </div>`;
+  // Инициализируем барабаны после вставки в DOM
+  requestAnimationFrame(()=>_initCalWheels(document.getElementById(wrapId),cal,ctx));
+}
+
+function _initCalWheels(wrap,cal,ctx){
+  if(!wrap||!cal)return;
+  const hw=wrap.querySelector(`#${ctx}-hw`);
+  const mw=wrap.querySelector(`#${ctx}-mw`);
+  if(hw){
+    hw.scrollTop=cal.hour*_WH;
+    let _ht=null;
+    hw.addEventListener('scroll',()=>{
+      clearTimeout(_ht);_ht=setTimeout(()=>{
+        cal.hour=Math.max(0,Math.min(23,Math.round(hw.scrollTop/_WH)));
+        _onCalWheelChange(ctx,cal,wrap);
+      },100);
+    },{passive:true});
+  }
+  if(mw){
+    mw.scrollTop=cal.min*_WH;
+    let _mt=null;
+    mw.addEventListener('scroll',()=>{
+      clearTimeout(_mt);_mt=setTimeout(()=>{
+        cal.min=Math.max(0,Math.min(59,Math.round(mw.scrollTop/_WH)));
+        _onCalWheelChange(ctx,cal,wrap);
+      },100);
+    },{passive:true});
+  }
+}
+
+function _onCalWheelChange(ctx,cal,wrap){
+  const MS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  const hS=String(cal.hour).padStart(2,'0'),mS=String(cal.min).padStart(2,'0');
+  // Обновить текст кнопки «Напомнить» внутри календаря (rem/rmp)
+  const saveBtn=wrap?.querySelector(`#${ctx}-rcal-save`);
+  if(saveBtn)saveBtn.textContent=`Напомнить ${hS}:${mS} · ${cal.day} ${MS[cal.month]}`;
+  // Для qrem: обновить основную кнопку снаружи
+  if(ctx==='qrem'){
+    _qremDate=new Date(cal.year,cal.month,cal.day,cal.hour,cal.min,0,0);
+    _qremUpdateSave(_qremDate);
+  }
 }
 
 // ── КАСТОМНЫЙ КАЛЕНДАРЬ (замена datetime-local) ──
@@ -2385,12 +2430,13 @@ function openQrem(){
   const inp=document.getElementById('qrem-inp');
   if(inp)inp.value='';
   document.querySelectorAll('.qrem-chip').forEach(b=>b.classList.remove('active'));
-  const saveBtn=document.getElementById('qrem-save');
-  if(saveBtn){saveBtn.textContent='Напомнить';saveBtn.classList.remove('ready');}
+  // Кнопка активна сразу — дефолтное время (+1 час) уже выбрано
+  _qremDate=new Date(_qremCal.year,_qremCal.month,_qremCal.day,_qremCal.hour,_qremCal.min,0,0);
+  _qremUpdateSave(_qremDate);
   requestAnimationFrame(()=>{
     const sheet=document.getElementById('qrem-sheet');
     if(sheet)sheet.style.transform='translateY(0)';
-    _renderCalInto('qrem-cal-wrap',_qremCal,'qrem');
+    _renderCalInto('qrem-cal-wrap',_qremCal,'qrem',{saveBtn:false});
     setTimeout(()=>inp?.focus(),350);
   });
 }
@@ -2435,20 +2481,20 @@ function _qremUpdateSave(dt){
 }
 
 // Контекст 'qrem' — функции вызываются из _renderCalInto
-function _qremCalPick(y,m,d){if(!_qremCal)return;_qremCal.year=y;_qremCal.month=m;_qremCal.day=d;_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
-function _qremCalPrevMonth(){if(!_qremCal)return;_qremCal.month--;if(_qremCal.month<0){_qremCal.month=11;_qremCal.year--;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
-function _qremCalNextMonth(){if(!_qremCal)return;_qremCal.month++;if(_qremCal.month>11){_qremCal.month=0;_qremCal.year++;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
-function _qremCalH(d){if(!_qremCal)return;_qremCal.hour=(_qremCal.hour+d+24)%24;_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
-function _qremCalM(d){if(!_qremCal)return;_qremCal.min=(_qremCal.min+d*5+60)%60;_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
-function _qremCalSave(){
+function _qremCalPick(y,m,d){
   if(!_qremCal)return;
-  const {year,month,day,hour,min}=_qremCal;
-  const dt=new Date(year,month,day,hour,min,0,0);
-  if(dt.getTime()<Date.now()){showToast('Время уже прошло — выбери будущее');return;}
-  _qremDate=dt;
+  _qremCal.year=y;_qremCal.month=m;_qremCal.day=d;
+  // Сразу обновляем дату — клик на день мгновенно активирует кнопку
+  _qremDate=new Date(_qremCal.year,_qremCal.month,_qremCal.day,_qremCal.hour,_qremCal.min,0,0);
   document.querySelectorAll('.qrem-chip').forEach(b=>b.classList.remove('active'));
-  _qremUpdateSave(dt);
+  _qremUpdateSave(_qremDate);
+  _renderCalInto('qrem-cal-wrap',_qremCal,'qrem',{saveBtn:false});
 }
+function _qremCalPrevMonth(){if(!_qremCal)return;_qremCal.month--;if(_qremCal.month<0){_qremCal.month=11;_qremCal.year--;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem',{saveBtn:false});}
+function _qremCalNextMonth(){if(!_qremCal)return;_qremCal.month++;if(_qremCal.month>11){_qremCal.month=0;_qremCal.year++;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem',{saveBtn:false});}
+function _qremCalH(){}  // барабан обрабатывает сам
+function _qremCalM(){}  // барабан обрабатывает сам
+function _qremCalSave(){} // кнопки нет, но функция нужна для безопасности
 
 function qremSave(){
   const text=(document.getElementById('qrem-inp')?.value||'').trim();
