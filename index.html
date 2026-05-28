@@ -1793,8 +1793,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* Buttons */
 .rem-edit-done-btn{width:100%;padding:15px;border:none;border-radius:18px;background:oklch(0.40 0.14 270);color:#fff;font-size:15px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 18px oklch(0.40 0.14 270/0.25);-webkit-appearance:none;margin-bottom:10px;}
 .rem-edit-done-btn:active{opacity:.88;}
-.rem-edit-del-btn{width:100%;padding:13px;border:none;border-radius:18px;background:oklch(0.90 0.04 15/0.35);color:oklch(0.45 0.16 15);font-size:14px;font-weight:600;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}
+.rem-edit-del-btn{width:100%;padding:13px;border:none;border-radius:18px;background:oklch(0.90 0.04 15/0.35);color:oklch(0.45 0.16 15);font-size:14px;font-weight:600;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;margin-bottom:8px;}
 .rem-edit-del-btn:active{background:oklch(0.85 0.08 15/0.45);}
+.rem-edit-del-note-btn{width:100%;padding:11px;border:none;border-radius:16px;background:transparent;color:oklch(0.55 0.12 15);font-size:13px;font-weight:500;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;}
+.rem-edit-del-note-btn:active{background:oklch(0.92 0.03 15/0.30);}
 /* ── КАСТОМНЫЙ КАЛЕНДАРЬ ── */
 .rem-edit-custom-row.expanded{background:oklch(0.92 0.04 210/0.45);border-color:oklch(0.55 0.10 270/0.40);margin-bottom:0;border-radius:16px 16px 0 0;}
 .rem-edit-custom-row .rem-edit-custom-ico{color:oklch(0.45 0.12 210);}
@@ -4072,6 +4074,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     <button class="rem-edit-done-btn" onclick="closeRemEdit()">Готово</button>
     <button class="rem-edit-del-btn" onclick="remEditDelete()">Удалить напоминание</button>
+    <button class="rem-edit-del-note-btn" onclick="remEditDeleteNote()">Удалить заметку тоже</button>
   </div>
 </div>
 

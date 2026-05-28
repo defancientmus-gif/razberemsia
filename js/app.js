@@ -1841,8 +1841,12 @@ function _toggleRemMenu(btn,noteId,isDone){
         Изменить время
       </button>
       <button class="rem-menu-item danger" onclick="_closeRemMenus();_deleteNoteReminder(${jsAttr(noteId)})">
-        <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-        ${isRecurring?'Остановить напоминание':'Удалить напоминание'}
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        ${isRecurring?'Остановить':'Удалить'} напоминание
+      </button>
+      <button class="rem-menu-item danger" onclick="_closeRemMenus();_trashNoteWithReminder(${jsAttr(noteId)})">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Удалить заметку тоже
       </button>`;
   }
   btn.appendChild(menu);
@@ -1867,6 +1871,21 @@ function _removeDoneReminder(noteId){
     setTimeout(doRemove,380);
   }else{doRemove();}
   showToast('Удалено из списка');
+}
+function _trashNoteWithReminder(noteId){
+  const el=document.querySelector(`.remind-item2[data-rid="${noteId}"]`);
+  const doDelete=()=>{
+    delNoteById(noteId);
+    scheduleAll();updateReminderDot();renderReminderPanel();
+    showToast('Заметка удалена');
+  };
+  if(el){
+    el.style.transition='opacity .22s,transform .22s,max-height .28s .1s,margin .28s .1s';
+    el.style.maxHeight=el.offsetHeight+'px';el.style.overflow='hidden';
+    el.style.opacity='0';el.style.transform='translateX(14px)';
+    setTimeout(()=>{el.style.maxHeight='0';el.style.marginBottom='0';},160);
+    setTimeout(doDelete,380);
+  }else doDelete();
 }
 function _deleteNoteReminder(noteId){
   const notes=getNotes();
@@ -2083,6 +2102,8 @@ function openRemEditForNote(noteId){
     requestAnimationFrame(()=>{
       const sheet=document.getElementById('rem-edit-sheet');
       if(sheet)sheet.style.transform='translateY(0)';
+      // Автоматически открываем календарь для разового напоминания
+      if(!isRec)setTimeout(()=>_remCalToggle(),80);
     });
   }
 }
@@ -2292,11 +2313,7 @@ function _remCalSave(){
   const d=new Date(year,month,day,hour,min,0,0);
   if(d.getTime()<Date.now()){showToast('Время уже прошло — выбери будущее');return;}
   _remEditSave(_rmpLocalStr(d));
-  _remCal=null;
-  const wrap=document.getElementById('rem-cal-wrap');
-  if(wrap)wrap.classList.remove('open');
-  const row=document.getElementById('rem-edit-custom-row');
-  if(row)row.classList.remove('expanded');
+  // Не закрываем календарь — остаётся виден для изменений
 }
 
 function remEditDtChange(val){
@@ -2318,6 +2335,17 @@ function remEditDelete(){
   renderReminderPanel();
   closeRemEdit();
   showToast('Напоминание удалено');
+}
+function remEditDeleteNote(){
+  if(!_remEditNoteId)return;
+  const id=_remEditNoteId;
+  closeRemEdit();
+  setTimeout(()=>{
+    delNoteById(id);
+    scheduleAll();updateReminderDot();
+    renderReminderPanel();
+    showToast('Заметка удалена');
+  },350);
 }
 
 function _renderRemEditRecChips(n){
