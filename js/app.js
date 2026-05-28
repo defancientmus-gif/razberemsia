@@ -2723,11 +2723,29 @@ function _agentFolderDisplayName(tag){
   const raw=String(tag||'');
   return raw?raw.charAt(0).toUpperCase()+raw.slice(1):'Папка';
 }
+let _fmodType='section'; // 'section' | 'tag'
+function fmodSetType(type){
+  _fmodType=type;
+  const tSect=document.getElementById('fmod-tab-sect');
+  const tTag=document.getElementById('fmod-tab-tag');
+  const hSect=document.getElementById('fmod-hint-sect');
+  const hTag=document.getElementById('fmod-hint-tag');
+  const inp=document.getElementById('folder-modal-inp');
+  const active='background:oklch(1 0 0);color:var(--fg);box-shadow:0 1px 4px oklch(0 0 0/.10);';
+  const idle='background:transparent;color:var(--fg-l);box-shadow:none;';
+  if(tSect)tSect.style.cssText=tSect.style.cssText.replace(/background:[^;]+;color:[^;]+;box-shadow:[^;]+;/,type==='section'?active:idle);
+  if(tTag)tTag.style.cssText=tTag.style.cssText.replace(/background:[^;]+;color:[^;]+;box-shadow:[^;]+;/,type==='tag'?active:idle);
+  if(hSect)hSect.style.display=type==='section'?'':'none';
+  if(hTag)hTag.style.display=type==='tag'?'':'none';
+  if(inp)inp.placeholder=type==='section'?'Название раздела…':'Тема папки (например: работа)';
+}
 function openFolderModal(){
   const m=document.getElementById('folder-modal');
   const inner=document.getElementById('folder-modal-inner');
   const inp=document.getElementById('folder-modal-inp');
   if(!m)return;
+  _fmodType='section';
+  fmodSetType('section');
   m.style.pointerEvents='auto';
   m.style.background='oklch(0.14 0.02 210 / 0.28)';
   m.style.backdropFilter='blur(6px)';
@@ -2753,12 +2771,27 @@ function confirmFolderCreate(){
   const inp=document.getElementById('folder-modal-inp');
   const name=(inp?.value||'').trim();
   if(!name){inp?.focus();return;}
-  const folders=getUserFolders();
-  if(!folders.find(f=>f.name.toLowerCase()===name.toLowerCase())){
-    folders.push({name,idx:folders.length});
-    saveUserFolders(folders);
-    loadNotes();
-    showToast('Раздел «'+name+'» создан');
+  if(_fmodType==='tag'){
+    // Создать папку-входящие (tag folder)
+    if(typeof getTagFolders==='function'){
+      const tagLow=name.toLowerCase();
+      const existing=getTagFolders();
+      if(!existing.find(f=>f.tag.toLowerCase()===tagLow)){
+        existing.push({tag:tagLow,label:name,pinned:false,createdAt:Date.now()});
+        saveTagFolders(existing);
+        _drillP0();
+        showToast('Папка «'+name+'» создана');
+      }
+    }
+  } else {
+    // Создать раздел (user folder)
+    const folders=getUserFolders();
+    if(!folders.find(f=>f.name.toLowerCase()===name.toLowerCase())){
+      folders.push({name,idx:folders.length});
+      saveUserFolders(folders);
+      loadNotes();
+      showToast('Раздел «'+name+'» создан');
+    }
   }
   closeFolderModal();
 }
@@ -3104,6 +3137,7 @@ const _STRIPE_SVG={
 
 function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
+  const _savedScroll=el.scrollTop; // сохранить скролл перед перерисовкой
   const notes=getNotes();
   const userFolders=getUserFolders();
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
@@ -3202,6 +3236,7 @@ function _drillP0(){
   </button>`;
 
   el.innerHTML=h;
+  el.scrollTop=_savedScroll; // восстановить позицию
 }
 
 function toggleP0Sect(){
