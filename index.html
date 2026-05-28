@@ -1718,16 +1718,37 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .rmp-current-body{flex:1;}
 .rmp-current-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;color:oklch(0.40 0.14 270);text-transform:uppercase;margin-bottom:2px;}
 .rmp-current-val{font-size:16px;font-weight:600;color:var(--fg);}
-/* Chips hidden — kept in JS for future use */
-.rmp-chips{display:none;}
-.rmp-chip{}
-/* Date/time section */
-.rmp-dt-wrap{margin-bottom:20px;}
-.rmp-dt-lbl{font-size:11px;font-weight:700;color:var(--fg-l);letter-spacing:.05em;text-transform:uppercase;margin-bottom:9px;}
-.rmp-dt-input{width:100%;padding:16px 16px;border-radius:16px;border:1.5px solid oklch(0.85 0.025 210 / 0.6);background:oklch(0.97 0.008 210 / 0.75);font-size:17px;font-weight:500;font-family:var(--sys);color:var(--fg);box-sizing:border-box;-webkit-appearance:none;outline:none;transition:border-color .15s;}
-.rmp-dt-input:focus{border-color:oklch(0.50 0.12 270 / 0.50);background:oklch(0.98 0.006 210 / 0.90);}
+/* rmp: chips скрыты, календарь — прямо в контейнере */
+.rmp-chips{display:none;}.rmp-chip{}
+#rmp-cal-wrap{margin-bottom:16px;}
 .rmp-ok{width:100%;padding:17px;border:none;border-radius:20px;background:oklch(0.50 0.12 270);color:#fff;font-size:16px;font-weight:700;font-family:var(--sys);cursor:pointer;box-shadow:0 4px 20px oklch(0.40 0.14 270 / 0.30);transition:transform .12s,opacity .12s;-webkit-appearance:none;letter-spacing:.02em;}
 .rmp-ok:active{transform:scale(.97);opacity:.9;}
+
+/* ── UNIFIED QUICK REMINDER SHEET ── */
+#qrem-ov{position:fixed;inset:0;z-index:9400;background:oklch(0.14 0.02 210/0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;}
+#qrem-sheet{
+  width:100%;max-width:480px;
+  background:radial-gradient(ellipse 90% 55% at 28% 8%, oklch(1 0 0/0.88) 0%, transparent 52%), oklch(0.97 0.006 210/0.97);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid oklch(0.92 0.02 210/0.7);
+  border-radius:28px 28px 0 0;
+  padding:0 20px calc(28px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 40px oklch(0 0 0/0.12),inset 0 1.5px 4px oklch(1 0 0/0.9);
+  transform:translateY(100%);transition:transform .34s cubic-bezier(.22,1,.36,1);
+  max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.qrem-handle{width:36px;height:4px;border-radius:2px;background:oklch(0.80 0.02 210);margin:14px auto 20px;flex-shrink:0;}
+.qrem-title{font-size:17px;font-weight:700;color:var(--fg);margin-bottom:16px;text-align:center;}
+.qrem-inp{width:100%;box-sizing:border-box;border:1.5px solid oklch(0.85 0.025 210/0.6);border-radius:16px;background:oklch(0.97 0.008 210/0.75);font-size:17px;font-family:var(--sys);color:var(--fg);padding:14px 16px;resize:none;outline:none;margin-bottom:14px;min-height:56px;transition:border-color .15s;}
+.qrem-inp:focus{border-color:oklch(0.50 0.12 270/0.50);}
+.qrem-chips{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.qrem-chip{padding:9px 16px;border-radius:12px;border:1.5px solid oklch(0.87 0.04 210/0.45);background:oklch(0.95 0.015 210);font-size:13px;font-weight:600;font-family:var(--sys);color:var(--accent-d);cursor:pointer;transition:background .12s,border-color .12s;-webkit-tap-highlight-color:transparent;}
+.qrem-chip:active{background:oklch(0.90 0.04 210);}
+.qrem-chip.active{background:oklch(0.50 0.12 270);color:#fff;border-color:transparent;}
+.qrem-save{width:100%;padding:17px;border:none;border-radius:20px;background:oklch(0.72 0.05 210);color:#fff;font-size:16px;font-weight:700;font-family:var(--sys);cursor:pointer;transition:transform .12s,background .2s;-webkit-appearance:none;margin-top:4px;margin-bottom:10px;opacity:.7;}
+.qrem-save.ready{background:oklch(0.50 0.12 270);opacity:1;box-shadow:0 4px 20px oklch(0.40 0.14 270/0.30);}
+.qrem-save:active{transform:scale(.97);}
+.qrem-cancel{display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:15px;font-family:var(--sys);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;}
 
 /* ── REMINDER EDITOR MODAL ── */
 #rem-edit-ov{position:fixed;inset:0;z-index:9300;background:oklch(0 0 0/0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;}
@@ -3158,11 +3179,8 @@ header{padding:15px 16px 9px;}
       <button class="rmp-chip" onclick="rmpPickTomorrow(9,0,this)">Завтра утром</button>
       <button class="rmp-chip" onclick="rmpPickTomorrow(19,0,this)">Завтра вечером</button>
     </div>
-    <div class="rmp-dt-wrap">
-      <div class="rmp-dt-lbl">Выбрать дату и время</div>
-      <input class="rmp-dt-input" type="datetime-local" id="rmp-dt-input" onchange="rmpPickNative(this.value)">
-    </div>
-    <button class="rmp-ok" onclick="rmpConfirm()">Сохранить</button>
+    <div id="rmp-cal-wrap"></div>
+    <button class="rmp-ok" onclick="_rmpCalSave()">Сохранить</button>
   </div>
 </div>
 
@@ -4117,6 +4135,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
       </div>
     </div>
     <div class="ai-overlay-body" id="ai-overlay-body"></div>
+  </div>
+</div>
+
+<!-- UNIFIED QUICK REMINDER SHEET -->
+<div id="qrem-ov" onclick="if(event.target===this)closeQrem()">
+  <div id="qrem-sheet">
+    <div class="qrem-handle"></div>
+    <div class="qrem-title">🔔 Новое напоминание</div>
+    <textarea class="qrem-inp" id="qrem-inp" placeholder="Что напомнить?…" rows="2"></textarea>
+    <div class="qrem-chips">
+      <button class="qrem-chip" onclick="qremQuick(30,this)">30 мин</button>
+      <button class="qrem-chip" onclick="qremQuick(60,this)">1 час</button>
+      <button class="qrem-chip" onclick="qremQuick(180,this)">3 часа</button>
+      <button class="qrem-chip" onclick="qremTomorrow(9,0,this)">Утром</button>
+    </div>
+    <div id="qrem-cal-wrap"></div>
+    <button class="qrem-save" id="qrem-save" onclick="qremSave()">Напомнить</button>
+    <button class="qrem-cancel" onclick="closeQrem()">Отмена</button>
   </div>
 </div>
 </body>

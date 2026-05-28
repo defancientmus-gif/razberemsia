@@ -2112,6 +2112,64 @@ function remEditTomorrow(h,m,btn){
   if(btn)btn.classList.add('active');
 }
 
+// ── УНИВЕРСАЛЬНЫЙ РЕНДЕР КАЛЕНДАРЯ ──────────────────────────────────────────
+// ctx = 'rem' | 'rmp' | 'qrem' — определяет имена onclick-хендлеров
+function _renderCalInto(wrapId, cal, ctx){
+  const wrap=document.getElementById(wrapId);
+  if(!wrap||!cal)return;
+  const {year,month,day,hour,min}=cal;
+  const now=new Date();
+  const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const MS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  const DHDR=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const firstDay=new Date(year,month,1).getDay();
+  const startOff=(firstDay+6)%7;
+  const dInMonth=new Date(year,month+1,0).getDate();
+  const dInPrev=new Date(year,month,0).getDate();
+  let cells='';
+  for(let i=startOff-1;i>=0;i--)cells+=`<div class="rcal-day other">${dInPrev-i}</div>`;
+  for(let d=1;d<=dInMonth;d++){
+    const isToday=year===now.getFullYear()&&month===now.getMonth()&&d===now.getDate();
+    const isSel=d===day;
+    const isPast=new Date(year,month,d,23,59).getTime()<now.getTime()&&!isToday;
+    const wd=new Date(year,month,d).getDay();
+    const isWknd=wd===0||wd===6;
+    let cls='rcal-day'+(isPast?' past':'')+(isToday?' today':'')+(isSel?' sel':'')+(isWknd&&!isSel?' wknd':'');
+    const click=isPast?'':`onclick="_${ctx}CalPick(${year},${month},${d})"`;
+    cells+=`<div class="${cls}" ${click}>${d}</div>`;
+  }
+  const total=startOff+dInMonth;const rem=total%7?7-total%7:0;
+  for(let d=1;d<=rem;d++)cells+=`<div class="rcal-day other">${d}</div>`;
+  const hS=String(hour).padStart(2,'0'),mS=String(min).padStart(2,'0');
+  const minSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const plsSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const lSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+  const rSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+  wrap.innerHTML=`<div class="rcal">
+    <div class="rcal-hdr">
+      <button class="rcal-nav" onclick="_${ctx}CalPrevMonth()">${lSvg}</button>
+      <div class="rcal-month">${MONTHS[month]} ${year}</div>
+      <button class="rcal-nav" onclick="_${ctx}CalNextMonth()">${rSvg}</button>
+    </div>
+    <div class="rcal-dhdr">${DHDR.map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="rcal-grid">${cells}</div>
+    <div class="rcal-time">
+      <div class="rcal-tpart">
+        <button class="rcal-tb" onclick="_${ctx}CalH(-1)">${minSvg}</button>
+        <div class="rcal-tv">${hS}</div>
+        <button class="rcal-tb" onclick="_${ctx}CalH(1)">${plsSvg}</button>
+      </div>
+      <div class="rcal-tsep">:</div>
+      <div class="rcal-tpart">
+        <button class="rcal-tb" onclick="_${ctx}CalM(-1)">${minSvg}</button>
+        <div class="rcal-tv">${mS}</div>
+        <button class="rcal-tb" onclick="_${ctx}CalM(1)">${plsSvg}</button>
+      </div>
+    </div>
+    <button class="rcal-save" onclick="_${ctx}CalSave()">Выбрать ${hS}:${mS} · ${day} ${MS[month]}</button>
+  </div>`;
+}
+
 // ── КАСТОМНЫЙ КАЛЕНДАРЬ (замена datetime-local) ──
 let _remCal=null; // {year,month,day,hour,min}
 
@@ -2143,83 +2201,14 @@ function _remCalToggle(){
   setTimeout(()=>{const s=document.getElementById('rem-edit-sheet');if(s)s.scrollTo({top:s.scrollHeight,behavior:'smooth'});},200);
 }
 
-function _renderRemCal(){
-  const wrap=document.getElementById('rem-cal-wrap');
-  if(!wrap||!_remCal)return;
-  const {year,month,day,hour,min}=_remCal;
-  const now=new Date();
-  const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  const MS=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-  const DHDR=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-  const firstDay=new Date(year,month,1).getDay();
-  const startOff=(firstDay+6)%7;
-  const dInMonth=new Date(year,month+1,0).getDate();
-  const dInPrev=new Date(year,month,0).getDate();
-  let cells='';
-  for(let i=startOff-1;i>=0;i--)cells+=`<div class="rcal-day other">${dInPrev-i}</div>`;
-  for(let d=1;d<=dInMonth;d++){
-    const isToday=year===now.getFullYear()&&month===now.getMonth()&&d===now.getDate();
-    const isSel=d===day;
-    const isPast=new Date(year,month,d,23,59).getTime()<now.getTime()&&!isToday;
-    const wd=new Date(year,month,d).getDay();
-    const isWknd=wd===0||wd===6;
-    let cls='rcal-day'+(isPast?' past':'')+(isToday?' today':'')+(isSel?' sel':'')+(isWknd&&!isSel?' wknd':'');
-    const click=isPast?'':`onclick="_remCalPick(${year},${month},${d})"`;
-    cells+=`<div class="${cls}" ${click}>${d}</div>`;
-  }
-  const total=startOff+dInMonth;
-  const rem=total%7?7-total%7:0;
-  for(let d=1;d<=rem;d++)cells+=`<div class="rcal-day other">${d}</div>`;
-  const hS=String(hour).padStart(2,'0'),mS=String(min).padStart(2,'0');
-  const minusSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  const plusSvg=`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  wrap.innerHTML=`<div class="rcal">
-    <div class="rcal-hdr">
-      <button class="rcal-nav" onclick="_remCalPrevMonth()">${`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>`}</button>
-      <div class="rcal-month">${MONTHS[month]} ${year}</div>
-      <button class="rcal-nav" onclick="_remCalNextMonth()">${`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`}</button>
-    </div>
-    <div class="rcal-dhdr">${DHDR.map(d=>`<div>${d}</div>`).join('')}</div>
-    <div class="rcal-grid">${cells}</div>
-    <div class="rcal-time">
-      <div class="rcal-tpart">
-        <button class="rcal-tb" onclick="_remCalH(-1)">${minusSvg}</button>
-        <div class="rcal-tv">${hS}</div>
-        <button class="rcal-tb" onclick="_remCalH(1)">${plusSvg}</button>
-      </div>
-      <div class="rcal-tsep">:</div>
-      <div class="rcal-tpart">
-        <button class="rcal-tb" onclick="_remCalM(-1)">${minusSvg}</button>
-        <div class="rcal-tv">${mS}</div>
-        <button class="rcal-tb" onclick="_remCalM(1)">${plusSvg}</button>
-      </div>
-    </div>
-    <button class="rcal-save" onclick="_remCalSave()">Напомнить ${hS}:${mS} · ${day} ${MS[month]}</button>
-  </div>`;
-}
+function _renderRemCal(){_renderCalInto('rem-cal-wrap',_remCal,'rem');}
+// алиасы для контекста 'rem' (вызываются из _renderCalInto)
+function _remCalPick(y,m,d){if(!_remCal)return;_remCal.year=y;_remCal.month=m;_remCal.day=d;_renderRemCal();}
+function _remCalPrevMonth(){if(!_remCal)return;_remCal.month--;if(_remCal.month<0){_remCal.month=11;_remCal.year--;}_renderRemCal();}
+function _remCalNextMonth(){if(!_remCal)return;_remCal.month++;if(_remCal.month>11){_remCal.month=0;_remCal.year++;}_renderRemCal();}
+function _remCalH(d){if(!_remCal)return;_remCal.hour=(_remCal.hour+d+24)%24;_renderRemCal();}
+function _remCalM(d){if(!_remCal)return;_remCal.min=(_remCal.min+d*5+60)%60;_renderRemCal();}
 
-function _remCalPick(y,m,d){
-  if(!_remCal)return;
-  _remCal.year=y;_remCal.month=m;_remCal.day=d;_renderRemCal();
-}
-function _remCalPrevMonth(){
-  if(!_remCal)return;
-  _remCal.month--;if(_remCal.month<0){_remCal.month=11;_remCal.year--;}
-  _renderRemCal();
-}
-function _remCalNextMonth(){
-  if(!_remCal)return;
-  _remCal.month++;if(_remCal.month>11){_remCal.month=0;_remCal.year++;}
-  _renderRemCal();
-}
-function _remCalH(delta){
-  if(!_remCal)return;
-  _remCal.hour=(_remCal.hour+delta+24)%24;_renderRemCal();
-}
-function _remCalM(delta){
-  if(!_remCal)return;
-  _remCal.min=(_remCal.min+delta*5+60)%60;_renderRemCal();
-}
 function _remCalSave(){
   if(!_remCal)return;
   const {year,month,day,hour,min}=_remCal;
@@ -2342,13 +2331,108 @@ function applyAiReminder(){
 }
 
 // ── КНОПКА «Установить напоминание» в панели колокольчика ──
+// ── ЕДИНЫЙ ЛИСТ "НОВОЕ НАПОМИНАНИЕ" (заменяет двухшаговый флоу) ──
+let _qremCal=null;
+let _qremDate=null;
+
 function openInputSheetWithReminder(){
   closeReminderPanel();
+  setTimeout(()=>openQrem(),180);
+}
+
+function openQrem(){
+  _qremDate=null;_qremCal=null;
+  // Инициализируем календарь сразу на +1 час
+  const base=new Date(Date.now()+3600000);base.setSeconds(0,0);
+  const rm=Math.round(base.getMinutes()/5)*5;
+  if(rm>=60){base.setHours(base.getHours()+1);base.setMinutes(0);}else base.setMinutes(rm);
+  _qremCal={year:base.getFullYear(),month:base.getMonth(),day:base.getDate(),hour:base.getHours(),min:base.getMinutes()};
+  const ov=document.getElementById('qrem-ov');
+  if(!ov)return;
+  ov.style.display='flex';
+  const inp=document.getElementById('qrem-inp');
+  if(inp)inp.value='';
+  document.querySelectorAll('.qrem-chip').forEach(b=>b.classList.remove('active'));
+  const saveBtn=document.getElementById('qrem-save');
+  if(saveBtn){saveBtn.textContent='Напомнить';saveBtn.classList.remove('ready');}
+  requestAnimationFrame(()=>{
+    const sheet=document.getElementById('qrem-sheet');
+    if(sheet)sheet.style.transform='translateY(0)';
+    _renderCalInto('qrem-cal-wrap',_qremCal,'qrem');
+    setTimeout(()=>inp?.focus(),350);
+  });
+}
+
+function closeQrem(){
+  const sheet=document.getElementById('qrem-sheet');
+  if(sheet)sheet.style.transform='translateY(100%)';
   setTimeout(()=>{
-    openInputSheet();
-    // Открываем пикер времени сразу после открытия шита
-    setTimeout(()=>openRmp('home'),350);
-  },200);
+    const ov=document.getElementById('qrem-ov');
+    if(ov)ov.style.display='none';
+    _qremCal=null;_qremDate=null;
+  },320);
+}
+
+function qremQuick(minutes,btn){
+  const dt=new Date(Date.now()+minutes*60000);dt.setSeconds(0,0);
+  const rm=Math.round(dt.getMinutes()/5)*5;
+  if(rm>=60){dt.setHours(dt.getHours()+1);dt.setMinutes(0);}else dt.setMinutes(rm);
+  _qremDate=dt;
+  _qremCal={year:dt.getFullYear(),month:dt.getMonth(),day:dt.getDate(),hour:dt.getHours(),min:dt.getMinutes()};
+  _renderCalInto('qrem-cal-wrap',_qremCal,'qrem');
+  document.querySelectorAll('.qrem-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  _qremUpdateSave(dt);
+}
+
+function qremTomorrow(h,m,btn){
+  const dt=new Date();dt.setDate(dt.getDate()+1);dt.setHours(h,m,0,0);
+  _qremDate=dt;
+  _qremCal={year:dt.getFullYear(),month:dt.getMonth(),day:dt.getDate(),hour:dt.getHours(),min:dt.getMinutes()};
+  _renderCalInto('qrem-cal-wrap',_qremCal,'qrem');
+  document.querySelectorAll('.qrem-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  _qremUpdateSave(dt);
+}
+
+function _qremUpdateSave(dt){
+  const saveBtn=document.getElementById('qrem-save');
+  if(!saveBtn)return;
+  if(dt){saveBtn.textContent='Напомнить · '+fmtDt(_rmpLocalStr(dt));saveBtn.classList.add('ready');}
+  else{saveBtn.textContent='Напомнить';saveBtn.classList.remove('ready');}
+}
+
+// Контекст 'qrem' — функции вызываются из _renderCalInto
+function _qremCalPick(y,m,d){if(!_qremCal)return;_qremCal.year=y;_qremCal.month=m;_qremCal.day=d;_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
+function _qremCalPrevMonth(){if(!_qremCal)return;_qremCal.month--;if(_qremCal.month<0){_qremCal.month=11;_qremCal.year--;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
+function _qremCalNextMonth(){if(!_qremCal)return;_qremCal.month++;if(_qremCal.month>11){_qremCal.month=0;_qremCal.year++;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
+function _qremCalH(d){if(!_qremCal)return;_qremCal.hour=(_qremCal.hour+d+24)%24;_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
+function _qremCalM(d){if(!_qremCal)return;_qremCal.min=(_qremCal.min+d*5+60)%60;_renderCalInto('qrem-cal-wrap',_qremCal,'qrem');}
+function _qremCalSave(){
+  if(!_qremCal)return;
+  const {year,month,day,hour,min}=_qremCal;
+  const dt=new Date(year,month,day,hour,min,0,0);
+  if(dt.getTime()<Date.now()){showToast('Время уже прошло — выбери будущее');return;}
+  _qremDate=dt;
+  document.querySelectorAll('.qrem-chip').forEach(b=>b.classList.remove('active'));
+  _qremUpdateSave(dt);
+}
+
+function qremSave(){
+  const text=(document.getElementById('qrem-inp')?.value||'').trim();
+  if(!text){showToast('Напишите что напомнить');return;}
+  if(!_qremDate){showToast('Выберите время');return;}
+  if(_qremDate.getTime()<Date.now()){showToast('Время уже прошло');return;}
+  const ts=Date.now();const id=genId();
+  const auto=analyzeText(text);
+  const notes=getNotes();
+  const reminderStr=_rmpLocalStr(_qremDate);
+  notes.push({id,title:auto.title||text.slice(0,60),body:text,label:'заметка',reminder:reminderStr,createdAt:ts,updatedAt:ts});
+  saveNotes(notes);
+  _reloadViews();
+  scheduleAll();updateReminderDot();
+  closeQrem();
+  showToast('🔔 Напомним '+fmtDt(reminderStr));
 }
 
 // ── УМНЫЙ ПАРСЕР ВРЕМЕНИ ИЗ ГОЛОСА ──
@@ -4465,6 +4549,8 @@ function addRecurringTime(val){
 // ── REMINDER PICKER ──
 let _rmpTarget=null,_rmpDate=new Date();
 
+let _rmpCal=null; // состояние кастомного календаря в rmp-ov
+
 function openRmp(target){
   _rmpTarget=target;
   const id=target==='sheet'?'sheet-reminder-in':'home-input-reminder';
@@ -4479,8 +4565,9 @@ function openRmp(target){
   if(!_rmpDate||isNaN(_rmpDate.getTime())||_rmpDate<=new Date()){
     _rmpDate=new Date(Date.now()+3600000);
   }
-  _rmpSyncInput();
-  _rmpHighlightChips();
+  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
+  // Инициализируем кастомный календарь вместо нативного пикера
+  _rmpCalInit();
   const ov=document.getElementById('rmp-ov');
   ov.style.display='flex';
 }
@@ -4489,19 +4576,34 @@ function _rmpLocalStr(d){
   const pad=n=>String(n).padStart(2,'0');
   return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-function _rmpSyncInput(){
-  const inp=document.getElementById('rmp-dt-input');
-  if(inp&&_rmpDate)inp.value=_rmpLocalStr(_rmpDate);
+
+// ── RMP кастомный календарь (контекст 'rmp') ──
+function _rmpCalInit(){
+  let base=_rmpDate||new Date(Date.now()+3600000);
+  base=new Date(base);base.setSeconds(0,0);
+  const rm=Math.round(base.getMinutes()/5)*5;
+  if(rm>=60){base.setHours(base.getHours()+1);base.setMinutes(0);}else base.setMinutes(rm);
+  _rmpCal={year:base.getFullYear(),month:base.getMonth(),day:base.getDate(),hour:base.getHours(),min:base.getMinutes()};
+  _renderCalInto('rmp-cal-wrap',_rmpCal,'rmp');
 }
-function _rmpHighlightChips(){
-  // Clear all — chip highlight set on pick
+function _rmpCalPick(y,m,d){if(!_rmpCal)return;_rmpCal.year=y;_rmpCal.month=m;_rmpCal.day=d;_renderCalInto('rmp-cal-wrap',_rmpCal,'rmp');}
+function _rmpCalPrevMonth(){if(!_rmpCal)return;_rmpCal.month--;if(_rmpCal.month<0){_rmpCal.month=11;_rmpCal.year--;}_renderCalInto('rmp-cal-wrap',_rmpCal,'rmp');}
+function _rmpCalNextMonth(){if(!_rmpCal)return;_rmpCal.month++;if(_rmpCal.month>11){_rmpCal.month=0;_rmpCal.year++;}_renderCalInto('rmp-cal-wrap',_rmpCal,'rmp');}
+function _rmpCalH(d){if(!_rmpCal)return;_rmpCal.hour=(_rmpCal.hour+d+24)%24;_renderCalInto('rmp-cal-wrap',_rmpCal,'rmp');}
+function _rmpCalM(d){if(!_rmpCal)return;_rmpCal.min=(_rmpCal.min+d*5+60)%60;_renderCalInto('rmp-cal-wrap',_rmpCal,'rmp');}
+function _rmpCalSave(){
+  if(!_rmpCal)return;
+  const {year,month,day,hour,min}=_rmpCal;
+  _rmpDate=new Date(year,month,day,hour,min,0,0);
+  if(_rmpDate.getTime()<Date.now()){showToast('Время уже прошло — выбери будущее');return;}
   document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
+  rmpConfirm();
 }
 
 // Quick picks: offset in minutes from now
 function rmpPickQuick(minutes,btn){
   _rmpDate=new Date(Date.now()+minutes*60000);
-  _rmpSyncInput();
+  _rmpCalInit();
   document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
 }
@@ -4509,26 +4611,16 @@ function rmpPickQuick(minutes,btn){
 function rmpPickToday(h,m,btn){
   const d=new Date();d.setHours(h,m,0,0);
   if(d<=new Date())d.setDate(d.getDate()+1);
-  _rmpDate=d;
-  _rmpSyncInput();
+  _rmpDate=d;_rmpCalInit();
   document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
 }
 // Tomorrow at given hour:minute
 function rmpPickTomorrow(h,m,btn){
   const d=new Date();d.setDate(d.getDate()+1);d.setHours(h,m,0,0);
-  _rmpDate=d;
-  _rmpSyncInput();
+  _rmpDate=d;_rmpCalInit();
   document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-}
-// Native datetime-local input changed
-function rmpPickNative(val){
-  if(!val)return;
-  const d=new Date(val);
-  if(isNaN(d.getTime()))return;
-  _rmpDate=d;
-  document.querySelectorAll('.rmp-chip').forEach(b=>b.classList.remove('active'));
 }
 
 function rmpClose(){
