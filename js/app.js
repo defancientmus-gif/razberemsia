@@ -3289,6 +3289,7 @@ function renderSectPills(){
   let h=pills.map(p=>p.html).join('');
   h+=`<button type="button" class="sect-pill sect-pill-add" onclick="openFolderModal()">+ раздел</button>`;
   row.innerHTML=h;
+  row.scrollLeft=0; // активная таблетка всегда первая — откатываем в начало
 }
 
 function selectSectPill(type,value,label){
