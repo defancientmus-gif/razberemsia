@@ -1801,16 +1801,15 @@ function _remItemHTML(n,isDone){
       <div class="rem-name${isDone?' rem-name-done':''}">${esc(title)}</div>
       <div class="rem-when rem-when-${whenCls}">${esc(whenTxt)}${recurLine}</div>
     </div>
-    ${!isDone?`<button class="rem-edit-btn" onclick="event.stopPropagation();_toggleRemMenu(this,${jsAttr(n.id)})" aria-label="Действия">
+    <button class="rem-edit-btn" onclick="event.stopPropagation();_toggleRemMenu(this,${jsAttr(n.id)},${isDone})" aria-label="Действия">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
-    </button>`:''}
+    </button>
   </div>`;
 }
 
 // ── Мини-меню ··· у напоминания ──
 function _closeRemMenus(){document.querySelectorAll('.rem-menu').forEach(m=>m.remove());}
-function _toggleRemMenu(btn,noteId){
-  // Закрыть уже открытое меню
+function _toggleRemMenu(btn,noteId,isDone){
   const existing=btn.querySelector('.rem-menu');
   if(existing){existing.remove();return;}
   _closeRemMenus();
@@ -1819,22 +1818,55 @@ function _toggleRemMenu(btn,noteId){
   const menu=document.createElement('div');
   menu.className='rem-menu';
   menu.onclick=e=>e.stopPropagation();
-  menu.innerHTML=`
-    <button class="rem-menu-item" onclick="_closeRemMenus();closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(noteId)}),260)">
-      <svg viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Открыть заметку
-    </button>
-    <button class="rem-menu-item" onclick="_closeRemMenus();openRemEditForNote(${jsAttr(noteId)})">
-      <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      ${isRecurring?'Изменить время':'Изменить время'}
-    </button>
-    <button class="rem-menu-item danger" onclick="_closeRemMenus();_deleteNoteReminder(${jsAttr(noteId)})">
-      <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      ${isRecurring?'Остановить напоминание':'Удалить напоминание'}
-    </button>`;
+  if(isDone){
+    // Меню для выполненного напоминания
+    menu.innerHTML=`
+      <button class="rem-menu-item" onclick="_closeRemMenus();closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(noteId)}),260)">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Открыть заметку
+      </button>
+      <button class="rem-menu-item danger" onclick="_closeRemMenus();_removeDoneReminder(${jsAttr(noteId)})">
+        <svg viewBox="0 0 24 24" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Убрать из списка
+      </button>`;
+  } else {
+    // Меню для активного напоминания
+    menu.innerHTML=`
+      <button class="rem-menu-item" onclick="_closeRemMenus();closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(noteId)}),260)">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Открыть заметку
+      </button>
+      <button class="rem-menu-item" onclick="_closeRemMenus();openRemEditForNote(${jsAttr(noteId)})">
+        <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Изменить время
+      </button>
+      <button class="rem-menu-item danger" onclick="_closeRemMenus();_deleteNoteReminder(${jsAttr(noteId)})">
+        <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        ${isRecurring?'Остановить напоминание':'Удалить напоминание'}
+      </button>`;
+  }
   btn.appendChild(menu);
-  // Закрываем при тапе снаружи
   setTimeout(()=>document.addEventListener('click',_closeRemMenus,{once:true}),0);
+}
+
+function _removeDoneReminder(noteId){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===noteId);
+  if(!n)return;
+  const el=document.querySelector(`.remind-item2[data-rid="${noteId}"]`);
+  const doRemove=()=>{
+    delete n.reminder;delete n.recurring;delete n.reminderDone;delete n.reminderDoneAt;
+    n.updatedAt=Date.now();
+    saveNotes(notes);updateReminderDot();renderReminderPanel();
+  };
+  if(el){
+    el.style.transition='opacity .22s,transform .22s,max-height .28s .1s,margin .28s .1s';
+    el.style.maxHeight=el.offsetHeight+'px';el.style.overflow='hidden';
+    el.style.opacity='0';el.style.transform='translateX(14px)';
+    setTimeout(()=>{el.style.maxHeight='0';el.style.marginBottom='0';},160);
+    setTimeout(doRemove,380);
+  }else{doRemove();}
+  showToast('Удалено из списка');
 }
 function _deleteNoteReminder(noteId){
   const notes=getNotes();
