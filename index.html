@@ -425,8 +425,15 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .rem-when-soon{color:oklch(0.52 0.16 58);}
 .rem-when-future{color:oklch(0.50 0.10 200);}
 .rem-recur{font-weight:400;opacity:.70;font-size:11px;}
-.rem-edit-btn{width:30px;height:30px;flex-shrink:0;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;color:oklch(0.62 0.04 210);cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:background .12s;}
+.rem-edit-btn{width:30px;height:30px;flex-shrink:0;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;color:oklch(0.62 0.04 210);cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:background .12s;position:relative;}
 .rem-edit-btn:active{background:oklch(0.90 0.04 210/0.30);}
+/* Мини-меню из ··· */
+.rem-menu{position:absolute;right:0;top:34px;z-index:80;background:oklch(0.99 0.003 210);border:1px solid oklch(0.88 0.02 210/0.55);border-radius:12px;box-shadow:0 4px 20px oklch(0 0 0/0.12),0 1px 4px oklch(0 0 0/0.06);min-width:170px;overflow:hidden;animation:rem-menu-in .14s cubic-bezier(.22,1,.36,1);}
+@keyframes rem-menu-in{from{opacity:0;transform:scale(.94) translateY(-4px);}to{opacity:1;transform:none;}}
+.rem-menu-item{display:flex;align-items:center;gap:9px;padding:11px 14px;font-size:14px;font-family:var(--sys);color:var(--fg);cursor:pointer;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;transition:background .10s;}
+.rem-menu-item:active{background:oklch(0.93 0.015 210/0.60);}
+.rem-menu-item.danger{color:oklch(0.48 0.18 25);}
+.rem-menu-item svg{flex-shrink:0;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 .rem-done-hdr{font-size:11px;font-weight:700;color:oklch(0.55 0.05 210);text-transform:uppercase;letter-spacing:.07em;margin:14px 2px 8px;}
 .remind-item2.rem-done{opacity:0.58;}
 .rem-name-done{text-decoration:line-through;color:oklch(0.48 0.03 60);}
