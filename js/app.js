@@ -1377,7 +1377,7 @@ function reqNotif(){
 
 let _NT=[];
 // Очистить все уведомления: SW-таймауты + показанные системные
-function clearAllNotifications(){
+function clearAllNotifications(btn){
   // SW: сбросить запланированные таймауты
   if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
     navigator.serviceWorker.controller.postMessage({type:'SCHEDULE',notes:[]});
@@ -1390,6 +1390,8 @@ function clearAllNotifications(){
   }
   // In-page таймауты (баннеры внутри приложения)
   _NT.forEach(t=>clearTimeout(t));_NT=[];
+  // Визуальный отклик на кнопке (не зависит от тоста)
+  if(btn){const orig=btn.textContent;btn.textContent='✓ Очищено';btn.disabled=true;setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},2500);}
   showToast('🔕 Уведомления очищены');
 }
 
@@ -1862,6 +1864,22 @@ function _deleteNoteReminder(noteId){
   showToast('Напоминание удалено');
 }
 
+let _remDoneOpen=false; // состояние аккордеона «Выполненные»
+
+function toggleRemDone(){
+  _remDoneOpen=!_remDoneOpen;
+  const body=document.getElementById('rem-done-body');
+  const arrow=document.getElementById('rem-done-arrow');
+  if(!body)return;
+  if(_remDoneOpen){
+    body.style.display='block';
+    if(arrow)arrow.textContent='▲';
+  }else{
+    body.style.display='none';
+    if(arrow)arrow.textContent='▼';
+  }
+}
+
 function renderReminderPanel(){
   const scroll=document.getElementById('remind-scroll');if(!scroll)return;
   const notes=getNotes();
@@ -1875,10 +1893,9 @@ function renderReminderPanel(){
     const da=parseDt(a.reminder),db=parseDt(b.reminder);
     return(da?da.getTime():Infinity)-(db?db.getTime():Infinity);
   });
-  // Выполненные — reminderDone=true, последние 30 дней
+  // Выполненные — все, без лимита по времени и количеству
   const done=notes.filter(n=>n.reminderDone&&n.reminder)
-    .sort((a,b)=>(b.reminderDoneAt||0)-(a.reminderDoneAt||0))
-    .slice(0,20);
+    .sort((a,b)=>(b.reminderDoneAt||0)-(a.reminderDoneAt||0));
   const settings=getReminderSettings();
   let html='';
   if(active.length){
@@ -1887,8 +1904,14 @@ function renderReminderPanel(){
     html+=`<div class="remind-empty"><div class="remind-empty-ico">🔔</div><div class="remind-empty-txt">Нет активных напоминаний</div></div>`;
   }
   if(done.length){
-    html+=`<div class="rem-done-hdr">Выполненные</div>`;
+    const open=_remDoneOpen;
+    html+=`<div class="rem-done-hdr" onclick="toggleRemDone()">
+      <span>Выполненные (${done.length})</span>
+      <span id="rem-done-arrow" class="rem-done-arrow">${open?'▲':'▼'}</span>
+    </div>`;
+    html+=`<div id="rem-done-body" style="display:${open?'block':'none'}">`;
     done.forEach(n=>{html+=_remItemHTML(n,true);});
+    html+='</div>';
   }
   html+='<div class="remind-section-label">Настройки</div>';
   html+=`<div class="remind-settings">
@@ -1898,7 +1921,7 @@ function renderReminderPanel(){
     </div>
     <div class="remind-set-row">
       <span class="remind-set-lbl">Очистить уведомления</span>
-      <button class="remind-set-val remind-set-danger" onclick="clearAllNotifications()">Очистить</button>
+      <button class="remind-set-val remind-set-danger" onclick="clearAllNotifications(this)">Очистить</button>
     </div>
   </div>`;
   scroll.innerHTML=html;
