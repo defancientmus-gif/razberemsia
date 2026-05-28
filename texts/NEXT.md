@@ -5,89 +5,95 @@
 
 ---
 
-## Последняя сессия — 2026-05-26 (rz-v194)
+## Последняя сессия — 2026-05-28 (rz-v257)
 
 **Сделано:**
-- ✅ **Иерархия разделов и папок** (rz-v194):
-  - `_drillP0` полностью переписан — убраны авто-категории по label
-  - Теперь: «Все заметки» → заголовок «АРХИВ» (разделы пользователя) → заголовок «ВХОДЯЩИЕ» (AI-папки)
-  - AI-папки визуально светлее (`.drill-folder-ai`), с бейджом «авт.»
-  - Разделы пользователя — керамик, с цветным тинтом, без изменений
-  - **Теги-чипы** появились в строках заметок (до 3 шт.), по тапу уходят в папку
-  - **Кнопка «В Архив»** на карточке агента при `CREATE_TAG_FOLDER` → `promoteToSection(tag)` — в один тап папка становится Разделом, заметки перекладываются автоматически
-  - `promoteToSection(tag)` — новая функция: создаёт раздел, переносит заметки, удаляет временную папку
+- ✅ **Inbox delete fix** (rz-v256): убрали ненадёжный swipe-reveal для inbox-карточек, добавили кнопку `×` прямо в карточку — надёжно работает на iOS
+- ✅ **Reminder redesign** (rz-v257): полный TickTick-стиль — чекбокс слева, тайм и ··· справа, анимация «галочка → исчезновение», без кнопок действий снизу
+- ✅ **save_idea bug fix** (rz-v257): агент больше не пишет в удалённую папку `ideas/` — теперь дописывает в `texts/IDEAS_NEAR_TERM.md` (функция `appendToGitHub`)
 
-**Текущий SW cache:** `rz-v194`
+**Текущий SW cache:** `rz-v257`
 
 ---
 
-## Предыдущая сессия — 2026-05-26 (rz-v193)
+## Аудит кода 2026-05-28 — найденные баги
 
-**Сделано:**
-- ✅ **Агент знает разделы пользователя** (rz-v193 + Edge Function):
-  - `getUserFolders()` теперь передаётся в Edge Function как `userFolders[]`
-  - В промпт добавлен блок `═══ РАЗДЕЛЫ ПОЛЬЗОВАТЕЛЯ ═══` с инструкцией
-  - `CREATE_NOTE` обрабатывает `params.section` → `_filedFolderTag()` → автоматически кладёт в раздел
-  - Совпадение только чёткое: «финансы» → Финансы, «здоровье» → Здоровье; при сомнении — не ставить
-- ✅ **Скролл в ИИ-анализе починен** (rz-v193):
-  - `toggleAiCollapse()` — при открытии устанавливает `overflow:visible` после анимации (320ms)
-  - При закрытии сначала `overflow:hidden`, потом анимация — iOS не теряет событие
-  - `.sheet-scroll-area` добавлен `-webkit-overflow-scrolling:touch`
-- ✅ **Керамик-карды** (rz-v193):
-  - `.drill-sec-row`, `.drill-note-row`, `.drill-grid-card` — border `.62→.70`, inset `.90→.94`, тень глубже
-  - Заголовки заметок: `font-variation-settings:'wght' 650` для плотности без жирного
-- ✅ **Кнопка «Разберёмся»** (rz-v193):
-  - Буква «Р» убрана полностью — чистый стеклянный орб
-  - Подпись «Помощник» → «Разберёмся» в serif шрифте (Iowan Old Style / Palatino)
-  - Кнопка стала мощнее: глубже градиент, ярче блик, двойное кольцо анимации
-  - `agent-glass-ring` расширен до scale(1.20), `agent-glass-rest` пульсирует сильнее
+### Исправлены сегодня:
+- ✅ `save_idea` → `ideas/` (удалена) → теперь `texts/IDEAS_NEAR_TERM.md`
+- ✅ Reminder panel — TickTick redesign (checkboxes + collapse animation)
+- ✅ Inbox delete — swipe-reveal заменён на прямую кнопку
 
-**Текущий SW cache:** `rz-v193`
+### Не критичные, отложены:
+- 🟡 `loadNotes()` сбрасывает `drillLevel=0` при каждом вызове — вызывает 50ms flash к level 0 при сохранении из секции. Workaround: setTimeout(drillGo, 50). Cosmetic.
+- 🟡 `attachSwipeDelete(d, delBg, null, 116)` в loadNotepad — лишние аргументы (null, 116) игнорируются. Dead code smell.
+- 🟡 Множественные `loadAll()` вызовы при одном действии (loadNotes+loadHomeFeed+loadNotepad). Работает, но не оптимально. Нужен debounce через requestAnimationFrame.
+- 🟡 `_drillInitSwipe` — listener leak guard работает (`_drillSwipeInited`). НЕ баг.
+- 🟡 textarea event listeners — cloneNode pattern корректно удаляет. НЕ баг.
+
+### В следующей сессии:
+- 🔜 **Lists toolbar** — кнопки форматирования над клавиатурой в редакторе заметки (сейчас `tools-row` hidden по умолчанию, ToggleToolsRow работает — но нужно доделать inline list toggle внутри textarea)
+- 🔜 **AI Analysis Overlay** — всплывающая панель поверх заметки (из NEXT.md #11)
 
 ---
 
-## Архитектура (важно знать)
+## Архитектура (важно знать — предыдущие сессии)
 
-**AI-папки** (drillAiTag) = сортировочный центр / входящий ящик
-- Создаются агентом через CREATE_TAG_FOLDER или при анализе заметки
-- Заметки там временно, пока не разобраны
+### AI Context Engine (rz-v254)
+- `_agentViewCtx` — где пользователь (section/folder/home)
+- `_buildAgentContext()` — top notes, section stats, inbox stats, upcoming reminders
+- `_trackNoteOpen(id)` — открытие заметки, at 5+ opens → ai_memory
+- `_getNoteStats()` → `localStorage rz_note_stats`
 
-**Разделы** (getUserFolders) = база данных / архив
-- Создаются пользователем через `+` на уровне 0 drill
-- Хранятся в `rz_user_folders` (localStorage only — нужна синхронизация)
-- Заметка принадлежит Разделу через `_filed_in:ИМЯ` тег в aiTags
-- Попадание в Раздел → метка «разобрались» везде где заметка показана
-- **Агент теперь знает разделы** → может сразу создавать заметку в нужный раздел
+### Session conversation history (rz-v253)
+- `_agentHistory[]` — 4 хода, 15 мин TTL
+- `_agentHistoryTs` — timestamp последнего хода
+- Передаётся агенту в каждом запросе как `conversationHistory`
 
-**Статус «разобрались»**: `isNoteResolved(note)` → `getFiledFolderName(note)` проверяет `_filed_in:` тег
+### Notes context (rz-v252)
+- 40 заметок (было 30)
+- `createdAt`, `updatedAt`, `section` в каждой заметке
+- `needsDeepCtx` — расширенный body (400 символов) для "сводки/плана/расскажи"
 
-**Статистика**: `calcStats()` → `{total, health, resolved, week, days, healthScore, activityScore}`
+### Timezone fix (rz-v249)
+- `clientNow` / `clientTz` передаются с каждым запросом
+- Claude получает `ТЕКУЩАЯ ДАТА И ВРЕМЯ ПОЛЬЗОВАТЕЛЯ:` в промпт
+
+---
+
+## Архитектура (базовая)
+
+**AI-папки** (`drillAiTag`) = входящий ящик (авт.)
+**Разделы** (`getUserFolders`) = база данных (пользователь)
+**`_filed_in:ИМЯ`** → заметка принадлежит разделу → статус «разобрались»
+
+---
+
+## Стек
+
+| Что | Где |
+|-----|-----|
+| UI | `index.html` + `js/app.js` |
+| PWA кэш | `sw.js` → `const CACHE = 'rz-vXXX'` |
+| AI | `supabase/functions/ai/index.ts` |
+| Здоровье | `supabase/functions/health/index.ts` |
+| Прод | https://defancientmus-gif.github.io/razberemsia/ |
+| Деплой | `./deploy.sh "описание"` |
 
 ---
 
 ## Следующие задачи (в порядке приоритета)
 
-1. ✅ ~~Голосовой агент v1~~
-2. ✅ ~~Клиентский sync-слой notes~~ (rz-v170)
-3. ✅ ~~Создать таблицу в Supabase~~ — сделано, мигрировано
-4. ✅ ~~Поиск по заметкам~~ (rz-v172)
-5. ✅ ~~Пользовательские Разделы + «разобрались» метка~~ (rz-v185-187)
-6. ✅ ~~Скролл в Заметках~~ (rz-v189)
-7. ✅ ~~Статистика в шапке~~ (rz-v191)
-8. ✅ ~~Агент знает о Разделах~~ (rz-v193)
-9. ✅ ~~Скролл в ИИ-анализе~~ (rz-v193)
-10. 🔜 **User folders sync в Supabase** — сейчас только localStorage, теряются при смене устройства
-11. 🔜 **Статистика расширенная** — трекинг «тратил» (label=покупки/задача), сохранять историю в localStorage по дням
-12. 🔜 **Supabase Auth**: JWT expiry 30 дней, выключить Phone provider
-13. 🔜 **Серверный DAILY_BRIEFING** — агент читает reminders из БД, работает когда приложение закрыто
-14. 🔜 **Realtime sync** — заметки обновляются на другом устройстве без перезагрузки
-15. 🔜 **Агент видит полный контекст** — связывает заметки, замечает конфликты по времени
+1. 🔥 **AI Analysis Overlay** — панель AI поверх заметки (NEXT.md #11)
+2. 🔜 **Lists toolbar** — кнопки форматирования над клавиатурой в заметке
+3. 🔜 **Supabase Auth** — JWT expiry 30 дней, выключить Phone provider
+4. 🔜 **Серверный DAILY_BRIEFING** — агент читает reminders из БД
+5. 🔜 **Realtime sync** — Supabase Realtime WebSocket
 
 ---
 
 ## Технический долг
 
-- `rz_user_folders` только в localStorage — нужна таблица в Supabase или поле в user_state
-- GIN-индекс поиска по-русски в таблице `notes` — можно подключить серверный поиск
-- `_drillHandledSwipe` — setTimeout(300ms) костыль, но рабочий. Не трогать.
-- Статистика: нет исторических данных по дням (только текущий срез). Для полноценного графика нужно хранить dailyStats в localStorage или Supabase.
+- `loadNotes()` reset drill → flash → cosmetic workaround работает
+- `attachSwipeDelete(d,delBg,null,116)` — лишние аргументы (notepad), мелочь
+- GIN-индекс поиска по-русски в `notes` — серверный поиск
+- `_deduplicateRecurringNotes()` — нет тестов на edge cases

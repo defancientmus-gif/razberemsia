@@ -1,12 +1,13 @@
 // supabase/functions/ai/index.ts
 // Деплой: supabase functions deploy ai --no-verify-jwt
-// Secrets: ANTHROPIC_API_KEY, GROQ_API_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
+// Secrets: ANTHROPIC_API_KEY, GROQ_API_KEY, YANDEX_STT_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const ANTHROPIC_KEY   = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const ANTHROPIC_MODEL = Deno.env.get('ANTHROPIC_MODEL')?.trim() || 'claude-haiku-4-5-20251001';
 const GROQ_KEY        = Deno.env.get('GROQ_API_KEY') ?? '';
+const YANDEX_STT_KEY  = Deno.env.get('YANDEX_STT_KEY') ?? '';
 const SB_URL          = Deno.env.get('SUPABASE_URL') ?? '';
 const SB_ANON         = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const GITHUB_TOKEN    = Deno.env.get('GITHUB_TOKEN') ?? '';
@@ -138,10 +139,41 @@ async function saveToGitHub(path: string, content: string, message: string): Pro
   return { ok: true, url: data.content?.html_url };
 }
 
-// ── Дата для имени файла ──
+// ── Дата для имени файла / записи ──
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ── Дописать секцию в конец существующего файла (GET sha + decode → append → PUT) ──
+async function appendToGitHub(path: string, section: string, message: string): Promise<{ ok: boolean; url?: string; error?: string }> {
+  if (!GITHUB_TOKEN) return { ok: false, error: 'GITHUB_TOKEN not configured' };
+  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
+  let existing = '';
+  let sha: string | undefined;
+  try {
+    const check = await fetch(apiUrl, {
+      headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, 'User-Agent': 'razberemsia-bot' },
+    });
+    if (check.ok) {
+      const meta = await check.json();
+      sha = meta.sha;
+      // GitHub отдаёт base64 с переносами строк
+      existing = decodeURIComponent(escape(atob((meta.content as string).replace(/\n/g,''))));
+    }
+  } catch (_) { /* файла нет — создадим */ }
+  const newContent = existing + '\n\n---\n\n' + section.trim() + '\n';
+  const encoded = btoa(unescape(encodeURIComponent(newContent)));
+  const body: Record<string, unknown> = { message, content: encoded };
+  if (sha) body.sha = sha;
+  const res = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'razberemsia-bot' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, error: await res.text() };
+  const data = await res.json();
+  return { ok: true, url: data.content?.html_url };
 }
 
 Deno.serve(async (req) => {
@@ -242,44 +274,30 @@ ${safeText}`,
   }
 
   // ── SAVE_IDEA ──
-  // Сохраняет заметку-идею в папку ideas/ репозитория через GitHub API
+  // Сохраняет заметку-идею в texts/IDEAS_NEAR_TERM.md (append)
   if (action === 'save_idea') {
     const { text, summary, tags, actions: ideaActions, noteId } = payload ?? {};
 
     if (typeof text !== 'string' || text.trim().length < 5) return json({ error: 'Text too short' }, 400);
     if (!GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured in Supabase Secrets' }, 500);
 
-    const date     = todayStr();
-    const shortId  = (noteId || Date.now().toString(36)).slice(-6);
-    const filename = `ideas/${date}_${shortId}.md`;
-
-    const tagsLine    = Array.isArray(tags)    ? tags.join(', ')        : '';
+    const date        = todayStr();
+    const tagsLine    = Array.isArray(tags)        ? tags.join(', ')                          : '';
     const actionsLine = Array.isArray(ideaActions) ? ideaActions.map(a => `- ${a}`).join('\n') : '';
 
-    const mdContent = `# Идея — ${date}
-
-## Заметка
+    const section = `## Идея — ${date}
 
 ${text.trim()}
 
-## AI-разбор
-
-**Суть:** ${summary || '—'}
-
-**Теги:** ${tagsLine || '—'}
-
-**Можно сделать:**
-${actionsLine || '—'}
-
----
-_Сохранено автоматически приложением «Разберёмся»_
-`;
+> **AI:** ${summary || '—'}
+> **Теги:** ${tagsLine || '—'}
+${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
 
     const commitMsg = `idea: ${(summary || text.trim().slice(0, 60)).replace(/\n/g, ' ')}`;
-    const result    = await saveToGitHub(filename, mdContent, commitMsg);
+    const result    = await appendToGitHub('texts/IDEAS_NEAR_TERM.md', section, commitMsg);
 
     if (!result.ok) return json({ error: result.error || 'GitHub save failed' }, 502);
-    return json({ saved: true, url: result.url, file: filename });
+    return json({ saved: true, url: result.url, file: 'texts/IDEAS_NEAR_TERM.md' });
   }
 
   // ── CHAT_REPLY ──
@@ -385,9 +403,16 @@ _Сохранено автоматически приложением «Разб
 
   // ── AGENT QUERY ──
   if (action === 'agent_query') {
-    const { text, memoryContext, alternatives } = payload ?? {};
+    const { text, memoryContext, alternatives, clientNow: rawClientNow, clientTz: rawClientTz, conversationHistory } = payload ?? {};
     if (typeof text !== 'string' || text.trim().length < 1) return json({ error: 'Empty query' }, 400);
     const safeText = text.trim().slice(0, 800);
+
+    // Часовой пояс и время пользователя (клиент передаёт, иначе UTC)
+    const clientTz = (typeof rawClientTz === 'string' && rawClientTz.length > 0) ? rawClientTz : 'UTC';
+    const clientNow = (typeof rawClientNow === 'string' && rawClientNow.length > 0) ? new Date(rawClientNow) : new Date();
+    const clientDateStr = clientNow.toLocaleDateString('ru-RU', { timeZone: clientTz, year: 'numeric', month: '2-digit', day: '2-digit' });
+    const clientTimeStr = clientNow.toLocaleTimeString('ru-RU', { timeZone: clientTz, hour: '2-digit', minute: '2-digit' });
+    const clientISODate = new Intl.DateTimeFormat('sv-SE', { timeZone: clientTz }).format(clientNow); // YYYY-MM-DD
 
     // Альтернативные варианты распознавания речи (топ-3 от браузера)
     const altsBlock = Array.isArray(alternatives) && alternatives.length > 0
@@ -399,20 +424,89 @@ _Сохранено автоматически приложением «Разб
       ? `\nПомни — человек раньше записывал:\n${memLines.join('\n')}\n`
       : '';
 
-    const { recentNotes, userFolders } = payload ?? {};
-    type NoteCtx = {index:number,title:string,body:string,hasReminder?:boolean,isRecurring?:boolean,reminderTime?:string|null};
-    // Форматируем время напоминания для DAILY_BRIEFING
-    const todayStr2 = new Date().toISOString().slice(0,10);
+    // ── История разговора этой сессии (последние 4 хода) ──────────────────
+    type HistoryTurn = { user: string; agent: string; intent?: string };
+    const historyBlock = Array.isArray(conversationHistory) && (conversationHistory as HistoryTurn[]).length > 0
+      ? '\n═══ ИСТОРИЯ ЭТОГО РАЗГОВОРА ═══\n' +
+        (conversationHistory as HistoryTurn[]).map(h =>
+          `Пользователь: «${h.user}»\nАгент (${h.intent||'?'}): ${h.agent}`
+        ).join('\n—\n') +
+        '\n(«эту», «ту», «её», «первую» — относится к заметкам упомянутым выше в истории. Используй историю чтобы понять контекст текущего запроса.)\n'
+      : '';
+
+    const { recentNotes, userFolders, appContext } = payload ?? {};
+
+    // ── Контекст приложения: структура, поведение, местоположение ─────────
+    type AppCtx = {
+      currentView?: { type: string; name?: string|null; tag?: string|null };
+      topOpenedNotes?: { title: string; opens: number; section?: string|null; hasReminder?: boolean }[];
+      sectionStats?: { name: string; noteCount: number }[];
+      inboxStats?: { tag: string; label: string; noteCount: number }[];
+      upcoming?: { title: string; reminder: string }[];
+      totalNotes?: number; totalSections?: number; totalInbox?: number; trashCount?: number;
+    };
+    let appCtxBlock = '';
+    if (appContext) {
+      const ctx = appContext as AppCtx;
+      const lines: string[] = [];
+      // Где сейчас пользователь
+      const v = ctx.currentView;
+      if (v) {
+        const loc = v.type === 'section' ? `раздел «${v.name}»`
+                  : v.type === 'folder'  ? `папка входящих «${v.tag}»`
+                  : v.type === 'all'     ? 'список всех разделов и папок'
+                  : 'главная лента';
+        lines.push(`📍 Где сейчас: ${loc}`);
+        if (v.type === 'section') lines.push(`(Если запрос без конкретики — отвечай в контексте раздела «${v.name}»)`);
+        if (v.type === 'folder')  lines.push(`(Если запрос без конкретики — отвечай в контексте папки «${v.tag}»)`);
+      }
+      // Общая статистика
+      lines.push(`📊 Всего: ${ctx.totalNotes||0} заметок · ${ctx.totalSections||0} разделов · ${ctx.totalInbox||0} папок входящих · ${ctx.trashCount||0} в корзине`);
+      // Разделы с количеством
+      if (ctx.sectionStats?.length) {
+        lines.push('📁 Разделы: ' + ctx.sectionStats.map(s => `«${s.name}» (${s.noteCount})`).join(' · '));
+      }
+      // Папки входящих с количеством
+      if (ctx.inboxStats?.length) {
+        lines.push('📥 Входящие папки: ' + ctx.inboxStats.map(f => `«${f.label}» (${f.noteCount})`).join(' · '));
+      }
+      // Часто открываемые — важные для пользователя
+      if (ctx.topOpenedNotes?.length) {
+        lines.push('⭐ Часто открывает (важные): ' + ctx.topOpenedNotes.map(n =>
+          `«${n.title}» (${n.opens}x${n.section ? ', '+n.section : ''}${n.hasReminder ? ', 🔔' : ''})`
+        ).join(' · '));
+      }
+      // Ближайшие напоминания
+      if (ctx.upcoming?.length) {
+        lines.push('🔔 Ближайшие напоминания: ' + ctx.upcoming.map(n => `«${n.title}» ${n.reminder}`).join(' · '));
+      }
+      appCtxBlock = '\n═══ КОНТЕКСТ ПРИЛОЖЕНИЯ ═══\n' + lines.join('\n') + '\n';
+    }
+
+    type NoteCtx = {
+      index:number; title:string; body:string;
+      createdAt?:string|null; updatedAt?:string|null;
+      hasReminder?:boolean; isRecurring?:boolean; reminderTime?:string|null;
+      section?:string|null;
+    };
     const notesLines = Array.isArray(recentNotes) && recentNotes.length > 0
-      ? '\nЗаметки пользователя:\n' + (recentNotes as NoteCtx[]).map(n => {
-          let timeLabel = '';
-          if(n.isRecurring) timeLabel = ' 🔁';
+      ? '\nЗаметки пользователя (сначала самые свежие):\n' + (recentNotes as NoteCtx[]).map(n => {
+          // Метка даты создания
+          const isCreatedToday = n.createdAt ? n.createdAt.startsWith(clientISODate) : false;
+          const dateLabel = n.createdAt
+            ? (isCreatedToday ? ' [сегодня]' : ` [${n.createdAt.slice(0,10)}]`)
+            : '';
+          // Метка напоминания
+          let remLabel = '';
+          if(n.isRecurring) remLabel = ' 🔁';
           else if(n.reminderTime){
-            const isToday = String(n.reminderTime).startsWith(todayStr2);
+            const isToday = String(n.reminderTime).startsWith(clientISODate);
             const timeStr = String(n.reminderTime).slice(11,16);
-            timeLabel = isToday ? ` 🔔 сегодня ${timeStr}` : ` 🔔 ${n.reminderTime.slice(0,10)} ${timeStr}`;
+            remLabel = isToday ? ` 🔔 сегодня ${timeStr}` : ` 🔔 ${n.reminderTime.slice(0,10)} ${timeStr}`;
           }
-          return `[${n.index}] «${n.title}»${timeLabel}${n.body?' — '+n.body:''}`;
+          // Раздел
+          const sectLabel = n.section ? ` 📁${n.section}` : '';
+          return `[${n.index}]${dateLabel}${sectLabel} «${n.title}»${remLabel}${n.body?' — '+n.body:''}`;
         }).join('\n') + '\n'
       : '';
 
@@ -422,15 +516,19 @@ _Сохранено автоматически приложением «Разб
 
     const prompt = `Ты голосовой агент «Разберёмся». Выполни запрос и верни JSON.
 
+ТЕКУЩАЯ ДАТА И ВРЕМЯ ПОЛЬЗОВАТЕЛЯ: ${clientDateStr} ${clientTimeStr} (${clientTz})
+(Используй это время при любых упоминаниях «сегодня», «завтра», «через час», «на этой неделе».)
+
+
 ═══ ДОСТУПНЫЕ ДЕЙСТВИЯ ═══
 CREATE_NOTE       — записать / запомнить / создать заметку (ДЕЙСТВИЕ ПО УМОЛЧАНИЮ при сомнениях)
 SET_REMINDER      — одно напоминание в конкретное время
 SET_RECURRING     — повторяющееся напоминание (каждый час / день)
 DELETE_REMINDER   — удалить / отменить напоминание (оставить заметку)
 READ_NOTE_ALOUD   — прочитай / озвучь заметку
-DAILY_BRIEFING    — что у меня сегодня / расскажи что запланировано / сводка дня
+DAILY_BRIEFING    — сводка заметок / что у меня сегодня / что я записал / расскажи что есть / покажи все / за день / всё что записано / что у меня есть
 MAKE_PLAN         — составь план / маршрут / список дел по заметкам
-FIND_NOTES        — найди / покажи / ищи заметки по теме или тексту
+FIND_NOTES        — найди заметки ПО КОНКРЕТНОЙ ТЕМЕ ("найди про врача", "покажи заметки о работе") — только когда есть конкретный поисковый запрос
 DELETE_NOTE       — удалить заметку в корзину
 CLARIFY           — запрос размытый, нужно уточнить
 CREATE_TAG_FOLDER — ТОЛЬКО если явно сказано «папку», «раздел» или «категорию»
@@ -497,6 +595,14 @@ SET_RECURRING — для ЛЮБОГО повторяющегося напоми�
   "каждый день в 9" → times: ["09:00"]
 НЕ выбирай слоты от текущего времени — всегда генерируй полный суточный ритм.
 
+═══ ПРАВИЛО: DAILY_BRIEFING vs FIND_NOTES ═══
+DAILY_BRIEFING — когда пользователь хочет ОБЗОР всего что есть (без конкретной темы):
+  «сводка», «что у меня», «что записал», «расскажи что есть», «покажи всё», «за день»
+FIND_NOTES — ТОЛЬКО когда есть КОНКРЕТНАЯ тема поиска:
+  «найди про встречу», «покажи заметки о здоровье», «найди где я писал про деньги»
+ОШИБКА: «сводку заметок за день» → НЕ FIND_NOTES → это DAILY_BRIEFING
+ОШИБКА: «что я записывал» → НЕ FIND_NOTES → это DAILY_BRIEFING
+
 ═══ ЖЁСТКИЕ ПРАВИЛА ПАПОК ═══
 CREATE_TAG_FOLDER и TAG_NOTE — ТОЛЬКО при явном упоминании слов: «папку», «папка», «раздел», «категорию», «тег», «ярлык».
 Если этих слов нет — НИКОГДА не создавай папку. Используй CREATE_NOTE или CLARIFY.
@@ -520,21 +626,42 @@ CREATE_TAG_FOLDER и TAG_NOTE — ТОЛЬКО при явном упомина�
 CLARIFY ТОЛЬКО когда САМО действие неясно — непонятно что именно нужно сделать.
 НЕ делай CLARIFY из-за отсутствия времени, деталей или уточнений — действуй сам.
 
+ЖЕЛЕЗНОЕ ПРАВИЛО: Если пользователь назвал папку/раздел И текст заметки — немедленно CREATE_NOTE с section=название.
+НИКОГДА не придумывай содержимое заметки — используй ТОЛЬКО слова пользователя.
+
+ИСКЛЮЧЕНИЕ — CLARIFY когда раздел назван но содержимое НЕ указано:
+— "запиши в финансы" (без текста) → CLARIFY, ответ: "Что записать в Финансы?"
+— "сделай заметку в здоровье" (без текста) → CLARIFY, ответ: "Что записать в Здоровье?"
+
+Примеры когда СРАЗУ CREATE_NOTE без CLARIFY (раздел + текст оба присутствуют):
+— "запиши в здоровье что выпил витамины" → CREATE_NOTE {title:"Выпил витамины", section:"Здоровье"}
+— "добавь в финансы купил курс за 5000" → CREATE_NOTE {title:"Купил курс за 5000", section:"Финансы"}
+— "создай папку еда и добавь туда заметку купить молоко" → [CREATE_TAG_FOLDER {tag:"еда"}, CREATE_NOTE {title:"Купить молоко", tag:"еда"}]
+
+НЕ задавай уточняющих вопросов о деталях (куда положить, как назвать) — только если содержимого нет совсем.
+
 Для "напомни X" без времени → SET_REMINDER с {"when":"завтра в 9:00"}, ответ: "Поставил напоминание на завтра в 9:00 — скажи если нужно другое время"
 Для "напоминай каждый день" без времени → SET_RECURRING с {"times":["09:00"],"days":"daily"}, ответ: "Буду напоминать каждый день в 9:00 — скажи если нужно другое время"
 Для "напомни каждый час" → SET_RECURRING times каждые 2 часа в рабочее время
 
 CLARIFY уместен только если:
-— Непонятно ЧТО записать (слишком размытый запрос без контекста)
+— Пользователь назвал только раздел без содержимого заметки
+— Совершенно непонятно ЧТО записать (один слог, бессмысленный набор слов)
 — Явный конфликт в данных (два взаимоисключающих намерения)
 Во всех остальных случаях — действуй, сообщай что сделал, предлагай изменить в ответе.
 НЕ давай советов по здоровью — только помогай настроить напоминание.
 
 ═══ ПРАВИЛА ДЛЯ НОВЫХ ДЕЙСТВИЙ ═══
 READ_NOTE_ALOUD: noteIndex = номер заметки из списка. Ответ: "Озвучиваю: «Название»".
-DAILY_BRIEFING: посмотри на заметки с полем reminderTime — это сегодняшние планы. Ответ: дружеская сводка "Сегодня у вас: ..." или "На сегодня ничего не запланировано". Кратко, 3-5 предложений.
+DAILY_BRIEFING: сделай тёплую живую сводку по ВСЕМ заметкам пользователя из списка выше.
+Структура ответа — три части (можно короче если мало данных):
+1. Что есть в работе / на повестке (темы, задачи, идеи — по заголовкам и телам)
+2. Что запланировано (заметки с 🔔 reminderTime — ближайшие в первую очередь)
+3. Одна фраза итога — тон как у друга: бодро, по-человечески, без канцелярита
+Если заметок мало — всё равно сделай сводку по тому что есть, не говори "ничего нет".
+Максимум 6 предложений. Не перечисляй заметки списком — расскажи словами.
 MAKE_PLAN: используй тела заметок как контекст и составь конкретный план или маршрут. Ответ = сам план (список шагов или пунктов маршрута). Не говори "вот план", сразу давай содержание. До 300 слов. Тёплый, практичный тон.
-${foldersBlock}${memBlock}${notesLines}${altsBlock}
+${appCtxBlock}${historyBlock}${foldersBlock}${memBlock}${notesLines}${altsBlock}
 Запрос пользователя: «${safeText}»`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -578,46 +705,79 @@ ${foldersBlock}${memBlock}${notesLines}${altsBlock}
     });
   }
 
-  // ── TRANSCRIBE — Groq Whisper ──
+  // ── TRANSCRIBE — Yandex SpeechKit (основной) + Groq Whisper (резерв) ──
+  // Клиент всегда присылает audio/wav (AudioContext → WAV encoder)
   if (action === 'transcribe') {
-    if (!GROQ_KEY) return json({ error: 'GROQ_API_KEY not configured' }, 500);
-
-    const { audio_base64, mime_type } = payload ?? {};
+    const { audio_base64, mime_type, sample_rate } = payload ?? {};
     if (typeof audio_base64 !== 'string' || audio_base64.length < 100) {
       return json({ error: 'No audio data' }, 400);
     }
 
-    // base64 → Uint8Array
-    const binaryStr = atob(audio_base64);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-
-    // Определяем расширение по MIME-типу (Groq требует расширение в имени файла)
-    const safeType = typeof mime_type === 'string' ? mime_type : 'audio/webm';
-    const ext = safeType.includes('mp4') || safeType.includes('m4a') ? 'm4a'
-              : safeType.includes('ogg') ? 'ogg'
-              : 'webm';
-
-    const form = new FormData();
-    form.append('file', new File([bytes], `audio.${ext}`, { type: safeType }));
-    form.append('model', 'whisper-large-v3-turbo');
-    form.append('language', 'ru');
-    form.append('response_format', 'json');
-
-    const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
-      body: form,
-    });
-
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      console.error('Groq transcription error:', errText);
-      return json({ error: 'Transcription failed' }, 500);
+    // base64 → Uint8Array (WAV)
+    let wavBytes: Uint8Array;
+    try {
+      const binaryStr = atob(audio_base64);
+      wavBytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) wavBytes[i] = binaryStr.charCodeAt(i);
+    } catch (e) {
+      return json({ error: 'Invalid base64 audio data' }, 400);
     }
 
-    const result = await groqRes.json();
-    return json({ text: (result.text ?? '').trim() });
+    // ── Попытка 1: Yandex SpeechKit ──
+    if (YANDEX_STT_KEY) {
+      try {
+        const sampleRate = typeof sample_rate === 'number' ? sample_rate : 16000;
+        // WAV = 44 байта заголовка + raw PCM → Yandex принимает lpcm без заголовка
+        const pcmBytes = wavBytes.slice(44);
+        const yRes = await fetch(
+          `https://stt.api.cloud.yandex.net/speech/v1/stt:recognize?lang=ru-RU&format=lpcm&sampleRateHertz=${sampleRate}`,
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Api-Key ${YANDEX_STT_KEY}`, 'Content-Type': 'application/octet-stream' },
+            body: pcmBytes,
+          }
+        );
+        if (yRes.ok) {
+          const yData = await yRes.json();
+          const text = (yData.result ?? '').trim();
+          if (text) return json({ text, provider: 'yandex' });
+          // Яндекс вернул пустой результат — пробуем Groq
+          console.warn('[rz] Yandex returned empty result, trying Groq');
+        } else {
+          const errText = await yRes.text();
+          console.warn('[rz] Yandex STT error:', yRes.status, errText);
+        }
+      } catch (e) {
+        console.warn('[rz] Yandex STT exception:', e);
+      }
+    }
+
+    // ── Попытка 2: Groq Whisper (fallback) ──
+    if (!GROQ_KEY) return json({ error: 'No STT provider configured' }, 500);
+    try {
+      const form = new FormData();
+      form.append('file', new File([wavBytes], 'audio.wav', { type: 'audio/wav' }));
+      form.append('model', 'whisper-large-v3-turbo');
+      form.append('language', 'ru');
+      form.append('response_format', 'json');
+
+      const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
+        body: form,
+      });
+
+      if (!groqRes.ok) {
+        const errText = await groqRes.text();
+        console.error('[rz] Groq transcription error:', groqRes.status, errText);
+        return json({ error: 'Transcription failed', groq_status: groqRes.status }, 500);
+      }
+      const result = await groqRes.json();
+      return json({ text: (result.text ?? '').trim(), provider: 'groq' });
+    } catch (e) {
+      console.error('[rz] Groq exception:', e);
+      return json({ error: 'Transcription failed' }, 500);
+    }
   }
 
   return json({ error: 'Unknown action' }, 400);
