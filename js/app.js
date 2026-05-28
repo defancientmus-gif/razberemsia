@@ -5617,6 +5617,9 @@ function _setAgentState(state){
   }else if(state==='thinking'){
     btn?.classList.add('agent-thinking');
     if(lbl){lbl.textContent='Разбираюсь...';lbl.style.opacity='1';}
+  }else if(state==='speaking'){
+    btn?.classList.add('agent-thinking');
+    if(lbl){lbl.textContent='Говорю...';lbl.style.opacity='1';}
   }else{
     if(lbl){lbl.textContent='';lbl.style.opacity='0';}
   }
@@ -5640,6 +5643,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 }
 
 async function _processAgentQuery(text,alts=[]){
+  window.speechSynthesis?.cancel(); // прерываем озвучку если агент уже говорит
   _setAgentState('thinking');
 
   // ── Таймаут агента: 30 сек, продление ещё на 30 сек ──
@@ -5912,6 +5916,26 @@ function _agentPickOption(query){
 }
 
 // ── TTS — озвучка ответа агента ──
+// ── Голос агента ─────────────────────────────────────────────────────────────
+function _agentVoiceEnabled(){return localStorage.getItem('rz_agent_voice')==='1';}
+function _setAgentVoice(on){
+  localStorage.setItem('rz_agent_voice',on?'1':'0');
+  document.querySelectorAll('.agent-card-speak').forEach(b=>{
+    b.classList.toggle('voice-on',on);
+    b.title=on?'Выключить голос':'Включить голос';
+  });
+}
+function _speakBtnTap(response){
+  if(_agentVoiceEnabled()){
+    window.speechSynthesis?.cancel();
+    _setAgentVoice(false);
+    _setAgentState('idle');
+  } else {
+    _setAgentVoice(true);
+    _agentSpeak(response);
+  }
+}
+
 function _agentSpeak(text){
   if(!text||!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
@@ -5921,6 +5945,9 @@ function _agentSpeak(text){
   const voices=window.speechSynthesis.getVoices();
   const ruVoice=voices.find(v=>v.lang.startsWith('ru'));
   if(ruVoice)utt.voice=ruVoice;
+  _setAgentState('speaking');
+  utt.onend=()=>_setAgentState('idle');
+  utt.onerror=()=>_setAgentState('idle');
   window.speechSynthesis.speak(utt);
 }
 
@@ -6001,8 +6028,9 @@ function _showAgentCard(intent,response,params,options){
 
   const card=document.createElement('div');
   card.id='agent-card';card.className='agent-card';
+  const voiceOn=_agentVoiceEnabled();
   const speakBtn=window.speechSynthesis
-    ?`<button class="agent-card-speak" onclick="_agentSpeak(${jsAttr(response)})" title="Озвучить">🔊</button>`:'';
+    ?`<button class="agent-card-speak${voiceOn?' voice-on':''}" onclick="_speakBtnTap(${jsAttr(response)})" title="${voiceOn?'Выключить голос':'Включить голос'}">🔊</button>`:'';
   card.innerHTML=`<div class="agent-card-inner">
     <div class="agent-card-head">
       <div class="agent-card-ico">${icons[intent]||'✦'}</div>
@@ -6023,6 +6051,8 @@ function _showAgentCard(intent,response,params,options){
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
   if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},7000);
+  // Автовоспроизведение — если голос включён
+  if(voiceOn&&response){setTimeout(()=>_agentSpeak(response),350);}
 }
 
 // Переход к папке или разделу из карточки агента
