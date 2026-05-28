@@ -1388,7 +1388,7 @@ function scheduleAll(){
 
   // ── 1. SW — системные уведомления (работает в фоне, без сети) ──
   // SW показывает системный попап. Страница его НЕ дублирует.
-  const swNotes=notes.filter(n=>n.reminder&&n.title).map(n=>({
+  const swNotes=notes.filter(n=>n.reminder&&n.title&&!n.reminderDone).map(n=>({
     id:n.id,title:n.title,body:n.body?.slice(0,100)||'',reminder:n.reminder
   }));
   if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
@@ -1398,7 +1398,7 @@ function scheduleAll(){
   // ── 2. setTimeout в странице — только внутренний баннер (без system Notification) ──
   // Если страница открыта в момент напоминания — показываем карточку поверх контента
   notes.forEach(n=>{
-    if(!n.reminder||!n.title)return;
+    if(!n.reminder||!n.title||n.reminderDone)return;
     const dt=parseDt(n.reminder);if(!dt)return;
     const delay=dt.getTime()-Date.now();
     if(delay<=0||delay>7*24*3600*1000)return;
@@ -1625,7 +1625,7 @@ function updateReminderDot(){
   const dot=document.getElementById('remind-dot');if(!dot)return;
   const now=Date.now();
   const has=getNotes().some(n=>{
-    if(!n.reminder)return false;
+    if(!n.reminder||n.reminderDone)return false;
     const dt=parseDt(n.reminder);if(!dt)return false;
     return dt.getTime()>now&&dt.getTime()-now<7*24*3600*1000;
   });
@@ -1691,7 +1691,7 @@ function checkDueReminders(){
   const advMs=settings.advanceMinutes*60*1000;
   const now=Date.now();
   getNotes().forEach(n=>{
-    if(!n.reminder)return;
+    if(!n.reminder||n.reminderDone)return;
     const dt=parseDt(n.reminder);if(!dt)return;
     const diff=dt.getTime()-now;
     const key=n.id+'_'+n.reminder;
@@ -1765,46 +1765,61 @@ function _fmtDayTime(d){
   const months=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
   return d.getDate()+' '+months[d.getMonth()]+' в '+pad(d.getHours())+':'+pad(d.getMinutes());
 }
+function _remItemHTML(n,isDone){
+  const now=Date.now();
+  const dt=parseDt(n.reminder);
+  const isPast=dt&&dt.getTime()<now;
+  const isSoon=dt&&!isPast&&(dt.getTime()-now)<3*3600000;
+  const whenCls=isDone?'done':isPast?'overdue':isSoon?'soon':'future';
+  const itemCls=(isDone?' rem-done':isPast?' rem-overdue':isSoon?' rem-soon':'');
+  const whenTxt=dt?_remindWhenTxt(dt,now):fmtDt(n.reminder);
+  const title=n.title||(n.body||'').split('\n')[0].slice(0,60)||'Заметка';
+  const recurLine=n.recurring?.times?.length&&!isDone
+    ?`<span class="rem-recur">🔁 ${esc(n.recurring.times.join(' · '))}</span>`:'';
+  const cbAction=isDone
+    ?`_markReminderUndone('${esc(n.id)}')`
+    :`_remCheckDone('${esc(n.id)}')`;
+  return `<div class="remind-item2${itemCls}" data-rid="${esc(n.id)}">
+    <button class="rem-cb${isDone?' done':''}" onclick="event.stopPropagation();${cbAction}" aria-label="${isDone?'Вернуть':'Выполнено'}">
+      <svg class="rem-cb-check" viewBox="0 0 12 9" width="12" height="9" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4.5 4.5,8 11,1"/></svg>
+    </button>
+    <div class="rem-body" onclick="closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(n.id)}),260)">
+      <div class="rem-name${isDone?' rem-name-done':''}">${esc(title)}</div>
+      <div class="rem-when rem-when-${whenCls}">${esc(whenTxt)}${recurLine}</div>
+    </div>
+    ${!isDone?`<button class="rem-edit-btn" onclick="event.stopPropagation();openRemEditForNote(${jsAttr(n.id)})" aria-label="Изменить">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
+    </button>`:''}
+  </div>`;
+}
+
 function renderReminderPanel(){
   const scroll=document.getElementById('remind-scroll');if(!scroll)return;
   const notes=getNotes();
   const now=Date.now();
-  const upcoming=notes.filter(n=>{
-    if(!n.reminder)return false;
+  // Активные — reminder есть, не выполнено, в пределах 3 суток
+  const active=notes.filter(n=>{
+    if(!n.reminder||n.reminderDone)return false;
     const dt=parseDt(n.reminder);if(!dt)return false;
-    return dt.getTime()>now-86400000*3; // просроченные до 3 суток тоже показываем
+    return dt.getTime()>now-86400000*3;
   }).sort((a,b)=>{
     const da=parseDt(a.reminder),db=parseDt(b.reminder);
     return(da?da.getTime():Infinity)-(db?db.getTime():Infinity);
   });
+  // Выполненные — reminderDone=true, последние 30 дней
+  const done=notes.filter(n=>n.reminderDone&&n.reminder)
+    .sort((a,b)=>(b.reminderDoneAt||0)-(a.reminderDoneAt||0))
+    .slice(0,20);
   const settings=getReminderSettings();
   let html='';
-  if(upcoming.length){
-    upcoming.forEach(n=>{
-      const dt=parseDt(n.reminder);
-      const isPast=dt&&dt.getTime()<now;
-      const isSoon=dt&&!isPast&&(dt.getTime()-now)<3*3600000;
-      const whenCls=isPast?'overdue':isSoon?'soon':'future';
-      const itemCls=isPast?' rem-overdue':isSoon?' rem-soon':'';
-      const whenTxt=dt?_remindWhenTxt(dt,now):fmtDt(n.reminder);
-      const title=n.title||(n.body||'').split('\n')[0].slice(0,60)||'Заметка';
-      const recurLine=n.recurring?.times?.length
-        ?`<span class="rem-recur">🔁 ${esc(n.recurring.times.join(' · '))}</span>`:'';
-      html+=`<div class="remind-item2${itemCls}" data-rid="${esc(n.id)}">
-        <button class="rem-cb" onclick="event.stopPropagation();_remCheckDone('${esc(n.id)}')" aria-label="Выполнено">
-          <svg class="rem-cb-check" viewBox="0 0 12 9" width="12" height="9" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4.5 4.5,8 11,1"/></svg>
-        </button>
-        <div class="rem-body" onclick="closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(n.id)}),260)">
-          <div class="rem-name">${esc(title)}</div>
-          <div class="rem-when rem-when-${whenCls}">${esc(whenTxt)}${recurLine}</div>
-        </div>
-        <button class="rem-edit-btn" onclick="event.stopPropagation();openRemEditForNote(${jsAttr(n.id)})" aria-label="Изменить">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
-        </button>
-      </div>`;
-    });
-  } else {
+  if(active.length){
+    active.forEach(n=>{html+=_remItemHTML(n,false);});
+  } else if(!done.length){
     html+=`<div class="remind-empty"><div class="remind-empty-ico">🔔</div><div class="remind-empty-txt">Нет активных напоминаний</div></div>`;
+  }
+  if(done.length){
+    html+=`<div class="rem-done-hdr">Выполненные</div>`;
+    done.forEach(n=>{html+=_remItemHTML(n,true);});
   }
   html+='<div class="remind-section-label">Настройки</div>';
   html+=`<div class="remind-settings">
@@ -1816,23 +1831,52 @@ function renderReminderPanel(){
   scroll.innerHTML=html;
 }
 
+// Отметить напоминание как выполненное (с анимацией, не удаляет)
 function _remCheckDone(id){
   const el=document.querySelector(`.remind-item2[data-rid="${id}"]`);
-  if(!el){doneReminder(id);return;}
+  if(!el){_markReminderDone(id);return;}
   const cb=el.querySelector('.rem-cb');
   if(cb)cb.classList.add('done');
-  // Фиксируем высоту перед collapse-анимацией
   el.style.maxHeight=el.offsetHeight+'px';
   el.style.overflow='hidden';
   setTimeout(()=>{
     el.style.opacity='0';
-    el.style.transform='translateX(10px)';
+    el.style.transform='translateY(6px)';
     el.style.maxHeight='0';
     el.style.marginBottom='0';
     el.style.paddingTop='0';
     el.style.paddingBottom='0';
-    setTimeout(()=>doneReminder(id),290);
-  },170);
+    setTimeout(()=>{_markReminderDone(id);renderReminderPanel();},290);
+  },180);
+}
+
+// Сохранить reminderDone=true, напоминание НЕ удаляется
+function _markReminderDone(id){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===id);
+  if(!n)return;
+  // Циклические — старое поведение (перепланировать)
+  if(n.recurring?.times?.length){doneReminder(id);return;}
+  n.reminderDone=true;
+  n.reminderDoneAt=Date.now();
+  n.updatedAt=Date.now();
+  saveNotes(notes);
+  scheduleAll();
+  updateReminderDot();
+}
+
+// Снять галочку — вернуть напоминание в активные
+function _markReminderUndone(id){
+  const notes=getNotes();
+  const n=notes.find(x=>x.id===id);
+  if(!n)return;
+  delete n.reminderDone;
+  delete n.reminderDoneAt;
+  n.updatedAt=Date.now();
+  saveNotes(notes);
+  scheduleAll();
+  updateReminderDot();
+  renderReminderPanel();
 }
 
 function doneReminder(noteId){
@@ -6051,7 +6095,7 @@ async function _cleanupPastReminders(){
       if(!n.reminder)return;
       const dt=parseDt(n.reminder);if(!dt)return;
       // Если прошло более 5 минут и напоминание не повторяющееся — чистим
-      if(dt.getTime()<now-5*60*1000&&!n.recurring?.times?.length){
+      if(dt.getTime()<now-5*60*1000&&!n.recurring?.times?.length&&!n.reminderDone){
         n.reminder=null;n.updatedAt=Date.now();
         dirty=true;toDelete.push(n.id);
       }
