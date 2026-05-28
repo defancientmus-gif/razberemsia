@@ -1849,6 +1849,56 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .ai-action-done{font-size:11px;color:oklch(0.45 0.12 210);display:flex;align-items:center;gap:4px;padding-left:16px;}
 .ai-err{font-size:12px;color:oklch(0.50 0.15 25);}
 
+/* ── AI ANALYSIS OVERLAY ── */
+.ai-overlay{
+  position:fixed;inset:0;z-index:920;
+  background:oklch(0 0 0/0.38);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.ai-overlay.show{opacity:1;pointer-events:all;}
+.ai-overlay-sheet{
+  width:100%;max-height:76vh;min-height:220px;
+  background:oklch(0.98 0.005 220);
+  border-radius:22px 22px 0 0;
+  border-top:1px solid oklch(0.92 0.02 220/0.7);
+  box-shadow:0 -8px 40px oklch(0 0 0/0.14);
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .34s cubic-bezier(.22,1,.36,1);
+}
+.ai-overlay.show .ai-overlay-sheet{transform:translateY(0);}
+.ai-overlay-handle{
+  width:36px;height:4px;
+  background:oklch(0.82 0.02 220);border-radius:2px;
+  margin:10px auto 0;flex-shrink:0;
+}
+.ai-overlay-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px 8px;flex-shrink:0;
+  border-bottom:1px solid oklch(0.90 0.02 220/0.55);
+}
+.ai-overlay-title{
+  font-size:12px;font-weight:700;color:oklch(0.40 0.12 290);
+  display:flex;align-items:center;gap:6px;letter-spacing:.03em;text-transform:uppercase;
+}
+.ai-overlay-rerun,.ai-overlay-close{
+  background:none;border:none;cursor:pointer;padding:5px;
+  display:flex;align-items:center;justify-content:center;
+  color:oklch(0.55 0.06 220);border-radius:8px;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s,color .12s;
+}
+.ai-overlay-rerun:active,.ai-overlay-close:active{background:oklch(0.88 0.02 220/0.60);}
+.ai-overlay-body{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:2px 0 calc(env(safe-area-inset-bottom,0px) + 16px);
+  overscroll-behavior:contain;
+}
+/* Адаптируем существующие .ai-panel-inner стили под overlay */
+.ai-overlay-body .ai-panel-inner{padding:12px 18px;}
+
 /* Footer — "0 символов  |  Cmd Enter  сохранить" */
 .sheet-footer{
   display:flex;align-items:center;justify-content:space-between;
@@ -3470,30 +3520,9 @@ header{padding:15px 16px 9px;}
     <div class="sheet-voice-row">
     </div>
     <div class="voice-wave-row" id="sheet-wave-row" style="gap:3px;"></div>
-    <!-- Scroll area: textarea + AI panel вместе, не жмут друг друга -->
+    <!-- Scroll area: только textarea -->
     <div class="sheet-scroll-area" id="sheet-scroll-area">
       <div class="sheet-body-wrap" id="sheet-body"></div>
-      <!-- AI Panel (появляется при включении) -->
-      <div id="ai-panel" class="ai-panel" style="display:none;">
-        <div class="ai-panel-hdr" onclick="toggleAiCollapse()">
-          <span class="ai-panel-title"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Анализ AI</span>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <button class="ai-collapse-btn" type="button" onclick="event.stopPropagation();rerunAiAnalysis()" title="Обновить анализ" style="opacity:.6;"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
-            <button class="ai-collapse-btn" id="ai-collapse-btn" type="button" onclick="event.stopPropagation();toggleAiCollapse()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
-          </div>
-        </div>
-        <div class="ai-panel-body" id="ai-panel-body"></div>
-      </div>
-      <!-- Chat inside note (микроблог) — внутри scroll-area, прокручивается вместе с заметкой -->
-      <div id="note-chat" class="note-chat" style="display:none;"></div>
-      <div id="note-chat-input-row" class="note-chat-input-row" style="display:none;">
-        <input id="note-chat-in" class="note-chat-in" type="text" placeholder="Продолжить разговор…" maxlength="500"
-          onfocus="if(document.getElementById('note-chat').style.display==='none')toggleNoteChat()"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();sendNoteChat();}">
-        <button id="note-chat-send" class="note-chat-send" type="button" onclick="sendNoteChat()">
-          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>
     </div>
     <!-- Reminder -->
     <div class="sheet-reminder-row" id="sheet-reminder-row" style="display:none;">
@@ -4045,6 +4074,28 @@ document.addEventListener('DOMContentLoaded', ()=>{
       onkeydown="if(event.key==='Enter')confirmFolderCreate()">
     <button onclick="confirmFolderCreate()" style="display:block;width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:700;font-family:var(--sys);cursor:pointer;margin-bottom:10px;transition:opacity .15s;">Создать</button>
     <button onclick="closeFolderModal()" style="display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:15px;font-family:var(--sys);cursor:pointer;">Отмена</button>
+  </div>
+</div>
+
+<!-- ── AI ANALYSIS OVERLAY — bottom sheet поверх заметки ── -->
+<div id="ai-overlay" class="ai-overlay" onclick="if(event.target===this)closeAiOverlay()">
+  <div class="ai-overlay-sheet" id="ai-overlay-sheet">
+    <div class="ai-overlay-handle"></div>
+    <div class="ai-overlay-hdr">
+      <span class="ai-overlay-title">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Разбор заметки
+      </span>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button class="ai-overlay-rerun" onclick="rerunAiAnalysis()" title="Обновить анализ">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        </button>
+        <button class="ai-overlay-close" onclick="closeAiOverlay()">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="ai-overlay-body" id="ai-overlay-body"></div>
   </div>
 </div>
 </body>

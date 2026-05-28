@@ -702,21 +702,21 @@ function _setSheetAiButtonState(state){
 }
 
 function toggleAiPanel(){
+  if(_aiOn){closeAiOverlay();return;}
+  _aiOn=true;
   const btn=document.getElementById('sheet-ai-btn');
-  const panel=document.getElementById('ai-panel');
-  if(!btn||!panel)return;
-  _aiOn=!_aiOn;
-  btn.classList.toggle('ai-on',_aiOn);
-  if(!_aiOn){panel.style.display='none';_setSheetAiButtonState('idle');return;}
+  if(btn)btn.classList.add('ai-on');
+  const overlay=document.getElementById('ai-overlay');
+  if(!overlay)return;
+  // Открыть overlay
+  overlay.style.display='flex';
+  requestAnimationFrame(()=>overlay.classList.add('show'));
   const f=document.getElementById('sh1');
   const text=(f?.value||'').trim();
-  panel.style.display='block';
-  panel.classList.remove('collapsed'); // всегда раскрывать при показе
-  const bodyEl=document.getElementById('ai-panel-body');
+  const bodyEl=document.getElementById('ai-overlay-body');
   if(text.length<15){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">Напишите немного больше — тогда AI сможет помочь.</div></div>`;
     _setSheetAiButtonState('retry');
-    _scrollToAiPanel();
     return;
   }
   // ── Кэш: если заметка уже анализировалась и текст не менялся — показать без API ──
@@ -725,41 +725,41 @@ function toggleAiPanel(){
     const idx=list.findIndex(n=>n.id===EI);
     const note=idx>=0?list[idx]:null;
     if(note?.aiCache&&note.aiCache.bodyKey===text.slice(0,80)){
-      // Бэкфилл: сохраняем aiTags если их ещё нет (старые заметки)
       if(!Array.isArray(note.aiTags)||!note.aiTags.length){
         list[idx].aiTags=note.aiCache.tags||[];
         list[idx].aiSummary=note.aiCache.summary||'';
         saveNotes(list);
       }
-      _renderAiResult(note.aiCache.summary,note.aiCache.tags,note.aiCache.actions,panel,text);
-      _scrollToAiPanel();
+      _renderAiResult(note.aiCache.summary,note.aiCache.tags,note.aiCache.actions,null,text);
       return;
     }
   }
   _setSheetAiButtonState('loading');
-  runAiAnalysis(text,panel);
+  runAiAnalysis(text,null);
 }
+
+function closeAiOverlay(){
+  _aiOn=false;
+  const btn=document.getElementById('sheet-ai-btn');
+  if(btn)btn.classList.remove('ai-on');
+  _setSheetAiButtonState('idle');
+  const overlay=document.getElementById('ai-overlay');
+  if(!overlay)return;
+  overlay.classList.remove('show');
+  setTimeout(()=>{overlay.style.display='none';},300);
+}
+
 function rerunAiAnalysis(){
-  // Сброс кэша → принудительный перезапуск
   if(EI){
     const list=getNotes();const idx=list.findIndex(n=>n.id===EI);
     if(idx>=0){list[idx].aiCache=null;saveNotes(list);}
   }
-  _aiOn=false; // сбросить флаг чтобы toggleAiPanel перезапустил
+  _aiOn=false;
   toggleAiPanel();
 }
 
-function toggleAiCollapse(){
-  const panel=document.getElementById('ai-panel');
-  if(!panel)return;
-  const body=document.getElementById('ai-panel-body');
-  const btn=document.getElementById('ai-collapse-btn');
-  // Сбросить любые inline-стили от предыдущих итераций
-  if(body){body.style.maxHeight='';body.style.overflow='';body.style.opacity='';}
-  panel.style.overflow='';
-  panel.classList.toggle('collapsed');
-  if(btn)btn.style.transform=panel.classList.contains('collapsed')?'rotate(180deg)':'rotate(0deg)';
-}
+// toggleAiCollapse не нужен в overlay — оставляем как заглушку
+function toggleAiCollapse(){}
 
 // ── ИСПРАВЛЕНИЕ ТЕКСТА ──
 // _spellOriginal и _spellActive — var-глобалы из inline-скрипта index.html
@@ -835,12 +835,7 @@ function _updateSpellBtn(btn){
     if(dot){dot.textContent=stage;dot.style.display='inline';}
   }
 }
-function _scrollToAiPanel(){
-  const sa=document.getElementById('sheet-scroll-area');
-  if(!sa)return;
-  // Instant jump — smooth scroll causes panel to appear stuck in middle of screen
-  sa.scrollTop=sa.scrollHeight;
-}
+function _scrollToAiPanel(){} // no-op — overlay не требует скролла
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function isAiOverloaded(message){
   const raw=String(message||'').toLowerCase();
@@ -870,12 +865,11 @@ async function readErrorText(res){
     return text;
   }
 }
-async function runAiAnalysis(text,panel,attempt=0){
+async function runAiAnalysis(text,_unused,attempt=0){
   let autoLabel=null;
   _setSheetAiButtonState('loading');
-  const bodyEl=document.getElementById('ai-panel-body');
+  const bodyEl=document.getElementById('ai-overlay-body');
   if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-loading"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="40"><animate attributeName="stroke-dashoffset" values="40;0;40" dur=".8s" repeatCount="indefinite"/></path></svg>${attempt?'AI занят, пробую ещё раз...':'Анализирую...'}</div></div>`;
-  _scrollToAiPanel();
   try{
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
@@ -890,7 +884,7 @@ async function runAiAnalysis(text,panel,attempt=0){
       const errText=await readErrorText(res);
       if(attempt<1&&(isAiOverloaded(errText)||res.status===502||res.status===529)){
         await sleep(1400);
-        return runAiAnalysis(text,panel,attempt+1);
+        return runAiAnalysis(text,null,attempt+1);
       }
       throw new Error(friendlyAiError(errText,res.status));
     }
@@ -900,8 +894,7 @@ async function runAiAnalysis(text,panel,attempt=0){
       const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
       if(curCat==='заметка'){showSheetCat(autoLabel);showCatHint(autoLabel);}
     }
-    _renderAiResult(summary,tags,actions,panel,text);
-    // ── Сохранить кэш анализа в заметку ──
+    _renderAiResult(summary,tags,actions,null,text);
     if(EI){
       const list=getNotes();
       const idx=list.findIndex(n=>n.id===EI);
@@ -913,7 +906,6 @@ async function runAiAnalysis(text,panel,attempt=0){
         saveNotes(list);
       }
     }
-    // ── Авто-сохранение идей в репозиторий ──
     const isIdea=(tags||[]).some(t=>/^идеи?$|^ideas?$/i.test(t.trim()))
       || /^идея([^а-яёА-ЯЁa-zA-Z]|$)/i.test(text.trim());
     if(isIdea){
@@ -921,20 +913,17 @@ async function runAiAnalysis(text,panel,attempt=0){
       _saveIdeaToRepo({text,summary:summary||'',tags:tags||[],actions:actions||[],noteId:nid})
         .catch(e=>console.warn('save_idea failed',e));
     }
-    _scrollToAiPanel();
   }catch(e){
     console.warn('AI error',e);
     const msg=String(e?.message||'').startsWith('Ошибка AI:')||String(e?.message||'').startsWith('AI ')||String(e?.message||'').startsWith('Войдите')||String(e?.message||'').startsWith('Не получилось')?String(e?.message):friendlyAiError(e?.message);
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
     _setSheetAiButtonState('retry');
-    // editBtn removed
-    _scrollToAiPanel();
   }
 }
 
-// ── RENDER AI RESULT (used both from runAiAnalysis and from cache) ──
-function _renderAiResult(summary,tags,actions,panel,text){
-  const bodyEl=document.getElementById('ai-panel-body');
+// ── RENDER AI RESULT ──
+function _renderAiResult(summary,tags,actions,_unused,text){
+  const bodyEl=document.getElementById('ai-overlay-body');
   let html='<div class="ai-panel-inner">';
   if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
   if(tags?.length){
@@ -968,14 +957,6 @@ function _renderAiResult(summary,tags,actions,panel,text){
   html+='</div>';
   if(bodyEl){
     bodyEl.innerHTML=html;
-    // Inline стили не нужны — CSS .ai-panel:not(.collapsed) управляет высотой
-    bodyEl.style.maxHeight='';
-    bodyEl.style.overflow='';
-    requestAnimationFrame(()=>{ _scrollToAiPanel(); });
-  }
-  if(panel){
-    panel.dataset.aiTags=JSON.stringify(Array.isArray(tags)?tags:[]);
-    panel.dataset.aiSummary=summary||'';
   }
   _setSheetAiButtonState('ready');
 }
@@ -3790,8 +3771,7 @@ function _openNoteWith(n){
   initSheetReminder(n.reminder||'');
   initSheetRecurring(n);
   initSheetUndo(n.body||n.title||'');
-  // Рендерим чат внутри заметки
-  renderNoteChat(n);
+  _chatNoteId=n.id;
   _openSheet();
 }
 
@@ -3808,8 +3788,6 @@ function openSheet(type){
   initSheetReminder('');
   initSheetRecurring(null);
   initSheetUndo('');
-  const cw=document.getElementById('note-chat');if(cw)cw.style.display='none';
-  const cr=document.getElementById('note-chat-input-row');if(cr)cr.style.display='none';
   _openSheet();
 }
 
@@ -3843,21 +3821,8 @@ function _openSheet(){
     filingTarget.innerHTML=`<span>В разделе</span><strong>${esc(currentFolder.name)}</strong>`;
     filingTarget.classList.add('show');
   }
-  const aiPanel=document.getElementById('ai-panel');
-  if(aiPanel){
-    aiPanel.style.display='none';
-    aiPanel.style.overflow='';
-    aiPanel.classList.remove('collapsed');
-    aiPanel.dataset.aiTags='';
-    aiPanel.dataset.aiSummary='';
-  }
-  const aiBody=document.getElementById('ai-panel-body');
-  if(aiBody){
-    aiBody.innerHTML='';
-    aiBody.style.maxHeight='';
-    aiBody.style.overflow='';
-    aiBody.style.opacity='';
-  }
+  // Закрываем AI overlay при открытии новой заметки
+  closeAiOverlay();
   document.getElementById('ai-edit-area')?.remove();
   const panel=document.getElementById('sheet-panel');
   if(panel){panel.style.transform='';panel.style.transition='';}
@@ -3879,13 +3844,7 @@ function _openSheet(){
     const sa=document.getElementById('sheet-scroll-area');
     if(sa){
       sa.onclick=(e)=>{if(e.target===sa){const ta=document.getElementById('sh1');if(ta)ta.focus();}};
-      // Если есть чат — прокрутить вниз ПОСЛЕ autoGrowTA (иначе рост textarea сбивает скролл)
-      const chat=document.getElementById('note-chat');
-      if(chat&&chat.style.display!=='none'){
-        sa.scrollTop=sa.scrollHeight;
-      } else {
-        sa.scrollTop=0; // новая заметка — сверху
-      }
+      sa.scrollTop=0;
     }
     const bw=document.getElementById('sheet-body');
     if(bw)bw.onclick=(e)=>{if(e.target===bw){const ta=document.getElementById('sh1');if(ta)ta.focus();}};
@@ -4042,6 +4001,7 @@ function onSheetPaste(e){
 }
 
 function closeSheet(){
+  closeAiOverlay();
   stopNoteSheetVoice();
   stopSheetVoice();
   stopSheetAudioNote();
@@ -4569,14 +4529,9 @@ function saveSheet(){
   const prev=existingIdx>=0?list[existingIdx]:null;
   const previousFiledFolder=getFiledFolderName(prev);
   const prevHadDestination=!!(_selectedUserFolder&&previousFiledFolder===_selectedUserFolder.toLowerCase());
-  const aiPanel=document.getElementById('ai-panel');
   let aiTags=Array.isArray(prev?.aiTags)?prev.aiTags:[];
   let aiSummary=prev?.aiSummary||'';
   let aiCache=prev?.aiCache||null;
-  if(aiPanel?.dataset.aiTags){
-    try{const parsed=JSON.parse(aiPanel.dataset.aiTags);if(Array.isArray(parsed))aiTags=parsed.filter(t=>typeof t==='string').slice(0,8);}catch(e){}
-  }
-  if(aiPanel?.dataset.aiSummary)aiSummary=aiPanel.dataset.aiSummary;
   // Если создаём заметку из тег-папки — добавляем её тег автоматически
   if(existingIdx<0&&drillAiTag&&!aiTags.map(t=>t.toLowerCase()).includes(drillAiTag.toLowerCase())){
     aiTags=[...aiTags,drillAiTag];
@@ -5183,9 +5138,8 @@ function startSheetAudioNote(){
       showToast('Голос записан ✓');
     }
     if(_aiOn){
-      const p=document.getElementById('ai-panel');
       const t=document.getElementById('sh1')?.value||'';
-      if(p&&p.style.display!=='none'&&t.length>14)runAiAnalysis(t,p);
+      if(_aiOn&&t.length>14)runAiAnalysis(t,null);
     }
   };
   sheetAudioRecog.start();
