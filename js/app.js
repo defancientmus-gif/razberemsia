@@ -3052,7 +3052,7 @@ function _drillP0(){
     pinnedFolders.forEach(f=>{
       const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())).length;
       h+=`<div class="sect-card sect-card-pinned" data-nav-folder="${esc(f.tag)}">
-        <button type="button" class="sect-card-del" onclick="unpinTagFolder(${JSON.stringify(f.tag)})" title="Открепить">${_PIN_SVG}</button>
+        <button type="button" class="sect-card-del" onclick="unpinTagFolder(${jsAttr(f.tag)})" title="Открепить">${_PIN_SVG}</button>
         <div class="sect-card-ico sect-card-ico-pin">${_BOOK_SVG}</div>
         <div class="sect-card-name">${esc(f.label||f.tag)}</div>
         <div class="sect-card-cnt">${cnt} ${cnt===1?'заметка':cnt<5?'заметки':'заметок'}</div>
@@ -3093,8 +3093,8 @@ function _drillP0(){
           <div class="drill-sec-ico" style="background:oklch(0.52 0.10 202 / .07);color:oklch(0.45 0.10 202);">${_TAG_SVG}</div>
           <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
           <div class="drill-sec-count">${cnt}</div>
-          <button type="button" class="folder-pin-btn" title="Закрепить" onclick="pinTagFolder(${JSON.stringify(f.tag)})">${_PIN_SVG}</button>
-          <button type="button" class="folder-del-btn" title="Удалить" onclick="deleteTagFolder(${JSON.stringify(f.tag)})">${_X_SVG}</button>
+          <button type="button" class="folder-pin-btn" title="Закрепить" onclick="pinTagFolder(${jsAttr(f.tag)})">${_PIN_SVG}</button>
+          <button type="button" class="folder-del-btn" title="Удалить" onclick="deleteTagFolder(${jsAttr(f.tag)})">${_X_SVG}</button>
         </div>`;
       });
     }
