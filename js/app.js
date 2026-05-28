@@ -1784,34 +1784,23 @@ function renderReminderPanel(){
       const dt=parseDt(n.reminder);
       const isPast=dt&&dt.getTime()<now;
       const isSoon=dt&&!isPast&&(dt.getTime()-now)<3*3600000;
-      const dotCls=isPast?'overdue':isSoon?'soon':'future';
-      const timeCls=isPast?'overdue':isSoon?'soon':'';
+      const whenCls=isPast?'overdue':isSoon?'soon':'future';
+      const itemCls=isPast?' rem-overdue':isSoon?' rem-soon':'';
       const whenTxt=dt?_remindWhenTxt(dt,now):fmtDt(n.reminder);
-      const cardCls=isPast?'remind-item overdue-card':'remind-item';
       const title=n.title||(n.body||'').split('\n')[0].slice(0,60)||'Заметка';
-      const preview=(n.body||'').split('\n').slice(1).join(' ').trim().slice(0,120);
       const recurLine=n.recurring?.times?.length
-        ?`<div class="remind-item-recurring">🔁 ${esc(n.recurring.times.join(' · '))}</div>`:'';
-      html+=`<div class="${cardCls}" onclick="closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(n.id)}),260)">
-        <div class="remind-item-top">
-          <div class="remind-item-dot ${dotCls}"></div>
-          <div class="remind-item-time ${timeCls}">${esc(whenTxt)}</div>
+        ?`<span class="rem-recur">🔁 ${esc(n.recurring.times.join(' · '))}</span>`:'';
+      html+=`<div class="remind-item2${itemCls}" data-rid="${esc(n.id)}">
+        <button class="rem-cb" onclick="event.stopPropagation();_remCheckDone('${esc(n.id)}')" aria-label="Выполнено">
+          <svg class="rem-cb-check" viewBox="0 0 12 9" width="12" height="9" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4.5 4.5,8 11,1"/></svg>
+        </button>
+        <div class="rem-body" onclick="closeReminderPanel();setTimeout(()=>openNoteSheetById(${jsAttr(n.id)}),260)">
+          <div class="rem-name">${esc(title)}</div>
+          <div class="rem-when rem-when-${whenCls}">${esc(whenTxt)}${recurLine}</div>
         </div>
-        <div class="remind-item-title">${esc(title)}</div>
-        ${preview?`<div class="remind-item-preview">${esc(preview)}</div>`:''}
-        ${recurLine}
-        <div class="remind-item-actions">
-          <button class="remind-done-btn" onclick="event.stopPropagation();doneReminder(${jsAttr(n.id)})">
-            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Выполнено
-          </button>
-          <button class="remind-open-btn" onclick="event.stopPropagation();openRemEditForNote(${jsAttr(n.id)})">
-            Изменить
-          </button>
-          <button class="remind-del-btn" onclick="event.stopPropagation();removeNoteReminder(${jsAttr(n.id)})" title="Удалить напоминание">
-            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
+        <button class="rem-edit-btn" onclick="event.stopPropagation();openRemEditForNote(${jsAttr(n.id)})" aria-label="Изменить">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="5" cy="12" r="1.2"/></svg>
+        </button>
       </div>`;
     });
   } else {
@@ -1825,6 +1814,25 @@ function renderReminderPanel(){
     </div>
   </div>`;
   scroll.innerHTML=html;
+}
+
+function _remCheckDone(id){
+  const el=document.querySelector(`.remind-item2[data-rid="${id}"]`);
+  if(!el){doneReminder(id);return;}
+  const cb=el.querySelector('.rem-cb');
+  if(cb)cb.classList.add('done');
+  // Фиксируем высоту перед collapse-анимацией
+  el.style.maxHeight=el.offsetHeight+'px';
+  el.style.overflow='hidden';
+  setTimeout(()=>{
+    el.style.opacity='0';
+    el.style.transform='translateX(10px)';
+    el.style.maxHeight='0';
+    el.style.marginBottom='0';
+    el.style.paddingTop='0';
+    el.style.paddingBottom='0';
+    setTimeout(()=>doneReminder(id),290);
+  },170);
 }
 
 function doneReminder(noteId){

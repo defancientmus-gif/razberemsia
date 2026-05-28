@@ -408,6 +408,25 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .remind-del-btn svg{width:12px;height:12px;stroke:oklch(0.52 0.04 210);stroke-width:2.2;fill:none;stroke-linecap:round;}
 .remind-section-label{font-size:11px;font-weight:700;color:oklch(0.50 0.08 65);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;}
 .remind-settings{background:oklch(1 0 0/0.55);border:0.5px solid oklch(0.84 0.04 65/0.55);border-radius:14px;padding:4px 14px;}
+/* ── TickTick-style reminder rows ── */
+.remind-item2{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;background:oklch(1 0 0/0.65);border:0.5px solid oklch(0.84 0.04 65/0.32);border-radius:16px;margin-bottom:8px;box-shadow:0 1px 8px oklch(0.52 0.08 65/0.06),inset 0 1px 0 oklch(1 0 0/0.90);overflow:hidden;transition:opacity .22s ease,transform .22s ease,max-height .28s ease,margin-bottom .28s ease,padding .28s ease;}
+.remind-item2.rem-overdue{border-color:oklch(0.72 0.14 25/0.32);background:oklch(0.995 0.008 25/0.80);}
+.remind-item2.rem-soon{border-color:oklch(0.78 0.12 58/0.28);}
+.rem-cb{width:22px;height:22px;flex-shrink:0;margin-top:2px;border-radius:6px;border:2px solid oklch(0.68 0.10 200);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s,border-color .18s,transform .15s;-webkit-tap-highlight-color:transparent;padding:0;}
+.rem-overdue .rem-cb{border-color:oklch(0.62 0.18 25);}
+.rem-soon .rem-cb{border-color:oklch(0.65 0.16 58);}
+.rem-cb.done{background:oklch(0.52 0.14 145);border-color:oklch(0.52 0.14 145);}
+.rem-cb-check{opacity:0;transition:opacity .14s;}
+.rem-cb.done .rem-cb-check{opacity:1;}
+.rem-body{flex:1;min-width:0;cursor:pointer;}
+.rem-name{font-size:15px;font-weight:600;color:oklch(0.22 0.04 60);line-height:1.35;}
+.rem-when{font-size:12px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:6px;}
+.rem-when-overdue{color:oklch(0.50 0.20 25);}
+.rem-when-soon{color:oklch(0.52 0.16 58);}
+.rem-when-future{color:oklch(0.50 0.10 200);}
+.rem-recur{font-weight:400;opacity:.70;font-size:11px;}
+.rem-edit-btn{width:30px;height:30px;flex-shrink:0;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;color:oklch(0.62 0.04 210);cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:background .12s;}
+.rem-edit-btn:active{background:oklch(0.90 0.04 210/0.30);}
 .remind-set-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid oklch(0.88 0.04 65/0.20);}
 .remind-set-row:last-child{border-bottom:none;}
 .remind-set-lbl{font-size:13px;color:var(--fg-m);font-weight:500;}
