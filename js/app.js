@@ -1376,6 +1376,23 @@ function reqNotif(){
 }
 
 let _NT=[];
+// Очистить все уведомления: SW-таймауты + показанные системные
+function clearAllNotifications(){
+  // SW: сбросить запланированные таймауты
+  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:'SCHEDULE',notes:[]});
+  }
+  // Закрыть видимые системные уведомления в трее
+  if(navigator.serviceWorker?.ready){
+    navigator.serviceWorker.ready.then(reg=>{
+      if(reg.getNotifications)reg.getNotifications().then(ns=>ns.forEach(n=>n.close()));
+    }).catch(()=>{});
+  }
+  // In-page таймауты (баннеры внутри приложения)
+  _NT.forEach(t=>clearTimeout(t));_NT=[];
+  showToast('🔕 Уведомления очищены');
+}
+
 function scheduleAll(){
   _NT.forEach(t=>clearTimeout(t));_NT=[];
   if(!notifGranted())return;
@@ -1878,6 +1895,10 @@ function renderReminderPanel(){
     <div class="remind-set-row">
       <span class="remind-set-lbl">Напомнить заранее</span>
       <button class="remind-set-val" id="remind-adv-btn" onclick="cycleAdvance()">${advanceLabel(settings.advanceMinutes)}</button>
+    </div>
+    <div class="remind-set-row">
+      <span class="remind-set-lbl">Очистить уведомления</span>
+      <button class="remind-set-val remind-set-danger" onclick="clearAllNotifications()">Очистить</button>
     </div>
   </div>`;
   scroll.innerHTML=html;
@@ -5979,7 +6000,7 @@ function _showAgentCard(intent,response,params,options){
       const noteTitle=newNote?.title||'заметку';
       const noteId=newNote?.id||'';
       openBtn=noteId
-        ?`<button class="agent-card-open" onclick="document.getElementById('agent-card')?.remove();openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
+        ?`<button class="agent-card-open" onclick="_closeAgentCard(this);openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
         :`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
     }
   } else if(['SET_REMINDER','SET_RECURRING'].includes(intent)){
@@ -5987,7 +6008,7 @@ function _showAgentCard(intent,response,params,options){
     const noteTitle=newNote?.title||'напоминание';
     const noteId=newNote?.id||'';
     openBtn=noteId
-      ?`<button class="agent-card-open" onclick="document.getElementById('agent-card')?.remove();openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
+      ?`<button class="agent-card-open" onclick="_closeAgentCard(this);openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
       :`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть напоминание</button>`;
   } else if(['OPEN_NOTE','ANALYZE_NOTE','TAG_NOTE','READ_NOTE_ALOUD'].includes(intent)&&typeof params?.noteIndex==='number'){
     const noteTitle=getNotes()[params.noteIndex]?.title||'заметку';
@@ -6003,7 +6024,7 @@ function _showAgentCard(intent,response,params,options){
   if(intent==='CREATE_TAG_FOLDER'&&params?.tag){
     const folderLabel=params.label||params.tag;
     openFolderBtn=`<button class="agent-card-open" onclick="_agentOpenFolder(${jsAttr(params.tag)})">Открыть «${esc(String(folderLabel).slice(0,25))}»</button>`;
-    promoteBtn=`<button class="agent-card-promote" onclick="promoteToSection(${jsAttr(params.tag)});this.closest('.agent-card').remove();">📚 В Архив</button>`;
+    promoteBtn=`<button class="agent-card-promote" onclick="promoteToSection(${jsAttr(params.tag)});_closeAgentCard(this);">📚 В Архив</button>`;
   }
 
   // Кнопка «Сохранить план» для MAKE_PLAN
@@ -6021,10 +6042,19 @@ function _showAgentCard(intent,response,params,options){
       '</div>'
     :'';
 
+  // Строка продолжения диалога — всегда в конце карточки
+  const askRow=`<div class="agent-card-ask">
+    <input class="agent-card-ask-inp" placeholder="Спросить ещё…"
+      onkeydown="if(event.key==='Enter'){const v=this.value.trim();if(v){_closeAgentCard(this);_processAgentQuery(v,[]);}}"
+    >
+    <button class="agent-card-ask-send" onclick="const inp=this.previousElementSibling;const v=inp?.value?.trim();if(v){_closeAgentCard(this);_processAgentQuery(v,[]);}" title="Отправить">↵</button>
+    <button class="agent-card-ask-mic" onclick="_closeAgentCard(this);agentTap()" title="Голос">🎙</button>
+  </div>`;
+
   // Для CLARIFY: только варианты + мелкая «Отмена»; для остальных — кнопка «Готово»
   const closeBtn=isClarify
-    ?`<button class="agent-card-cancel" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Отмена</button>`
-    :`<button class="agent-card-btn" onclick="this.closest('.agent-card').classList.remove('show');setTimeout(()=>this.closest('.agent-card')?.remove(),380)">Готово</button>`;
+    ?`<button class="agent-card-cancel" onclick="_closeAgentCard(this)">Отмена</button>`
+    :`<button class="agent-card-btn" onclick="_closeAgentCard(this)">Готово</button>`;
 
   const card=document.createElement('div');
   card.id='agent-card';card.className='agent-card';
@@ -6042,28 +6072,40 @@ function _showAgentCard(intent,response,params,options){
     ${openFolderBtn}
     ${savePlanBtn}
     ${promoteBtn}
+    ${askRow}
     ${closeBtn}
   </div>`;
   // Клик на затемнённый фон = закрыть (только для autoClose карточек)
   if(autoClose){
-    card.addEventListener('click',e=>{if(e.target===card){card.classList.remove('show');setTimeout(()=>card.remove(),380);}},{passive:true});
+    card.addEventListener('click',e=>{if(e.target===card){_closeAgentCard(card);}},{passive:true});
   }
   document.body.appendChild(card);
   requestAnimationFrame(()=>card.classList.add('show'));
-  if(autoClose)setTimeout(()=>{card.classList.remove('show');setTimeout(()=>card.remove(),380);},7000);
+  if(autoClose)setTimeout(()=>{_closeAgentCard(card);},7000);
   // Автовоспроизведение — если голос включён
   if(voiceOn&&response){setTimeout(()=>_agentSpeak(response),350);}
 }
 
+// Закрыть карточку агента — единственная точка закрытия, всегда останавливает TTS
+function _closeAgentCard(el){
+  const card=el?.closest?.('.agent-card')||document.getElementById('agent-card');
+  if(!card)return;
+  window.speechSynthesis?.cancel();
+  _setAgentState('idle');
+  card.classList.remove('show');
+  setTimeout(()=>card?.remove(),380);
+}
+
 // Переход к папке или разделу из карточки агента
 function _agentOpenFolder(tag){
+  window.speechSynthesis?.cancel();_setAgentState('idle');
   document.getElementById('agent-card')?.remove();
   go('notes');
-  // Небольшая пауза чтобы секция успела активироваться
   setTimeout(()=>{drillGo(1,{aiTag:tag});},160);
 }
 
 function _agentOpenNote(idx){
+  window.speechSynthesis?.cancel();_setAgentState('idle');
   document.getElementById('agent-card')?.remove();
   const notes=getNotes();
   const note=notes[idx];
@@ -6164,6 +6206,7 @@ function _renderSearch(q){
 }
 
 function _agentSavePlan(planText){
+  window.speechSynthesis?.cancel();_setAgentState('idle');
   document.getElementById('agent-card')?.remove();
   if(!planText||planText.length<5)return;
   const ts=Date.now();const id=genId();const notes=getNotes();

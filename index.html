@@ -444,6 +444,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .remind-set-lbl{font-size:13px;color:var(--fg-m);font-weight:500;}
 .remind-set-val{font-size:13px;color:oklch(0.46 0.14 60);font-weight:600;background:oklch(0.58 0.12 65/0.10);border:none;border-radius:8px;padding:5px 11px;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;transition:background .12s;}
 .remind-set-val:active{background:oklch(0.58 0.12 65/0.20);}
+.remind-set-danger{color:oklch(0.48 0.18 25)!important;background:oklch(0.55 0.18 25/0.10)!important;}
+.remind-set-danger:active{background:oklch(0.55 0.18 25/0.20)!important;}
 .remind-toggle{position:relative;width:40px;height:24px;cursor:pointer;flex-shrink:0;}
 .remind-toggle input{opacity:0;width:0;height:0;}
 .remind-toggle-track{position:absolute;inset:0;border-radius:12px;background:oklch(0.80 0.02 210);transition:background .2s;}
@@ -1153,6 +1155,11 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .agent-card-opt{padding:14px 10px;background:oklch(0.95 0.025 210);color:var(--accent-d);border:1.5px solid oklch(0.87 0.06 210/0.45);border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;line-height:1.35;font-family:var(--sys);}
 .agent-card-opts--clarify .agent-card-opt{padding:16px 18px;font-size:16px;border-radius:18px;text-align:left;}
 .agent-card-opt:active{background:oklch(0.90 0.05 210);transform:scale(.97);}
+.agent-card-ask{display:flex;gap:6px;margin-top:10px;margin-bottom:4px;}
+.agent-card-ask-inp{flex:1;background:oklch(0.94 0.012 210);border:none;border-radius:12px;padding:10px 13px;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;min-width:0;}
+.agent-card-ask-inp::placeholder{color:oklch(0.65 0.04 210);}
+.agent-card-ask-send,.agent-card-ask-mic{background:oklch(0.94 0.012 210);border:none;border-radius:12px;padding:10px 12px;font-size:16px;cursor:pointer;flex-shrink:0;transition:background .12s;}
+.agent-card-ask-send:active,.agent-card-ask-mic:active{background:oklch(0.88 0.04 210);}
 .agent-card-cancel{display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:14px;cursor:pointer;margin-top:4px;font-family:var(--sys);}
 .agent-card-open{display:block;width:100%;padding:13px;background:oklch(0.95 0.025 210);color:var(--accent-d);border:1.5px solid oklch(0.87 0.06 210/0.45);border-radius:16px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .15s;font-family:var(--sys);}
 .agent-card-open:active{opacity:.7;}
