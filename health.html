@@ -167,6 +167,8 @@
 
   /* ── VERSION ── */
   .version-row { text-align: center; margin-top: 28px; font-size: 11px; color: oklch(0.35 0.010 240); }
+  .version-row a { color: inherit; opacity: .55; }
+  .version-row a:hover { opacity: .9; }
 
   /* ── ANIMATIONS ── */
   @keyframes pulse-g { 0%,100%{box-shadow:0 0 5px var(--green);}  50%{box-shadow:0 0 14px var(--green);} }
@@ -182,7 +184,7 @@
   <div class="hdr-title">Карта здоровья системы</div>
   <div class="hdr-meta">
     <span class="live-badge"><span class="live-dot"></span>Live</span>
-    <span id="ver-badge">rz-v250</span>
+    <span id="ver-badge">rz-v277</span>
     <span id="date-badge"></span>
   </div>
 </div>
@@ -210,21 +212,25 @@
       <div class="svc-dot"></div>
       <div class="svc-info"><div class="svc-name">GitHub Pages (хостинг)</div><div class="svc-detail">проверяем…</div></div>
     </div>
+    <div class="svc-card checking" id="svc-ideas">
+      <div class="svc-dot"></div>
+      <div class="svc-info"><div class="svc-name">Идеи → GitHub</div><div class="svc-detail">проверяем…</div></div>
+    </div>
   </div>
   <div class="last-check" id="last-check">—</div>
 </div>
 
 <!-- ─── SUMMARY ─────────────────────────────────────────────── -->
 <div class="summary">
-  <div class="s-chip"><div class="s-dot g"></div><span class="s-count">25</span><span class="s-label">работает</span></div>
-  <div class="s-chip"><div class="s-dot y"></div><span class="s-count">10</span><span class="s-label">нестабильно</span></div>
-  <div class="s-chip"><div class="s-dot r"></div><span class="s-count">6</span><span class="s-label">не готово</span></div>
+  <div class="s-chip"><div class="s-dot g"></div><span class="s-count" id="sum-ok">0</span><span class="s-label">работает</span></div>
+  <div class="s-chip"><div class="s-dot y"></div><span class="s-count" id="sum-warn">0</span><span class="s-label">нестабильно</span></div>
+  <div class="s-chip"><div class="s-dot r"></div><span class="s-count" id="sum-bad">0</span><span class="s-label">не готово</span></div>
 </div>
 
 <!-- ─── HEALTH BAR ─────────────────────────────────────────── -->
 <div class="hbar-wrap">
-  <div class="hbar-label"><span>Готовность продукта (функционал)</span><span>61%</span></div>
-  <div class="hbar"><div class="hbar-g"></div><div class="hbar-y"></div><div class="hbar-r"></div></div>
+  <div class="hbar-label"><span>Готовность продукта (функционал)</span><span id="ready-pct">—</span></div>
+  <div class="hbar"><div class="hbar-g" id="hbar-g"></div><div class="hbar-y" id="hbar-y"></div><div class="hbar-r" id="hbar-r"></div></div>
 </div>
 
 <!-- ─── MODULE GRID ───────────────────────────────────────── -->
@@ -245,9 +251,9 @@
     <div class="items">
       <div class="item"><div class="dot g"></div><div><div class="item-name">Распознавание намерений</div><div class="item-note">CREATE_NOTE, SET_REMINDER, FIND, BRIEFING…</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Разделы / filing</div><div class="item-note">Знает разделы, пишет section= сразу</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Дата/время пользователя</div><div class="item-note">Починено rz-v249 — нужна верификация</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Выдумывает содержание</div><div class="item-note">Промпт исправлен rz-v250 — нужна верификация</div></div></div>
-      <div class="item"><div class="dot r"></div><div><div class="item-name">Голосовой ответ (TTS)</div><div class="item-note">Агент не говорит — только текст</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Дата/время пользователя</div><div class="item-note">Починено раньше — нужна периодическая проверка</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Выдумывает содержание</div><div class="item-note">Промпт ужесточён — проверять на реальных заметках</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Голосовой ответ (TTS)</div><div class="item-note">Есть speechSynthesis + тумблер, нужна проверка iOS/Android</div></div></div>
       <div class="item"><div class="dot r"></div><div><div class="item-name">Серверный DAILY_BRIEFING</div><div class="item-note">Работает только в открытом приложении</div></div></div>
     </div>
   </div>
@@ -271,8 +277,9 @@
       <div class="item"><div class="dot g"></div><div><div class="item-name">Локальные браузерные уведомления</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Циклические (каждый час, каждый день)</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Без дублей (ghost fix rz-v243)</div></div></div>
-      <div class="item"><div class="dot r"></div><div><div class="item-name">Push когда приложение закрыто</div><div class="item-note">iOS PWA принципиально не поддерживает</div></div></div>
-      <div class="item"><div class="dot r"></div><div><div class="item-name">Серверный планировщик (cron)</div><div class="item-note">Нет Edge Worker для фоновых уведомлений</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Подтверждения действий через уведомления</div><div class="item-note">Идея сильная: Android/desktop проще, iOS требует Home Screen PWA и отдельной проверки action-кнопок</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Push когда приложение закрыто</div><div class="item-note">Не внедрено: нужен Web Push server; iOS работает только для Home Screen PWA</div></div></div>
+      <div class="item"><div class="dot r"></div><div><div class="item-name">Серверный планировщик (cron)</div><div class="item-note">Нет отдельного воркера/cron для фоновых решений агента</div></div></div>
     </div>
   </div>
 
@@ -303,12 +310,13 @@
   <div class="block">
     <div class="block-head"><span class="block-icon">🏗</span><span class="block-title">PWA / Инфраструктура</span><span class="badge badge-y">нестабильно</span></div>
     <div class="items">
-      <div class="item"><div class="dot g"></div><div><div class="item-name">Service Worker + кэш (rz-vXXX)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Service Worker + кэш</div><div class="item-note">Актуальную версию читает шапка из sw.js</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Деплой через deploy.sh</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Шрифты в SW кэше</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Быстрый PWA update</div><div class="item-note">skipWaiting + clients.claim + один reload</div></div></div>
       <div class="item"><div class="dot y"></div><div><div class="item-name">Offline режим</div><div class="item-note">Базовый кэш, при чистой установке — ошибки</div></div></div>
       <div class="item"><div class="dot y"></div><div><div class="item-name">iOS Home Screen</div><div class="item-note">Работает, но push недоступен</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">save_idea → путь сломан</div><div class="item-note">Пишет в ideas/ (удалена)</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">GitHub Pages после markdown-коммитов</div><div class="item-note">Идеи тоже триггерят Pages build — терпимо в dev</div></div></div>
     </div>
   </div>
 
@@ -323,6 +331,29 @@
     </div>
   </div>
 
+  <div class="block">
+    <div class="block-head"><span class="block-icon">💡</span><span class="block-title">Идеи / память проекта</span><span class="badge badge-y">разобрать</span></div>
+    <div class="items">
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Новая цепочка save_idea</div><div class="item-note">Работает: идеи дописываются в texts/IDEAS_NEAR_TERM.md</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Новая рабочая полка</div><div class="item-note">2 идеи от 2026-05-29 уже пришли через приложение</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Legacy raw ideas/</div><div class="item-note">22 файла 2026-05-25..28, часть дублируется и требует выжимки</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Архив raw-ideas</div><div class="item-note">15 файлов 2026-05-19..22 + session log, не активный план</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Общее число raw/выгруженных идей</div><div class="item-note">39 записей: 2 новые + 22 legacy + 15 архивных</div></div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><span class="block-icon">🧪</span><span class="block-title">Dev-механики</span><span class="badge badge-y">снять перед финалом</span></div>
+    <div class="items">
+      <div class="item"><div class="dot y"></div><div><div class="item-name">save_idea делает commit в main</div><div class="item-note">Сейчас полезно как память проекта; финал: Supabase idea_inbox + ручной/пакетный дайджест</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Фидбек идёт через save_idea</div><div class="item-note">Финал: отдельная приватная таблица/очередь feedback</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">health.html публичная</div><div class="item-note">Секретов нет, но перед релизом закрыть, скрыть или оставить только безопасный summary</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Health endpoint без JWT</div><div class="item-note">Показывает только общий статус; финал: rate limit или внутренний доступ</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Legacy ideas/</div><div class="item-note">Не активная память. Архивировать/заморозить после переноса нужного смысла</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">GitHub token не во фронте</div><div class="item-note">Токен лежит в Supabase Secrets — это правильная граница</div></div></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ─── LEGEND ────────────────────────────────────────────── -->
@@ -332,10 +363,11 @@
   <div class="leg"><div class="dot r" style="margin-top:0"></div> Не реализовано или сломано</div>
 </div>
 
-<div class="version-row">health.html · обновляется с каждым деплоем · <a href="https://defancientmus-gif.github.io/razberemsia/" style="color:inherit;opacity:.5;">открыть приложение</a></div>
+<div class="version-row">health.html · dev-приборка, не экран продукта · <a href="https://defancientmus-gif.github.io/razberemsia/">открыть приложение</a></div>
 
 <script>
   const HEALTH_URL = 'https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/health';
+  const IDEAS_COMMITS_URL = 'https://api.github.com/repos/defancientmus-gif/razberemsia/commits?path=texts/IDEAS_NEAR_TERM.md&per_page=1';
   let _refreshTimer = null;
   const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 минут
 
@@ -343,17 +375,55 @@
   document.getElementById('date-badge').textContent =
     new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
+  function escHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function updateModuleStats() {
+    const root = document.querySelector('.grid');
+    if (!root) return;
+    const ok = root.querySelectorAll('.dot.g').length;
+    const warn = root.querySelectorAll('.dot.y').length;
+    const bad = root.querySelectorAll('.dot.r').length;
+    const total = ok + warn + bad;
+    const pct = total ? Math.round((ok / total) * 100) : 0;
+    document.getElementById('sum-ok').textContent = ok;
+    document.getElementById('sum-warn').textContent = warn;
+    document.getElementById('sum-bad').textContent = bad;
+    document.getElementById('ready-pct').textContent = `${pct}%`;
+    const g = document.getElementById('hbar-g');
+    const y = document.getElementById('hbar-y');
+    const r = document.getElementById('hbar-r');
+    if (g) g.style.flex = String(Math.max(ok, 1));
+    if (y) y.style.flex = String(Math.max(warn, 1));
+    if (r) r.style.flex = String(Math.max(bad, 1));
+  }
+
+  async function loadRuntimeVersion() {
+    try {
+      const res = await fetch(`sw.js?health=${Date.now()}`, { cache: 'no-store' });
+      const text = await res.text();
+      const match = text.match(/const CACHE = ['"]([^'"]+)['"]/);
+      if (match) document.getElementById('ver-badge').textContent = match[1];
+    } catch (e) {
+      console.warn('version fetch error', e);
+    }
+  }
+
   function setCard(id, ok, name, detail, ping) {
     const el = document.getElementById(id);
     if (!el) return;
     el.className = 'svc-card ' + (ok ? 'ok' : 'err');
+    const cleanPing = Number.isFinite(Number(ping)) ? Math.round(Number(ping)) : null;
     el.innerHTML = `
       <div class="svc-dot"></div>
       <div class="svc-info">
-        <div class="svc-name">${name}</div>
-        <div class="svc-detail">${ok ? '✓ ' : '✗ '}${detail}</div>
+        <div class="svc-name">${escHtml(name)}</div>
+        <div class="svc-detail">${ok ? '✓ ' : '✗ '}${escHtml(detail)}</div>
       </div>
-      ${ping ? `<div class="svc-ping">${ping}мс</div>` : ''}
+      ${cleanPing !== null ? `<div class="svc-ping">${cleanPing}мс</div>` : ''}
     `;
   }
 
@@ -370,6 +440,26 @@
     `;
   }
 
+  async function checkIdeasSink() {
+    const t = Date.now();
+    try {
+      const res = await fetch(IDEAS_COMMITS_URL, {
+        headers: { 'Accept': 'application/vnd.github+json' },
+        signal: AbortSignal.timeout(12000),
+      });
+      const latency = Date.now() - t;
+      if (!res.ok) return { ok: false, latency, detail: `GitHub API ${res.status}` };
+      const commits = await res.json();
+      const latest = Array.isArray(commits) ? commits[0] : null;
+      if (!latest) return { ok: false, latency, detail: 'нет commit по IDEAS_NEAR_TERM.md' };
+      const sha = String(latest.sha || '').slice(0, 7);
+      const msg = String(latest.commit?.message || '').split('\n')[0].slice(0, 72);
+      return { ok: true, latency, detail: `${sha} · ${msg}` };
+    } catch (e) {
+      return { ok: false, latency: Date.now() - t, detail: String(e).slice(0, 80) };
+    }
+  }
+
   async function checkLive() {
     const btn = document.getElementById('refresh-btn');
     if (btn) { btn.disabled = true; btn.textContent = '↻ …'; }
@@ -378,9 +468,11 @@
     setChecking('svc-groq',     'Groq (резервный STT)');
     setChecking('svc-supabase', 'Supabase / Edge Function');
     setChecking('svc-github',   'GitHub Pages (хостинг)');
+    setChecking('svc-ideas',    'Идеи → GitHub');
 
     const t = Date.now();
     let data = null;
+    const ideasPromise = checkIdeasSink();
     try {
       const res = await fetch(HEALTH_URL, { signal: AbortSignal.timeout(15000) });
       if (res.ok) data = await res.json();
@@ -389,6 +481,7 @@
     }
 
     const edgeLatency = Date.now() - t;
+    const ideas = await ideasPromise;
 
     if (data && data.services) {
       const s = data.services;
@@ -396,12 +489,14 @@
       setCard('svc-groq',     s.groq?.ok,          'Groq (резервный STT)',     s.groq?.detail ?? '—',       s.groq?.latency_ms);
       setCard('svc-supabase', true,                'Supabase / Edge Function', `ответил за ${edgeLatency}мс`, edgeLatency);
       setCard('svc-github',   true,                'GitHub Pages (хостинг)',   'страница загружена', null);
+      setCard('svc-ideas',    ideas.ok,            'Идеи → GitHub',            ideas.detail, ideas.latency);
     } else {
       // Edge Function не ответила
       setCard('svc-yandex',   false, 'Yandex SpeechKit',        'нет данных', null);
       setCard('svc-groq',     false, 'Groq (резервный STT)',     'нет данных', null);
       setCard('svc-supabase', false, 'Supabase / Edge Function', `нет ответа (${edgeLatency}мс)`, null);
       setCard('svc-github',   true,  'GitHub Pages (хостинг)',   'страница загружена', null);
+      setCard('svc-ideas',    ideas.ok, 'Идеи → GitHub', ideas.detail, ideas.latency);
     }
 
     const now = new Date();
@@ -416,6 +511,8 @@
   }
 
   // Запуск при загрузке
+  updateModuleStats();
+  loadRuntimeVersion();
   checkLive();
 </script>
 </body>
