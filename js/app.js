@@ -6466,7 +6466,11 @@ async function _cleanupPastReminders(){
 }
 
 // Перерисовать все основные списки (без idle tasks)
-function _reloadViews(){_reloadViews();}
+function _reloadViews(){
+  loadHomeFeed();
+  loadNotes();
+  loadNotepad();
+}
 
 // ── LOAD ALL ──
 function loadAll(){
