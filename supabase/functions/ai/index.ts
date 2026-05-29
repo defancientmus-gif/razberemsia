@@ -89,6 +89,25 @@ function normalizeArray(value: unknown, limit: number) {
     .slice(0, limit);
 }
 
+const IDEA_TAG = 'идея';
+function normalizeIdeaTag(value: string) {
+  const clean = value.replace(/^#/, '').trim();
+  const key = clean.toLowerCase().replace(/\s+/g, '_');
+  return ['идея', 'идеи', 'idea', 'ideas'].includes(key) ? IDEA_TAG : clean;
+}
+function normalizeTags(value: unknown, limit: number) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const tag of normalizeArray(value, limit)) {
+    const normalized = normalizeIdeaTag(tag);
+    const key = normalized.toLowerCase().replace(/\s+/g, '_');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
 function parseJsonObject(raw: string) {
   try {
     return JSON.parse(raw);
@@ -211,7 +230,7 @@ Deno.serve(async (req) => {
   "actions": ["что можно сделать 1", "что можно сделать 2"]
 }
 
-Важно про теги: если заметка — это идея, предложение, план что-то создать или улучшить — обязательно добавь тег "идеи" в список тегов.
+Важно про теги: если заметка — это идея, предложение, план что-то создать или улучшить — обязательно добавь тег "идея" в список тегов. Не используй варианты "идеи", "idea", "ideas".
 ${memoryBlock}
 Новая заметка:
 ${safeText}`;
@@ -230,7 +249,7 @@ ${safeText}`;
 
     const result = {
       summary: typeof parsed.summary === 'string' ? parsed.summary.trim() : '',
-      tags:    normalizeArray(parsed.tags, 5),
+      tags:    normalizeTags(parsed.tags, 5),
       actions: normalizeArray(parsed.actions, 5),
     };
     return json(result);
@@ -282,7 +301,8 @@ ${safeText}`,
     if (!GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured in Supabase Secrets' }, 500);
 
     const date        = todayStr();
-    const tagsLine    = Array.isArray(tags)        ? tags.join(', ')                          : '';
+    const normalizedTags = normalizeTags(tags, 10);
+    const tagsLine    = normalizedTags.length      ? normalizedTags.join(', ')                 : '';
     const actionsLine = Array.isArray(ideaActions) ? ideaActions.map(a => `- ${a}`).join('\n') : '';
 
     const section = `## Идея — ${date}

@@ -3729,16 +3729,29 @@ var _spellOriginal = null, _spellActive = false, _spellStage = 0;
 
 // ── TAG FOLDERS ──
 const TAG_FOLDERS_KEY = 'rz_tag_folders';
-function getTagFolders(){ try{ return JSON.parse(localStorage.getItem(TAG_FOLDERS_KEY)||'[]'); } catch(e){ return []; } }
-function saveTagFolders(arr){ localStorage.setItem(TAG_FOLDERS_KEY, JSON.stringify(arr)); if(typeof queueCloudSave==='function') queueCloudSave(); }
-function tagFolderExists(tag){ return getTagFolders().some(f => f.tag === tag.toLowerCase()); }
+function getTagFolders(){
+  try{
+    const arr=JSON.parse(localStorage.getItem(TAG_FOLDERS_KEY)||'[]');
+    return typeof normalizeTagFolderList==='function'?normalizeTagFolderList(arr):arr;
+  } catch(e){ return []; }
+}
+function saveTagFolders(arr){
+  const next=typeof normalizeTagFolderList==='function'?normalizeTagFolderList(arr):arr;
+  localStorage.setItem(TAG_FOLDERS_KEY, JSON.stringify(next));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+}
+function tagFolderExists(tag){
+  const key=typeof tagKey==='function'?tagKey(tag):String(tag||'').toLowerCase();
+  return getTagFolders().some(f => (typeof tagKey==='function'?tagKey(f.tag):String(f.tag||'').toLowerCase()) === key);
+}
 
 function toggleTagFolder(tag){
-  const t = tag.toLowerCase();
+  const label = typeof normalizeIdeaTag==='function'?normalizeIdeaTag(tag):String(tag||'').trim();
+  const t = typeof tagKey==='function'?tagKey(label):label.toLowerCase();
   const folders = getTagFolders();
-  const exists = folders.some(f => f.tag === t);
+  const exists = folders.some(f => (typeof tagKey==='function'?tagKey(f.tag):String(f.tag||'').toLowerCase()) === t);
   if(exists){
-    showToast('Папка «'+tag+'» — открываем');
+    showToast('Папка «'+label+'» — открываем');
     if(typeof closeSheet === 'function') closeSheet();
     setTimeout(()=>{
       if(typeof go === 'function') go('notes');
@@ -3746,10 +3759,10 @@ function toggleTagFolder(tag){
       setTimeout(()=>{if(typeof drillGo === 'function') drillGo(1,{aiTag:t});},80);
     }, 180);
   } else {
-    folders.push({tag:t, label:tag, createdAt:Date.now()});
+    folders.push({tag:t, label, createdAt:Date.now()});
     saveTagFolders(folders);
-    showToast('✓ Папка «'+tag+'» создана');
-    document.querySelectorAll('.ai-tag[data-tag="'+CSS.escape(tag)+'"]').forEach(el=>{
+    showToast('✓ Папка «'+label+'» создана');
+    document.querySelectorAll('.ai-tag[data-tag="'+CSS.escape(label)+'"]').forEach(el=>{
       el.classList.add('ai-tag--active');
     });
   }

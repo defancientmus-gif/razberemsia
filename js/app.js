@@ -19,11 +19,82 @@ function writeJson(key,value){localStorage.setItem(scopedKey(key),JSON.stringify
 function readText(key){return localStorage.getItem(scopedKey(key))||'';}
 function writeText(key,value){localStorage.setItem(scopedKey(key),String(value||''));queueCloudSave();}
 function migrateLegacyLocal(){['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{const target=scopedKey(key);if(localStorage.getItem(target)!==null)return;const legacy=localStorage.getItem(key);if(legacy!==null)localStorage.setItem(target,legacy);});}
+
+const IDEA_TAG='идея';
+const IDEA_TAG_ALIASES=new Set(['идея','идеи','idea','ideas']);
+function _cleanTag(raw){return String(raw||'').replace(/^#/,'').trim();}
+function _tagKey(raw){
+  const clean=_cleanTag(raw).toLowerCase().replace(/\s+/g,'_');
+  return IDEA_TAG_ALIASES.has(clean)?IDEA_TAG:clean;
+}
+function tagKey(raw){return _tagKey(raw);}
+function normalizeIdeaTag(raw){
+  const clean=_cleanTag(raw);
+  if(!clean)return '';
+  return _tagKey(clean)===IDEA_TAG?IDEA_TAG:clean;
+}
+function isIdeaTag(raw){return _tagKey(raw)===IDEA_TAG;}
+function normalizeAiTags(tags){
+  if(!Array.isArray(tags))return [];
+  const seen=new Set();
+  const out=[];
+  tags.forEach(raw=>{
+    const clean=_cleanTag(raw);
+    if(!clean)return;
+    const normalized=clean.startsWith('_filed_in:')?clean:normalizeIdeaTag(clean);
+    const key=clean.startsWith('_filed_in:')?clean.toLowerCase():_tagKey(normalized);
+    if(seen.has(key))return;
+    seen.add(key);out.push(normalized);
+  });
+  return out;
+}
+function _sameTags(a,b){
+  const aa=Array.isArray(a)?a:[];
+  const bb=Array.isArray(b)?b:[];
+  return aa.length===bb.length&&aa.every((v,i)=>v===bb[i]);
+}
+function _noteHasAiTag(note,tag){
+  const key=_tagKey(tag);
+  return !!key&&Array.isArray(note?.aiTags)&&note.aiTags.some(t=>_tagKey(t)===key);
+}
+function textLooksLikeIdea(text){
+  return /^\s*(?:есть\s+)?иде[яи](?:[^а-яёa-zA-Z]|$)/i.test(String(text||'').trim());
+}
+function _hasIdeaContext({text,tags,label}={}){
+  return isIdeaTag(label)||normalizeAiTags(tags||[]).some(isIdeaTag)||textLooksLikeIdea(text);
+}
+function normalizeTagFolderList(arr){
+  if(!Array.isArray(arr))return [];
+  const out=[];
+  arr.forEach(item=>{
+    if(!item)return;
+    const rawTag=item.tag||item.label||'';
+    const key=_tagKey(rawTag);
+    if(!key)return;
+    const label=isIdeaTag(rawTag)?IDEA_TAG:(_cleanTag(item.label||item.tag)||key);
+    const existing=out.find(f=>_tagKey(f.tag)===key);
+    if(existing){
+      existing.label=existing.label||label;
+      existing.pinned=!!(existing.pinned||item.pinned);
+      existing.createdAt=Math.min(existing.createdAt||Date.now(),item.createdAt||Date.now());
+      return;
+    }
+    out.push({...item,tag:key,label});
+  });
+  return out;
+}
 function getNotes(){
   const notes=readJson('rz_notes',[]);
   // Миграция: назначаем id заметкам без него (старые заметки)
   let dirty=false;
-  notes.forEach(n=>{if(!n.id){n.id=genId();dirty=true;}});
+  notes.forEach(n=>{
+    if(!n.id){n.id=genId();dirty=true;}
+    const normalizedTags=normalizeAiTags(n.aiTags||[]);
+    if(!_sameTags(n.aiTags||[],normalizedTags)){n.aiTags=normalizedTags;dirty=true;}
+    if(isIdeaTag(n.label)&&!normalizedTags.some(isIdeaTag)){
+      n.aiTags=normalizeAiTags([...normalizedTags,IDEA_TAG]);dirty=true;
+    }
+  });
   if(dirty)writeJson('rz_notes',notes);
   return notes;
 }
@@ -35,11 +106,12 @@ function saveHistory(hist){writeJson('rz_history',hist);}
 
 // ── NOTES TABLE — конвертеры client ↔ Supabase ──
 function _noteToRow(n,userId,deletedAt){
+  const aiTags=normalizeAiTags(n.aiTags||[]);
   return{
     id:n.id,user_id:userId,
     title:n.title||null,body:n.body||null,label:n.label||'заметка',
     reminder:n.reminder||null,recurring:n.recurring||null,
-    ai_tags:Array.isArray(n.aiTags)&&n.aiTags.length?n.aiTags:null,
+    ai_tags:aiTags.length?aiTags:null,
     ai_summary:n.aiSummary||null,ai_cache:n.aiCache||null,
     items:Array.isArray(n.items)&&n.items.length?n.items:null,
     from_pad:n.fromPad||false,
@@ -52,7 +124,7 @@ function _rowToNote(r){
   return{
     id:r.id,title:r.title||'',body:r.body||'',label:r.label||'заметка',
     reminder:r.reminder||null,recurring:r.recurring||null,
-    aiTags:Array.isArray(r.ai_tags)?r.ai_tags:[],
+    aiTags:normalizeAiTags(r.ai_tags||[]),
     aiSummary:r.ai_summary||'',aiCache:r.ai_cache||null,
     items:r.items||null,fromPad:r.from_pad||false,
     createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
@@ -186,10 +258,11 @@ function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
   }
   if(Array.isArray(cloudTagFolders)){
     const localTags=typeof getTagFolders==='function'?getTagFolders():[];
+    const normalizedCloudTags=normalizeTagFolderList(cloudTagFolders);
     if(cloudIsNewer){
-      localStorage.setItem('rz_tag_folders',JSON.stringify(cloudTagFolders));
+      localStorage.setItem('rz_tag_folders',JSON.stringify(normalizedCloudTags));
     } else if(cloudTagFolders.length>0&&!localTags.length){
-      localStorage.setItem('rz_tag_folders',JSON.stringify(cloudTagFolders));
+      localStorage.setItem('rz_tag_folders',JSON.stringify(normalizedCloudTags));
     } else if(localTags.length>0&&!cloudTagFolders.length){
       queueCloudSave();
     }
@@ -740,7 +813,7 @@ function toggleAiPanel(){
     const note=idx>=0?list[idx]:null;
     if(note?.aiCache&&note.aiCache.bodyKey===text.slice(0,80)){
       if(!Array.isArray(note.aiTags)||!note.aiTags.length){
-        list[idx].aiTags=note.aiCache.tags||[];
+        list[idx].aiTags=normalizeAiTags(note.aiCache.tags||[]);
         list[idx].aiSummary=note.aiCache.summary||'';
         saveNotes(list);
       }
@@ -902,8 +975,11 @@ async function runAiAnalysis(text,_unused,attempt=0){
       }
       throw new Error(friendlyAiError(errText,res.status));
     }
-    const {summary,tags,actions}=await res.json();
-    autoLabel=tagsToPrimaryLabel(tags||[]);
+    const data=await res.json();
+    const summary=typeof data.summary==='string'?data.summary:'';
+    const tags=normalizeAiTags(data.tags||[]);
+    const actions=Array.isArray(data.actions)?data.actions:[];
+    autoLabel=tagsToPrimaryLabel(tags);
     if(autoLabel){
       const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
       if(curCat==='заметка'){showSheetCat(autoLabel);showCatHint(autoLabel);}
@@ -914,19 +990,15 @@ async function runAiAnalysis(text,_unused,attempt=0){
       const idx=list.findIndex(n=>n.id===EI);
       if(idx>=0){
         const filedTags=(list[idx].aiTags||[]).filter(_isFiledFolderTag);
-        list[idx].aiCache={summary:summary||'',tags:tags||[],actions:actions||[],bodyKey:text.slice(0,80)};
-        list[idx].aiTags=[...(tags||[]),...filedTags];
+        list[idx].aiCache={summary:summary||'',tags,actions,bodyKey:text.slice(0,80)};
+        list[idx].aiTags=normalizeAiTags([...tags,...filedTags]);
         list[idx].aiSummary=summary||'';
         saveNotes(list);
       }
     }
-    const isIdea=(tags||[]).some(t=>/^идеи?$|^ideas?$/i.test(t.trim()))
-      || /^идея([^а-яёА-ЯЁa-zA-Z]|$)/i.test(text.trim());
-    if(isIdea){
-      const nid=document.getElementById('sheet-wrap')?.dataset.noteId||'';
-      _saveIdeaToRepo({text,summary:summary||'',tags:tags||[],actions:actions||[],noteId:nid})
-        .catch(e=>console.warn('save_idea failed',e));
-    }
+    const nid=document.getElementById('sheet-wrap')?.dataset.noteId||EI||'';
+    _maybeSaveIdeaToRepo({text,summary:summary||'',tags,actions,noteId:nid,label:autoLabel,source:'analysis'})
+      .catch(e=>console.warn('save_idea failed',e));
   }catch(e){
     console.warn('AI error',e);
     const msg=String(e?.message||'').startsWith('Ошибка AI:')||String(e?.message||'').startsWith('AI ')||String(e?.message||'').startsWith('Войдите')||String(e?.message||'').startsWith('Не получилось')?String(e?.message):friendlyAiError(e?.message);
@@ -937,14 +1009,16 @@ async function runAiAnalysis(text,_unused,attempt=0){
 
 // ── RENDER AI RESULT ──
 function _renderAiResult(summary,tags,actions,_unused,text){
+  tags=normalizeAiTags(tags||[]);
+  actions=Array.isArray(actions)?actions:[];
   const bodyEl=document.getElementById('ai-overlay-body');
   let html='<div class="ai-panel-inner">';
   if(summary){html+=`<div class="ai-section"><div class="ai-label">Суть</div><div class="ai-text">${esc(summary)}</div></div>`;}
   if(tags?.length){
     // Текущая открытая папка (если открыта из drill)
-    const currentFolderTag=(drillAiTag||'').toLowerCase();
+    const currentFolderTag=_tagKey(drillAiTag||'');
     const tagBtns=tags.map(t=>{
-      const tl=t.toLowerCase();
+      const tl=_tagKey(t);
       const exists=typeof tagFolderExists==='function'&&tagFolderExists(t);
       const isCurrent=currentFolderTag&&tl===currentFolderTag;
       const cls='ai-tag'+(isCurrent?' ai-tag--current':exists?' ai-tag--active':'');
@@ -976,11 +1050,45 @@ function _renderAiResult(summary,tags,actions,_unused,text){
 }
 
 // ── SAVE IDEA TO REPO ──
+const _ideaRepoInFlight=new Set();
+function _simpleHash(str){
+  let h=5381;const s=String(str||'');
+  for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);
+  return (h>>>0).toString(36);
+}
+function _ideaRepoKey(text){return 'idea:'+_simpleHash(String(text||'').trim());}
+function _getIdeaRepoSavedKeys(){
+  try{return JSON.parse(localStorage.getItem(scopedKey('rz_idea_repo_saved'))||'[]');}catch(e){return[];}
+}
+function _markIdeaRepoSaved(key){
+  const arr=_getIdeaRepoSavedKeys().filter(x=>x!==key);
+  arr.unshift(key);
+  localStorage.setItem(scopedKey('rz_idea_repo_saved'),JSON.stringify(arr.slice(0,80)));
+}
+function _isIdeaRepoSaved(key){return _getIdeaRepoSavedKeys().includes(key);}
+async function _maybeSaveIdeaToRepo({text,summary,tags,actions,noteId,label,source}){
+  const clean=String(text||'').trim();
+  let normalizedTags=normalizeAiTags(tags||[]);
+  if(!_hasIdeaContext({text:clean,tags:normalizedTags,label}))return false;
+  if(!normalizedTags.some(isIdeaTag))normalizedTags=normalizeAiTags([IDEA_TAG,...normalizedTags]);
+  const key=_ideaRepoKey(clean);
+  if(_isIdeaRepoSaved(key)||_ideaRepoInFlight.has(key))return false;
+  _ideaRepoInFlight.add(key);
+  try{
+    const saved=await _saveIdeaToRepo({text:clean,summary,tags:normalizedTags,actions:actions||[],noteId,source});
+    if(saved)_markIdeaRepoSaved(key);
+    return saved;
+  }finally{
+    _ideaRepoInFlight.delete(key);
+  }
+}
 async function _saveIdeaToRepo({text,summary,tags,actions,noteId}){
   try{
+    tags=normalizeAiTags(tags||[]);
+    if(!tags.some(isIdeaTag))tags=normalizeAiTags([IDEA_TAG,...tags]);
     const session=await sb.auth.getSession();
     const token=session?.data?.session?.access_token;
-    if(!token)return;
+    if(!token)return false;
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -989,13 +1097,15 @@ async function _saveIdeaToRepo({text,summary,tags,actions,noteId}){
     if(!res.ok){
       const err=await res.text();
       console.warn('save_idea error',res.status,err);
-      return;
+      return false;
     }
     const {saved,file}=await res.json();
     if(saved){showToast('✦ Идея сохранена в репозиторий');}
     console.info('idea saved:',file);
+    return !!saved;
   }catch(e){
     console.warn('_saveIdeaToRepo failed',e);
+    return false;
   }
 }
 
@@ -2951,10 +3061,10 @@ function migrateLegacyFolderPlacements(){
 }
 function _agentFolderDisplayName(tag){
   if(typeof getTagFolders==='function'){
-    const folder=getTagFolders().find(item=>String(item.tag).toLowerCase()===String(tag).toLowerCase());
+    const folder=getTagFolders().find(item=>_tagKey(item.tag)===_tagKey(tag));
     if(folder?.label)return folder.label;
   }
-  const raw=String(tag||'');
+  const raw=normalizeIdeaTag(tag||'');
   return raw?raw.charAt(0).toUpperCase()+raw.slice(1):'Папка';
 }
 let _fmodType='section'; // 'section' | 'tag'
@@ -3008,10 +3118,10 @@ function confirmFolderCreate(){
   if(_fmodType==='tag'){
     // Создать папку-входящие (tag folder)
     if(typeof getTagFolders==='function'){
-      const tagLow=name.toLowerCase();
+      const tagLow=_tagKey(name);
       const existing=getTagFolders();
-      if(!existing.find(f=>f.tag.toLowerCase()===tagLow)){
-        existing.push({tag:tagLow,label:name,pinned:false,createdAt:Date.now()});
+      if(!existing.find(f=>_tagKey(f.tag)===tagLow)){
+        existing.push({tag:tagLow,label:normalizeIdeaTag(name),pinned:false,createdAt:Date.now()});
         saveTagFolders(existing);
         _drillP0();
         showToast('Папка «'+name+'» создана');
@@ -3089,7 +3199,7 @@ const TAG_TO_CAT={
   событие:'событие',встреча:'событие',собрание:'событие',поездка:'событие',
   праздник:'событие',день_рождения:'событие',отпуск:'событие',дата:'событие',
   расписание:'событие',запись:'событие',планирование:'событие',
-  идея:'идея',мысль:'идея',план:'идея',желание:'идея',
+  идея:'идея',идеи:'идея',idea:'идея',ideas:'идея',мысль:'идея',план:'идея',желание:'идея',
   мечта:'идея',проект:'идея',концепция:'идея',придумал:'идея',
   рецепт:'рецепт',готовить:'рецепт',блюдо:'рецепт',кулинария:'рецепт',
   ингредиенты:'рецепт',приготовить:'рецепт',
@@ -3100,7 +3210,7 @@ function tagsToPrimaryLabel(tags){
   if(!Array.isArray(tags)||!tags.length)return null;
   const score={};
   tags.forEach(rawTag=>{
-    const t=String(rawTag).replace(/^#/,'').toLowerCase().trim().replace(/\s+/g,'_');
+    const t=_tagKey(rawTag);
     const cat=TAG_TO_CAT[t];
     if(cat)score[cat]=(score[cat]||0)+1;
   });
@@ -3190,7 +3300,7 @@ function _buildAgentContext(){
   // Заметок в каждой папке входящих
   const inboxStats=tagFolders.map(f=>({
     tag:f.tag, label:f.label||f.tag,
-    noteCount:allNotes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.includes(f.tag)).length
+    noteCount:allNotes.filter(n=>_noteHasAiTag(n,f.tag)).length
   })).filter(f=>f.noteCount>0);
 
   // Ближайшие напоминания (до 4)
@@ -3249,13 +3359,13 @@ function loadNotes(){
 function drillGo(level,data){
   if(level===1)_drillP1Limit=10; // сбросить пагинацию при входе в список
   if(data&&data.category!==undefined){drillCategory=data.category;drillAiTag=null;}
-  if(data&&data.aiTag!==undefined){drillAiTag=data.aiTag;drillCategory=null;}
+  if(data&&data.aiTag!==undefined){drillAiTag=normalizeIdeaTag(data.aiTag);drillCategory=null;}
   if(data&&data.noteId!==undefined)drillNoteId=data.noteId;
   drillLevel=level;
   // Обновляем контекст для агента — он знает где пользователь
   if(level===0)_agentViewCtx={type:'all',name:null,tag:null};
   else if(data?.category)_agentViewCtx={type:'section',name:data.category,tag:null};
-  else if(data?.aiTag)_agentViewCtx={type:'folder',name:null,tag:data.aiTag};
+  else if(data?.aiTag)_agentViewCtx={type:'folder',name:null,tag:normalizeIdeaTag(data.aiTag)};
   _drillRender(level);
   _drillNav();
   _drillSeek(level);
@@ -3330,9 +3440,9 @@ function _drillRender(level){
 // ── Закрепление AI-папки в разделах ──
 function pinTagFolder(tag){
   if(typeof getTagFolders!=='function')return;
-  const tagLow=String(tag).toLowerCase();
+  const tagLow=_tagKey(tag);
   const folders=getTagFolders();
-  const f=folders.find(x=>String(x.tag).toLowerCase()===tagLow);
+  const f=folders.find(x=>_tagKey(x.tag)===tagLow);
   if(!f)return;
   f.pinned=true;
   saveTagFolders(folders);
@@ -3341,9 +3451,9 @@ function pinTagFolder(tag){
 }
 function unpinTagFolder(tag){
   if(typeof getTagFolders!=='function')return;
-  const tagLow=String(tag).toLowerCase();
+  const tagLow=_tagKey(tag);
   const folders=getTagFolders();
-  const f=folders.find(x=>String(x.tag).toLowerCase()===tagLow);
+  const f=folders.find(x=>_tagKey(x.tag)===tagLow);
   if(!f)return;
   f.pinned=false;
   saveTagFolders(folders);
@@ -3375,9 +3485,9 @@ function _drillP0(){
   const notes=getNotes();
   const userFolders=getUserFolders();
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
-  const userFolderNames=userFolders.map(f=>f.name.toLowerCase());
-  const pinnedFolders=tagFolders.filter(f=>f.pinned&&!userFolderNames.includes(String(f.tag).toLowerCase()));
-  const aiOnlyFolders=tagFolders.filter(f=>!f.pinned&&!userFolderNames.includes(String(f.tag).toLowerCase()));
+  const userFolderKeys=userFolders.map(f=>_tagKey(f.name));
+  const pinnedFolders=tagFolders.filter(f=>f.pinned&&!userFolderKeys.includes(_tagKey(f.tag)));
+  const aiOnlyFolders=tagFolders.filter(f=>!f.pinned&&!userFolderKeys.includes(_tagKey(f.tag)));
 
   // Встроенные стрипы (здоровье, покупки...) у которых есть заметки
   const stripeEntries=Object.keys(STRIPES).filter(l=>l!=='заметка'&&notes.some(n=>safeLabel(n.label||'заметка')===l));
@@ -3414,7 +3524,7 @@ function _drillP0(){
 
     // Закреплённые папки
     pinnedFolders.forEach(f=>{
-      const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())).length;
+      const cnt=notes.filter(n=>_noteHasAiTag(n,f.tag)).length;
       h+=`<div class="sect-card sect-card-pinned" data-nav-folder="${esc(f.tag)}">
         <button type="button" class="sect-card-del" onclick="unpinTagFolder(${jsAttr(f.tag)})" title="Открепить">${_PIN_SVG}</button>
         <div class="sect-card-ico sect-card-ico-pin">${_BOOK_SVG}</div>
@@ -3444,7 +3554,7 @@ function _drillP0(){
 
   // ── ВХОДЯЩИЕ ──
   if(aiOnlyFolders.length){
-    const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length,0);
+    const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,0);
     const badge=totalIncoming>0?`<span class="drill-incoming-badge">${totalIncoming}</span>`:'';
     h+=`<div class="sect-hdr-row sect-hdr-incoming" onclick="toggleP0Inbox()">
       <span class="sect-hdr-label">Входящие</span>${badge}
@@ -3452,7 +3562,7 @@ function _drillP0(){
     </div>`;
     if(!_p0InboxCollapsed){
       aiOnlyFolders.forEach(f=>{
-        const cnt=notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase())&&!isNoteResolved(n)).length;
+        const cnt=notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length;
         h+=`<div class="drill-sec-row drill-sec-tag drill-folder-ai" data-nav-folder="${esc(f.tag)}">
           <div class="drill-sec-ico" style="background:oklch(0.52 0.10 202 / .07);color:oklch(0.45 0.10 202);">${_TAG_SVG}</div>
           <div class="drill-sec-name">${esc(f.label||f.tag)}</div>
@@ -3507,7 +3617,7 @@ function renderSectPills(){
 
   // Закреплённые папки
   pinnedFolders.forEach(f=>{
-    const isActive=!!curAiTag&&curAiTag.toLowerCase()===f.tag.toLowerCase();
+    const isActive=!!curAiTag&&_tagKey(curAiTag)===_tagKey(f.tag);
     pills.push({isActive,html:`<button type="button" class="sect-pill sect-pill-pinned${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:oklch(0.50 0.14 270);`:''}" onclick="selectSectPill('ai',${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">${esc(f.label||f.tag)}</button>`});
   });
 
@@ -3534,12 +3644,12 @@ function selectSectPill(type,value,label){
 
 function deleteTagFolder(tag){
   if(typeof getTagFolders!=='function')return;
-  const tagLow=String(tag).toLowerCase();
+  const tagLow=_tagKey(tag);
   const folders=getTagFolders();
-  const f=folders.find(x=>String(x.tag).toLowerCase()===tagLow);
+  const f=folders.find(x=>_tagKey(x.tag)===tagLow);
   if(!f)return;
   const label=f.label||f.tag;
-  saveTagFolders(folders.filter(x=>String(x.tag).toLowerCase()!==tagLow));
+  saveTagFolders(folders.filter(x=>_tagKey(x.tag)!==tagLow));
   loadNotes();
   showToast(`Папка «${label}» удалена`);
 }
@@ -3547,7 +3657,8 @@ function deleteTagFolder(tag){
 // Повысить AI-папку до постоянного Раздела (архива)
 function promoteToSection(tag){
   const tFolders=typeof getTagFolders==='function'?getTagFolders():[];
-  const f=tFolders.find(x=>x.tag.toLowerCase()===String(tag).toLowerCase());
+  const tagLow=_tagKey(tag);
+  const f=tFolders.find(x=>_tagKey(x.tag)===tagLow);
   const raw=f?f.label||f.tag:tag;
   const sectionName=raw.charAt(0).toUpperCase()+raw.slice(1);
   const existing=getUserFolders();
@@ -3559,7 +3670,7 @@ function promoteToSection(tag){
   const notes=getNotes();
   let filed=0;
   notes.forEach(n=>{
-    if(Array.isArray(n.aiTags)&&n.aiTags.some(t=>t.toLowerCase()===String(tag).toLowerCase())){
+    if(Array.isArray(n.aiTags)&&n.aiTags.some(t=>_tagKey(t)===tagLow)){
       if(!getFiledFolderName(n)){
         n.aiTags=[...n.aiTags,_filedFolderTag(sectionName)];
         n.updatedAt=Date.now();filed++;
@@ -3568,7 +3679,7 @@ function promoteToSection(tag){
   });
   saveNotes(notes);
   if(typeof getTagFolders==='function'){
-    saveTagFolders(tFolders.filter(x=>x.tag.toLowerCase()!==String(tag).toLowerCase()));
+    saveTagFolders(tFolders.filter(x=>_tagKey(x.tag)!==tagLow));
   }
   loadNotes();loadHomeFeed();
   showToast(`«${sectionName}» теперь в Архиве`+(filed?` · ${filed} заметок разобрались`:''));
@@ -3677,10 +3788,10 @@ function _drillP1(){
   if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
   const viewingUserFolder=drillAiTag!==null&&isUserFolderName(drillAiTag);
   if(drillAiTag!==null){
-    const t=drillAiTag.toLowerCase();
+    const t=viewingUserFolder?drillAiTag.toLowerCase():_tagKey(drillAiTag);
     notes=viewingUserFolder
       ?notes.filter(n=>getFiledFolderName(n)===t)
-      :notes.filter(n=>Array.isArray(n.aiTags)&&n.aiTags.map(x=>x.toLowerCase()).includes(t));
+      :notes.filter(n=>_noteHasAiTag(n,t));
     if(!viewingUserFolder)notes=notes.filter(n=>!isNoteResolved(n));
   }
   notes=[...notes].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -4483,7 +4594,7 @@ function toggleCatDropdown(){
     </div>`;
   });
   pinnedList.forEach(f=>{
-    const isActive=curNote&&Array.isArray(curNote.aiTags)&&curNote.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase());
+    const isActive=curNote&&_noteHasAiTag(curNote,f.tag);
     sectionOpts+=`<div class="cat-opt" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">
       <div class="cat-opt-dot" style="background:oklch(0.55 0.12 270);"></div>📌 ${esc(f.label||f.tag)}${isActive?CHECK:''}
     </div>`;
@@ -4502,7 +4613,7 @@ function toggleCatDropdown(){
   // ── ВХОДЯЩИЕ (временные AI-папки) ──
   const incomingOpts=unpinnedList.length
     ?'<div class="cat-opt-sep">Входящие</div>'+unpinnedList.map(f=>{
-      const isActive=curNote&&Array.isArray(curNote.aiTags)&&curNote.aiTags.some(t=>t.toLowerCase()===f.tag.toLowerCase());
+      const isActive=curNote&&_noteHasAiTag(curNote,f.tag);
       return `<div class="cat-opt" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">
         <div class="cat-opt-dot" style="background:oklch(0.55 0.13 290);"></div>${esc(f.label||f.tag)}${isActive?CHECK:''}
       </div>`;}).join('')
@@ -4550,6 +4661,8 @@ function selectUserFolderTag(folderName){
 }
 
 function selectAiTagFolder(tag,label){
+  tag=_tagKey(tag);
+  label=isIdeaTag(tag)?IDEA_TAG:(label||tag);
   const btn=document.getElementById('sheet-cat-btn');
   if(btn){
     btn.dataset.label=label;
@@ -4861,13 +4974,23 @@ function showCatHint(label){
   setTimeout(()=>hint.remove(),5000);
 }
 
+let _sheetSaveLock=false;
 function saveSheet(){
+  if(_sheetSaveLock)return;
+  _sheetSaveLock=true;
+  try{
+    return _saveSheetCore();
+  }finally{
+    setTimeout(()=>{_sheetSaveLock=false;},700);
+  }
+}
+function _saveSheetCore(){
   if(ST==='list'){saveListSheet();return;}
   const f=document.getElementById('sh1');
   const v1=f?f.value:'';
   const catBtn=document.getElementById('sheet-cat-btn');
   const isUserFolder=catBtn?.dataset.userFolder==='1';
-  const _selectedAiTag=catBtn?.dataset.aiTagFolder||'';
+  const _selectedAiTag=catBtn?.dataset.aiTagFolder?normalizeIdeaTag(catBtn.dataset.aiTagFolder):'';
   const v3=isUserFolder?'заметка':safeLabel(catBtn?catBtn.dataset.label||'заметка':'заметка');
   const _selectedUserFolder=(isUserFolder&&!_selectedAiTag)?(catBtn?.dataset.label||''):'';
   const reminderEl=document.getElementById('sheet-reminder-in');
@@ -4882,18 +5005,22 @@ function saveSheet(){
   let aiSummary=prev?.aiSummary||'';
   let aiCache=prev?.aiCache||null;
   // Если создаём заметку из тег-папки — добавляем её тег автоматически
-  if(existingIdx<0&&drillAiTag&&!aiTags.map(t=>t.toLowerCase()).includes(drillAiTag.toLowerCase())){
-    aiTags=[...aiTags,drillAiTag];
+  const drillTag=drillAiTag?normalizeIdeaTag(drillAiTag):'';
+  if(existingIdx<0&&drillTag&&!aiTags.map(_tagKey).includes(_tagKey(drillTag))){
+    aiTags=[...aiTags,drillTag];
   }
   // Если пользователь выбрал раздел из пикера — добавляем тег
   if(_selectedUserFolder&&!aiTags.map(t=>t.toLowerCase()).includes(_selectedUserFolder.toLowerCase())){
     aiTags=[...aiTags,_selectedUserFolder];
   }
   // Если пользователь выбрал AI-папку из пикера — добавляем её тег
-  if(_selectedAiTag&&!aiTags.map(t=>t.toLowerCase()).includes(_selectedAiTag.toLowerCase())){
+  if(_selectedAiTag&&!aiTags.map(_tagKey).includes(_tagKey(_selectedAiTag))){
     aiTags=[...aiTags,_selectedAiTag];
   }
-  aiTags=aiTags.filter(tag=>!_isFiledFolderTag(tag));
+  aiTags=normalizeAiTags(aiTags.filter(tag=>!_isFiledFolderTag(tag)));
+  if(_hasIdeaContext({text:v1,tags:aiTags,label:v3})){
+    aiTags=normalizeAiTags([IDEA_TAG,...aiTags]);
+  }
   // Если создаём из раздела — добавить _filed_in: даже если пилюля не переключалась
   const drillFolderCtx=existingIdx<0&&drillAiTag&&isUserFolderName(drillAiTag)?drillAiTag:'';
   const filedFolder=_selectedUserFolder||drillFolderCtx||previousFiledFolder;
@@ -4935,6 +5062,15 @@ function saveSheet(){
     },50);
   }
   if(v2) _handleReminderAfterSave(v2,item.id,title,v1.trim().slice(0,200));
+  _maybeSaveIdeaToRepo({
+    text:item.body,
+    summary:aiSummary||`Идея: ${title}`,
+    tags:aiTags,
+    actions:aiCache?.actions||[],
+    noteId:item.id,
+    label:item.label,
+    source:'save'
+  }).catch(e=>console.warn('save_idea after save failed',e));
   // AI-ответ — только для новых заметок (не редактирование)
   if(wasNew&&v1.trim().length>=15){
     _fetchChatReply(item.id, v1.trim());
@@ -6040,11 +6176,11 @@ function _runSingleIntent(intent,params,originalText){
   }
 
   if(intent==='CREATE_TAG_FOLDER'){
-    const tag=(params.tag||params.label||'').toLowerCase().trim();
-    const label=params.label||tag;
+    const tag=_tagKey(params.tag||params.label||'');
+    const label=isIdeaTag(tag)?IDEA_TAG:(params.label||tag);
     if(tag&&typeof getTagFolders==='function'){
       const folders=getTagFolders();
-      if(!folders.some(f=>f.tag===tag)){
+      if(!folders.some(f=>_tagKey(f.tag)===tag)){
         folders.push({tag,label,createdAt:Date.now()});
         saveTagFolders(folders);
         loadNotes(); // обновить список папок
@@ -6098,23 +6234,23 @@ function _runSingleIntent(intent,params,originalText){
   }
 
   if(intent==='TAG_NOTE'){
-    const tag=(params.tag||'').toLowerCase().trim();
+    const tag=_tagKey(params.tag||'');
     const idx=typeof params.noteIndex==='number'?params.noteIndex:0;
     if(tag){
       const notes=getNotes();
       const note=notes[idx];
       if(note){
         if(!Array.isArray(note.aiTags))note.aiTags=[];
-        if(!note.aiTags.map(t=>t.toLowerCase()).includes(tag)){
-          note.aiTags=[...note.aiTags,tag];
+        if(!note.aiTags.map(_tagKey).includes(tag)){
+          note.aiTags=normalizeAiTags([...note.aiTags,tag]);
           note.updatedAt=Date.now();
           saveNotes(notes);loadHomeFeed();loadNotes();
         }
         // Создать тег-папку если нет
         if(typeof getTagFolders==='function'){
           const folders=getTagFolders();
-          if(!folders.some(f=>f.tag===tag)){
-            folders.push({tag,label:params.tag||tag,createdAt:Date.now()});
+          if(!folders.some(f=>_tagKey(f.tag)===tag)){
+            folders.push({tag,label:isIdeaTag(tag)?IDEA_TAG:(params.tag||tag),createdAt:Date.now()});
             saveTagFolders(folders);
           }
         }
@@ -6368,11 +6504,12 @@ function onSearchInput(q){
 function _searchNotes(q){
   if(!q||q.length<2)return{active:[],trash:[]};
   const lq=q.toLowerCase();
+  const tagQuery=_tagKey(q);
   function match(n){
     return (n.title||'').toLowerCase().includes(lq)
       ||(n.body||'').toLowerCase().includes(lq)
       ||(n.aiSummary||'').toLowerCase().includes(lq)
-      ||(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t)).some(t=>t.toLowerCase().includes(lq))
+      ||(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t)).some(t=>t.toLowerCase().includes(lq)||(tagQuery&&_tagKey(t).includes(tagQuery)))
       ||(n.items||[]).some(i=>(i.t||i.text||'').toLowerCase().includes(lq));
   }
   function sortFn(arr){
