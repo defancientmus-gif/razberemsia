@@ -1,0 +1,90 @@
+# Context router
+
+Главное правило: сначала определить тип задачи, потом читать только нужные файлы. Не поднимать весь проект в контекст без причины.
+
+## Всегда в начале
+
+1. `CLAUDE.md`
+2. `texts/README.md`
+3. `texts/ROUTER.md`
+4. `texts/SNAPSHOT.md`
+5. `texts/NEXT.md`
+6. `git status --short --branch`
+
+Если задача очевидная, дальше сразу идти по маршруту ниже.
+
+## Код / баг / runtime
+
+Читать:
+
+1. `texts/STATUS.md`
+2. `texts/RULES.md`
+3. `texts/CONTEXT.md`
+4. `texts/IDEAS_DONE_OR_DORMANT.md`, если похоже на уже сделанную или сломанную функцию.
+
+Потом смотреть только нужные runtime-файлы:
+
+- `index.html`
+- `js/app.js`
+- `sw.js`
+- `manifest.json`
+- `supabase/functions/ai/index.ts`
+- `supabase/migrations/*.sql`
+
+Перед правкой функции обязательно искать ее по `index.html` и `js/app.js`.
+
+## Дизайн / интерфейс / AI-кнопка
+
+Читать:
+
+1. `texts/UI_PHILOSOPHY.md`
+2. `texts/CONTEXT.md`
+3. `texts/STATUS.md`
+4. `texts/IDEAS_BETA_DELIGHTERS.md`
+
+Цель визуала: порядок, память, спокойная помощь. Не делать тяжелую зелень, хаос, декоративные полосы, лишние логотипы, случайные градиенты.
+
+## Промпты / поведение AI / Claude
+
+Читать:
+
+1. `texts/MASTER_PROMPT.md`
+2. `texts/PROMPTS.md`
+3. `texts/CONTEXT.md`
+4. `texts/RULES.md`
+
+Если меняется продуктовый AI, после текстов смотреть `supabase/functions/ai/index.ts`.
+
+## План / ближайшие этапы
+
+Читать:
+
+1. `texts/NEXT.md`
+2. `texts/STATUS.md`
+3. `texts/IDEAS_NEAR_TERM.md`
+4. `texts/IDEAS_DONE_OR_DORMANT.md`
+
+Результат: очередь действий, файлы, проверки. Не философия ради философии.
+
+## Перспектива / концепты
+
+Читать:
+
+1. `texts/CONTEXT.md`
+2. `texts/IDEAS_FUTURE.md`
+3. `texts/IDEAS_BETA_DELIGHTERS.md`
+4. `prototypes/` только если пользователь просит визуальный пример или конкретный прототип.
+
+## Память / восстановление старого смысла
+
+Читать:
+
+1. `texts/IDEAS_DONE_OR_DORMANT.md`
+2. `texts/STATUS.md`
+3. `texts/archive/` точечно, по названию или дате.
+
+Архив не читать целиком. Если находишь важный смысл, сжать его и перенести в активный документ.
+
+## Если пользователь сам не знает, куда направить
+
+Коротко определить маршрут самому. Если не получается, спросить одним вопросом: это про код, дизайн, план, промпты или память?

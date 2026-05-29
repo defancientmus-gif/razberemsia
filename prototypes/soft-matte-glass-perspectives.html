@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Разберёмся - понятный soft matte glass</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:oklch(0.17 0.023 220);
+  --ink-soft:oklch(0.39 0.017 216);
+  --muted:oklch(0.52 0.015 215);
+  --faint:oklch(0.65 0.013 215);
+  --accent:oklch(0.55 0.087 213);
+  --accent-deep:oklch(0.39 0.083 212);
+  --aqua:oklch(0.76 0.042 197);
+  --warm:oklch(0.74 0.076 80);
+  --success:oklch(0.57 0.062 185);
+  --matte:oklch(0.988 0.005 212 / .78);
+  --matte-strong:oklch(0.994 0.004 212 / .89);
+  --rim:oklch(1 0 0 / .78);
+  --shade:oklch(0.32 0.029 215 / .10);
+  --curve:cubic-bezier(.22,1,.36,1);
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+html,body{min-height:100%;font-family:var(--sys);color:var(--ink)}
+body{
+  background:
+    radial-gradient(circle at 10% 3%,oklch(1 0.004 210),transparent 30rem),
+    radial-gradient(circle at 89% 8%,oklch(0.93 0.026 220 / .60),transparent 36rem),
+    radial-gradient(circle at 48% 103%,oklch(0.90 0.025 194 / .48),transparent 39rem),
+    linear-gradient(145deg,oklch(0.97 0.006 215),oklch(0.91 0.014 213));
+}
+button{border:0;background:none;font:inherit;color:inherit;cursor:pointer}
+.studio{max-width:1530px;margin:0 auto;padding:28px clamp(12px,2.4vw,31px) 42px}
+.top{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:22px}
+.brand{font-family:var(--serif);font-size:clamp(32px,3.4vw,45px);font-weight:400;color:oklch(0.24 0.053 195);letter-spacing:0}
+.sub{margin-top:7px;font-size:13px;color:var(--muted)}
+.modes{
+  display:flex;gap:5px;padding:5px;border-radius:21px;
+  background:oklch(1 0 0 / .40);border:1px solid oklch(1 0 0 / .65);
+  box-shadow:inset 0 1px 0 #fff,0 11px 29px oklch(0.34 0.03 216 / .08);
+}
+.mode{
+  min-width:116px;height:49px;border-radius:16px;padding:0 13px;
+  font-size:14px;font-weight:620;color:var(--muted);transition:all .22s ease;
+}
+.mode.active{
+  color:var(--accent-deep);background:oklch(1 0 0 / .82);
+  box-shadow:inset 0 1px 0 #fff,0 6px 17px oklch(0.33 0.042 216 / .10);
+}
+.gallery{display:grid;grid-template-columns:repeat(4,minmax(280px,1fr));gap:16px}
+.proposal{
+  padding:10px;border-radius:28px;background:oklch(1 0 0 / .25);
+  border:1px solid oklch(1 0 0 / .47);
+}
+.proposal-head{height:43px;padding:1px 6px 9px;display:flex;align-items:center;gap:10px}
+.no{font-size:11px;font-weight:700;color:var(--faint)}
+.proposal h2{font-size:19px;line-height:1;font-weight:650;letter-spacing:0}
+.trait{margin-left:auto;font-size:11px;color:var(--muted)}
+.phone{
+  --local:var(--accent);
+  --local-deep:var(--accent-deep);
+  --wash:oklch(0.76 0.042 200 / .12);
+  position:relative;isolation:isolate;overflow:hidden;height:704px;width:100%;border-radius:32px;
+  border:1px solid var(--rim);
+  box-shadow:0 22px 48px oklch(0.32 0.034 214 / .16),inset 0 1px 0 #fff;
+  background:
+    radial-gradient(ellipse 70% 31% at 100% 0%,oklch(0.84 0.033 222 / .21),transparent 67%),
+    radial-gradient(ellipse 74% 37% at 0% 100%,var(--wash),transparent 68%),
+    linear-gradient(166deg,oklch(0.965 0.008 215),oklch(0.913 0.014 214));
+}
+.phone::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;
+  background:
+    radial-gradient(ellipse 72% 32% at 50% 28%,oklch(0.80 0.045 214 / .19),transparent 67%),
+    radial-gradient(ellipse 94% 40% at 50% 95%,oklch(0.76 0.043 195 / .25),transparent 69%);
+  transition:opacity .68s ease;
+}
+.phone[data-state="working"]::before,.phone[data-state="filed"]::before{opacity:1}
+.screen{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+.status{height:29px;padding:11px 18px 0;display:flex;justify-content:space-between;font-size:10px;font-weight:650;color:var(--faint)}
+.bar{height:41px;padding:6px 14px 2px;display:flex;align-items:center;justify-content:space-between}
+.mini-brand{font-family:var(--serif);font-size:20px;color:oklch(0.25 0.052 195)}
+.today{font-size:11px;color:var(--muted)}
+.nav{height:60px;padding:8px 12px 11px;display:grid;grid-template-columns:36px 1fr 36px;align-items:center;gap:9px}
+.round{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--local-deep);
+  border:1px solid oklch(1 0 0 / .68);background:oklch(1 0 0 / .48);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .84);
+}
+.round svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.nav-label{font-size:9px;text-transform:uppercase;font-weight:700;color:var(--muted);line-height:1;margin-bottom:3px}
+.nav-title{font-family:var(--serif);font-size:25px;font-weight:400;line-height:1}
+.depth{display:flex;gap:4px;padding:0 12px 12px}
+.depth span{flex:1;height:3px;border-radius:3px;background:oklch(0.84 0.022 211)}
+.depth span:first-child{background:var(--local-deep)}
+.depth span:nth-child(2){background:var(--local)}
+.content{flex:1;min-height:0;padding:0 12px;position:relative}
+.tile{
+  position:relative;overflow:hidden;background:
+    radial-gradient(circle at 12% 4%,oklch(1 0 0 / .62),transparent 32%),
+    linear-gradient(148deg,var(--matte-strong),var(--matte));
+  border:1px solid oklch(1 0 0 / .72);
+  box-shadow:inset 0 1px 0 #fff,0 6px 17px var(--shade);
+}
+.tile::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(118deg,oklch(1 0 0 / .45),transparent 21%,transparent 74%,oklch(0.78 0.044 210 / .08));
+}
+.target{
+  display:flex;align-items:center;gap:10px;height:0;opacity:0;transform:translateY(-8px);
+  border-radius:16px;padding:0 12px;margin-bottom:0;
+  transition:height .42s var(--curve),padding .42s var(--curve),margin .42s var(--curve),opacity .27s ease,transform .45s var(--curve),box-shadow .4s ease;
+}
+.phone[data-state="working"] .target,.phone[data-state="filed"] .target{
+  height:54px;padding-top:8px;padding-bottom:8px;margin-bottom:9px;opacity:1;transform:none;
+}
+.folder{
+  height:32px;width:32px;display:grid;place-items:center;border-radius:11px;flex-shrink:0;
+  color:var(--local-deep);background:oklch(0.65 0.060 208 / .10);
+}
+.folder svg{height:17px;width:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.target-text{flex:1;line-height:1.08}.target-text small{display:block;color:var(--muted);font-size:10px}.target-text b{font-size:14px;font-weight:650}
+.count{font-size:11px;color:var(--faint)}
+.note{
+  border-radius:19px;padding:13px 12px;transition:transform .66s var(--curve),opacity .42s ease,box-shadow .4s ease,min-height .46s var(--curve);
+}
+.note-row{display:flex;align-items:flex-start;gap:9px}
+.dot{margin-top:7px;height:7px;width:7px;border-radius:50%;flex-shrink:0;background:var(--warm)}
+.quiet .dot{background:oklch(0.60 0.067 180)}
+.copy{flex:1;min-width:0}
+.title{display:block;font-size:15px;font-weight:650;line-height:1.31}
+.body{display:block;font-size:12px;color:var(--muted);line-height:1.43;margin-top:3px}
+.time{display:block;font-size:10px;color:var(--faint);white-space:nowrap;margin-top:2px}
+.suggest{
+  height:0;opacity:0;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border-radius:12px;background:oklch(0.93 0.030 209 / .53);border:1px solid transparent;
+  transition:height .4s var(--curve),padding .4s var(--curve),margin .4s var(--curve),opacity .3s ease;
+}
+.phone[data-state="working"] .suggest{
+  height:49px;opacity:1;margin-top:12px;padding:7px 9px;border-color:oklch(0.79 0.05 209 / .25);
+}
+.suggest small{display:block;color:var(--muted);font-size:10px;line-height:1.1}
+.suggest strong{display:block;color:var(--local-deep);font-size:14px;margin-top:2px}
+.pill{
+  height:28px;padding:0 10px;border-radius:999px;background:oklch(1 0 0 / .68);
+  color:var(--local-deep);font-size:11px;font-weight:650;
+}
+.saved{
+  height:0;opacity:0;overflow:hidden;display:flex;align-items:center;gap:7px;
+  color:var(--success);font-size:12px;font-weight:650;
+  transition:height .38s var(--curve),opacity .27s ease,margin .38s var(--curve);
+}
+.saved svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4}
+.phone[data-state="filed"] .saved{height:28px;opacity:1;margin-top:10px}
+.phone[data-state="filed"] .target{
+  box-shadow:inset 0 1px 0 #fff,0 0 28px oklch(0.68 0.052 196 / .20);
+  border-color:oklch(0.75 0.047 198 / .31);
+}
+.phone.placing .feature{transform:translateY(-10px) scale(.984);opacity:.70}
+.phone.placing .target{box-shadow:inset 0 1px 0 #fff,0 0 33px oklch(0.65 0.06 201 / .22)}
+.footer{margin-top:auto;padding:10px 12px max(16px,env(safe-area-inset-bottom))}
+.meta{height:26px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px}
+.meta b{color:var(--local-deep);font-size:12px;font-weight:650}
+.action{
+  position:relative;overflow:hidden;width:100%;height:54px;border-radius:17px;
+  background:linear-gradient(108deg,oklch(0.53 0.083 211),oklch(0.61 0.066 199));
+  color:#fff;font-size:15px;font-weight:650;
+  box-shadow:0 10px 23px oklch(0.39 0.075 211 / .16),inset 0 1px 0 oklch(1 0 0 / .25);
+}
+.action::after{
+  content:"";position:absolute;inset:-85% -78%;opacity:0;pointer-events:none;
+  background:linear-gradient(111deg,transparent 37%,oklch(1 0 0 / .53) 48%,oklch(0.82 0.045 213 / .17) 51%,transparent 62%);
+}
+.phone[data-state="working"] .action::after{animation:crystal 4.4s cubic-bezier(.25,.76,.25,1) infinite}
+.phone[data-state="filed"] .action{background:linear-gradient(106deg,oklch(0.55 0.060 189),oklch(0.63 0.052 186))}
+.action:active{transform:scale(.984)}
+
+/* 01: the familiar inbox, refined rather than reinvented. */
+.inbox{--wash:oklch(0.76 0.042 197 / .14)}
+.inbox .stack{display:flex;flex-direction:column;gap:8px}
+.inbox .feature{min-height:152px;padding-top:14px}
+.inbox .quiet{min-height:67px}
+.inbox[data-state="filed"] .feature{min-height:119px}
+
+/* 02: one-note focus mode, with a clearly visible queue underneath. */
+.focus{
+  --local:oklch(0.58 0.080 224);--local-deep:oklch(0.40 0.079 224);
+  --wash:oklch(0.80 0.042 224 / .16);
+}
+.focus-tabs{display:flex;gap:6px;margin-bottom:10px}
+.focus-tab{
+  flex:1;height:36px;border-radius:12px;text-align:center;padding-top:10px;color:var(--muted);font-size:11px;font-weight:600;
+  background:oklch(1 0 0 / .36);border:1px solid oklch(1 0 0 / .52);
+}
+.focus-tab.active{background:oklch(1 0 0 / .70);color:var(--local-deep)}
+.focus .feature{min-height:232px;padding:17px 14px}
+.focus .feature .title{font-family:var(--serif);font-size:27px;font-weight:400;line-height:1.12;margin-top:10px}
+.focus .feature .body{font-size:13px;margin-top:10px}
+.focus .suggest{position:absolute;left:14px;right:14px;bottom:14px}
+.next-label{margin:14px 4px 7px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.queue{display:flex;gap:7px}
+.queue .tile{flex:1;border-radius:14px;min-height:60px;padding:10px 9px}
+.queue b{display:block;font-size:11px;line-height:1.28}.queue small{font-size:10px;color:var(--muted)}
+.focus[data-state="filed"] .feature .body{opacity:.58}
+
+/* 03: sections remain ordinary folders, with a useful sorting surface. */
+.sections{
+  --local:oklch(0.55 0.069 195);--local-deep:oklch(0.38 0.066 195);
+  --wash:oklch(0.77 0.040 187 / .16);
+}
+.folders{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+.folder-card{
+  min-height:60px;border-radius:15px;padding:9px 10px;display:flex;flex-direction:column;justify-content:space-between;
+}
+.folder-card.selected{border-color:oklch(0.72 0.051 193 / .30);background:oklch(0.96 0.024 191 / .65)}
+.folder-card small{font-size:10px;color:var(--muted)}
+.folder-card b{font-size:13px;font-weight:650}.folder-card span{font-size:10px;color:var(--faint)}
+.sections .feature{min-height:140px}
+.sections .quiet{margin-top:8px;min-height:65px}
+.sections[data-state="filed"] .folder-card.selected{
+  box-shadow:inset 0 1px 0 #fff,0 0 26px oklch(0.66 0.052 191 / .18);
+}
+
+/* 04: a daily view: progressive, but everyone understands Today/Later. */
+.daily{
+  --local:oklch(0.57 0.073 207);--local-deep:oklch(0.39 0.071 205);
+  --wash:oklch(0.78 0.042 198 / .18);
+}
+.day-label{
+  display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin:2px 0 8px;
+  text-transform:uppercase;color:var(--muted);font-size:10px;font-weight:700;
+}
+.day-label b{font-size:10px;color:var(--local-deep)}
+.daily .feature{min-height:137px}
+.later{margin-top:14px}
+.day-row{display:grid;grid-template-columns:42px 1fr;gap:7px;margin-top:7px}
+.clock{font-size:11px;color:var(--muted);padding:13px 0 0 3px}
+.day-note{border-radius:15px;min-height:51px;padding:10px 11px}
+.day-note b{display:block;font-size:13px}.day-note small{font-size:11px;color:var(--muted)}
+.daily[data-state="filed"] .feature{min-height:108px}
+
+@keyframes crystal{
+  0%,16%{opacity:0;transform:translateX(-44%)}
+  28%{opacity:.75}
+  49%{opacity:.18;transform:translateX(40%)}
+  57%,100%{opacity:0;transform:translateX(49%)}
+}
+@media(max-width:1280px){
+  .gallery{grid-template-columns:repeat(2,minmax(300px,405px));justify-content:center}
+}
+@media(max-width:760px){
+  .studio{padding:18px 12px 28px}
+  .top{display:block;margin-bottom:17px}
+  .modes{margin-top:17px;width:100%}
+  .mode{flex:1;min-width:0;padding:0 4px}
+  .gallery{grid-template-columns:minmax(0,405px)}
+  .phone{height:min(704px,calc(100svh - 122px));min-height:646px}
+}
+</style>
+</head>
+<body>
+<main class="studio">
+  <header class="top">
+    <div>
+      <div class="brand">Разберёмся</div>
+      <div class="sub">Мягкое стекло, понятные заметки</div>
+    </div>
+    <nav class="modes" aria-label="Состояние интерфейса">
+      <button class="mode" data-mode="rest" type="button">Покой</button>
+      <button class="mode active" data-mode="working" type="button">Разбираюсь</button>
+      <button class="mode" data-mode="filed" type="button">Сохранено</button>
+    </nav>
+  </header>
+  <section class="gallery">
+    <article class="proposal">
+      <header class="proposal-head"><span class="no">01</span><h2>Входящие</h2><span class="trait">привычно</span></header>
+      <section class="phone inbox" data-state="working">
+        <div class="screen">
+          <div class="status"><span>10:42</span><span>5G&nbsp; 92%</span></div>
+          <div class="bar"><span class="mini-brand">Разберёмся</span><span class="today">Сегодня</span></div>
+          <div class="nav">
+            <button class="round" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div><div class="nav-label">Папка агента</div><div class="nav-title">Деньги</div></div>
+            <button class="round" aria-label="Ещё"><svg viewBox="0 0 24 24"><path d="M6 12h.1M12 12h.1M18 12h.1"/></svg></button>
+          </div>
+          <div class="depth"><span></span><span></span><span></span></div>
+          <main class="content">
+            <div class="tile target"><span class="folder"><svg viewBox="0 0 24 24"><path d="M12 4v13M7 12l5 5 5-5M4 20h16"/></svg></span><span class="target-text"><small>Раздел</small><b>Финансы</b></span><span class="count">12</span></div>
+            <div class="stack">
+              <article class="tile note feature">
+                <div class="note-row"><i class="dot"></i><span class="copy"><span class="title">Квитанция за апрель</span><span class="body">Оплатить до 25-го - 2 840 руб.</span></span><time class="time">вчера</time></div>
+                <div class="suggest"><span><small>Агент предлагает раздел</small><strong>Финансы</strong></span><button class="pill">верно</button></div>
+                <div class="saved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Сохранено в «Финансы»</div>
+              </article>
+              <article class="tile note quiet"><div class="note-row"><i class="dot"></i><span class="copy"><span class="title">Продлить страховку</span><span class="body">Проверить дату полиса</span></span><time class="time">2 дня</time></div></article>
+              <article class="tile note quiet"><div class="note-row"><i class="dot"></i><span class="copy"><span class="title">Расходы на поездку</span><span class="body">Собрать чеки</span></span><time class="time">май</time></div></article>
+            </div>
+          </main>
+          <footer class="footer"><div class="meta"><span>Назначение агента</span><b>Финансы</b></div><button class="action" data-action><span data-text>Сохранить</span></button></footer>
+        </div>
+      </section>
+    </article>
+
+    <article class="proposal">
+      <header class="proposal-head"><span class="no">02</span><h2>Фокус</h2><span class="trait">спокойно</span></header>
+      <section class="phone focus" data-state="working">
+        <div class="screen">
+          <div class="status"><span>10:42</span><span>5G&nbsp; 92%</span></div>
+          <div class="bar"><span class="mini-brand">Разберёмся</span><span class="today">Сегодня</span></div>
+          <div class="nav">
+            <button class="round" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div><div class="nav-label">Разобрать заметки</div><div class="nav-title">По одной</div></div>
+            <button class="round" aria-label="Ещё"><svg viewBox="0 0 24 24"><path d="M6 12h.1M12 12h.1M18 12h.1"/></svg></button>
+          </div>
+          <main class="content">
+            <div class="focus-tabs"><span class="focus-tab active">Сейчас</span><span class="focus-tab">Потом</span><span class="focus-tab">Готово</span></div>
+            <article class="tile note feature">
+              <div class="note-row"><i class="dot"></i><span class="copy"><span class="time">СРОК РЯДОМ</span><span class="title">Квитанция<br>за апрель</span><span class="body">Оплатить до 25-го - 2 840 руб.</span></span></div>
+              <div class="suggest"><span><small>Сохранить в раздел</small><strong>Финансы</strong></span><button class="pill">верно</button></div>
+              <div class="saved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Уложено в «Финансы»</div>
+            </article>
+            <div class="next-label">Следом</div>
+            <div class="queue"><article class="tile"><b>Страховка</b><small>2 дня</small></article><article class="tile"><b>Поездка</b><small>май</small></article></div>
+          </main>
+          <footer class="footer"><div class="meta"><span>1 заметка из 3</span><b>Финансы</b></div><button class="action" data-action><span data-text>Сохранить</span></button></footer>
+        </div>
+      </section>
+    </article>
+
+    <article class="proposal">
+      <header class="proposal-head"><span class="no">03</span><h2>Разделы</h2><span class="trait">наглядно</span></header>
+      <section class="phone sections" data-state="working">
+        <div class="screen">
+          <div class="status"><span>10:42</span><span>5G&nbsp; 92%</span></div>
+          <div class="bar"><span class="mini-brand">Разберёмся</span><span class="today">Сегодня</span></div>
+          <div class="nav">
+            <button class="round" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div><div class="nav-label">Мои разделы</div><div class="nav-title">Порядок</div></div>
+            <button class="round" aria-label="Ещё"><svg viewBox="0 0 24 24"><path d="M6 12h.1M12 12h.1M18 12h.1"/></svg></button>
+          </div>
+          <main class="content">
+            <div class="folders">
+              <article class="tile folder-card selected"><small>Предложено</small><b>Финансы</b><span>12 заметок</span></article>
+              <article class="tile folder-card"><small>Раздел</small><b>Дом</b><span>7 заметок</span></article>
+              <article class="tile folder-card"><small>Раздел</small><b>Здоровье</b><span>4 заметки</span></article>
+              <article class="tile folder-card"><small>Раздел</small><b>Покупки</b><span>9 заметок</span></article>
+            </div>
+            <article class="tile note feature">
+              <div class="note-row"><i class="dot"></i><span class="copy"><span class="title">Квитанция за апрель</span><span class="body">Оплатить до 25-го - 2 840 руб.</span></span><time class="time">вчера</time></div>
+              <div class="suggest"><span><small>Выбран раздел</small><strong>Финансы</strong></span><button class="pill">верно</button></div>
+              <div class="saved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Теперь в «Финансы»</div>
+            </article>
+            <article class="tile note quiet"><div class="note-row"><i class="dot"></i><span class="copy"><span class="title">Продлить страховку</span><span class="body">Проверить дату полиса</span></span><time class="time">2 дня</time></div></article>
+          </main>
+          <footer class="footer"><div class="meta"><span>Куда сохранить</span><b>Финансы</b></div><button class="action" data-action><span data-text>Сохранить</span></button></footer>
+        </div>
+      </section>
+    </article>
+
+    <article class="proposal">
+      <header class="proposal-head"><span class="no">04</span><h2>Сегодня</h2><span class="trait">по времени</span></header>
+      <section class="phone daily" data-state="working">
+        <div class="screen">
+          <div class="status"><span>10:42</span><span>5G&nbsp; 92%</span></div>
+          <div class="bar"><span class="mini-brand">Разберёмся</span><span class="today">Сегодня</span></div>
+          <div class="nav">
+            <button class="round" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div><div class="nav-label">Помню за вас</div><div class="nav-title">Ближайшее</div></div>
+            <button class="round" aria-label="Ещё"><svg viewBox="0 0 24 24"><path d="M6 12h.1M12 12h.1M18 12h.1"/></svg></button>
+          </div>
+          <main class="content">
+            <div class="day-label"><span>Важно сейчас</span><b>Финансы</b></div>
+            <article class="tile note feature">
+              <div class="note-row"><i class="dot"></i><span class="copy"><span class="title">Квитанция за апрель</span><span class="body">Оплатить до 25-го - 2 840 руб.</span></span><time class="time">срок</time></div>
+              <div class="suggest"><span><small>Я могу сохранить</small><strong>В Финансы</strong></span><button class="pill">да</button></div>
+              <div class="saved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Запомнил в «Финансы»</div>
+            </article>
+            <div class="later">
+              <div class="day-label"><span>Потом</span><b></b></div>
+              <div class="day-row"><time class="clock">2 дня</time><article class="tile day-note"><b>Продлить страховку</b><small>Проверить дату полиса</small></article></div>
+              <div class="day-row"><time class="clock">май</time><article class="tile day-note"><b>Расходы на поездку</b><small>Собрать чеки</small></article></div>
+            </div>
+          </main>
+          <footer class="footer"><div class="meta"><span>Одно важное действие</span><b>Финансы</b></div><button class="action" data-action><span data-text>Сохранить</span></button></footer>
+        </div>
+      </section>
+    </article>
+  </section>
+</main>
+<script>
+const phones=[...document.querySelectorAll('.phone')];
+const modeButtons=[...document.querySelectorAll('[data-mode]')];
+const labels={rest:'Разобраться',working:'Сохранить',filed:'Сохранено'};
+const order=['rest','working','filed'];
+function setPhone(phone,state){
+  phone.classList.remove('placing');
+  phone.dataset.state=state;
+  phone.querySelector('[data-text]').textContent=labels[state];
+}
+function setGlobal(state){
+  const fromWorking=phones.some(phone=>phone.dataset.state==='working');
+  if(state==='filed'&&fromWorking){
+    phones.forEach(phone=>phone.classList.add('placing'));
+    setTimeout(()=>phones.forEach(phone=>setPhone(phone,'filed')),560);
+  }else{
+    phones.forEach(phone=>setPhone(phone,state));
+  }
+  modeButtons.forEach(button=>button.classList.toggle('active',button.dataset.mode===state));
+}
+modeButtons.forEach(button=>button.addEventListener('click',()=>setGlobal(button.dataset.mode)));
+phones.forEach(phone=>{
+  phone.querySelector('[data-action]').addEventListener('click',()=>{
+    const current=phone.dataset.state;
+    const next=order[(order.indexOf(current)+1)%order.length];
+    if(next==='filed'){
+      phone.classList.add('placing');
+      setTimeout(()=>setPhone(phone,'filed'),560);
+    }else{
+      setPhone(phone,next);
+    }
+  });
+});
+setGlobal('working');
+</script>
+</body>
+</html>

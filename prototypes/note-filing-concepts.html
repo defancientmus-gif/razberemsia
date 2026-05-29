@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Разберёмся - укладывание заметки в раздел</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:oklch(0.90 0.018 210);
+  --ink:oklch(0.16 0.022 210);
+  --muted:oklch(0.49 0.016 210);
+  --muted-2:oklch(0.61 0.014 210);
+  --accent:oklch(0.53 0.115 210);
+  --accent-deep:oklch(0.39 0.115 210);
+  --accent-soft:oklch(0.55 0.09 210 / .13);
+  --warm:oklch(0.72 0.10 80);
+  --paper:oklch(0.99 0.004 210 / .77);
+  --paper-solid:oklch(0.985 0.006 210);
+  --border:oklch(1 0 0 / .70);
+  --shadow:oklch(0.32 0.035 210 / .11);
+  --system:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+html,body{min-height:100%;font-family:var(--system);color:var(--ink);background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+body{
+  background:
+    radial-gradient(circle at 14% 3%,oklch(0.985 0.005 210),transparent 36rem),
+    radial-gradient(circle at 86% 16%,oklch(0.92 0.04 170 / .50),transparent 32rem),
+    linear-gradient(150deg,oklch(0.94 0.012 210),oklch(0.87 0.025 216));
+}
+.lab{
+  width:min(1120px,100%);
+  min-height:100svh;
+  margin:0 auto;
+  padding:24px;
+  display:grid;
+  grid-template-columns:minmax(340px,412px) minmax(310px,1fr);
+  align-items:center;
+  gap:42px;
+}
+.phone{
+  --curve:cubic-bezier(.22,1,.36,1);
+  position:relative;
+  width:100%;
+  height:min(872px,calc(100svh - 48px));
+  min-height:720px;
+  max-height:872px;
+  overflow:hidden;
+  border-radius:42px;
+  isolation:isolate;
+  background:
+    radial-gradient(ellipse 66% 42% at 100% 0%,oklch(0.72 0.08 230 / .15),transparent 60%),
+    radial-gradient(ellipse 76% 44% at 0% 100%,oklch(0.63 0.09 190 / .18),transparent 62%),
+    linear-gradient(165deg,oklch(0.94 0.012 210),oklch(0.875 0.021 216));
+  border:1px solid oklch(1 0 0 / .86);
+  box-shadow:0 28px 76px oklch(0.30 0.03 210 / .20),inset 0 1px 0 #fff;
+}
+.phone::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 54% 30% at 50% 22%,oklch(0.70 0.10 210 / .20),transparent 64%),
+    radial-gradient(ellipse 82% 36% at 50% 91%,oklch(0.58 0.10 195 / .24),transparent 68%);
+  transition:opacity .6s ease;
+}
+.phone.working::before,.phone.done::before{opacity:1}
+.ui{height:100%;display:flex;flex-direction:column;position:relative;z-index:1}
+.status{
+  height:37px;
+  padding:14px 24px 0;
+  display:flex;
+  justify-content:space-between;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+.brandbar{
+  min-height:48px;
+  padding:6px 19px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.brand{
+  font-family:var(--serif);
+  color:oklch(0.25 0.06 190);
+  font-size:23px;
+  letter-spacing:0;
+}
+.brand-date{font-size:12px;color:var(--muted);font-weight:500}
+.nav{
+  padding:11px 15px 10px;
+  display:grid;
+  grid-template-columns:38px 1fr 38px;
+  align-items:center;
+  gap:10px;
+}
+.round{
+  width:38px;height:38px;border-radius:50%;border:1px solid oklch(0.88 0.025 210 / .50);
+  background:oklch(1 0 0 / .55);display:grid;place-items:center;color:var(--accent-deep);
+  font-size:27px;line-height:1;
+}
+.more{font-size:18px;color:var(--muted);padding-bottom:10px}
+.where{text-align:left;min-width:0}
+.where-label{
+  font-size:10px;line-height:1;text-transform:uppercase;color:var(--muted);
+  font-weight:700;letter-spacing:0;margin-bottom:4px;
+}
+.where h1{font-family:var(--serif);font-size:27px;font-weight:400;line-height:1;color:var(--ink);letter-spacing:0}
+.depth{display:flex;gap:5px;padding:0 15px 13px}
+.depth span{height:3px;background:oklch(0.85 0.025 210);border-radius:3px;flex:1}
+.depth .done{background:var(--accent-deep)}
+.depth .active{background:var(--accent)}
+.board{position:relative;flex:1;min-height:0;padding:0 14px}
+.receiver{
+  position:absolute;
+  z-index:7;
+  top:0;left:14px;right:14px;
+  height:55px;border-radius:17px;
+  display:flex;align-items:center;gap:12px;padding:0 14px;
+  background:oklch(0.985 0.006 210 / .76);
+  border:1px solid oklch(1 0 0 / .88);
+  box-shadow:0 10px 26px oklch(0.40 0.05 210 / .08),inset 0 1px 0 #fff;
+  opacity:0;transform:translateY(-13px) scale(.97);
+  pointer-events:none;
+  transition:opacity .25s ease,transform .42s var(--curve),box-shadow .42s ease,border-color .35s ease;
+}
+.receiver-mark{
+  width:34px;height:34px;border-radius:11px;
+  display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-deep);
+  font-size:18px;font-weight:600;
+}
+.receiver-copy{flex:1;min-width:0}
+.receiver-overline{color:var(--muted);font-size:10px;line-height:1.2;margin-bottom:2px}
+.receiver-name{font-size:15px;line-height:1.15;font-weight:650}
+.receiver-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.phone[data-variant="1"] .receiver,
+.phone[data-variant="4"] .receiver,
+.phone[data-variant="5"] .receiver,
+.phone[data-variant="7"] .receiver,
+.phone[data-variant="8"] .receiver,
+.phone.routing[data-variant="2"] .receiver{opacity:1;transform:translateY(0) scale(1)}
+.phone[data-variant="4"] .receiver{
+  left:auto;width:146px;height:45px;border-radius:999px;padding:0 10px;gap:8px;background:oklch(1 0 0 / .51);
+}
+.phone[data-variant="4"] .receiver-mark{width:27px;height:27px;border-radius:50%;font-size:14px}
+.phone[data-variant="4"] .receiver-overline{display:none}
+.phone[data-variant="4"] .receiver-name{font-size:13px}
+.phone[data-variant="4"] .receiver-count{display:none}
+.receiver.landed{
+  border-color:oklch(0.73 0.10 190 / .44);
+  box-shadow:0 0 0 1px oklch(0.70 0.10 190 / .15),0 0 35px oklch(0.59 0.12 194 / .27),inset 0 1px 0 #fff;
+}
+.receiver.landed .receiver-mark{animation:folder-breathe 700ms var(--curve)}
+.notes{
+  display:flex;flex-direction:column;gap:9px;
+  transition:transform .45s var(--curve),opacity .35s ease;
+}
+.phone[data-variant="1"] .notes,.phone[data-variant="4"] .notes,
+.phone[data-variant="5"] .notes,.phone[data-variant="7"] .notes,
+.phone[data-variant="8"] .notes{padding-top:65px}
+.phone.routing[data-variant="2"] .notes{transform:translateY(64px)}
+.transfer-guide{
+  display:flex;align-items:center;gap:9px;
+  max-height:0;opacity:0;overflow:hidden;margin-bottom:0;padding:0 13px;
+  border-radius:14px;background:oklch(0.965 0.02 206 / .72);
+  border:0 solid oklch(0.83 0.06 203 / .35);
+  color:var(--accent-deep);font-size:13px;font-weight:600;
+  transition:max-height .42s var(--curve),opacity .3s ease,margin .4s var(--curve),padding .4s var(--curve),border-width .2s ease;
+}
+.guide-dot{
+  width:18px;height:18px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent-soft);font-size:11px;flex-shrink:0;
+}
+.phone.routing[data-variant="5"] .transfer-guide,
+.phone.routing[data-variant="7"] .transfer-guide,
+.phone.routing[data-variant="8"] .transfer-guide{
+  max-height:44px;opacity:1;margin-bottom:9px;padding:11px 13px;border-width:1px;
+}
+.note{
+  border-radius:19px;padding:15px 15px 14px;
+  background:linear-gradient(158deg,oklch(1 0 0 / .82),oklch(0.965 0.012 210 / .72));
+  border:1px solid var(--border);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .94),0 4px 13px var(--shadow);
+}
+.origin{
+  position:relative;min-height:182px;max-height:240px;overflow:hidden;
+  transition:opacity .25s ease,transform .45s var(--curve),max-height .44s var(--curve),min-height .44s var(--curve),padding .44s var(--curve),margin .44s var(--curve);
+}
+.origin.leaving{opacity:0;transform:scale(.975)}
+.origin.filed{max-height:0;min-height:0;padding-top:0;padding-bottom:0;margin:0;border-width:0;opacity:0}
+.note-top{display:flex;align-items:flex-start;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--warm);margin-top:7px;flex-shrink:0}
+.note-main{flex:1;min-width:0}
+.note-title{font-size:17px;line-height:1.30;font-weight:650;color:var(--ink)}
+.note-body{font-size:14px;line-height:1.48;color:var(--muted);margin-top:4px}
+.stamp{font-size:11px;color:var(--muted-2);white-space:nowrap;margin-top:2px}
+.suggestion{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:16px;padding:10px 12px;border-radius:13px;
+  background:oklch(0.93 0.035 210 / .58);
+  border:1px solid oklch(0.84 0.06 210 / .35);
+}
+.suggestion-label{font-size:11px;color:var(--muted);margin-bottom:2px}
+.suggestion-name{font-size:15px;font-weight:650;color:var(--accent-deep)}
+.suggestion-pill{
+  border-radius:999px;background:oklch(1 0 0 / .70);padding:6px 10px;
+  font-size:12px;font-weight:600;color:var(--accent-deep);
+}
+.resolved-state{
+  display:flex;align-items:center;gap:7px;max-height:0;opacity:0;overflow:hidden;
+  font-size:13px;font-weight:650;color:var(--accent-deep);
+  transition:max-height .42s var(--curve),opacity .3s ease,margin .35s var(--curve);
+}
+.resolved-state::before{
+  content:"\2713";width:20px;height:20px;display:grid;place-items:center;
+  border-radius:50%;background:oklch(0.57 0.10 175);color:#fff;font-size:12px;
+}
+.phone.done[data-variant="7"] .origin,.phone.done[data-variant="8"] .origin{
+  border-color:oklch(0.82 0.07 190 / .42);background:oklch(0.975 0.018 198 / .86);
+}
+.phone.done[data-variant="7"] .origin .suggestion,.phone.done[data-variant="8"] .origin .suggestion{display:none}
+.phone.done[data-variant="7"] .resolved-state,.phone.done[data-variant="8"] .resolved-state{
+  max-height:32px;opacity:1;margin-top:14px;
+}
+.quiet{
+  min-height:74px;display:flex;align-items:center;gap:12px;padding-top:13px;padding-bottom:13px;
+  transition:transform .48s var(--curve);
+}
+.phone.done .quiet{transform:translateY(-3px)}
+.quiet-dot{width:8px;height:8px;border-radius:50%;background:oklch(0.57 0.11 155);flex-shrink:0}
+.quiet .note-title{font-size:15px}
+.quiet .note-body{font-size:12px;margin-top:2px}
+.shelves{
+  position:absolute;z-index:8;left:8px;right:8px;bottom:12px;
+  padding:12px;border-radius:22px;background:oklch(0.975 0.008 210 / .94);
+  border:1px solid oklch(1 0 0 / .90);
+  box-shadow:0 22px 46px oklch(0.25 0.03 210 / .18),inset 0 1px 0 #fff;
+  opacity:0;transform:translateY(26px) scale(.98);pointer-events:none;
+  transition:opacity .25s ease,transform .44s var(--curve);
+}
+.shelves-header{font-size:11px;text-transform:uppercase;font-weight:700;color:var(--muted);letter-spacing:0;margin:0 3px 9px}
+.shelves-items{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.shelf{
+  height:67px;border-radius:13px;border:1px solid oklch(0.90 0.025 210);
+  background:oklch(1 0 0 / .65);padding:9px;text-align:left;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.shelf-name{font-size:12px;font-weight:650}
+.shelf-number{font-size:11px;color:var(--muted)}
+.phone.routing[data-variant="3"] .shelves{opacity:1;transform:translateY(0) scale(1)}
+.phone.routing[data-variant="6"] .shelves{opacity:1;transform:translateY(0) scale(1)}
+.shelf.target.landed{
+  border-color:oklch(0.70 0.10 190 / .42);
+  background:oklch(0.94 0.035 192 / .86);
+  box-shadow:0 0 30px oklch(0.57 0.12 192 / .22);
+}
+.mini-receipt{
+  display:block;max-height:0;opacity:0;overflow:hidden;font-size:10px;line-height:1.25;
+  color:var(--accent-deep);transition:max-height .38s var(--curve),opacity .3s ease,margin .3s ease;
+}
+.phone.done[data-variant="6"] .shelf.target{height:82px}
+.phone.done[data-variant="6"] .mini-receipt{max-height:27px;opacity:1;margin-top:5px}
+.trace{
+  position:absolute;z-index:6;inset:0;opacity:0;pointer-events:none;
+  transition:opacity .22s ease;
+}
+.trace svg{width:100%;height:100%}
+.trace path{
+  stroke:oklch(0.62 0.095 210 / .50);stroke-width:1.3;fill:none;
+  stroke-dasharray:3 8;stroke-dashoffset:120;
+}
+.phone.routing[data-variant="4"] .trace{opacity:1}
+.phone.routing[data-variant="4"] .trace path{animation:trace 900ms ease forwards}
+.actions{
+  position:relative;z-index:12;padding:12px 14px max(20px,env(safe-area-inset-bottom));
+  border-top:1px solid oklch(1 0 0 / .45);
+  background:oklch(0.94 0.012 210 / .62);
+  backdrop-filter:blur(18px);
+}
+.actions-context{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+  font-size:12px;color:var(--muted);
+}
+.actions-context strong{font-size:13px;color:var(--accent-deep);font-weight:650}
+.primary-shell{
+  position:relative;border-radius:18px;isolation:isolate;
+}
+.primary-shell::before,.primary-shell::after{
+  content:"";position:absolute;pointer-events:none;opacity:0;
+}
+.primary-shell::before{
+  inset:-10px;border-radius:25px;z-index:0;
+}
+.primary-shell::after{
+  inset:-2px;border-radius:20px;z-index:0;
+}
+.primary{
+  position:relative;z-index:1;overflow:hidden;
+  height:54px;width:100%;border:0;border-radius:17px;background:var(--accent);color:#fff;
+  font-size:16px;font-weight:650;
+  box-shadow:0 10px 22px oklch(0.42 0.12 210 / .18);
+  transition:transform .12s ease,opacity .2s ease,background .3s ease;
+}
+.primary::after{
+  content:"";position:absolute;inset:-50% -80%;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,oklch(1 0 0 / .42),transparent 43%);
+}
+.primary:active{transform:scale(.98)!important;animation-play-state:paused!important}
+.primary:disabled{opacity:.55;cursor:default}
+.phone:not(.working):not(.done)[data-pulse="breath"] .primary{
+  animation:primary-breath 3.6s ease-in-out infinite;
+}
+.phone:not(.working):not(.done)[data-pulse="breath"] .primary-shell::before{
+  opacity:1;
+  background:radial-gradient(ellipse at center,oklch(0.56 0.12 205 / .23),transparent 68%);
+  animation:aura-breath 3.6s ease-in-out infinite;
+}
+.phone:not(.working):not(.done)[data-pulse="glass"] .primary::after{
+  opacity:1;
+  animation:glass-wash 3.9s cubic-bezier(.34,0,.25,1) infinite;
+}
+.phone:not(.working):not(.done)[data-pulse="glass"] .primary{
+  box-shadow:0 13px 27px oklch(0.42 0.12 210 / .22),inset 0 1px 0 oklch(1 0 0 / .28);
+}
+.phone:not(.working):not(.done)[data-pulse="ring"] .primary-shell::after{
+  opacity:1;border:1px solid oklch(0.54 0.12 210 / .35);
+  animation:quiet-ring 2.9s var(--curve) infinite;
+}
+.phone:not(.working):not(.done)[data-pulse="ring"] .primary{
+  animation:primary-settle 2.9s ease-in-out infinite;
+}
+.phone:not(.working):not(.done)[data-pulse="signal"] .primary-shell::before{
+  opacity:1;
+  background:radial-gradient(ellipse at center,oklch(0.62 0.10 196 / .30),transparent 68%);
+  animation:signal-aura 4.1s ease-out infinite;
+}
+.phone:not(.working):not(.done)[data-pulse="signal"] .primary{
+  animation:signal-beat 4.1s ease-out infinite;
+}
+.toast{
+  position:absolute;z-index:30;left:18px;right:18px;bottom:122px;
+  height:48px;border-radius:16px;background:oklch(0.25 0.035 204 / .92);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 13px 0 16px;
+  font-size:13px;font-weight:500;
+  opacity:0;transform:translateY(12px);pointer-events:none;
+  transition:opacity .22s ease,transform .36s var(--curve);
+}
+.phone.done .toast{opacity:1;transform:translateY(0);pointer-events:auto}
+.undo{border:0;background:transparent;color:oklch(0.89 0.065 190);font-size:13px;font-weight:650;padding:8px}
+.flight{
+  position:absolute;z-index:25;margin:0;pointer-events:none;
+  transform-origin:center;
+  box-shadow:0 16px 34px oklch(0.37 0.06 210 / .17),inset 0 1px 0 #fff;
+}
+.flight .suggestion{opacity:.70}
+.receipt{
+  position:absolute;z-index:26;width:42px;height:12px;border-radius:999px;
+  background:oklch(0.86 0.08 206 / .88);opacity:0;pointer-events:none;
+}
+.token-flight{
+  position:absolute;z-index:27;height:30px;border-radius:999px;padding:0 13px;
+  display:flex;align-items:center;background:oklch(0.95 0.04 207 / .98);
+  border:1px solid oklch(0.77 0.08 207 / .46);color:var(--accent-deep);
+  font-size:12px;font-weight:700;pointer-events:none;
+  box-shadow:0 9px 22px oklch(0.35 0.06 210 / .14);
+}
+.controls{max-width:560px}
+.eyebrow{
+  display:block;font-size:12px;text-transform:uppercase;letter-spacing:0;
+  color:var(--accent-deep);font-weight:700;margin-bottom:12px;
+}
+.controls h2{
+  font-family:var(--serif);font-size:46px;line-height:1.08;font-weight:400;letter-spacing:0;
+  color:oklch(0.23 0.055 190);margin-bottom:12px;
+}
+.intro{font-size:16px;line-height:1.55;color:var(--muted);max-width:490px;margin-bottom:27px}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.choice{
+  width:100%;display:grid;grid-template-columns:32px 1fr;gap:10px;text-align:left;
+  padding:12px 12px;border:1px solid oklch(0.84 0.03 210 / .58);border-radius:18px;
+  background:oklch(1 0 0 / .43);
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.choice:hover{background:oklch(1 0 0 / .58)}
+.choice.active{
+  background:oklch(1 0 0 / .77);border-color:oklch(0.68 0.085 202 / .43);
+  box-shadow:0 14px 30px oklch(0.32 0.04 210 / .08);
+}
+.choice-no{
+  width:29px;height:29px;border-radius:50%;display:grid;place-items:center;
+  background:oklch(0.90 0.035 205);color:var(--accent-deep);
+  font-size:14px;font-weight:650;
+}
+.choice-name{display:block;font-size:14px;font-weight:650;line-height:1.25;margin:1px 0 4px}
+.choice-desc{display:block;color:var(--muted);font-size:12px;line-height:1.38}
+.pulse-panel{margin-top:23px}
+.pulse-heading{
+  display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;
+}
+.pulse-heading strong{font-size:15px;font-weight:650;color:var(--ink)}
+.pulse-heading span{font-size:12px;color:var(--muted)}
+.pulse-choices{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.pulse-choice{
+  min-height:53px;border:1px solid oklch(0.84 0.03 210 / .54);border-radius:14px;
+  background:oklch(1 0 0 / .40);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:7px 5px;font-size:12px;font-weight:600;line-height:1.25;
+  transition:background .2s ease,border-color .2s ease,color .2s ease;
+}
+.pulse-choice.active{
+  background:oklch(1 0 0 / .77);border-color:oklch(0.68 0.085 202 / .45);
+  color:var(--accent-deep);
+}
+.tools{display:flex;align-items:center;gap:12px;margin-top:20px}
+.replay{
+  height:48px;border-radius:14px;padding:0 19px;border:1px solid oklch(0.83 0.035 210);
+  background:oklch(1 0 0 / .65);color:var(--accent-deep);font-weight:650;
+}
+.tip{font-size:13px;color:var(--muted);line-height:1.4}
+@keyframes folder-breathe{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.12)}
+  100%{transform:scale(1)}
+}
+@keyframes trace{to{stroke-dashoffset:0}}
+@keyframes primary-breath{
+  0%,100%{transform:translateY(0) scale(1);box-shadow:0 10px 22px oklch(0.42 0.12 210 / .18)}
+  47%{transform:translateY(-1px) scale(1.008);box-shadow:0 15px 30px oklch(0.42 0.12 210 / .27)}
+}
+@keyframes aura-breath{
+  0%,100%{transform:scale(.94);opacity:.22}
+  47%{transform:scale(1.07);opacity:1}
+}
+@keyframes glass-wash{
+  0%,14%{transform:translateX(-62%);opacity:0}
+  26%{opacity:.62}
+  48%{transform:translateX(42%);opacity:.32}
+  54%,100%{transform:translateX(58%);opacity:0}
+}
+@keyframes quiet-ring{
+  0%,18%{transform:scale(1);opacity:0}
+  30%{opacity:.62}
+  68%,100%{transform:scale(1.065,1.26);opacity:0}
+}
+@keyframes primary-settle{
+  0%,100%{box-shadow:0 10px 22px oklch(0.42 0.12 210 / .18)}
+  32%{box-shadow:0 12px 25px oklch(0.42 0.12 210 / .23)}
+}
+@keyframes signal-aura{
+  0%,12%,100%{transform:scale(.93);opacity:0}
+  22%{transform:scale(1.04);opacity:.95}
+  30%{transform:scale(.97);opacity:.28}
+  39%{transform:scale(1.06);opacity:.82}
+  57%{transform:scale(1.08);opacity:0}
+}
+@keyframes signal-beat{
+  0%,12%,100%{transform:scale(1)}
+  22%{transform:scale(1.012)}
+  30%{transform:scale(1)}
+  39%{transform:scale(1.009)}
+}
+@media(max-width:820px){
+  body{overflow:auto}
+  .lab{display:flex;flex-direction:column-reverse;align-items:center;gap:22px;padding:17px 13px 22px}
+  .controls{width:100%;max-width:412px}
+  .controls h2{font-size:32px;margin-bottom:8px}
+  .intro{font-size:14px;margin-bottom:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .choice{display:block;padding:11px 12px;min-height:82px}
+  .choice-no{display:none}
+  .choice-name{font-size:13px;margin-bottom:3px}
+  .choice-desc{font-size:11px}
+  .pulse-panel{margin-top:12px}
+  .pulse-heading{margin-bottom:7px}
+  .pulse-choice{min-height:44px;font-size:11px}
+  .tools{margin-top:12px}
+  .phone{height:min(820px,calc(100svh - 20px));min-height:700px}
+}
+</style>
+</head>
+<body>
+<main class="lab">
+  <section class="phone" id="phone" data-variant="1" data-pulse="breath" aria-label="Прототип приложения Разберёмся">
+    <div class="ui">
+      <div class="status"><span>10:42</span><span>5G&nbsp;&nbsp;92%</span></div>
+      <div class="brandbar">
+        <div class="brand">Разберёмся</div>
+        <div class="brand-date">Сегодня</div>
+      </div>
+      <nav class="nav">
+        <button class="round" type="button" aria-label="Назад">&#8249;</button>
+        <div class="where">
+          <div class="where-label">Папка агента</div>
+          <h1>Деньги</h1>
+        </div>
+        <button class="round more" type="button" aria-label="Ещё">...</button>
+      </nav>
+      <div class="depth"><span class="done"></span><span class="active"></span><span></span></div>
+      <div class="board">
+        <div class="receiver" id="receiver">
+          <span class="receiver-mark">&#8595;</span>
+          <div class="receiver-copy">
+            <div class="receiver-overline">Раздел</div>
+            <div class="receiver-name">Финансы</div>
+          </div>
+          <span class="receiver-count"><span class="folder-count">12</span></span>
+        </div>
+        <div class="trace" aria-hidden="true">
+          <svg viewBox="0 0 380 560" preserveAspectRatio="none">
+            <path d="M 195 208 C 310 160 316 58 282 29"></path>
+          </svg>
+        </div>
+        <div class="notes">
+          <div class="transfer-guide">
+            <span class="guide-dot">&#8594;</span>
+            <span>Сохраняю в раздел «Финансы»</span>
+          </div>
+          <article class="note origin" id="origin">
+            <div class="note-top">
+              <span class="dot"></span>
+              <div class="note-main">
+                <div class="note-title">Квитанция за апрель</div>
+                <div class="note-body">Оплатить до 25-го - 2 840 руб.</div>
+              </div>
+              <time class="stamp">вчера</time>
+            </div>
+            <div class="suggestion">
+              <div>
+                <div class="suggestion-label">Агент предлагает раздел</div>
+                <div class="suggestion-name">Финансы</div>
+              </div>
+              <span class="suggestion-pill">верно</span>
+            </div>
+            <div class="resolved-state">Сохранено в «Финансы»</div>
+          </article>
+          <article class="note quiet">
+            <span class="quiet-dot"></span>
+            <div class="note-main">
+              <div class="note-title">Продлить страховку</div>
+              <div class="note-body">Проверить дату полиса</div>
+            </div>
+            <time class="stamp">2 дня</time>
+          </article>
+          <article class="note quiet">
+            <span class="quiet-dot"></span>
+            <div class="note-main">
+              <div class="note-title">Расходы на поездку</div>
+              <div class="note-body">Собрать чеки</div>
+            </div>
+            <time class="stamp">май</time>
+          </article>
+        </div>
+        <div class="shelves" id="shelves">
+          <div class="shelves-header">Разделы</div>
+          <div class="shelves-items">
+            <div class="shelf target" id="shelf-target">
+              <span class="shelf-name">Финансы</span>
+              <span class="shelf-number"><span class="folder-count">12</span> заметок</span>
+              <span class="mini-receipt">Квитанция за апрель</span>
+            </div>
+            <div class="shelf">
+              <span class="shelf-name">Дом</span>
+              <span class="shelf-number">7 заметок</span>
+            </div>
+            <div class="shelf">
+              <span class="shelf-name">Здоровье</span>
+              <span class="shelf-number">4 заметки</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="actions-context">
+          <span>Назначение агента</span>
+          <strong>Финансы</strong>
+        </div>
+        <div class="primary-shell">
+          <button class="primary" id="primary" type="button">В Финансы</button>
+        </div>
+      </div>
+    </div>
+    <div class="toast"><span>Сохранено в «Финансы»</span><button class="undo" id="undo" type="button">Отменить</button></div>
+  </section>
+
+  <aside class="controls">
+    <span class="eyebrow">Прототип движения заметки</span>
+    <h2>Момент порядка</h2>
+    <p class="intro" id="description">Кнопка сразу называет назначение. Действие максимально ясное, а перелёт подтверждает результат.</p>
+    <div class="choices" role="tablist" aria-label="Варианты сохранения заметки">
+      <button class="choice active" type="button" data-choice="1" role="tab" aria-selected="true">
+        <span class="choice-no">1</span>
+        <span><span class="choice-name">В Финансы</span><span class="choice-desc">Прямое действие и явная точка посадки</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="2" role="tab" aria-selected="false">
+        <span class="choice-no">2</span>
+        <span><span class="choice-name">Сохранить</span><span class="choice-desc">Папка проявляется после подтверждения</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="3" role="tab" aria-selected="false">
+        <span class="choice-no">3</span>
+        <span><span class="choice-name">Живая полка</span><span class="choice-desc">Разделы открываются и принимают заметку</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="4" role="tab" aria-selected="false">
+        <span class="choice-no">4</span>
+        <span><span class="choice-name">Тихий след</span><span class="choice-desc">Минимальный жест без крупного раскрытия</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="5" role="tab" aria-selected="false">
+        <span class="choice-no">5</span>
+        <span><span class="choice-name">Сначала показать</span><span class="choice-desc">Пауза с подписью, потом медленный перенос</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="6" role="tab" aria-selected="false">
+        <span class="choice-no">6</span>
+        <span><span class="choice-name">Положить на полку</span><span class="choice-desc">В папке остаётся видимый след заметки</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="7" role="tab" aria-selected="false">
+        <span class="choice-no">7</span>
+        <span><span class="choice-name">Без перелёта</span><span class="choice-desc">Карточка остаётся, папка подтверждает сохранение</span></span>
+      </button>
+      <button class="choice" type="button" data-choice="8" role="tab" aria-selected="false">
+        <span class="choice-no">8</span>
+        <span><span class="choice-name">Ярлык в папку</span><span class="choice-desc">Улетает только понятное слово «Финансы»</span></span>
+      </button>
+    </div>
+    <div class="pulse-panel">
+      <div class="pulse-heading"><strong>Как живёт кнопка</strong><span>до нажатия</span></div>
+      <div class="pulse-choices" role="tablist" aria-label="Варианты пульсации кнопки">
+        <button class="pulse-choice active" type="button" data-pulse="breath" role="tab" aria-selected="true">Дыхание</button>
+        <button class="pulse-choice" type="button" data-pulse="glass" role="tab" aria-selected="false">Стекло</button>
+        <button class="pulse-choice" type="button" data-pulse="ring" role="tab" aria-selected="false">Контур</button>
+        <button class="pulse-choice" type="button" data-pulse="signal" role="tab" aria-selected="false">Сигнал</button>
+      </div>
+    </div>
+    <div class="tools">
+      <button class="replay" id="replay" type="button">Повторить</button>
+      <span class="tip">Нажимай основную кнопку на экране.</span>
+    </div>
+  </aside>
+</main>
+<script>
+const phone=document.getElementById('phone');
+const primary=document.getElementById('primary');
+const receiver=document.getElementById('receiver');
+const origin=document.getElementById('origin');
+const shelfTarget=document.getElementById('shelf-target');
+const choices=[...document.querySelectorAll('.choice')];
+const pulseChoices=[...document.querySelectorAll('.pulse-choice')];
+const description=document.getElementById('description');
+const concepts={
+  1:{
+    button:'В Финансы',
+    text:'Кнопка сразу называет назначение. Действие максимально ясное, а перелёт подтверждает результат.'
+  },
+  2:{
+    button:'Сохранить',
+    text:'Сначала человек подтверждает свою работу. Только затем интерфейс показывает, куда агент аккуратно её уложил.'
+  },
+  3:{
+    button:'Сохранить',
+    text:'После подтверждения приоткрывается слой личных разделов: заметка видимо попадает на нужную полку.'
+  },
+  4:{
+    button:'Сохранить',
+    text:'Самый спокойный вариант: короткий световой маршрут и компактное подтверждение назначения.'
+  },
+  5:{
+    button:'Сохранить',
+    text:'Сначала появляется понятное сообщение, куда сохраняется заметка. Только после паузы карточка медленно перемещается.'
+  },
+  6:{
+    button:'Сохранить',
+    text:'Личные разделы раскрываются как полка. После посадки в «Финансы» остаётся видимая строка с названием заметки.'
+  },
+  7:{
+    button:'Сохранить',
+    text:'Без полёта: карточка спокойно меняет статус, а «Финансы» подсвечиваются. Самый безопасный вариант для понятности.'
+  },
+  8:{
+    button:'Сохранить',
+    text:'Карточка остаётся на месте, а в папку неспешно уходит только ярлык «Финансы». Меньше движения, смысл сохраняется.'
+  }
+};
+let busy=false;
+let activeVariant=1;
+let activePulse='breath';
+
+function clearFlight(){
+  phone.querySelectorAll('.flight,.receipt,.token-flight').forEach(el=>el.remove());
+}
+
+function resetDemo(){
+  busy=false;
+  clearFlight();
+  phone.classList.remove('working','routing','done');
+  receiver.classList.remove('landed');
+  shelfTarget.classList.remove('landed');
+  origin.classList.remove('leaving','filed');
+  phone.querySelectorAll('.folder-count').forEach(el=>el.textContent='12');
+  primary.disabled=false;
+  primary.textContent=concepts[activeVariant].button;
+}
+
+function selectVariant(id){
+  activeVariant=Number(id);
+  phone.dataset.variant=String(activeVariant);
+  choices.forEach(choice=>{
+    const selected=Number(choice.dataset.choice)===activeVariant;
+    choice.classList.toggle('active',selected);
+    choice.setAttribute('aria-selected',selected?'true':'false');
+  });
+  description.textContent=concepts[activeVariant].text;
+  resetDemo();
+}
+
+function selectPulse(id){
+  activePulse=id;
+  phone.dataset.pulse=activePulse;
+  pulseChoices.forEach(choice=>{
+    const selected=choice.dataset.pulse===activePulse;
+    choice.classList.toggle('active',selected);
+    choice.setAttribute('aria-selected',selected?'true':'false');
+  });
+  resetDemo();
+}
+
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+
+function makeFlight(target){
+  const phoneBox=phone.getBoundingClientRect();
+  const sourceBox=origin.getBoundingClientRect();
+  const targetBox=target.getBoundingClientRect();
+  const clone=origin.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.className='note flight';
+  clone.style.left=(sourceBox.left-phoneBox.left)+'px';
+  clone.style.top=(sourceBox.top-phoneBox.top)+'px';
+  clone.style.width=sourceBox.width+'px';
+  clone.style.height=sourceBox.height+'px';
+  phone.appendChild(clone);
+  const startX=sourceBox.left-phoneBox.left;
+  const startY=sourceBox.top-phoneBox.top;
+  const endX=targetBox.left-phoneBox.left+(targetBox.width/2);
+  const endY=targetBox.top-phoneBox.top+(targetBox.height/2);
+  const dx=endX-(startX+sourceBox.width/2);
+  const dy=endY-(startY+sourceBox.height/2);
+  const bend=activeVariant===3?22:-46;
+  const duration=activeVariant===4?1180:activeVariant===5?1750:activeVariant===6?1550:1450;
+  const animation=clone.animate([
+    {transform:'translate(0,0) scale(1)',opacity:1},
+    {transform:`translate(${dx*.48}px, ${dy*.40+bend}px) scale(.70)`,opacity:.93,offset:.52},
+    {transform:`translate(${dx}px, ${dy}px) scale(.10)`,opacity:.12}
+  ],{duration,easing:'cubic-bezier(.25,.78,.22,1)',fill:'forwards'});
+  return animation.finished.then(()=>clone.remove());
+}
+
+function makeTokenFlight(target){
+  const phoneBox=phone.getBoundingClientRect();
+  const sourceBox=origin.querySelector('.suggestion-name').getBoundingClientRect();
+  const targetBox=target.getBoundingClientRect();
+  const token=document.createElement('div');
+  token.className='token-flight';
+  token.textContent='Финансы';
+  token.style.left=(sourceBox.left-phoneBox.left-8)+'px';
+  token.style.top=(sourceBox.top-phoneBox.top-5)+'px';
+  phone.appendChild(token);
+  const tokenBox=token.getBoundingClientRect();
+  const dx=targetBox.left-phoneBox.left+(targetBox.width/2)-(tokenBox.left-phoneBox.left+tokenBox.width/2);
+  const dy=targetBox.top-phoneBox.top+(targetBox.height/2)-(tokenBox.top-phoneBox.top+tokenBox.height/2);
+  const animation=token.animate([
+    {transform:'translate(0,0) scale(1)',opacity:1},
+    {transform:`translate(${dx*.42}px, ${dy*.34-32}px) scale(.98)`,opacity:1,offset:.48},
+    {transform:`translate(${dx}px, ${dy}px) scale(.56)`,opacity:.10}
+  ],{duration:1700,easing:'cubic-bezier(.24,.78,.22,1)',fill:'forwards'});
+  return animation.finished.then(()=>token.remove());
+}
+
+async function commit(){
+  if(busy)return;
+  busy=true;
+  primary.disabled=true;
+  phone.classList.add('working','routing');
+  if(activeVariant===2)await wait(260);
+  if(activeVariant===3)await wait(320);
+  if(activeVariant===4)await wait(140);
+  if(activeVariant===5)await wait(920);
+  if(activeVariant===6)await wait(760);
+  if(activeVariant===7){
+    await wait(1150);
+    receiver.classList.add('landed');
+    phone.querySelectorAll('.folder-count').forEach(el=>el.textContent='13');
+    phone.classList.add('done');
+    primary.textContent='Сохранено';
+    return;
+  }
+  if(activeVariant===8){
+    await wait(940);
+    await makeTokenFlight(receiver);
+    receiver.classList.add('landed');
+    phone.querySelectorAll('.folder-count').forEach(el=>el.textContent='13');
+    phone.classList.add('done');
+    primary.textContent='Сохранено';
+    return;
+  }
+  const target=activeVariant===3?shelfTarget:receiver;
+  const landingTarget=activeVariant===6?shelfTarget:target;
+  const flightTarget=activeVariant===6?shelfTarget:target;
+  const flying=makeFlight(flightTarget);
+  await wait(48);
+  origin.classList.add('leaving');
+  await flying;
+  origin.classList.add('filed');
+  landingTarget.classList.add('landed');
+  phone.querySelectorAll('.folder-count').forEach(el=>el.textContent='13');
+  await wait(100);
+  phone.classList.add('done');
+  primary.textContent='Сохранено';
+}
+
+choices.forEach(choice=>choice.addEventListener('click',()=>selectVariant(choice.dataset.choice)));
+pulseChoices.forEach(choice=>choice.addEventListener('click',()=>selectPulse(choice.dataset.pulse)));
+primary.addEventListener('click',commit);
+document.getElementById('replay').addEventListener('click',resetDemo);
+document.getElementById('undo').addEventListener('click',resetDemo);
+selectVariant(1);
+selectPulse('breath');
+</script>
+</body>
+</html>

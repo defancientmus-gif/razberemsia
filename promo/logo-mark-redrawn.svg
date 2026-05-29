@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Разберемся - перерисованный знак</title>
+  <desc id="desc">Прозрачный синий знак в форме буквы Р и пера без фона и дополнительных эффектов.</desc>
+  <defs>
+    <linearGradient id="p-face" x1="372" y1="194" x2="448" y2="750" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#93ceff"/>
+      <stop offset="0.34" stop-color="#82beff"/>
+      <stop offset="0.68" stop-color="#4c96ff"/>
+      <stop offset="1" stop-color="#2169ed"/>
+    </linearGradient>
+    <linearGradient id="p-surface" x1="377" y1="202" x2="692" y2="549" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c4e6ff" stop-opacity="0.25"/>
+      <stop offset="0.38" stop-color="#89c5ff" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#1d61e9" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="feather-face" x1="527" y1="300" x2="390" y2="748" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b1dbff"/>
+      <stop offset="0.31" stop-color="#93ccff"/>
+      <stop offset="0.66" stop-color="#5b9fff"/>
+      <stop offset="1" stop-color="#236df1"/>
+    </linearGradient>
+    <linearGradient id="feather-depth" x1="580" y1="355" x2="378" y2="735" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d2edff" stop-opacity="0.18"/>
+      <stop offset="0.43" stop-color="#8bbfff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#174fcf" stop-opacity="0.34"/>
+    </linearGradient>
+    <path id="p-form" d="M343 750 C361 744 375 729 384 707 C392 690 395 670 398 650 C400 634 406 614 414 594 L378 643 V228 H571 C650 228 701 291 701 387 C701 482 647 543 564 543 H530 C515 557 498 568 480 573 C499 578 525 580 564 580 C669 580 738 504 738 387 C738 271 673 194 572 194 H343 Z"/>
+    <path id="feather-form" d="M345 749 C362 738 375 710 389 674 C404 629 428 598 465 580 C507 562 549 551 583 510 C617 467 634 380 631 281 C607 328 557 350 493 389 C435 426 400 503 394 580 C389 637 369 710 345 749 Z"/>
+    <path id="feather-cut" d="M394 584 C419 512 474 459 555 428 C488 465 432 520 395 610 C394 601 394 593 394 584 Z"/>
+    <mask id="feather-mask">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <use href="#feather-cut" fill="#000"/>
+    </mask>
+  </defs>
+
+  <g id="mark">
+    <use href="#p-form" fill="url(#p-face)" stroke="#1e6ff1" stroke-width="0.9" stroke-linejoin="round"/>
+    <use href="#p-form" fill="url(#p-surface)"/>
+    <path d="M343.5 194.5 H572 C672.5 194.5 737.5 271 737.5 387 C737.5 503.5 668.5 579.5 564 579.5 C526 579.5 500 577 480 573" fill="none" stroke="#87c2ff" stroke-opacity="0.52" stroke-width="0.8"/>
+    <path d="M343.5 194.5 L378 228.5 H570.5" fill="none" stroke="#d2ecff" stroke-opacity="0.24" stroke-width="1"/>
+
+    <g mask="url(#feather-mask)">
+      <use href="#feather-form" fill="url(#feather-face)" stroke="#2476f5" stroke-width="0.8" stroke-linejoin="round"/>
+      <use href="#feather-form" fill="url(#feather-depth)"/>
+    </g>
+    <use href="#feather-cut" fill="none" stroke="#2476f5" stroke-opacity="0.7" stroke-width="0.65"/>
+    <path d="M346 747 C370 697 390 631 395 581 C405 501 438 427 493 389 C557 350 607 328 631 281" fill="none" stroke="#9bd0ff" stroke-opacity="0.42" stroke-width="0.75" stroke-linecap="round"/>
+  </g>
+</svg>

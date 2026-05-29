@@ -1,75 +1,26 @@
 # Разберёмся
 
-PWA/HTML-прототип спокойного цифрового помощника.
+PWA голосового AI-агента с памятью.
 
-## Главное правило
+## Runtime
 
-Рабочая входная точка проекта — `index.html`.
+- `index.html`
+- `js/app.js`
+- `sw.js`
+- `manifest.json`
+- `supabase/`
 
-Не создаём новые рабочие HTML-файлы с версиями в названии. Старые HTML-копии складываем в `backups/legacy-html/`.
+## Контекст для Claude/Codex
 
-## Как открыть проект на новом устройстве
+Активная память проекта лежит в `texts/`.
 
-```powershell
-git clone https://github.com/defancientmus-gif/razberemsia.git
-cd razberemsia
-```
+Читать в таком порядке:
 
-Если проект уже скачан:
+1. `CLAUDE.md`
+2. `texts/README.md`
+3. `texts/ROUTER.md`
+4. `texts/SNAPSHOT.md`
+5. `texts/NEXT.md`
+6. дальше только файлы из маршрута задачи.
 
-```powershell
-git pull
-```
-
-## Как сохранить и отправить изменения
-
-```powershell
-.\deploy.ps1 "описание изменения"
-```
-
-`deploy.ps1` сам работает из папки проекта, поэтому путь к проекту на конкретном компьютере менять не нужно.
-
-## Как обновить файлы для Claude
-
-```bash
-./update-handoff.sh
-```
-
-Скрипт пересобирает плоскую папку `claude-handoff/` из актуальных файлов проекта.
-
-## Основные файлы
-
-- `index.html` — HTML-оболочка приложения.
-- `js/app.js` — основной runtime приложения.
-- `manifest.json` — PWA-настройки.
-- `sw.js` — service worker и кэш.
-- `supabase.sql` — таблица и RLS-правила для облачных заметок Supabase.
-- `supabase/functions/smooth-processor/index.ts` — текущая Edge Function для AI-анализа заметок.
-- `project-memory/` — каноническая папка промтов, памяти, правил, TODO и архивов.
-
-## Supabase
-
-Для живого входа по почте используется Supabase email OTP: пользователь вводит почту, получает 6-значный код и вводит его в приложении.
-
-В `index.html` должны быть публичные клиентские значения:
-
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-
-В Supabase SQL Editor выполните `supabase.sql`. Он создаёт таблицу `user_state` и правила, чтобы пользователь видел только свои заметки.
-
-В Supabase Auth URL Configuration укажите:
-
-- Site URL: `https://defancientmus-gif.github.io/razberemsia/`
-- Redirect URL: `https://defancientmus-gif.github.io/razberemsia/`
-
-Важно: не использовать `service_role` key в клиентском HTML и не отключать RLS.
-
-## Документы проекта
-
-- `project-memory/README.md` — карта актуальных документов и архива.
-- `project-memory/current/2026-05-19_PROJECT_BRIEF.md` — краткий контекст проекта.
-- `project-memory/current/2026-05-19_TODO.md` — ближайшие задачи.
-- `project-memory/current/2026-05-19_AGENT_RULES.md` — правила работы для AI/разработки.
-- `project-memory/current/2026-05-19_CHANGELOG.md` — история изменений.
-- `MASTER.md`, `PROJECT_CONTEXT.md`, `TODO.md`, `CLAUDE.md` — короткие указатели на `project-memory/current/`.
+`texts/archive/` и `ideas/` - архив/legacy, не ежедневный контекст.

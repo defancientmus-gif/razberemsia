@@ -1,99 +1,73 @@
-# NEXT — текущая задача и контекст сессии
+# NEXT
 
-> Этот файл читается ПЕРВЫМ в каждой сессии.
-> Обновляется в конце каждой сессии — что сделано, что следующее.
+Читать первым после `texts/SNAPSHOT.md`.
 
----
+## Последнее важное
 
-## Последняя сессия — 2026-05-28 (rz-v257)
+2026-05-29, `rz-v276`.
 
-**Сделано:**
-- ✅ **Inbox delete fix** (rz-v256): убрали ненадёжный swipe-reveal для inbox-карточек, добавили кнопку `×` прямо в карточку — надёжно работает на iOS
-- ✅ **Reminder redesign** (rz-v257): полный TickTick-стиль — чекбокс слева, тайм и ··· справа, анимация «галочка → исчезновение», без кнопок действий снизу
-- ✅ **save_idea bug fix** (rz-v257): агент больше не пишет в удалённую папку `ideas/` — теперь дописывает в `texts/IDEAS_NEAR_TERM.md` (функция `appendToGitHub`)
+Сделано:
 
-**Текущий SW cache:** `rz-v257`
+- Исправлена кнопка `Сохранить`: `_reloadViews()` больше не вызывает саму себя.
+- Поднят PWA cache `rz-v274` -> `rz-v275`.
+- Закоммичено и отправлено в `main`: `f451e5b rz-v275: fix save sheet reload helper`.
+- Создан локальный архив перед уборкой контекста: `backups/repo_context_before_cleanup_2026-05-29_after_v275.tar.gz`.
+- В текущей уборке поднято до `rz-v276`, чтобы заменить старые ссылки `pwa-feather-*` на `pwa-logo-*`.
 
----
+Почему это было критично:
 
-## Аудит кода 2026-05-28 — найденные баги
+- заметка сохранялась;
+- затем UI падал на `_reloadViews()`;
+- лист не закрывался;
+- повторные клики по `Сохранить` создавали дубли.
 
-### Исправлены сегодня:
-- ✅ `save_idea` → `ideas/` (удалена) → теперь `texts/IDEAS_NEAR_TERM.md`
-- ✅ Reminder panel — TickTick redesign (checkboxes + collapse animation)
-- ✅ Inbox delete — swipe-reveal заменён на прямую кнопку
+## Что сейчас делаем
 
-### Не критичные, отложены:
-- 🟡 `loadNotes()` сбрасывает `drillLevel=0` при каждом вызове — вызывает 50ms flash к level 0 при сохранении из секции. Workaround: setTimeout(drillGo, 50). Cosmetic.
-- 🟡 `attachSwipeDelete(d, delBg, null, 116)` в loadNotepad — лишние аргументы (null, 116) игнорируются. Dead code smell.
-- 🟡 Множественные `loadAll()` вызовы при одном действии (loadNotes+loadHomeFeed+loadNotepad). Работает, но не оптимально. Нужен debounce через requestAnimationFrame.
-- 🟡 `_drillInitSwipe` — listener leak guard работает (`_drillSwipeInited`). НЕ баг.
-- 🟡 textarea event listeners — cloneNode pattern корректно удаляет. НЕ баг.
+Наводим порядок в контексте и репозитории, чтобы Claude и Codex не расходились:
 
-### В следующей сессии:
-- 🔜 **Lists toolbar** — кнопки форматирования над клавиатурой в редакторе заметки (сейчас `tools-row` hidden по умолчанию, ToggleToolsRow работает — но нужно доделать inline list toggle внутри textarea)
-- 🔜 **AI Analysis Overlay** — всплывающая панель поверх заметки (из NEXT.md #11)
+1. `texts/` - единственная активная папка памяти.
+2. `CLAUDE.md` -> `texts/README.md` -> `texts/ROUTER.md` -> нужный маршрут.
+3. `project-memory/` и старые root-доки - архив/legacy, не активная память.
+4. `scripts/build-claude-handoff.sh` должен собирать актуальные файлы, а не старую структуру.
+5. Философию и UI-стиль не терять: перед дизайном читать `texts/UI_PHILOSOPHY.md`.
 
----
+## Следующие кодовые задачи
 
-## Архитектура (важно знать — предыдущие сессии)
+1. Проверить цепочку `идея` -> `save_idea` -> GitHub.
+   - Локальный код нацелен на `texts/IDEAS_NEAR_TERM.md`.
+   - Тест 2026-05-29 не попал ни в `texts/IDEAS_NEAR_TERM.md`, ни в `ideas/`, ни в GitHub-коммиты.
+   - Нужно понять: не вызывается анализ, не пришел тег, Edge Function не задеплоена, нет `GITHUB_TOKEN`, или путь не совпадает.
 
-### AI Context Engine (rz-v254)
-- `_agentViewCtx` — где пользователь (section/folder/home)
-- `_buildAgentContext()` — top notes, section stats, inbox stats, upcoming reminders
-- `_trackNoteOpen(id)` — открытие заметки, at 5+ opens → ai_memory
-- `_getNoteStats()` → `localStorage rz_note_stats`
+2. Разобрать legacy `ideas/`.
+   - Старые raw-идеи 2026-05-19..22 перенесены в `texts/archive/raw-ideas-2026-05-23/`.
+   - Новые raw-идеи 2026-05-25..28 еще лежат в `ideas/`.
+   - Решить: оставить readonly или перенести/сжать в активные `IDEAS_*.md`.
 
-### Session conversation history (rz-v253)
-- `_agentHistory[]` — 4 хода, 15 мин TTL
-- `_agentHistoryTs` — timestamp последнего хода
-- Передаётся агенту в каждом запросе как `conversationHistory`
+3. Проверить живую PWA после деплоя `rz-v276`.
+   - Старые ссылки `pwa-feather-*` в активных `index.html` и `sw.js` заменены.
+   - Если iOS все еще показывает старую иконку ярлыка, это отдельная переустановка ярлыка, не runtime-баг.
 
-### Notes context (rz-v252)
-- 40 заметок (было 30)
-- `createdAt`, `updatedAt`, `section` в каждой заметке
-- `needsDeepCtx` — расширенный body (400 символов) для "сводки/плана/расскажи"
+## Продуктовый фокус
 
-### Timezone fix (rz-v249)
-- `clientNow` / `clientTz` передаются с каждым запросом
-- Claude получает `ТЕКУЩАЯ ДАТА И ВРЕМЯ ПОЛЬЗОВАТЕЛЯ:` в промпт
+Мы на этапе надежности.
 
----
+Цель: пользователь верит, что агент помнит, раскладывает и не теряет. Красота важна, но база должна быть предсказуемой.
 
-## Архитектура (базовая)
+Главная линия интерфейса:
 
-**AI-папки** (`drillAiTag`) = входящий ящик (авт.)
-**Разделы** (`getUserFolders`) = база данных (пользователь)
-**`_filed_in:ИМЯ`** → заметка принадлежит разделу → статус «разобрались»
+- легкие парящие заметки;
+- soft matte glass, керамика/хрусталь без дешевой зелени;
+- видимая структура, не хаос;
+- пожилой человек должен понять действие без обучения.
 
----
+## Быстрый деплой, который нельзя сломать
 
-## Стек
+Рабочая схема:
 
-| Что | Где |
-|-----|-----|
-| UI | `index.html` + `js/app.js` |
-| PWA кэш | `sw.js` → `const CACHE = 'rz-vXXX'` |
-| AI | `supabase/functions/ai/index.ts` |
-| Здоровье | `supabase/functions/health/index.ts` |
-| Прод | https://defancientmus-gif.github.io/razberemsia/ |
-| Деплой | `./deploy.sh "описание"` |
+1. правка;
+2. `node --check js/app.js`;
+3. bump `CACHE` в `sw.js`;
+4. commit/push;
+5. через 1-2 минуты PWA видит обновление.
 
----
-
-## Следующие задачи (в порядке приоритета)
-
-1. 🔥 **AI Analysis Overlay** — панель AI поверх заметки (NEXT.md #11)
-2. 🔜 **Lists toolbar** — кнопки форматирования над клавиатурой в заметке
-3. 🔜 **Supabase Auth** — JWT expiry 30 дней, выключить Phone provider
-4. 🔜 **Серверный DAILY_BRIEFING** — агент читает reminders из БД
-5. 🔜 **Realtime sync** — Supabase Realtime WebSocket
-
----
-
-## Технический долг
-
-- `loadNotes()` reset drill → flash → cosmetic workaround работает
-- `attachSwipeDelete(d,delBg,null,116)` — лишние аргументы (notepad), мелочь
-- GIN-индекс поиска по-русски в `notes` — серверный поиск
-- `_deduplicateRecurringNotes()` — нет тестов на edge cases
+`sw.js` + `app.js` уже настроены на быстрый update. Не менять эту связку без отдельной причины.

@@ -1,4 +1,4 @@
-const CACHE = 'rz-v275';
+const CACHE = 'rz-v276';
 const ASSETS = [
   './',
   'index.html',
@@ -81,8 +81,8 @@ self.addEventListener('message', e => {
       const notifTitle = n.title || n.body?.slice(0, 80) || 'Напоминание';
       self.registration.showNotification(notifTitle, {
         body: '',
-        icon: 'pwa-feather-192.png',
-        badge: 'pwa-feather-192.png',
+        icon: 'pwa-logo-192.png',
+        badge: 'pwa-logo-192.png',
         tag: n.id || String(dt), // tag prevents duplicates
       });
     }, delay);
@@ -97,8 +97,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body:  data.body,
-      icon:  'pwa-feather-192.png',
-      badge: 'pwa-feather-192.png',
+      icon:  'pwa-logo-192.png',
+      badge: 'pwa-logo-192.png',
       tag:   data.tag || 'rz-push',
       renotify: false,
       data:  { url: './' },

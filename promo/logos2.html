@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Разберёмся — Логотипы v2 + AI кнопка</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  background:#f5ede0;
+  font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  min-height:100vh;
+}
+
+/* ── PAGE TITLE ── */
+.page-section{padding:72px 48px 48px;}
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(61,40,0,.35);margin-bottom:10px;
+}
+.section-title{
+  font-size:32px;font-weight:800;color:#3d2800;letter-spacing:-.02em;
+  margin-bottom:6px;
+}
+.section-sub{font-size:15px;color:rgba(61,40,0,.42);line-height:1.6;max-width:540px;margin-bottom:40px;}
+
+/* ── GRID ── */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:16px;
+  max-width:1100px;
+}
+
+/* ── LOGO CARD ── */
+.lcard{
+  background:#fff;
+  border:1px solid rgba(100,70,20,.07);
+  border-radius:24px;
+  padding:28px 20px 22px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  box-shadow:0 2px 16px rgba(100,70,20,.06),0 1px 3px rgba(0,0,0,.04);
+  transition:transform .2s,box-shadow .2s;cursor:pointer;
+}
+.lcard:hover{transform:translateY(-5px);box-shadow:0 16px 48px rgba(100,70,20,.13);}
+
+.icon-wrap{
+  width:88px;height:88px;border-radius:26px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;overflow:visible;
+}
+.lcard-name{font-size:13px;font-weight:700;color:#3d2800;text-align:center;}
+.lcard-desc{font-size:11px;color:rgba(61,40,0,.40);text-align:center;line-height:1.55;}
+
+/* ── ICON BACKGROUNDS ── */
+.bg1{background:linear-gradient(145deg,#5e9167,#86af8c);}
+.bg2{background:linear-gradient(145deg,#7aab82,#4a7e55);}
+.bg3{background:linear-gradient(145deg,#a8c8aa,#6a9870);}
+.bg4{background:linear-gradient(145deg,#3d5a42,#618c67);}
+.bg5{background:linear-gradient(145deg,#c8a87a,#a07840);}
+.bg6{background:linear-gradient(145deg,#8ab89a,#5e8a68);}
+.bg7{background:linear-gradient(145deg,#d4e8d6,#8aaa90);box-shadow:0 8px 24px rgba(94,145,103,.25);}
+.bg8{background:linear-gradient(145deg,#f5f0e8,#e8dece);box-shadow:0 8px 24px rgba(100,70,20,.15);}
+.bg9{background:linear-gradient(145deg,#2d4a32,#4a7254);}
+
+/* ── FEATHER ANIMATIONS ── */
+
+/* Плавное планирование (покачивание + лёгкое опускание) */
+@keyframes glide{
+  0%{transform:rotate(-12deg) translateY(0px);}
+  30%{transform:rotate(-10deg) translateY(-2px);}
+  60%{transform:rotate(-14deg) translateY(1px);}
+  100%{transform:rotate(-12deg) translateY(0px);}
+}
+/* Приземление (почти остановилось, чуть качается) */
+@keyframes land{
+  0%{transform:rotate(-4deg) translateY(0px);}
+  40%{transform:rotate(-2deg) translateY(-1px);}
+  70%{transform:rotate(-5deg) translateY(0.5px);}
+  100%{transform:rotate(-4deg) translateY(0px);}
+}
+/* Свободное падение (медленное) */
+@keyframes fall{
+  0%{transform:rotate(-20deg) translateY(-2px);}
+  50%{transform:rotate(-15deg) translateY(2px);}
+  100%{transform:rotate(-20deg) translateY(-2px);}
+}
+/* Пушистое покачивание */
+@keyframes sway{
+  0%,100%{transform:rotate(-2deg);}
+  50%{transform:rotate(2deg);}
+}
+/* Покой */
+@keyframes breathe{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-3px);}
+}
+
+.anim-glide{animation:glide 3.5s ease-in-out infinite;}
+.anim-land{animation:land 4s ease-in-out infinite;}
+.anim-fall{animation:fall 5s ease-in-out infinite;}
+.anim-sway{animation:sway 4.5s ease-in-out infinite;}
+.anim-breathe{animation:breathe 3s ease-in-out infinite;}
+
+
+/* ════════════════════════════════════
+   AI КНОПКА — космическая вода
+════════════════════════════════════ */
+.ai-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;max-width:1100px;
+}
+.ai-card{
+  background:#0c0c18;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:24px;
+  padding:32px 20px 24px;
+  display:flex;flex-direction:column;align-items:center;gap:18px;
+  box-shadow:0 8px 40px rgba(0,0,0,.35);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+}
+.ai-card:hover{transform:translateY(-5px);box-shadow:0 24px 60px rgba(0,0,0,.55);}
+.ai-card-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.8);text-align:center;}
+.ai-card-desc{font-size:11px;color:rgba(255,255,255,.30);text-align:center;line-height:1.55;}
+
+/* Базовый контейнер кнопки AI */
+.ai-btn-wrap{
+  width:80px;height:80px;
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
+
+/* ── AI Animations ── */
+@keyframes cosmic-pulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.06);}
+}
+@keyframes water-morph{
+  0%{border-radius:58% 42% 38% 62% / 52% 48% 52% 48%;}
+  25%{border-radius:42% 58% 56% 44% / 48% 52% 48% 52%;}
+  50%{border-radius:62% 38% 44% 56% / 56% 44% 60% 40%;}
+  75%{border-radius:44% 56% 62% 38% / 40% 60% 44% 56%;}
+  100%{border-radius:58% 42% 38% 62% / 52% 48% 52% 48%;}
+}
+@keyframes nebula-rotate{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+@keyframes star-twinkle{
+  0%,100%{opacity:.6;}
+  50%{opacity:1;}
+}
+@keyframes ripple-out{
+  0%{transform:scale(0.7);opacity:.7;}
+  100%{transform:scale(1.4);opacity:0;}
+}
+@keyframes glow-pulse{
+  0%,100%{box-shadow:0 0 20px rgba(99,179,237,.4),0 0 40px rgba(99,179,237,.1);}
+  50%{box-shadow:0 0 35px rgba(99,179,237,.7),0 0 60px rgba(99,179,237,.25);}
+}
+@keyframes liquid-flow{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* ────────────────────────────────
+   Разделитель
+──────────────────────────────── */
+.divider{
+  height:1px;background:rgba(100,70,20,.10);
+  margin:0 0 48px;
+}
+
+</style>
+</head>
+<body>
+
+
+<!-- ════════════════════════════════════════════
+     РАЗДЕЛ 1 — ПЕРО: ПЛАНИРОВАНИЕ И ПРИЗЕМЛЕНИЕ
+════════════════════════════════════════════ -->
+<div class="page-section">
+  <div class="section-label">Логотип · Перо</div>
+  <div class="section-title">Планирует и мягко приземляется</div>
+  <div class="section-sub">Каждый вариант — своя интерпретация момента: воздух, движение, касание земли. Кликни — можно сравнивать.</div>
+
+  <div class="grid">
+
+    <!-- 1. Реалистичное перо в планировании -->
+    <div class="lcard">
+      <div class="icon-wrap bg1">
+        <svg class="anim-glide" viewBox="0 0 48 80" width="46" height="76" fill="none">
+          <!-- Левая половина пера -->
+          <path d="M24 10
+            C20 14 13 24 11 38
+            C10 48 11 58 13 66
+            L24 70 Z"
+            fill="rgba(255,255,255,0.88)"/>
+          <!-- Правая половина -->
+          <path d="M24 10
+            C28 14 35 24 37 38
+            C38 48 37 58 35 66
+            L24 70 Z"
+            fill="rgba(255,255,255,0.65)"/>
+          <!-- Центральный стержень -->
+          <path d="M24 10 C23.5 30 23.5 52 24 70"
+            stroke="rgba(255,255,255,0.9)" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- Бородки левые -->
+          <path d="M23.5 22 C19 25 14 27 11 30" stroke="rgba(255,255,255,0.30)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M23.5 30 C18 33 13 35 10 38" stroke="rgba(255,255,255,0.28)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M23.5 38 C18 41 13 43 10 46" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M23.5 46 C19 49 15 51 12 53" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M23.5 54 C20 57 17 58 15 60" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" stroke-linecap="round"/>
+          <!-- Бородки правые -->
+          <path d="M24.5 22 C29 25 34 27 37 30" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M24.5 30 C30 33 35 35 38 38" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M24.5 38 C30 41 35 43 38 46" stroke="rgba(255,255,255,0.20)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M24.5 46 C29 49 33 51 35 53" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" stroke-linecap="round"/>
+          <path d="M24.5 54 C28 57 31 58 33 60" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" stroke-linecap="round"/>
+          <!-- Очин (стержень основы) -->
+          <path d="M24 70 C23.5 73 23.5 77 24 80" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="lcard-name">Реалистичное</div>
+      <div class="lcard-desc">Живое перо в планировании. Анатомично, нежно.</div>
+    </div>
+
+    <!-- 2. Момент приземления -->
+    <div class="lcard">
+      <div class="icon-wrap bg2">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+          <svg class="anim-land" viewBox="0 0 56 72" width="54" height="68" fill="none" style="position:relative;z-index:2;">
+            <!-- Перо — почти горизонтальное -->
+            <path d="M28 16 C22 20 12 30 10 44 C9 52 10 62 13 66 L28 68 Z"
+              fill="rgba(255,255,255,0.90)"/>
+            <path d="M28 16 C34 20 44 30 46 44 C47 52 46 62 43 66 L28 68 Z"
+              fill="rgba(255,255,255,0.65)"/>
+            <path d="M28 16 C27.5 36 27.5 54 28 68"
+              stroke="rgba(255,255,255,0.9)" stroke-width="1.2" stroke-linecap="round"/>
+            <!-- Бородки -->
+            <path d="M27.5 28 C22 31 16 33 12 36" stroke="rgba(255,255,255,0.28)" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M27.5 38 C21 41 15 43 11 46" stroke="rgba(255,255,255,0.24)" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M27.5 48 C22 51 17 53 14 55" stroke="rgba(255,255,255,0.20)" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M28.5 28 C34 31 40 33 44 36" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M28.5 38 C35 41 41 43 45 46" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" stroke-linecap="round"/>
+            <path d="M28.5 48 C34 51 39 53 42 55" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" stroke-linecap="round"/>
+            <!-- Очин -->
+            <path d="M28 68 C27.5 70 27.5 72 28 74" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <!-- Тень на земле -->
+          <div style="
+            position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+            width:44px;height:5px;border-radius:50%;
+            background:rgba(0,0,0,0.18);filter:blur(3px);
+          "></div>
+          <!-- Линия земли -->
+          <div style="
+            position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+            width:54px;height:1px;
+            background:rgba(255,255,255,0.18);
+          "></div>
+        </div>
+      </div>
+      <div class="lcard-name">Приземление</div>
+      <div class="lcard-desc">Момент мягкого касания. Тень подчёркивает глубину.</div>
+    </div>
+
+    <!-- 3. Перо с траекторией полёта -->
+    <div class="lcard">
+      <div class="icon-wrap bg3" style="overflow:visible;">
+        <svg viewBox="0 0 90 80" width="90" height="80" fill="none">
+          <!-- Дуга траектории (пунктир) -->
+          <path d="M12 18 C18 10 34 8 44 22 C52 34 52 54 40 68"
+            stroke="rgba(255,255,255,0.30)" stroke-width="1.2" stroke-dasharray="3 4" stroke-linecap="round"/>
+          <!-- Точки на траектории -->
+          <circle cx="22" cy="12" r="1.5" fill="rgba(255,255,255,0.28)"/>
+          <circle cx="36" cy="10" r="1.5" fill="rgba(255,255,255,0.22)"/>
+          <circle cx="48" cy="18" r="1.5" fill="rgba(255,255,255,0.18)"/>
+          <!-- Само перо (в конце траектории) -->
+          <g transform="translate(30,38) rotate(-20)">
+            <path d="M5 -16 C2 -10 -4 0 -5 10 C-6 16 -5 24 -3 28 L5 30 Z"
+              fill="rgba(255,255,255,0.92)"/>
+            <path d="M5 -16 C8 -10 14 0 15 10 C16 16 15 24 13 28 L5 30 Z"
+              fill="rgba(255,255,255,0.65)"/>
+            <path d="M5 -16 C4.8 4 4.8 18 5 30" stroke="rgba(255,255,255,0.9)" stroke-width="1.1" stroke-linecap="round"/>
+            <path d="M5 30 L5 35" stroke="rgba(255,255,255,0.5)" stroke-width="1.3" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+      <div class="lcard-name">Траектория</div>
+      <div class="lcard-desc">Путь планирования виден. Рождается история полёта.</div>
+    </div>
+
+    <!-- 4. Минималистичное — один штрих -->
+    <div class="lcard">
+      <div class="icon-wrap bg4">
+        <svg class="anim-fall" viewBox="0 0 48 72" width="42" height="66" fill="none">
+          <!-- Одна плавная линия — стержень пера -->
+          <path d="M32 8 C26 20 20 36 16 52 C14 60 14 66 16 70"
+            stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>
+          <!-- Левое крыло — одна кривая -->
+          <path d="M32 8 C22 12 12 24 10 40 C9 50 10 60 14 66"
+            stroke="rgba(255,255,255,0.55)" stroke-width="1.6" stroke-linecap="round"/>
+          <!-- Правое крыло -->
+          <path d="M32 8 C36 14 38 26 36 42 C34 54 28 64 22 70"
+            stroke="rgba(255,255,255,0.30)" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="lcard-name">Росчерк</div>
+      <div class="lcard-desc">Три линии — намёк на перо. Минимум, максимум характера.</div>
+    </div>
+
+    <!-- 5. Пушистое мягкое перо -->
+    <div class="lcard">
+      <div class="icon-wrap bg5">
+        <svg class="anim-sway" viewBox="0 0 52 80" width="48" height="74" fill="none">
+          <!-- Пышная форма — левая -->
+          <path d="M26 8 C18 14 8 26 7 42 C6 54 9 64 13 70 C16 74 20 76 26 76"
+            fill="rgba(255,255,255,0.85)"/>
+          <!-- Пышная форма — правая -->
+          <path d="M26 8 C34 14 44 26 45 42 C46 54 43 64 39 70 C36 74 32 76 26 76"
+            fill="rgba(255,255,255,0.60)"/>
+          <!-- Пушистые края — левые -->
+          <path d="M7 42 C5 38 5 34 7 30" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M7 50 C4 46 4 42 6 38" stroke="rgba(255,255,255,0.30)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M10 58 C6 53 6 48 9 44" stroke="rgba(255,255,255,0.22)" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- Стержень -->
+          <path d="M26 8 C25.5 30 25.5 54 26 76" stroke="rgba(255,255,255,0.85)" stroke-width="1.2" stroke-linecap="round"/>
+          <!-- Очин -->
+          <path d="M26 76 C25.5 79 26 82 26.5 84" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Бородки-пушинки -->
+          <path d="M25.5 18 C20 20 15 21 11 23" stroke="rgba(255,255,255,0.30)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M25.5 26 C19 28 13 29 9 31" stroke="rgba(255,255,255,0.26)" stroke-width="1.1" stroke-linecap="round"/>
+          <path d="M25.5 34 C18 36 12 37 8 39" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-linecap="round"/>
+          <path d="M26.5 18 C32 20 37 21 41 23" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M26.5 26 C33 28 39 29 43 31" stroke="rgba(255,255,255,0.20)" stroke-width="1.1" stroke-linecap="round"/>
+          <path d="M26.5 34 C33 36 39 37 44 39" stroke="rgba(255,255,255,0.18)" stroke-width="1" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="lcard-name">Пушистое</div>
+      <div class="lcard-desc">Мягкое, объёмное. Как пёрышко птицы, а не писчее.</div>
+    </div>
+
+    <!-- 6. Геометрия + движение -->
+    <div class="lcard">
+      <div class="icon-wrap bg6">
+        <svg class="anim-glide" viewBox="0 0 52 72" width="46" height="66" fill="none">
+          <!-- Геометричное перо — острее, чище -->
+          <path d="M26 6 L10 62 L26 68 L42 62 Z"
+            fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linejoin="round"/>
+          <!-- Внутренняя линия (стержень) -->
+          <line x1="26" y1="6" x2="26" y2="68" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
+          <!-- Горизонтальные делители (бородки упрощённые) -->
+          <line x1="16" y1="30" x2="36" y2="30" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>
+          <line x1="13" y1="42" x2="39" y2="42" stroke="rgba(255,255,255,0.20)" stroke-width="0.8"/>
+          <line x1="11" y1="54" x2="41" y2="54" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+          <!-- Очин -->
+          <line x1="26" y1="68" x2="26" y2="76" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- Линии ветра (движение) -->
+          <path d="M6 24 C8 22 10 22 12 24" stroke="rgba(255,255,255,0.30)" stroke-width="1" stroke-linecap="round"/>
+          <path d="M4 32 C7 30 10 30 13 32" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="lcard-name">Геометрия</div>
+      <div class="lcard-desc">Чёткий ромб-силуэт. Строгость + элегантность.</div>
+    </div>
+
+    <!-- 7. Перо на воде (приземление на поверхность) -->
+    <div class="lcard">
+      <div class="icon-wrap bg7" style="overflow:visible;">
+        <svg class="anim-breathe" viewBox="0 0 64 80" width="62" height="76" fill="none">
+          <!-- Рябь на воде (концентрические дуги) -->
+          <ellipse cx="32" cy="66" rx="24" ry="5" stroke="rgba(94,145,103,0.45)" stroke-width="1.2" fill="none"/>
+          <ellipse cx="32" cy="66" rx="16" ry="3.5" stroke="rgba(94,145,103,0.35)" stroke-width="1" fill="none"/>
+          <ellipse cx="32" cy="66" rx="9" ry="2" stroke="rgba(94,145,103,0.60)" stroke-width="1" fill="none"/>
+          <!-- Перо над рябью -->
+          <path d="M32 10 C27 15 18 28 16 44 C15 54 16 62 18 66 L32 68 Z"
+            fill="rgba(94,145,103,0.90)"/>
+          <path d="M32 10 C37 15 46 28 48 44 C49 54 48 62 46 66 L32 68 Z"
+            fill="rgba(94,145,103,0.65)"/>
+          <path d="M32 10 C31.5 32 31.5 52 32 68" stroke="rgba(61,40,0,0.4)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M31 22 C25 26 19 28 15 31" stroke="rgba(61,40,0,0.15)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M31 32 C24 36 18 38 14 41" stroke="rgba(61,40,0,0.13)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M31 42 C25 46 19 48 16 51" stroke="rgba(61,40,0,0.12)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M33 22 C39 26 45 28 49 31" stroke="rgba(61,40,0,0.12)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M33 32 C40 36 46 38 50 41" stroke="rgba(61,40,0,0.10)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M32 68 C31.5 71 32 74 32 76" stroke="rgba(61,40,0,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="lcard-name">На воде</div>
+      <div class="lcard-desc">Приземляется на воду. Рябь — след прикосновения к миру.</div>
+    </div>
+
+    <!-- 8. Два пера (диалог / мысль и запись) -->
+    <div class="lcard">
+      <div class="icon-wrap bg8">
+        <svg class="anim-breathe" viewBox="0 0 60 72" width="56" height="68" fill="none">
+          <!-- Первое перо (большое, основное) -->
+          <g transform="rotate(-8,30,36)">
+            <path d="M30 8 C26 12 18 24 17 38 C16 48 17 58 19 64 L30 66 Z"
+              fill="rgba(94,145,103,0.80)"/>
+            <path d="M30 8 C34 12 42 24 43 38 C44 48 43 58 41 64 L30 66 Z"
+              fill="rgba(94,145,103,0.50)"/>
+            <path d="M30 8 C29.5 28 29.5 50 30 66" stroke="rgba(61,40,0,0.45)" stroke-width="1.1"/>
+          </g>
+          <!-- Второе перо (маленькое, справа, немного сзади) -->
+          <g transform="translate(14,14) rotate(12,15,25) scale(0.58)">
+            <path d="M15 6 C12 10 7 19 6 30 C5 38 6 46 8 50 L15 52 Z"
+              fill="rgba(160,120,60,0.55)"/>
+            <path d="M15 6 C18 10 23 19 24 30 C25 38 24 46 22 50 L15 52 Z"
+              fill="rgba(160,120,60,0.35)"/>
+            <path d="M15 6 C14.5 22 14.5 40 15 52" stroke="rgba(61,40,0,0.35)" stroke-width="1.1"/>
+          </g>
+        </svg>
+      </div>
+      <div class="lcard-name">Дуэт</div>
+      <div class="lcard-desc">Два пера — мысль + запись. Большое ведёт, малое вторит.</div>
+    </div>
+
+    <!-- 9. Только кончик пера (момент касания) -->
+    <div class="lcard">
+      <div class="icon-wrap bg9">
+        <svg class="anim-land" viewBox="0 0 56 72" width="50" height="66" fill="none">
+          <!-- Верхняя часть пера уходит за край — обрезана -->
+          <path d="M28 -4 C23 4 14 18 12 34 C11 44 12 54 14 60 L28 62 Z"
+            fill="rgba(255,255,255,0.88)" clip-path="url(#clip1)"/>
+          <path d="M28 -4 C33 4 42 18 44 34 C45 44 44 54 42 60 L28 62 Z"
+            fill="rgba(255,255,255,0.60)" clip-path="url(#clip1)"/>
+          <defs>
+            <clipPath id="clip1"><rect x="0" y="0" width="56" height="72"/></clipPath>
+          </defs>
+          <!-- Стержень -->
+          <path d="M28 0 C27.5 22 27.5 48 28 62" stroke="rgba(255,255,255,0.88)" stroke-width="1.2" stroke-linecap="round"/>
+          <!-- Очин — КРУПНЫЙ, это главный элемент -->
+          <path d="M28 62 C27 65 26 70 27 74" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+          <!-- Точка касания -->
+          <circle cx="27.5" cy="74" r="2.5" fill="rgba(255,255,255,0.85)"/>
+          <!-- Маленькая искра -->
+          <circle cx="27.5" cy="74" r="5" fill="rgba(255,255,255,0.15)"/>
+          <!-- Линии ветра (выше) — перо летит -->
+          <path d="M8 14 C11 12 14 12 16 14" stroke="rgba(255,255,255,0.28)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M6 22 C10 20 14 20 17 22" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-linecap="round"/>
+          <path d="M5 30 C9 28 13 28 16 30" stroke="rgba(255,255,255,0.18)" stroke-width="1" stroke-linecap="round"/>
+          <!-- Бородки -->
+          <path d="M27 20 C21 23 15 25 11 28" stroke="rgba(255,255,255,0.25)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M27 30 C20 33 14 35 10 38" stroke="rgba(255,255,255,0.22)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M27 40 C21 43 15 45 12 48" stroke="rgba(255,255,255,0.18)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M29 20 C35 23 41 25 45 28" stroke="rgba(255,255,255,0.20)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M29 30 C36 33 42 35 46 38" stroke="rgba(255,255,255,0.18)" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M29 40 C35 43 41 45 44 48" stroke="rgba(255,255,255,0.15)" stroke-width="0.9" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="lcard-name">Касание</div>
+      <div class="lcard-desc">Самый важный момент — кончик касается. Точка рождения слова.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider" style="margin:0 48px;"></div>
+
+
+<!-- ════════════════════════════════════════════
+     РАЗДЕЛ 2 — AI КНОПКА: ВОДА + ПРОСТРАНСТВО + ВРЕМЯ
+════════════════════════════════════════════ -->
+<div class="page-section" style="background:linear-gradient(175deg,#0a0a18,#060610);">
+  <div class="section-label" style="color:rgba(200,180,255,.30);">AI Кнопка</div>
+  <div class="section-title" style="color:#fff;">Вода · Пространство · Время</div>
+  <div class="section-sub" style="color:rgba(255,255,255,.38);">Живой сгусток — не кнопка, а портал. Всё анимировано, дышит, реагирует.</div>
+
+  <div class="ai-grid">
+
+    <!-- A1. Космическая капля -->
+    <div class="ai-card">
+      <div class="ai-btn-wrap">
+        <div style="
+          width:72px;height:72px;
+          background:radial-gradient(ellipse 60% 80% at 35% 30%, #7c3aed, #1e1b4b 55%, #0f0c29);
+          border-radius:58% 42% 38% 62% / 52% 48% 52% 48%;
+          animation:water-morph 8s ease-in-out infinite, glow-pulse 3s ease-in-out infinite;
+          box-shadow:0 0 30px rgba(124,58,237,.45),0 0 60px rgba(124,58,237,.15);
+          position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+        ">
+          <!-- Звёзды внутри -->
+          <div style="position:absolute;inset:0;">
+            <div style="position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;top:20%;left:25%;animation:star-twinkle 1.8s infinite;"></div>
+            <div style="position:absolute;width:1.5px;height:1.5px;background:#c4b5fd;border-radius:50%;top:35%;left:60%;animation:star-twinkle 2.4s .5s infinite;"></div>
+            <div style="position:absolute;width:2.5px;height:2.5px;background:#fff;border-radius:50%;top:55%;left:30%;animation:star-twinkle 1.5s .8s infinite;"></div>
+            <div style="position:absolute;width:1px;height:1px;background:#a5f3fc;border-radius:50%;top:25%;left:75%;animation:star-twinkle 3s 1.2s infinite;"></div>
+            <div style="position:absolute;width:2px;height:2px;background:#fde68a;border-radius:50%;top:65%;left:55%;animation:star-twinkle 2s 0.3s infinite;"></div>
+            <div style="position:absolute;width:1.5px;height:1.5px;background:#fff;border-radius:50%;top:75%;left:20%;animation:star-twinkle 2.8s 1.5s infinite;"></div>
+            <div style="position:absolute;width:1px;height:1px;background:#c4b5fd;border-radius:50%;top:45%;left:80%;animation:star-twinkle 2.2s 0.7s infinite;"></div>
+          </div>
+          <!-- Туманность -->
+          <div style="
+            position:absolute;width:50px;height:30px;
+            background:radial-gradient(ellipse,rgba(167,139,250,.35),transparent 70%);
+            top:15%;left:15%;transform:rotate(-30deg);
+            animation:nebula-rotate 20s linear infinite;
+          "></div>
+          <!-- Иконка ИИ -->
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" style="position:relative;z-index:2;">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke="#e9d5ff" stroke-width="1.4" fill="rgba(233,213,255,0.15)"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ai-card-name">Космическая капля</div>
+      <div class="ai-card-desc">Туманность внутри живой формы. Звёзды мерцают.</div>
+    </div>
+
+    <!-- A2. Водяное время (рябь + глубина) -->
+    <div class="ai-card">
+      <div class="ai-btn-wrap">
+        <div style="position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center;">
+          <!-- Кольца ряби (время) -->
+          <div style="position:absolute;width:72px;height:72px;border-radius:50%;border:1px solid rgba(99,179,237,0.30);animation:ripple-out 2.8s ease-out infinite;"></div>
+          <div style="position:absolute;width:72px;height:72px;border-radius:50%;border:1px solid rgba(99,179,237,0.20);animation:ripple-out 2.8s 0.9s ease-out infinite;"></div>
+          <div style="position:absolute;width:72px;height:72px;border-radius:50%;border:1px solid rgba(99,179,237,0.15);animation:ripple-out 2.8s 1.8s ease-out infinite;"></div>
+          <!-- Центр -->
+          <div style="
+            width:56px;height:56px;border-radius:50%;
+            background:radial-gradient(ellipse at 35% 30%, #0ea5e9, #0c4a6e 60%, #030d1a);
+            box-shadow:0 0 24px rgba(14,165,233,.5),inset 0 1px 0 rgba(255,255,255,0.2);
+            display:flex;align-items:center;justify-content:center;
+            position:relative;overflow:hidden;
+            animation:cosmic-pulse 3s ease-in-out infinite;
+          ">
+            <!-- Водяная поверхность (горизонтальные волны) -->
+            <div style="position:absolute;bottom:0;left:0;right:0;height:24px;overflow:hidden;">
+              <svg viewBox="0 0 56 24" width="56" height="24" style="position:absolute;bottom:0;">
+                <path d="M0 12 C8 6 16 18 24 12 C32 6 40 18 56 12 L56 24 L0 24 Z" fill="rgba(99,179,237,0.35)"/>
+                <path d="M0 16 C10 10 18 22 28 16 C38 10 46 22 56 16 L56 24 L0 24 Z" fill="rgba(99,179,237,0.25)"/>
+              </svg>
+            </div>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" style="position:relative;z-index:2;">
+              <circle cx="12" cy="12" r="3" fill="rgba(186,230,253,0.9)"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="rgba(186,230,253,0.7)" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="rgba(186,230,253,0.4)" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="ai-card-name">Водяное время</div>
+      <div class="ai-card-desc">Рябь — след прошедшего времени. Глубина = знание.</div>
+    </div>
+
+    <!-- A3. Живая плазма -->
+    <div class="ai-card">
+      <div class="ai-btn-wrap">
+        <div style="
+          width:72px;height:72px;
+          background:linear-gradient(-45deg, #1e1b4b, #312e81, #4c1d95, #6d28d9, #7c3aed, #2563eb, #1d4ed8);
+          background-size:400% 400%;
+          animation:liquid-flow 5s ease infinite, water-morph 7s ease-in-out infinite;
+          border-radius:62% 38% 50% 50% / 45% 55% 45% 55%;
+          box-shadow:0 0 35px rgba(109,40,217,.55),0 0 70px rgba(109,40,217,.20);
+          display:flex;align-items:center;justify-content:center;
+          position:relative;overflow:hidden;
+        ">
+          <!-- Блик -->
+          <div style="
+            position:absolute;top:8px;left:12px;
+            width:22px;height:14px;border-radius:50%;
+            background:rgba(255,255,255,0.18);
+            filter:blur(4px);transform:rotate(-20deg);
+          "></div>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" style="position:relative;z-index:2;">
+            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ai-card-name">Живая плазма</div>
+      <div class="ai-card-desc">Переливается как северное сияние. Живёт, дышит.</div>
+    </div>
+
+    <!-- A4. Чёрная дыра мысли -->
+    <div class="ai-card">
+      <div class="ai-btn-wrap">
+        <div style="position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center;">
+          <!-- Орбитальное кольцо -->
+          <div style="
+            position:absolute;width:70px;height:22px;border-radius:50%;
+            border:1.5px solid rgba(167,139,250,0.45);
+            transform:rotateX(72deg);
+            animation:nebula-rotate 6s linear infinite;
+          "></div>
+          <!-- Ядро -->
+          <div style="
+            width:50px;height:50px;border-radius:50%;
+            background:radial-gradient(ellipse at 40% 35%,rgba(167,139,250,.55) 0%,rgba(30,27,75,.95) 55%,#000 100%);
+            box-shadow:0 0 30px rgba(167,139,250,.40),inset 0 0 20px rgba(0,0,0,.8);
+            display:flex;align-items:center;justify-content:center;
+            animation:cosmic-pulse 4s ease-in-out infinite;
+          ">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="rgba(167,139,250,0.6)" stroke-width="1.2"/>
+              <path d="M2 12h4M18 12h4M12 2v4M12 18v4" stroke="rgba(167,139,250,0.4)" stroke-width="1" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="2" fill="rgba(233,213,255,0.9)"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="ai-card-name">Сингулярность</div>
+      <div class="ai-card-desc">Чёрная дыра мысли. Орбитальное кольцо — время вокруг идеи.</div>
+    </div>
+
+    <!-- A5. Жидкий кристалл (вода + свет) -->
+    <div class="ai-card">
+      <div class="ai-btn-wrap">
+        <div style="
+          width:72px;height:72px;
+          background:radial-gradient(ellipse at 30% 25%, rgba(186,230,253,0.9), rgba(14,165,233,0.6) 40%, rgba(3,105,161,0.9) 70%, rgba(0,30,60,1));
+          border-radius:50% 50% 44% 56% / 50% 44% 56% 50%;
+          animation:water-morph 9s ease-in-out infinite;
+          box-shadow:0 0 28px rgba(14,165,233,.50),0 0 56px rgba(14,165,233,.18),inset 0 1px 0 rgba(255,255,255,0.35);
+          display:flex;align-items:center;justify-content:center;
+          position:relative;overflow:hidden;
+        ">
+          <!-- Преломление света (внутренний блик) -->
+          <div style="
+            position:absolute;top:10px;left:14px;
+            width:28px;height:18px;border-radius:50%;
+            background:rgba(255,255,255,0.22);
+            filter:blur(5px);transform:rotate(-15deg);
+          "></div>
+          <div style="
+            position:absolute;bottom:14px;right:10px;
+            width:16px;height:10px;border-radius:50%;
+            background:rgba(255,255,255,0.10);
+            filter:blur(3px);
+          "></div>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" style="position:relative;z-index:2;">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="rgba(255,255,255,0.88)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ai-card-name">Жидкий кристалл</div>
+      <div class="ai-card-desc">Вода + свет = знание. Преломление внутри живой формы.</div>
+    </div>
+
+    <!-- A6. Квантовый сгусток (пузыри + пространство) -->
+    <div class="ai-card">
+      <div class="ai-btn-wrap">
+        <div style="position:relative;width:80px;height:72px;display:flex;align-items:center;justify-content:center;">
+          <!-- Маленькие пузырьки-спутники -->
+          <div style="position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(167,139,250,.8),rgba(67,56,202,.9));top:4px;right:6px;animation:cosmic-pulse 2.5s .5s ease-in-out infinite;box-shadow:0 0 10px rgba(139,92,246,.5);"></div>
+          <div style="position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(96,165,250,.8),rgba(30,64,175,.9));bottom:8px;left:4px;animation:cosmic-pulse 3s 1s ease-in-out infinite;box-shadow:0 0 8px rgba(96,165,250,.45);"></div>
+          <div style="position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,.8),rgba(5,150,105,.9));top:10px;left:8px;animation:cosmic-pulse 2s .2s ease-in-out infinite;box-shadow:0 0 6px rgba(52,211,153,.4);"></div>
+          <!-- Главный сгусток -->
+          <div style="
+            width:52px;height:52px;border-radius:50%;
+            background:radial-gradient(ellipse at 35% 30%, rgba(196,181,253,.3), rgba(91,33,182,1) 50%, rgba(30,10,60,1));
+            box-shadow:0 0 28px rgba(139,92,246,.55),0 0 56px rgba(139,92,246,.20);
+            display:flex;align-items:center;justify-content:center;
+            animation:cosmic-pulse 3.5s ease-in-out infinite;
+          ">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+              <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                stroke="rgba(233,213,255,0.90)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="ai-card-name">Квантовый сгусток</div>
+      <div class="ai-card-desc">Несколько состояний одновременно. Пузырьки — мысли вокруг идеи.</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Разберёмся · liquid glass агент</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#14231f;
+  --muted:rgba(20,35,31,.56);
+  --glass:rgba(255,255,255,.58);
+  --line:rgba(28,48,41,.12);
+  --green:#3f765a;
+  --amber:#c98c2f;
+  --red:#b65b50;
+  --blue:#4f82a8;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+html,body{margin:0;min-height:100%;background:#eee8dc;color:var(--ink);font-family:var(--font);overflow:hidden}
+button{font-family:var(--font)}
+.phone{
+  width:min(100vw,430px);
+  height:100svh;
+  min-height:720px;
+  margin:0 auto;
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  background:#edf1ea;
+  box-shadow:0 0 0 1px rgba(20,35,31,.08),0 30px 90px rgba(25,31,29,.18);
+}
+.scene{
+  position:absolute;
+  inset:0;
+  z-index:-4;
+  background:
+    linear-gradient(180deg,#d9e9f1 0%,#e8f0eb 45%,#eef0e7 70%,#e0e8dc 100%);
+}
+.scene::before{
+  content:"";
+  position:absolute;
+  inset:-20% -28% 15%;
+  background:
+    radial-gradient(circle at 28% 12%,rgba(255,255,255,.92),transparent 20%),
+    radial-gradient(circle at 74% 20%,rgba(255,238,196,.40),transparent 23%),
+    radial-gradient(ellipse at 50% 70%,rgba(180,213,190,.36),transparent 42%);
+  opacity:.62;
+}
+.scene::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:56%;
+  background:
+    radial-gradient(ellipse at 18% 26%,rgba(127,185,116,.42) 0 23%,transparent 24%),
+    radial-gradient(ellipse at 83% 33%,rgba(111,174,118,.28) 0 25%,transparent 26%),
+    linear-gradient(180deg,transparent,rgba(104,161,95,.34));
+  clip-path:polygon(0 34%,16% 24%,31% 35%,49% 21%,66% 32%,86% 18%,100% 28%,100% 100%,0 100%);
+}
+.memory-wake{
+  position:absolute;
+  left:-25%;
+  right:-25%;
+  bottom:-24%;
+  height:62%;
+  z-index:-3;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(80px) scale(.9);
+  filter:blur(2px);
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.56),transparent 58%),
+    radial-gradient(ellipse at 42% 78%,rgba(63,118,90,.30),transparent 44%),
+    radial-gradient(ellipse at 66% 78%,rgba(79,130,168,.16),transparent 45%);
+  transition:opacity .65s ease,transform .9s cubic-bezier(.22,1,.36,1);
+}
+.memory-lines{
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .5s ease;
+}
+.memory-lines svg{width:100%;height:100%}
+.memory-lines path{
+  fill:none;
+  stroke:rgba(255,255,255,.36);
+  stroke-width:1.1;
+  stroke-dasharray:1 14;
+  stroke-dashoffset:170;
+}
+.memory-lines path:nth-child(2){stroke:rgba(75,126,99,.20)}
+.memory-lines path:nth-child(3){stroke:rgba(79,130,168,.18)}
+.ui{
+  height:100%;
+  padding:env(safe-area-inset-top) 14px max(16px,env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  z-index:2;
+}
+.status{
+  height:36px;
+  padding:0 7px 6px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  color:rgba(20,35,31,.46);
+  font-size:12px;
+  font-weight:700;
+}
+.top{
+  padding:8px 4px 14px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+}
+.brand{
+  font-family:var(--serif);
+  font-size:30px;
+  line-height:1;
+  font-weight:420;
+  color:#17362c;
+}
+.date{margin-top:5px;color:rgba(20,35,31,.42);font-size:12px}
+.state-pill{
+  display:none!important;
+  height:34px;
+  min-width:118px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid rgba(255,255,255,.68);
+  background:rgba(255,255,255,.32);
+  color:rgba(20,35,31,.58);
+  font-size:11px;
+  font-weight:760;
+  backdrop-filter:blur(14px);
+  box-shadow:0 8px 18px rgba(24,34,30,.06);
+}
+.state-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:rgba(63,118,90,.46);
+}
+.stage{
+  position:relative;
+  flex:1;
+  min-height:0;
+  padding-top:130px;
+}
+.breath-title{
+  display:none!important;
+  position:absolute;
+  left:18px;
+  right:18px;
+  top:18px;
+  min-height:88px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-family:var(--serif);
+  font-size:28px;
+  line-height:1.12;
+  color:rgba(23,54,44,0);
+  transform:translateY(14px);
+  pointer-events:none;
+  transition:color .45s ease,transform .7s cubic-bezier(.22,1,.36,1);
+}
+.notes{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.note{
+  min-height:76px;
+  position:relative;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:10px;
+  align-items:start;
+  padding:12px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.72);
+  background:rgba(255,255,255,.54);
+  box-shadow:0 10px 24px rgba(26,36,31,.06);
+  backdrop-filter:blur(16px);
+  transition:transform .75s cubic-bezier(.22,1,.36,1),background .45s ease,border-color .45s ease,box-shadow .45s ease,opacity .45s ease;
+}
+.note::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  opacity:0;
+  border:1px solid rgba(255,255,255,.48);
+  box-shadow:0 0 34px rgba(255,255,255,.16);
+  pointer-events:none;
+  transition:opacity .45s ease;
+}
+.sig{width:8px;height:8px;border-radius:50%;margin-top:4px;background:rgba(20,35,31,.18)}
+.sig.red{background:var(--red)}
+.sig.amber{background:var(--amber)}
+.sig.green{background:var(--green)}
+.nt{font-size:14px;font-weight:760;line-height:1.25;color:#16241f}
+.np{font-size:12px;line-height:1.35;color:rgba(20,35,31,.56);margin-top:3px}
+.time{font-size:10px;color:rgba(20,35,31,.34);white-space:nowrap}
+.tags{
+  grid-column:2/4;
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  max-height:0;
+  margin-top:0;
+  overflow:hidden;
+  opacity:0;
+  transition:max-height .55s ease,opacity .45s ease,margin .45s ease;
+}
+.tag{
+  min-height:21px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 8px;
+  border-radius:8px;
+  border:1px solid rgba(20,35,31,.08);
+  background:rgba(255,255,255,.62);
+  color:rgba(20,35,31,.64);
+  font-size:10px;
+  font-weight:760;
+}
+.bottom{
+  position:relative;
+  z-index:8;
+  padding-top:8px;
+}
+.new-note{
+  width:100%;
+  height:54px;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:18px;
+  background:rgba(255,255,255,.46);
+  color:rgba(20,35,31,.52);
+  box-shadow:0 10px 24px rgba(26,36,31,.07);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  font-size:15px;
+  font-weight:690;
+  backdrop-filter:blur(16px);
+}
+.bar{
+  margin-top:4px;
+  display:grid;
+  grid-template-columns:1fr 168px 1fr;
+  gap:4px;
+  align-items:end;
+}
+.tool{
+  height:58px;
+  border:1px solid rgba(255,255,255,.68);
+  border-radius:16px;
+  background:rgba(255,255,255,.40);
+  color:rgba(20,35,31,.54);
+  box-shadow:0 10px 22px rgba(26,36,31,.06);
+  display:grid;
+  place-items:center;
+  gap:2px;
+  font-size:10px;
+  font-weight:760;
+  backdrop-filter:blur(16px);
+}
+.tool svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.liquid-agent{
+  position:relative;
+  width:168px;
+  height:168px;
+  margin-bottom:-34px;
+  border:0;
+  padding:0;
+  border-radius:50%;
+  background:transparent;
+  cursor:pointer;
+  color:#17362c;
+  -webkit-tap-highlight-color:transparent;
+  filter:drop-shadow(0 26px 40px rgba(31,48,41,.13));
+}
+.liquid-agent:active{transform:scale(.985)}
+.liquid-agent canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.toast{
+  display:none!important;
+  position:absolute;
+  left:27px;
+  right:27px;
+  bottom:128px;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:9px 18px;
+  border:1px solid rgba(255,255,255,.70);
+  border-radius:18px;
+  background:rgba(255,255,255,.50);
+  color:rgba(20,35,31,.68);
+  font-size:13px;
+  font-weight:730;
+  box-shadow:0 16px 36px rgba(26,36,31,.10);
+  backdrop-filter:blur(18px);
+  opacity:0;
+  transform:translateY(18px);
+  transition:opacity .45s ease,transform .65s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+}
+.app-awake .memory-wake{opacity:1;transform:translateY(0) scale(1)}
+.app-awake .memory-lines{opacity:1}
+.app-awake .memory-lines path{animation:dash 3.6s linear infinite}
+.app-awake .note{background:rgba(255,255,255,.64);border-color:rgba(255,255,255,.84)}
+.app-awake .note::after{opacity:1}
+.app-awake .tags{max-height:0;opacity:0;margin-top:0}
+.app-awake .toast{opacity:1;transform:translateY(0)}
+.app-awake .state-dot{animation:dot 1.2s ease-in-out infinite}
+.phone[data-state="listen"] .breath-title{color:rgba(23,54,44,.32);transform:translateY(0)}
+.phone[data-state="listen"] .note{transform:translateY(-2px)}
+.phone[data-state="listen"] .toast::before{content:"Говорите обычными словами. Я держу контекст."}
+.phone[data-state="think"] .breath-title{color:rgba(47,99,134,.34);transform:translateY(0)}
+.phone[data-state="think"] .note:nth-child(1){transform:translate(-5px,-5px)}
+.phone[data-state="think"] .note:nth-child(2){transform:translate(8px,-8px)}
+.phone[data-state="think"] .note:nth-child(3){transform:translate(-3px,-11px)}
+.phone[data-state="think"] .note:nth-child(4){transform:translate(8px,-13px)}
+.phone[data-state="think"] .toast::before{content:"Разбираюсь: срок, риск, человек, действие."}
+.phone[data-state="done"] .breath-title{color:rgba(47,100,77,.34);transform:translateY(0)}
+.phone[data-state="done"] .note{transform:translateY(-6px);box-shadow:0 13px 30px rgba(47,100,77,.08)}
+.phone[data-state="done"] .toast::before{content:"Запомнил. Важное не потеряется."}
+@keyframes dash{to{stroke-dashoffset:0}}
+@keyframes dot{0%,100%{opacity:.38;transform:scale(.8)}50%{opacity:1;transform:scale(1.25)}}
+@media (max-width:460px){
+  .phone{width:100vw;min-height:100svh;box-shadow:none}
+  .bar{grid-template-columns:1fr 160px 1fr}
+  .liquid-agent{width:160px;height:160px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="phone" data-state="idle">
+  <div class="scene"></div>
+  <div class="memory-wake" aria-hidden="true"></div>
+  <div class="memory-lines" aria-hidden="true">
+    <svg viewBox="0 0 430 760" preserveAspectRatio="none">
+      <path d="M215 655 C168 578 84 526 86 432 C88 340 165 318 209 245 C247 182 248 116 326 70"/>
+      <path d="M215 655 C248 560 338 532 326 422 C319 356 264 326 221 259 C185 203 176 126 93 69"/>
+      <path d="M215 655 C202 577 215 504 166 448 C129 406 78 389 62 328"/>
+    </svg>
+  </div>
+
+  <div class="ui">
+    <div class="status"><span>10:42</span><span>●●●</span></div>
+    <header class="top">
+      <div>
+        <div class="brand">Разберёмся</div>
+        <div class="date">сб, 23 мая · личная память</div>
+      </div>
+      <div class="state-pill"><span class="state-dot"></span><span data-state-text>Покой</span></div>
+    </header>
+
+    <section class="stage">
+      <div class="breath-title" data-breath-title>Память рядом</div>
+      <div class="notes">
+        <article class="note">
+          <span class="sig red"></span>
+          <div><div class="nt">Звонили из банка</div><div class="np">Просили назвать код из смс</div></div>
+          <span class="time">вчера</span>
+          <div class="tags"><span class="tag">риск</span><span class="tag">мошенники</span><span class="tag">не перезванивать</span></div>
+        </article>
+        <article class="note">
+          <span class="sig amber"></span>
+          <div><div class="nt">Квитанция апрель</div><div class="np">Оплатить до 25-го · 2 840 руб.</div></div>
+          <span class="time">срок</span>
+          <div class="tags"><span class="tag">напомнить</span><span class="tag">25 мая</span><span class="tag">платёж</span></div>
+        </article>
+        <article class="note">
+          <span class="sig green"></span>
+          <div><div class="nt">Список лекарств</div><div class="np">Эналаприл, Аспирин, Магний Б6</div></div>
+          <span class="time">3 дня</span>
+          <div class="tags"><span class="tag">здоровье</span><span class="tag">важное</span></div>
+        </article>
+        <article class="note">
+          <span class="sig"></span>
+          <div><div class="nt">Позвонить тёте</div><div class="np">Уточнить документы для поездки</div></div>
+          <span class="time">сегодня</span>
+          <div class="tags"><span class="tag">человек</span><span class="tag">дело</span></div>
+        </article>
+      </div>
+    </section>
+
+    <div class="bottom">
+      <button class="new-note" type="button">
+        <span data-icon="pen"></span>
+        <span>Новая заметка</span>
+      </button>
+      <div class="bar">
+        <button class="tool" type="button"><span data-icon="mic"></span><span>Голос</span></button>
+        <button class="liquid-agent" type="button" data-agent aria-label="Разберёмся">
+          <canvas data-liquid-canvas></canvas>
+        </button>
+        <button class="tool" type="button"><span data-icon="bell"></span><span>Напомнить</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" aria-live="polite"></div>
+</main>
+
+<script>
+const icons = {
+  pen: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 12.2a6 6 0 0 0-8.4-8.4L5 10.6V19h8.4Z"/><path d="M16 8 2 22"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/><path d="M8 22h8"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  stack: '<svg viewBox="0 0 24 24"><path d="M12 4 4 8l8 4 8-4-8-4Z"/><path d="m4 13 8 4 8-4"/><path d="m4 18 8 4 8-4"/></svg>',
+  listen: '<svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/></svg>',
+  think: '<svg viewBox="0 0 24 24"><path d="M10.5 3.8 8.9 8.7 4 10.5l4.9 1.8 1.6 4.9 1.8-4.9 4.9-1.8-4.9-1.8-1.8-4.9Z"/><path d="M18.5 14.8 17.8 17l-2.3.8 2.3.8.7 2.2.8-2.2 2.2-.8-2.2-.8-.8-2.2Z"/></svg>',
+  done: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.1L19 7"/></svg>'
+};
+
+const states = [
+  { key: 'idle', chip: 'Покой', label: 'Разберёмся', sub: 'память рядом', icon: 'stack', title: 'Память рядом', energy: .35 },
+  { key: 'listen', chip: 'Слушаю', label: 'Слушаю…', sub: 'запоминаю', icon: 'listen', title: 'Говорите обычными словами', energy: .70 },
+  { key: 'think', chip: 'Разбираюсь', label: 'Разбираюсь…', sub: 'раскладываю', icon: 'think', title: 'Раскладываю по полкам', energy: 1 },
+  { key: 'done', chip: 'Запомнил', label: 'Запомнил', sub: 'не потеряется', icon: 'done', title: 'Важное под контролем', energy: .58 }
+];
+
+document.querySelectorAll('[data-icon]').forEach(node => {
+  node.innerHTML = icons[node.dataset.icon] || '';
+});
+
+const phone = document.querySelector('.phone');
+const agent = document.querySelector('[data-agent]');
+const stateText = document.querySelector('[data-state-text]');
+const breathTitle = document.querySelector('[data-breath-title]');
+const canvas = document.querySelector('[data-liquid-canvas]');
+const ctx = canvas.getContext('2d');
+
+let stateIndex = 0;
+let targetEnergy = states[0].energy;
+let currentEnergy = states[0].energy;
+let currentState = states[0].key;
+let w = 0;
+let h = 0;
+let dpr = 1;
+const PHI = (1 + Math.sqrt(5)) / 2;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  w = rect.width;
+  h = rect.height;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function setState(index) {
+  stateIndex = index % states.length;
+  const state = states[stateIndex];
+  currentState = state.key;
+  targetEnergy = state.energy;
+  phone.dataset.state = state.key;
+  phone.classList.toggle('app-awake', state.key !== 'idle');
+  if (stateText) stateText.textContent = state.chip;
+  if (breathTitle) breathTitle.textContent = state.title;
+}
+
+function arcRibbon(cx, cy, radius, width, start, length, time, alpha, tint) {
+  const steps = 72;
+  const outer = [];
+  const inner = [];
+  for (let i = 0; i <= steps; i++) {
+    const p = i / steps;
+    const a = start + length * p;
+    const taper = Math.sin(p * Math.PI);
+    const wave = taper * (2.6 + currentEnergy * 2.4);
+    const laminar = Math.sin(p * Math.PI * 2 + time * .48) * (.75 + currentEnergy * .55);
+    const structure = Math.sin((a - start) * PHI + time * .22) * .55;
+    outer.push([
+      cx + Math.cos(a) * (radius + width * .5 + wave + laminar + structure),
+      cy + Math.sin(a) * (radius + width * .5 + wave + laminar + structure)
+    ]);
+    inner.push([
+      cx + Math.cos(a) * (radius - width * .5 - wave * .28 + laminar * .24),
+      cy + Math.sin(a) * (radius - width * .5 - wave * .28 + laminar * .24)
+    ]);
+  }
+
+  ctx.beginPath();
+  outer.forEach((point, i) => i ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+  inner.reverse().forEach(point => ctx.lineTo(point[0], point[1]));
+  ctx.closePath();
+  const grad = ctx.createRadialGradient(cx - 22, cy - 24, 8, cx, cy, radius + width + 14);
+  grad.addColorStop(0, 'rgba(255,255,255,' + (alpha + .16) + ')');
+  grad.addColorStop(.44, 'rgba(255,255,255,' + alpha + ')');
+  grad.addColorStop(.72, tint);
+  grad.addColorStop(1, 'rgba(255,255,255,.03)');
+  ctx.fillStyle = grad;
+  ctx.shadowColor = 'rgba(255,255,255,.42)';
+  ctx.shadowBlur = 14;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,.30)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function drawNeutrino(cx, cy, radius, t, i) {
+  const lanes = [radius / PHI, radius - 9, radius + 6, radius + 21, radius * PHI];
+  const lane = lanes[i % lanes.length] + Math.sin(t * .32 + i) * 1.1;
+  const a = i * GOLDEN_ANGLE + t * (.055 + (i % 5) * .012) * (currentState === 'think' ? 1.7 : 1);
+  const x = cx + Math.cos(a) * lane;
+  const y = cy + Math.sin(a) * lane;
+  const pulse = .34 + .66 * Math.pow(Math.sin(t * 1.15 + i * PHI), 2);
+  const size = .65 + pulse * (1.05 + currentEnergy * .9);
+  const colors = [
+    'rgba(255,255,255,.68)',
+    'rgba(214,235,255,.34)',
+    'rgba(255,235,190,.30)',
+    'rgba(214,235,222,.32)'
+  ];
+  ctx.beginPath();
+  ctx.fillStyle = colors[i % colors.length];
+  ctx.shadowColor = colors[i % colors.length];
+  ctx.shadowBlur = 5 + currentEnergy * 6;
+  ctx.arc(x, y, size, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawGoldenStructure(cx, cy, radius, t) {
+  ctx.save();
+  ctx.globalAlpha = .18 + currentEnergy * .10;
+  ctx.strokeStyle = 'rgba(255,255,255,.28)';
+  ctx.lineWidth = .8;
+  [radius * .78, radius, radius * 1.34].forEach((r, i) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + Math.sin(t * .35 + i) * .6, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  ctx.globalAlpha = .16 + currentEnergy * .06;
+  for (let i = 0; i < 12; i++) {
+    const a = i * GOLDEN_ANGLE + t * .045;
+    const r0 = radius * .78;
+    const r1 = radius * 1.34;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
+    ctx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function clearCenterVoid(cx, cy, radius) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  const voidGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * .62);
+  voidGrad.addColorStop(0, 'rgba(0,0,0,1)');
+  voidGrad.addColorStop(.56, 'rgba(0,0,0,.96)');
+  voidGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = voidGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * .68, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function draw(now) {
+  const time = now * .001;
+  currentEnergy += (targetEnergy - currentEnergy) * .045;
+  ctx.clearRect(0, 0, w, h);
+  const cx = w / 2;
+  const cy = h / 2 - 4;
+  const radius = Math.min(w, h) * .31;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+
+  const ring = ctx.createRadialGradient(cx, cy, radius - 8, cx, cy, radius + 24);
+  ring.addColorStop(0, 'rgba(255,255,255,0)');
+  ring.addColorStop(.52, 'rgba(255,255,255,.10)');
+  ring.addColorStop(.62, 'rgba(255,255,255,.26)');
+  ring.addColorStop(.74, 'rgba(255,255,255,.08)');
+  ring.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = ring;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius + 28, 0, Math.PI * 2);
+  ctx.fill();
+  drawGoldenStructure(cx, cy, radius, time);
+
+  const speed = .24 + currentEnergy * .13;
+  arcRibbon(cx, cy, radius, 18, time * speed - GOLDEN_ANGLE, Math.PI * (1 / PHI + .22), time, .15 + currentEnergy * .06, 'rgba(205,235,255,.10)');
+  arcRibbon(cx, cy, radius + 1, 14, time * speed + GOLDEN_ANGLE, Math.PI * (1 / (PHI * PHI) + .18), time + 2.1, .11 + currentEnergy * .05, 'rgba(255,231,180,.09)');
+  arcRibbon(cx, cy, radius - 1, 12, -time * (speed * .62) + GOLDEN_ANGLE * 2, Math.PI * (1 / (PHI * PHI)), time + 4.4, .10 + currentEnergy * .04, 'rgba(207,232,215,.09)');
+
+  const particleCount = 21 + Math.floor(currentEnergy * 13);
+  for (let i = 0; i < particleCount; i++) drawNeutrino(cx, cy, radius, time, i);
+
+  ctx.globalAlpha = .36 + currentEnergy * .26;
+  ctx.strokeStyle = 'rgba(255,255,255,.34)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius + Math.sin(time * 1.4) * 2, 0, Math.PI * 2);
+  ctx.stroke();
+  clearCenterVoid(cx, cy, radius);
+  ctx.restore();
+
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('resize', resize);
+agent.addEventListener('click', () => setState(stateIndex + 1));
+resize();
+setState(0);
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.phone{
+  width:320px;margin:1rem auto;
+  border-radius:36px;
+  border:.5px solid rgba(255,255,255,.5);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  position:relative;
+  font-family:var(--font-sans);
+  box-shadow:0 20px 60px rgba(0,0,0,.15);
+}
+.bg{position:absolute;inset:0;z-index:0;width:100%;height:100%}
+.overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 38%,rgba(235,245,255,.55) 60%,rgba(225,240,255,.75) 100%)}
+.ui{position:relative;z-index:2;display:flex;flex-direction:column;min-height:580px}
+.status{padding:14px 20px 4px;display:flex;justify-content:space-between;font-size:11px;font-weight:500;color:rgba(20,35,60,.55)}
+.hdr{padding:6px 18px 8px}
+.app-name{font-size:22px;font-weight:300;color:rgba(15,28,55,.75);letter-spacing:-.5px}
+.app-date{font-size:11px;color:rgba(15,28,55,.4);margin-top:1px}
+.spacer{flex:1;min-height:130px}
+.cards{padding:0 14px 8px;display:flex;flex-direction:column;gap:7px}
+.card{
+  background:rgba(255,255,255,.62);
+  border:.5px solid rgba(255,255,255,.9);
+  border-radius:14px;
+  padding:11px 13px;
+  display:flex;align-items:flex-start;gap:10px;
+  cursor:pointer;
+}
+.sig{width:8px;padding-top:3px;flex-shrink:0;display:flex;justify-content:center}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.red{background:#c0392b;animation:blink 2s ease-in-out infinite}
+.dot.amber{background:#d4860a}
+.dot.green{background:#27ae75}
+.dot.none{background:rgba(0,0,0,.15)}
+.tri{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:7px solid #d4860a;margin-top:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.cb{flex:1;min-width:0}
+.ct{font-size:13px;font-weight:500;color:rgba(12,22,45,.85);margin-bottom:2px;line-height:1.3}
+.cp{font-size:12px;color:rgba(12,22,45,.5);line-height:1.4}
+.cai{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:rgba(12,22,45,.45);background:rgba(255,255,255,.5);padding:2px 7px;border-radius:5px;margin-top:4px}
+.cai i{font-size:10px}
+.cr{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.ctime{font-size:10px;color:rgba(12,22,45,.3);white-space:nowrap}
+.carr{font-size:13px;color:rgba(12,22,45,.22)}
+.bottom{
+  padding:8px 14px 22px;
+  background:rgba(255,255,255,.38);
+  border-top:.5px solid rgba(255,255,255,.7);
+}
+.nb{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.65);border:.5px solid rgba(255,255,255,.95);border-radius:14px;padding:11px 14px;cursor:pointer;margin-bottom:8px}
+.nb i{font-size:15px;color:rgba(12,22,45,.4)}
+.nl{font-size:13px;font-weight:500;color:rgba(12,22,45,.5);flex:1}
+.nh{font-size:11px;color:rgba(12,22,45,.28)}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.act{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px;border-radius:11px;cursor:pointer}
+.act i{font-size:18px;color:rgba(12,22,45,.35)}
+.act-l{font-size:9px;font-weight:500;color:rgba(12,22,45,.35)}
+.act.main{background:rgba(18,28,55,.72)}
+.act.main i{color:rgba(210,230,250,.75)}
+.act.main .act-l{color:rgba(210,230,250,.45)}
+.adot{width:5px;height:5px;border-radius:50%;background:#5dcaa5;display:inline-block;animation:blink 2s ease-in-out infinite;margin-left:2px;vertical-align:middle}
+</style>
+
+<div class="phone">
+
+<svg class="bg" viewBox="0 0 320 580" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a8c8e8"/>
+      <stop offset="45%" stop-color="#c8dff2"/>
+      <stop offset="100%" stop-color="#ddeefa"/>
+    </linearGradient>
+    <linearGradient id="g-mtn1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8eef5"/>
+      <stop offset="100%" stop-color="#b8ccde"/>
+    </linearGradient>
+    <linearGradient id="g-mtn2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8e8f4"/>
+      <stop offset="100%" stop-color="#9ab8d0"/>
+    </linearGradient>
+    <linearGradient id="g-hill1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ec870"/>
+      <stop offset="100%" stop-color="#5aaa4a"/>
+    </linearGradient>
+    <linearGradient id="g-hill2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#68c058"/>
+      <stop offset="100%" stop-color="#4a9838"/>
+    </linearGradient>
+    <linearGradient id="g-grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5ab848"/>
+      <stop offset="100%" stop-color="#3a9028"/>
+    </linearGradient>
+    <linearGradient id="g-road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b8c4d0"/>
+      <stop offset="100%" stop-color="#9aacbc"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="320" height="580" fill="url(#g-sky)"/>
+
+  <ellipse cx="245" cy="52" rx="30" ry="18" fill="rgba(255,255,255,.35)"/>
+  <ellipse cx="268" cy="48" rx="22" ry="14" fill="rgba(255,255,255,.3)"/>
+  <ellipse cx="225" cy="56" rx="18" ry="11" fill="rgba(255,255,255,.25)"/>
+  <ellipse cx="70" cy="40" rx="20" ry="12" fill="rgba(255,255,255,.28)"/>
+  <ellipse cx="88" cy="36" rx="15" ry="9" fill="rgba(255,255,255,.22)"/>
+
+  <path d="M180 210 L210 130 L240 210 Z" fill="url(#g-mtn1)"/>
+  <path d="M195 210 L210 148 L225 210 Z" fill="rgba(255,255,255,.18)"/>
+  <path d="M230 210 L265 120 L300 210 Z" fill="url(#g-mtn2)"/>
+  <path d="M247 210 L265 138 L283 210 Z" fill="rgba(255,255,255,.15)"/>
+  <path d="M150 210 L178 145 L206 210 Z" fill="url(#g-mtn1)" opacity=".85"/>
+  <path d="M270 210 L295 150 L320 210 Z" fill="url(#g-mtn2)" opacity=".7"/>
+  <path d="M0 210 L22 160 L44 210 Z" fill="url(#g-mtn1)" opacity=".6"/>
+
+  <path d="M0 255 Q40 220 90 235 Q140 250 180 225 Q220 200 270 220 Q295 230 320 215 L320 280 Q280 265 240 278 Q200 290 160 268 Q120 248 80 265 Q40 280 0 268 Z" fill="url(#g-hill1)"/>
+  <path d="M0 270 Q50 248 100 260 Q150 272 200 252 Q240 235 280 250 L320 242 L320 295 L0 295 Z" fill="url(#g-hill2)" opacity=".7"/>
+
+  <g fill="#2d6e28">
+    <path d="M18 258 L22 230 L26 258 Z"/>
+    <path d="M14 252 L22 218 L30 252 Z"/>
+    <path d="M10 265 L22 245 L34 265 Z"/>
+  </g>
+  <g fill="#246020">
+    <path d="M36 255 L40 232 L44 255 Z"/>
+    <path d="M33 250 L40 222 L47 250 Z"/>
+    <path d="M30 262 L40 248 L50 262 Z"/>
+  </g>
+  <g fill="#2d6e28">
+    <path d="M54 260 L57 240 L60 260 Z"/>
+    <path d="M51 255 L57 234 L63 255 Z"/>
+    <path d="M48 266 L57 252 L66 266 Z"/>
+  </g>
+  <g fill="#246020" opacity=".8">
+    <path d="M68 258 L71 242 L74 258 Z"/>
+    <path d="M65 254 L71 237 L77 254 Z"/>
+    <path d="M62 264 L71 253 L80 264 Z"/>
+  </g>
+
+  <g fill="#1e5018" opacity=".6">
+    <path d="M252 248 L256 228 L260 248 Z"/>
+    <path d="M249 243 L256 222 L263 243 Z"/>
+    <path d="M246 256 L256 242 L266 256 Z"/>
+    <path d="M264 250 L268 232 L272 250 Z"/>
+    <path d="M261 245 L268 226 L275 245 Z"/>
+    <path d="M258 258 L268 245 L278 258 Z"/>
+  </g>
+
+  <rect x="0" y="310" width="320" height="50" fill="url(#g-grass)"/>
+  <path d="M0 295 Q80 280 160 292 Q240 304 320 288 L320 318 Q240 328 160 318 Q80 308 0 320 Z" fill="url(#g-grass)" opacity=".9"/>
+
+  <path d="M60 310 Q160 295 260 310 L320 316 L320 350 L0 350 L0 318 Q60 322 60 310 Z" fill="url(#g-road)"/>
+  <rect x="150" y="325" width="20" height="4" rx="2" fill="rgba(255,255,255,.6)"/>
+  <rect x="0" y="327" width="12" height="3" rx="1.5" fill="rgba(255,255,255,.5)"/>
+  <rect x="295" y="326" width="12" height="3" rx="1.5" fill="rgba(255,255,255,.5)"/>
+
+  <path d="M0 350 Q80 340 160 348 Q240 356 320 344 L320 380 L0 380 Z" fill="#4a9838"/>
+  <path d="M0 365 Q80 355 160 363 Q240 371 320 358 L320 580 L0 580 Z" fill="#3a8028"/>
+
+  <g fill="#fff" opacity=".9">
+    <ellipse cx="30" cy="368" rx="4" ry="3"/>
+    <ellipse cx="40" cy="365" rx="3" ry="2.5"/>
+    <ellipse cx="50" cy="370" rx="5" ry="3"/>
+    <ellipse cx="180" cy="366" rx="4" ry="3"/>
+    <ellipse cx="192" cy="363" rx="3" ry="2.5"/>
+    <ellipse cx="270" cy="369" rx="4" ry="3"/>
+    <ellipse cx="280" cy="366" rx="3" ry="2.5"/>
+  </g>
+  <g fill="#f5d020" opacity=".8">
+    <circle cx="62" cy="364" r="2"/>
+    <circle cx="140" cy="367" r="1.5"/>
+    <circle cx="220" cy="363" r="2"/>
+  </g>
+</svg>
+
+<div class="overlay"></div>
+
+<div class="ui">
+  <div class="status">
+    <span>00:41</span>
+    <span style="display:flex;gap:4px;align-items:center">
+      <i class="ti ti-wifi" style="font-size:12px"></i>
+      <i class="ti ti-battery" style="font-size:12px"></i>
+    </span>
+  </div>
+  <div class="hdr">
+    <div class="app-name">Разберёмся</div>
+    <div class="app-date">пт, 22 мая · 00:41</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="cards">
+    <div class="card">
+      <div class="sig"><div class="dot red"></div></div>
+      <div class="cb">
+        <div class="ct">Звонили из банка</div>
+        <div class="cp">Просили назвать код из смс</div>
+        <div class="cai"><i class="ti ti-robot" aria-hidden="true"></i>Мошенники — не перезванивайте</div>
+      </div>
+      <div class="cr"><div class="ctime">вчера</div><i class="ti ti-chevron-right carr" aria-hidden="true"></i></div>
+    </div>
+    <div class="card">
+      <div class="sig"><div class="tri"></div></div>
+      <div class="cb">
+        <div class="ct">Квитанция апрель</div>
+        <div class="cp">Оплатить до 25-го · 2 840 руб.</div>
+        <div class="cai"><i class="ti ti-bell" aria-hidden="true"></i>Осталось 3 дня</div>
+      </div>
+      <div class="cr"><div class="ctime">1 мая</div><i class="ti ti-chevron-right carr" aria-hidden="true"></i></div>
+    </div>
+    <div class="card">
+      <div class="sig"><div class="dot green"></div></div>
+      <div class="cb">
+        <div class="ct">Список лекарств</div>
+        <div class="cp">Эналаприл, Аспирин, Магний Б6</div>
+      </div>
+      <div class="cr"><div class="ctime">3 дня</div><i class="ti ti-chevron-right carr" aria-hidden="true"></i></div>
+    </div>
+    <div class="card">
+      <div class="sig"><div class="dot none"></div></div>
+      <div class="cb">
+        <div class="ct">Позвонить Наташе</div>
+        <div class="cp">Спросить про дачу в июне</div>
+      </div>
+      <div class="cr"><div class="ctime">вчера</div><i class="ti ti-chevron-right carr" aria-hidden="true"></i></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="nb">
+      <i class="ti ti-pencil"></i>
+      <span class="nl">Новая заметка</span>
+      <span class="nh">или зажми</span>
+    </div>
+    <div class="acts">
+      <div class="act"><i class="ti ti-microphone"></i><span class="act-l">Голос</span></div>
+      <div class="act main">
+        <span style="display:flex;align-items:center"><i class="ti ti-sparkles"></i><span class="adot"></span></span>
+        <span class="act-l">Разберёмся</span>
+      </div>
+      <div class="act"><i class="ti ti-bell"></i><span class="act-l">Напомнить</span></div>
+    </div>
+  </div>
+</div>
+
+</div>

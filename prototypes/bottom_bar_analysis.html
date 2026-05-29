@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bottom Bar Analysis</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg: oklch(0.97 0.015 210);
+  --fg: oklch(0.18 0.02 210);
+  --fg-l: oklch(0.52 0.012 210);
+  --sys: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+}
+body{font-family:var(--sys);background:#e8eef5;display:flex;gap:32px;padding:32px;flex-wrap:wrap;align-items:flex-end;}
+
+/* ── ФРЕЙМ ТЕЛЕФОНА ── */
+.phone{
+  width:320px;height:580px;
+  background:var(--bg);
+  border-radius:36px;
+  border:1px solid rgba(0,0,0,0.1);
+  box-shadow:0 24px 60px rgba(0,0,0,0.15);
+  display:flex;flex-direction:column;
+  overflow:hidden;position:relative;
+}
+
+/* ── MOCK CARDS AREA ── */
+.mock-cards{
+  flex:1;
+  padding:14px;
+  display:flex;flex-direction:column;gap:8px;
+  overflow:hidden;
+}
+.mock-card{
+  background:oklch(1 0 0/0.72);
+  border:0.5px solid oklch(1 0 0/0.90);
+  border-radius:16px;
+  padding:13px 14px;
+  display:flex;gap:10px;align-items:center;
+}
+.mock-dot{width:8px;height:8px;border-radius:50%;}
+.dot-red{background:oklch(0.55 0.20 25);}
+.dot-amber{background:oklch(0.65 0.16 65);}
+.dot-green{background:oklch(0.55 0.14 150);}
+.mock-title{font-size:13px;font-weight:600;color:oklch(0.18 0.02 210);}
+.mock-sub{font-size:11px;color:oklch(0.52 0.012 210);}
+
+/* ── CURRENT STATE ── */
+.home-bar{padding:8px 14px 28px;flex-shrink:0;}
+.new-note-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:16px 24px;border:none;cursor:pointer;font-family:var(--sys);
+  border-radius:20px;
+  background:radial-gradient(ellipse 90% 55% at 28% 20%, oklch(1 0 0/0.60) 0%, transparent 55%), oklch(0.95 0.020 210);
+  border:1px solid oklch(0.90 0.020 210/0.70);
+  box-shadow:0 4px 20px -6px oklch(0 0 0/0.07);
+  margin-bottom:8px;
+}
+.new-note-btn svg{width:17px;height:17px;stroke:oklch(0.40 0.08 210);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.new-note-btn span{font-size:15px;font-weight:500;color:oklch(0.35 0.06 210);}
+
+.home-act-row{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:60px;gap:8px;align-items:end;overflow:visible;}
+.home-act-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 8px;border-radius:14px;border:none;cursor:pointer;font-family:var(--sys);background:oklch(1 0 0/0.55);border:0.5px solid oklch(1 0 0/0.80);}
+.home-act-btn svg{width:20px;height:20px;stroke:var(--fg-l);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.home-act-btn span{font-size:10px;font-weight:600;color:var(--fg-l);}
+
+/* PORTAL */
+.rz-portal-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;overflow:visible;justify-content:flex-end;height:100%;}
+.rz-portal-lbl{font-size:10px;font-weight:600;color:var(--fg-l);}
+.rz-portal{
+  width:96px;height:96px;border-radius:50%;
+  border:none;cursor:pointer;
+  position:relative;overflow:hidden;flex-shrink:0;
+  background:
+    radial-gradient(circle at 34% 27%, oklch(1 0 0/0.74) 0%, oklch(1 0 0/0) 30%),
+    radial-gradient(circle at 64% 20%, oklch(1 0 0/0.22) 0%, oklch(1 0 0/0) 16%),
+    radial-gradient(circle at 50% 50%, oklch(0.78 0.24 268) 0%, oklch(0.63 0.22 263) 38%, oklch(0.50 0.20 258) 65%, oklch(0.36 0.16 262) 100%);
+  box-shadow:
+    0 10px 32px oklch(0.44 0.24 272/0.44),
+    0 4px 12px oklch(0 0 0/0.15),
+    0 0 0 1px oklch(0.66 0.20 268/0.30),
+    inset 0 -3px 6px oklch(0.34 0.16 265/0.40),
+    inset 0 2px 5px oklch(1 0 0/0.58);
+  animation:rz-breathe 4.5s ease-in-out infinite;
+}
+.rz-au{position:absolute;inset:0;border-radius:50%;pointer-events:none;}
+.rz-au1{background:radial-gradient(ellipse 90% 74% at 24% 76%, oklch(0.64 0.30 292/0.74) 0%, transparent 56%);animation:rz-au1 8s ease-in-out infinite;}
+.rz-au2{background:radial-gradient(ellipse 78% 90% at 76% 24%, oklch(0.58 0.28 183/0.64) 0%, transparent 54%);animation:rz-au2 11.5s ease-in-out infinite;}
+.rz-au3{background:radial-gradient(ellipse 70% 70% at 58% 76%, oklch(0.82 0.24 74/0.42) 0%, transparent 50%);animation:rz-au3 14s ease-in-out infinite;}
+.rz-au-rim{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 50% 50%, transparent 50%, oklch(0.18 0.10 268/0.55) 100%);}
+.rz-portal-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none;}
+.rz-portal-ico svg{width:28px;height:28px;fill:oklch(1 0 0/0.18);stroke:oklch(0.96 0.04 250/0.85);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;}
+@keyframes rz-breathe{0%,100%{box-shadow:0 10px 32px oklch(0.44 0.24 272/0.44),0 4px 12px oklch(0 0 0/0.15),0 0 0 1px oklch(0.66 0.20 268/0.30),inset 0 -3px 6px oklch(0.34 0.16 265/0.40),inset 0 2px 5px oklch(1 0 0/0.58);}50%{box-shadow:0 14px 42px oklch(0.44 0.24 272/0.58),0 4px 12px oklch(0 0 0/0.15),0 0 0 1.5px oklch(0.68 0.22 270/0.42),0 0 64px oklch(0.60 0.26 278/0.34),inset 0 -3px 6px oklch(0.34 0.16 265/0.40),inset 0 2px 5px oklch(1 0 0/0.58);}}
+@keyframes rz-au1{0%,100%{opacity:1;}50%{opacity:0.30;}}
+@keyframes rz-au2{0%,100%{opacity:0.40;}47%{opacity:1;}}
+@keyframes rz-au3{0%,100%{opacity:0.20;}63%{opacity:0.90;}}
+
+/* ── ПРОБЛЕМА: фон плоский, стеклянные кнопки не читаются ── */
+.analysis{
+  width:320px;
+  font-size:13px;line-height:1.6;color:#333;
+  background:white;border-radius:16px;padding:20px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.1);
+}
+.analysis h3{font-size:15px;font-weight:700;margin-bottom:12px;color:#111;}
+.analysis .issue{display:flex;gap:8px;margin-bottom:8px;}
+.tag-red{background:#fee;color:#c00;border-radius:5px;padding:2px 6px;font-size:11px;font-weight:700;flex-shrink:0;}
+.tag-ok{background:#efe;color:#080;border-radius:5px;padding:2px 6px;font-size:11px;font-weight:700;flex-shrink:0;}
+.tag-fix{background:#fef3cd;color:#856404;border-radius:5px;padding:2px 6px;font-size:11px;font-weight:700;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- ТЕКУЩИЙ РЕНДЕР -->
+<div class="phone">
+  <div class="mock-cards">
+    <div class="mock-card"><div class="mock-dot dot-red"></div><div><div class="mock-title">Звонили из банка</div><div class="mock-sub">Мошенники</div></div></div>
+    <div class="mock-card"><div class="mock-dot dot-amber"></div><div><div class="mock-title">Квитанция апрель</div><div class="mock-sub">До 25-го · 2 840 руб</div></div></div>
+    <div class="mock-card"><div class="mock-dot dot-green"></div><div><div class="mock-title">Список лекарств</div><div class="mock-sub">Эналаприл, Аспирин</div></div></div>
+  </div>
+  <div class="home-bar">
+    <button class="new-note-btn">
+      <svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 00-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
+      <span>Новая заметка</span>
+    </button>
+    <div class="home-act-row">
+      <button class="home-act-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span>Голос</span>
+      </button>
+      <div class="rz-portal-wrap">
+        <button class="rz-portal">
+          <span class="rz-au rz-au1"></span>
+          <span class="rz-au rz-au2"></span>
+          <span class="rz-au rz-au3"></span>
+          <span class="rz-au-rim"></span>
+          <span class="rz-portal-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-1.2 5.4-5.4 8-9 9 3.6 1 7.8 3.6 9 9 1.2-5.4 5.4-8 9-9-3.6-1-7.8-3.6-9-9z"/></svg></span>
+        </button>
+        <span class="rz-portal-lbl">Разберёмся</span>
+      </div>
+      <button class="home-act-btn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span>Напомнить</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- АНАЛИЗ -->
+<div class="analysis">
+  <h3>🔍 Диагноз</h3>
+
+  <div class="issue"><span class="tag-red">БАГ</span>Фон —var(--bg) = почти белый. Стеклянные кнопки oklch(1 0 0/0.55) на белом = невидимки. Нет контраста.</div>
+
+  <div class="issue"><span class="tag-red">БАГ</span>home-act-row — CSS Grid. flex:1 на grid item = ничего не делает. overflow:visible работает, но шар перекрывается картами при scroll (нет z-index на home-bar).</div>
+
+  <div class="issue"><span class="tag-red">БАГ</span>Кнопки «Голос» и «Напомнить»: border:0.5px oklch(1 0 0/0.80) — белая рамка на белом фоне. Всё сливается.</div>
+
+  <div class="issue"><span class="tag-fix">ПЛАН</span>Добавить градиентный фон на #s-home (как в прототипе landscape). Тогда стекло заработает.</div>
+
+  <div class="issue"><span class="tag-fix">ПЛАН</span>Боковые кнопки: дать чёткий stroke/цвет вместо сплошного стекла.</div>
+
+  <div class="issue"><span class="tag-fix">ПЛАН</span>Портал — переосмыслить позиционирование: не overflow из grid, а отдельно с position:absolute от home-bar.</div>
+
+  <div class="issue"><span class="tag-ok">ОК</span>Портал сам по себе: 3D градиент + аура + дыхание — правильная концепция.</div>
+
+  <div class="issue"><span class="tag-ok">ОК</span>Новая заметка — читается хорошо.</div>
+</div>
+
+</body>
+</html>

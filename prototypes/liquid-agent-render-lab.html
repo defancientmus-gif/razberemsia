@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разберёмся · лаборатория liquid-agent</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#14231f;
+  --muted:rgba(20,35,31,.58);
+  --line:rgba(24,44,38,.12);
+  --paper:rgba(255,255,255,.56);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+html,body{margin:0;min-height:100%;font-family:var(--font);color:var(--ink);background:#eee8dc}
+body{
+  background:
+    radial-gradient(circle at 20% 8%,rgba(255,255,255,.92),transparent 28rem),
+    radial-gradient(circle at 82% 16%,rgba(214,204,185,.48),transparent 27rem),
+    linear-gradient(180deg,#fbf8f1,#e9e1d3);
+}
+button,input{font-family:var(--font)}
+.lab{
+  width:min(1280px,100%);
+  min-height:100vh;
+  margin:0 auto;
+  padding:22px;
+  display:grid;
+  grid-template-columns:minmax(390px,1fr) minmax(330px,390px);
+  gap:18px;
+}
+.preview{
+  position:relative;
+  min-height:calc(100vh - 44px);
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:30px;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,#d9e9f1 0%,#e8f0eb 45%,#eef0e7 70%,#e0e8dc 100%);
+  box-shadow:0 28px 76px rgba(27,34,30,.15), inset 0 0 0 1px rgba(24,44,38,.06);
+}
+.preview::before{
+  content:"";
+  position:absolute;
+  inset:-20% -20% 12%;
+  background:
+    radial-gradient(circle at 28% 12%,rgba(255,255,255,.94),transparent 20%),
+    radial-gradient(circle at 72% 18%,rgba(255,238,196,.36),transparent 24%),
+    radial-gradient(ellipse at 50% 78%,rgba(180,213,190,.34),transparent 45%);
+}
+.preview::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:53%;
+  background:
+    radial-gradient(ellipse at 18% 26%,rgba(127,185,116,.36) 0 23%,transparent 24%),
+    radial-gradient(ellipse at 83% 33%,rgba(111,174,118,.24) 0 25%,transparent 26%),
+    linear-gradient(180deg,transparent,rgba(104,161,95,.30));
+  clip-path:polygon(0 34%,16% 24%,31% 35%,49% 21%,66% 32%,86% 18%,100% 28%,100% 100%,0 100%);
+}
+.mock-ui{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  padding:18px;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  padding:8px 4px 0;
+}
+.brand{font-family:var(--serif);font-size:34px;line-height:1;color:#17362c;font-weight:420}
+.date{margin-top:5px;font-size:12px;color:rgba(20,35,31,.42)}
+.notes{
+  width:min(430px,100%);
+  margin:150px auto 0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.note{
+  min-height:72px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:10px;
+  padding:12px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.72);
+  background:rgba(255,255,255,.50);
+  box-shadow:0 10px 24px rgba(26,36,31,.055);
+  backdrop-filter:blur(16px);
+}
+.sig{width:8px;height:8px;margin-top:4px;border-radius:50%;background:rgba(20,35,31,.18)}
+.sig.red{background:#b65b50}.sig.amber{background:#c98c2f}.sig.green{background:#3f765a}
+.nt{font-size:14px;font-weight:760;line-height:1.25;color:#16241f}
+.np{font-size:12px;line-height:1.35;color:rgba(20,35,31,.56);margin-top:3px}
+.time{font-size:10px;color:rgba(20,35,31,.34);white-space:nowrap}
+.dock{
+  margin:auto auto 0;
+  width:min(430px,100%);
+  display:grid;
+  grid-template-columns:1fr var(--agent-size,210px) 1fr;
+  gap:4px;
+  align-items:end;
+}
+.tool{
+  height:58px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.68);
+  background:rgba(255,255,255,.38);
+  color:rgba(20,35,31,.54);
+  box-shadow:0 10px 22px rgba(26,36,31,.06);
+  display:grid;
+  place-items:center;
+  font-size:11px;
+  font-weight:760;
+  backdrop-filter:blur(16px);
+}
+.agent-wrap{
+  width:var(--agent-size,210px);
+  height:var(--agent-size,210px);
+  margin-bottom:calc(var(--agent-size,210px) * -.23);
+  border:0;
+  padding:0;
+  background:transparent;
+  border-radius:50%;
+  cursor:pointer;
+  filter:drop-shadow(0 28px 42px rgba(31,48,41,.12));
+}
+.agent-wrap canvas{display:block;width:100%;height:100%}
+.panel{
+  max-height:calc(100vh - 44px);
+  overflow:auto;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:26px;
+  background:rgba(255,255,255,.58);
+  box-shadow:0 22px 60px rgba(27,34,30,.12), inset 0 1px 0 rgba(255,255,255,.70);
+  backdrop-filter:blur(20px);
+  padding:18px;
+}
+.panel h1{margin:0;font-size:24px;line-height:1.05;font-family:var(--serif);font-weight:420;color:#17362c}
+.panel p{margin:8px 0 16px;color:var(--muted);font-size:13px;line-height:1.45}
+.preset-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.preset-row button,.copy-btn{
+  min-height:38px;
+  border:1px solid rgba(24,44,38,.11);
+  border-radius:13px;
+  background:rgba(255,255,255,.52);
+  color:rgba(20,35,31,.72);
+  font-size:13px;
+  font-weight:760;
+  cursor:pointer;
+}
+.preset-row button.active{background:#17362c;color:#fff;border-color:#17362c}
+.group{padding:14px 0;border-top:1px solid rgba(24,44,38,.10)}
+.group-title{font-size:12px;font-weight:820;text-transform:uppercase;letter-spacing:.06em;color:rgba(20,35,31,.46);margin-bottom:10px}
+.control{display:grid;grid-template-columns:1fr 58px;gap:12px;align-items:center;margin:10px 0}
+.control label{font-size:13px;font-weight:700;color:rgba(20,35,31,.72)}
+.control output{text-align:right;font-size:12px;color:rgba(20,35,31,.50);font-weight:760;font-variant-numeric:tabular-nums}
+.control input{grid-column:1/3;width:100%;accent-color:#3f765a}
+.config{
+  width:100%;
+  min-height:108px;
+  resize:vertical;
+  border:1px solid rgba(24,44,38,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.46);
+  padding:10px;
+  color:rgba(20,35,31,.72);
+  font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (max-width:900px){
+  body{overflow:auto}
+  .lab{grid-template-columns:1fr;padding:12px}
+  .preview{min-height:720px}
+  .panel{max-height:none}
+}
+</style>
+</head>
+<body>
+<main class="lab">
+  <section class="preview" aria-label="Превью">
+    <div class="mock-ui">
+      <header class="top">
+        <div>
+          <div class="brand">Разберёмся</div>
+          <div class="date">локальная лаборатория рендера</div>
+        </div>
+      </header>
+      <div class="notes" aria-hidden="true">
+        <article class="note"><span class="sig red"></span><div><div class="nt">Звонили из банка</div><div class="np">Просили назвать код из смс</div></div><span class="time">вчера</span></article>
+        <article class="note"><span class="sig amber"></span><div><div class="nt">Квитанция апрель</div><div class="np">Оплатить до 25-го · 2 840 руб.</div></div><span class="time">срок</span></article>
+        <article class="note"><span class="sig green"></span><div><div class="nt">Список лекарств</div><div class="np">Эналаприл, Аспирин, Магний Б6</div></div><span class="time">3 дня</span></article>
+      </div>
+      <div class="dock">
+        <div class="tool">Голос</div>
+        <button class="agent-wrap" type="button" aria-label="Пустой liquid-agent">
+          <canvas id="agent-canvas"></canvas>
+        </button>
+        <div class="tool">Напомнить</div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <h1>Крутилка агента</h1>
+    <p>Это локальный canvas-рендер. Никаких платных сервисов: двигай ползунки, пока объект не станет спокойным, пустым, ритмичным и логичным.</p>
+    <div class="preset-row">
+      <button type="button" data-preset="empty">Пустой</button>
+      <button type="button" data-preset="ordered" class="active">Структура</button>
+      <button type="button" data-preset="glass">Стекло</button>
+      <button type="button" data-preset="energy">Энергия</button>
+    </div>
+
+    <div class="group" data-group="geometry">
+      <div class="group-title">Геометрия</div>
+      <div class="control"><label for="size">Размер</label><output></output><input id="size" type="range" min="140" max="280" step="1"></div>
+      <div class="control"><label for="radius">Радиус орбиты</label><output></output><input id="radius" type="range" min="22" max="42" step="1"></div>
+      <div class="control"><label for="void">Пустота в центре</label><output></output><input id="void" type="range" min="32" max="78" step="1"></div>
+      <div class="control"><label for="rings">Кольца структуры</label><output></output><input id="rings" type="range" min="0" max="5" step="1"></div>
+    </div>
+
+    <div class="group" data-group="liquid">
+      <div class="group-title">Жидкое стекло</div>
+      <div class="control"><label for="ribbons">Потоки</label><output></output><input id="ribbons" type="range" min="1" max="4" step="1"></div>
+      <div class="control"><label for="width">Толщина потока</label><output></output><input id="width" type="range" min="6" max="24" step="1"></div>
+      <div class="control"><label for="glass">Прозрачность</label><output></output><input id="glass" type="range" min="5" max="60" step="1"></div>
+      <div class="control"><label for="viscosity">Вязкость</label><output></output><input id="viscosity" type="range" min="0" max="100" step="1"></div>
+    </div>
+
+    <div class="group" data-group="motion">
+      <div class="group-title">Ритм</div>
+      <div class="control"><label for="speed">Скорость</label><output></output><input id="speed" type="range" min="0" max="100" step="1"></div>
+      <div class="control"><label for="energy">Энергия</label><output></output><input id="energy" type="range" min="0" max="100" step="1"></div>
+      <div class="control"><label for="sync">Синхронность</label><output></output><input id="sync" type="range" min="0" max="100" step="1"></div>
+      <div class="control"><label for="glow">Свечение</label><output></output><input id="glow" type="range" min="0" max="100" step="1"></div>
+    </div>
+
+    <div class="group" data-group="particles">
+      <div class="group-title">Частицы</div>
+      <div class="control"><label for="particles">Количество</label><output></output><input id="particles" type="range" min="0" max="80" step="1"></div>
+      <div class="control"><label for="particleSize">Размер</label><output></output><input id="particleSize" type="range" min="0" max="100" step="1"></div>
+      <div class="control"><label for="lanes">Орбитальные дорожки</label><output></output><input id="lanes" type="range" min="1" max="7" step="1"></div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Конфиг</div>
+      <textarea class="config" id="config" spellcheck="false"></textarea>
+      <button class="copy-btn" type="button" id="copy">Скопировать JSON</button>
+    </div>
+  </aside>
+</main>
+
+<script>
+const PHI = (1 + Math.sqrt(5)) / 2;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const canvas = document.getElementById('agent-canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.querySelector('.agent-wrap');
+const dock = document.querySelector('.dock');
+const configBox = document.getElementById('config');
+let width = 0;
+let height = 0;
+let dpr = 1;
+
+const settings = {
+  size: 210,
+  radius: 32,
+  void: 62,
+  rings: 3,
+  ribbons: 3,
+  width: 15,
+  glass: 26,
+  viscosity: 72,
+  speed: 34,
+  energy: 45,
+  sync: 86,
+  glow: 34,
+  particles: 28,
+  particleSize: 38,
+  lanes: 5
+};
+
+const presets = {
+  empty: { size: 210, radius: 31, void: 74, rings: 2, ribbons: 2, width: 11, glass: 18, viscosity: 86, speed: 18, energy: 20, sync: 94, glow: 18, particles: 10, particleSize: 20, lanes: 4 },
+  ordered: { size: 210, radius: 32, void: 62, rings: 3, ribbons: 3, width: 15, glass: 26, viscosity: 72, speed: 34, energy: 45, sync: 86, glow: 34, particles: 28, particleSize: 38, lanes: 5 },
+  glass: { size: 226, radius: 33, void: 58, rings: 3, ribbons: 3, width: 19, glass: 44, viscosity: 64, speed: 28, energy: 38, sync: 82, glow: 52, particles: 18, particleSize: 26, lanes: 4 },
+  energy: { size: 226, radius: 34, void: 54, rings: 4, ribbons: 4, width: 16, glass: 34, viscosity: 48, speed: 58, energy: 78, sync: 74, glow: 62, particles: 48, particleSize: 48, lanes: 6 }
+};
+
+const controls = Array.from(document.querySelectorAll('input[type="range"]'));
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  width = rect.width;
+  height = rect.height;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function applySettings() {
+  wrap.style.setProperty('--agent-size', settings.size + 'px');
+  dock.style.setProperty('--agent-size', settings.size + 'px');
+  controls.forEach(input => {
+    input.value = settings[input.id];
+    input.closest('.control').querySelector('output').textContent = settings[input.id];
+  });
+  configBox.value = JSON.stringify(settings, null, 2);
+  resizeCanvas();
+}
+
+function setPreset(name) {
+  Object.assign(settings, presets[name]);
+  document.querySelectorAll('[data-preset]').forEach(button => {
+    button.classList.toggle('active', button.dataset.preset === name);
+  });
+  applySettings();
+}
+
+function ribbon(cx, cy, radius, bandWidth, start, length, time, index) {
+  const steps = 96;
+  const outer = [];
+  const inner = [];
+  const energy = settings.energy / 100;
+  const viscosity = settings.viscosity / 100;
+  const laminarPower = 1 - viscosity * .72;
+  for (let i = 0; i <= steps; i++) {
+    const p = i / steps;
+    const a = start + length * p;
+    const taper = Math.sin(p * Math.PI);
+    const wave = taper * bandWidth * (.18 + energy * .20);
+    const laminar = Math.sin(p * Math.PI * 2 + time * .42 + index) * laminarPower * bandWidth * .16;
+    const outerR = radius + bandWidth * .5 + wave + laminar;
+    const innerR = radius - bandWidth * .5 - wave * .26 + laminar * .22;
+    outer.push([cx + Math.cos(a) * outerR, cy + Math.sin(a) * outerR]);
+    inner.push([cx + Math.cos(a) * innerR, cy + Math.sin(a) * innerR]);
+  }
+
+  ctx.beginPath();
+  outer.forEach((point, i) => i ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+  inner.reverse().forEach(point => ctx.lineTo(point[0], point[1]));
+  ctx.closePath();
+
+  const glass = settings.glass / 100;
+  const grad = ctx.createRadialGradient(cx - radius * .42, cy - radius * .48, 4, cx, cy, radius + bandWidth * 1.8);
+  grad.addColorStop(0, `rgba(255,255,255,${.10 + glass * .42})`);
+  grad.addColorStop(.44, `rgba(255,255,255,${.08 + glass * .30})`);
+  grad.addColorStop(.74, index % 2 ? `rgba(212,236,255,${.04 + glass * .14})` : `rgba(255,235,190,${.04 + glass * .12})`);
+  grad.addColorStop(1, 'rgba(255,255,255,.02)');
+  ctx.fillStyle = grad;
+  ctx.shadowColor = 'rgba(255,255,255,.45)';
+  ctx.shadowBlur = settings.glow * .18;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = `rgba(255,255,255,${.12 + glass * .18})`;
+  ctx.lineWidth = .9;
+  ctx.stroke();
+}
+
+function drawStructure(cx, cy, radius, time) {
+  const rings = settings.rings;
+  if (!rings) return;
+  const glass = settings.glass / 100;
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,255,255,${.12 + glass * .20})`;
+  ctx.lineWidth = .75;
+  ctx.globalAlpha = .9;
+  for (let i = 0; i < rings; i++) {
+    const t = rings === 1 ? 0 : i / (rings - 1);
+    const r = radius * (.72 + t * .62);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + Math.sin(time * .25 + i) * .25, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawParticles(cx, cy, radius, time) {
+  const count = settings.particles;
+  const lanes = Math.max(1, settings.lanes);
+  const energy = settings.energy / 100;
+  const particleScale = settings.particleSize / 100;
+  const sync = settings.sync / 100;
+  const baseSpeed = (.008 + settings.speed * .00055) * (1 + energy * .55);
+  const colors = [
+    'rgba(255,255,255,.62)',
+    'rgba(214,235,255,.30)',
+    'rgba(255,235,190,.28)',
+    'rgba(214,235,222,.30)'
+  ];
+  for (let i = 0; i < count; i++) {
+    const laneIndex = i % lanes;
+    const laneT = lanes === 1 ? .5 : laneIndex / (lanes - 1);
+    const lane = radius * (.76 + laneT * .70);
+    const phase = i * GOLDEN_ANGLE;
+    const a = phase + time * baseSpeed * (1 + (1 - sync) * ((i % 5) - 2) * .2);
+    const x = cx + Math.cos(a) * lane;
+    const y = cy + Math.sin(a) * lane;
+    const pulse = .45 + .55 * Math.pow(Math.sin(time * .8 + i * PHI), 2);
+    const size = (.45 + particleScale * 1.9) * pulse;
+    ctx.beginPath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.shadowColor = colors[i % colors.length];
+    ctx.shadowBlur = settings.glow * .08;
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+function clearVoid(cx, cy, radius) {
+  const voidRatio = settings.void / 100;
+  const r = radius * voidRatio;
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.08);
+  grad.addColorStop(0, 'rgba(0,0,0,1)');
+  grad.addColorStop(.72, 'rgba(0,0,0,.96)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function draw(now) {
+  const time = now * .001;
+  ctx.clearRect(0, 0, width, height);
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = Math.min(width, height) * (settings.radius / 100);
+  const speed = settings.speed / 100;
+  const sync = settings.sync / 100;
+  const phase = time * (.10 + speed * .28);
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  const aura = ctx.createRadialGradient(cx, cy, radius * .55, cx, cy, radius * 1.62);
+  aura.addColorStop(0, 'rgba(255,255,255,0)');
+  aura.addColorStop(.52, `rgba(255,255,255,${.05 + settings.glow * .002})`);
+  aura.addColorStop(.72, `rgba(255,255,255,${.10 + settings.glow * .003})`);
+  aura.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.72, 0, Math.PI * 2);
+  ctx.fill();
+
+  drawStructure(cx, cy, radius, time);
+
+  const ribbons = settings.ribbons;
+  const baseWidth = settings.width;
+  for (let i = 0; i < ribbons; i++) {
+    const ratio = i / Math.max(1, ribbons - 1);
+    const bandRadius = radius * (1 + (ratio - .5) * .10);
+    const band = baseWidth * (1 - ratio * .18);
+    const start = phase * (1 - ratio * .32 * sync) + i * GOLDEN_ANGLE;
+    const length = Math.PI * (1 / PHI + .22 - ratio * .12);
+    ribbon(cx, cy, bandRadius, band, start, length, time, i);
+  }
+
+  drawParticles(cx, cy, radius, time);
+
+  ctx.globalAlpha = .32 + settings.glass * .004;
+  ctx.strokeStyle = 'rgba(255,255,255,.34)';
+  ctx.lineWidth = .9;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  clearVoid(cx, cy, radius);
+  ctx.restore();
+
+  requestAnimationFrame(draw);
+}
+
+controls.forEach(input => {
+  input.value = settings[input.id];
+  input.addEventListener('input', () => {
+    settings[input.id] = Number(input.value);
+    input.closest('.control').querySelector('output').textContent = input.value;
+    configBox.value = JSON.stringify(settings, null, 2);
+    if (input.id === 'size') applySettings();
+    document.querySelectorAll('[data-preset]').forEach(button => button.classList.remove('active'));
+  });
+});
+
+document.querySelectorAll('[data-preset]').forEach(button => {
+  button.addEventListener('click', () => setPreset(button.dataset.preset));
+});
+
+document.getElementById('copy').addEventListener('click', async () => {
+  configBox.select();
+  try { await navigator.clipboard.writeText(configBox.value); } catch (e) { document.execCommand('copy'); }
+});
+
+window.addEventListener('resize', resizeCanvas);
+applySettings();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

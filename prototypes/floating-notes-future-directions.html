@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Разберёмся - новые поверхности памяти</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:oklch(0.18 0.025 221);
+  --muted:oklch(0.48 0.018 214);
+  --faint:oklch(0.62 0.013 215);
+  --blue:oklch(0.54 0.11 216);
+  --blue-deep:oklch(0.40 0.105 216);
+  --cyan:oklch(0.73 0.075 205);
+  --mint:oklch(0.77 0.045 178);
+  --gold:oklch(0.73 0.095 76);
+  --white:oklch(0.995 0.002 210);
+  --paper:oklch(0.99 0.006 210 / .82);
+  --curve:cubic-bezier(.22,1,.36,1);
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+html,body{min-height:100%;font-family:var(--sys);color:var(--ink)}
+body{
+  background:
+    radial-gradient(circle at 14% 2%,oklch(0.995 0.004 206),transparent 35rem),
+    radial-gradient(circle at 92% 15%,oklch(0.93 0.032 205 / .62),transparent 35rem),
+    radial-gradient(circle at 44% 100%,oklch(0.90 0.028 189 / .36),transparent 38rem),
+    linear-gradient(145deg,oklch(0.965 0.008 215),oklch(0.90 0.018 214));
+}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.lab{max-width:1520px;margin:0 auto;padding:30px clamp(15px,3vw,34px) 48px}
+.masthead{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:27px}
+.wordmark{font-family:var(--serif);font-size:clamp(31px,3vw,44px);font-weight:400;color:oklch(0.25 0.06 194);letter-spacing:0}
+.lead{font-size:15px;line-height:1.46;color:var(--muted);max-width:510px;margin-top:7px}
+.states{
+  display:flex;gap:5px;padding:5px;border-radius:19px;
+  background:oklch(1 0 0 / .43);border:1px solid oklch(1 0 0 / .68);
+  box-shadow:inset 0 1px 0 #fff,0 9px 28px oklch(0.35 0.035 215 / .07);
+}
+.state{
+  min-width:112px;height:48px;border-radius:14px;padding:0 15px;
+  font-size:14px;font-weight:600;color:var(--muted);
+  transition:background .18s ease,color .18s ease,box-shadow .2s ease;
+}
+.state.active{
+  background:oklch(1 0 0 / .82);color:var(--blue-deep);
+  box-shadow:0 5px 16px oklch(0.34 0.045 213 / .10),inset 0 1px 0 #fff;
+}
+.gallery{
+  display:grid;grid-template-columns:repeat(4,minmax(285px,1fr));gap:17px;
+  align-items:start;
+}
+.concept{
+  border-radius:28px;padding:12px 12px 14px;
+  background:oklch(1 0 0 / .26);
+  border:1px solid oklch(1 0 0 / .42);
+}
+.caption{display:flex;align-items:baseline;gap:9px;padding:5px 5px 12px}
+.number{font-size:12px;font-weight:700;color:var(--faint);font-variant-numeric:tabular-nums}
+.caption h2{font-size:19px;font-weight:620;letter-spacing:0}
+.caption small{display:block;margin-left:auto;font-size:11px;color:var(--muted)}
+.phone{
+  --accent:var(--blue);
+  --accent-d:var(--blue-deep);
+  --surface:var(--paper);
+  --soft:oklch(0.92 0.026 211 / .60);
+  --shadow:oklch(0.34 0.038 215 / .10);
+  position:relative;isolation:isolate;height:708px;width:100%;overflow:hidden;
+  border-radius:33px;color:var(--ink);
+  border:1px solid oklch(1 0 0 / .82);
+  box-shadow:0 23px 52px oklch(0.32 0.033 214 / .14),inset 0 1px 0 #fff;
+  transition:background .7s ease;
+}
+.phone::before,.phone::after{content:"";position:absolute;pointer-events:none;transition:opacity .75s ease,transform .9s var(--curve)}
+.phone::before{z-index:0;inset:0;opacity:0}
+.phone[data-state="thinking"]::before,.phone[data-state="done"]::before{opacity:1}
+.screen{height:100%;display:flex;flex-direction:column;position:relative;z-index:2}
+.status{
+  height:30px;padding:12px 19px 0;display:flex;justify-content:space-between;
+  color:var(--faint);font-size:10px;font-weight:650;font-variant-numeric:tabular-nums;
+}
+.brandbar{height:42px;padding:5px 15px 3px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:var(--serif);font-size:20px;color:oklch(0.25 0.055 193);letter-spacing:0}
+.date{font-size:11px;color:var(--muted)}
+.viewhead{display:grid;grid-template-columns:34px 1fr 34px;gap:9px;align-items:center;padding:9px 12px 8px}
+.icon{
+  height:34px;width:34px;border-radius:50%;display:grid;place-items:center;
+  background:oklch(1 0 0 / .52);border:1px solid oklch(1 0 0 / .60);color:var(--accent-d);
+}
+.icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.where-label{text-transform:uppercase;font-size:9px;line-height:1;color:var(--muted);font-weight:700;margin-bottom:3px}
+.where-title{font-family:var(--serif);font-size:24px;font-weight:400;line-height:1}
+.depth{display:flex;gap:4px;padding:0 12px 11px}
+.depth i{display:block;flex:1;height:3px;border-radius:4px;background:oklch(0.85 0.025 210)}
+.depth i:first-child{background:var(--accent-d)}
+.depth i:nth-child(2){background:var(--accent)}
+.body{position:relative;flex:1;min-height:0;padding:0 12px}
+.destination{
+  max-height:0;opacity:0;overflow:hidden;transform:translateY(-9px) scale(.98);
+  display:flex;align-items:center;gap:10px;padding:0 12px;margin-bottom:0;
+  border-radius:16px;background:var(--surface);border:1px solid oklch(1 0 0 / .76);
+  box-shadow:inset 0 1px 0 #fff,0 7px 19px var(--shadow);
+  transition:max-height .44s var(--curve),height .44s var(--curve),opacity .26s ease,transform .48s var(--curve),margin .42s var(--curve),padding .42s var(--curve);
+}
+.phone[data-state="thinking"] .destination,.phone[data-state="done"] .destination{
+  max-height:54px;height:54px;opacity:1;transform:none;margin-bottom:9px;padding-top:8px;padding-bottom:8px;
+}
+.folder-mark{
+  height:32px;width:32px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;
+  background:oklch(0.60 0.09 210 / .10);color:var(--accent-d);
+}
+.folder-mark svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.folder-copy{flex:1;min-width:0}
+.folder-copy span{display:block;font-size:10px;color:var(--muted);line-height:1}
+.folder-copy strong{display:block;font-size:14px;font-weight:650;line-height:1.15;margin-top:3px}
+.count{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.path{
+  position:absolute;top:43px;right:22px;left:22px;height:138px;pointer-events:none;
+  opacity:0;transition:opacity .34s ease;
+}
+.phone[data-state="thinking"] .path,.phone[data-state="done"] .path{opacity:1}
+.path svg{width:100%;height:100%}
+.path path{fill:none;stroke:oklch(0.62 0.09 211 / .30);stroke-width:1.2;stroke-dasharray:2 7;animation:route 2.3s linear infinite}
+.notes{position:relative;display:flex;flex-direction:column;gap:8px}
+.card{
+  position:relative;min-height:69px;border-radius:18px;padding:12px 12px;
+  background:var(--surface);border:1px solid oklch(1 0 0 / .68);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .92),0 4px 13px var(--shadow);
+  transition:transform .72s var(--curve),opacity .48s ease,max-height .8s var(--curve),min-height .8s var(--curve),padding .68s var(--curve),margin .72s var(--curve),box-shadow .42s ease,border-color .42s ease;
+  overflow:hidden;
+}
+.card.featured{min-height:157px;padding:14px 12px 12px}
+.note-row{display:flex;align-items:flex-start;gap:9px}
+.dot{margin-top:7px;height:7px;width:7px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.card:not(.featured) .dot{background:oklch(0.60 0.09 170)}
+.copy{flex:1;min-width:0}
+.title{font-size:15px;font-weight:650;line-height:1.3}
+.preview{font-size:12px;color:var(--muted);line-height:1.4;margin-top:3px}
+.time{font-size:10px;color:var(--faint);white-space:nowrap;margin-top:2px}
+.suggestion{
+  max-height:0;opacity:0;transform:translateY(5px);overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:12px;
+  background:var(--soft);border:1px solid transparent;margin-top:0;padding:0 10px;
+  transition:max-height .4s var(--curve),opacity .3s ease,transform .42s var(--curve),margin .4s var(--curve),padding .4s var(--curve),border-color .35s ease;
+}
+.phone[data-state="thinking"] .suggestion,.phone[data-state="done"] .suggestion{
+  max-height:50px;opacity:1;transform:none;margin-top:13px;padding-top:8px;padding-bottom:8px;
+  border-color:oklch(0.81 0.055 211 / .30);
+}
+.suggestion em{display:block;font-style:normal;font-size:10px;color:var(--muted);line-height:1}
+.suggestion b{display:block;font-size:14px;font-weight:650;color:var(--accent-d);margin-top:3px}
+.yes{
+  height:29px;border-radius:999px;padding:0 10px;background:oklch(1 0 0 / .66);
+  color:var(--accent-d);font-size:11px;font-weight:650;
+}
+.receipt{
+  display:flex;align-items:center;gap:7px;max-height:0;opacity:0;overflow:hidden;
+  color:var(--accent-d);font-size:12px;font-weight:650;transition:max-height .42s var(--curve),opacity .32s ease,margin .42s var(--curve);
+}
+.receipt svg{height:17px;width:17px;stroke:currentColor;fill:none;stroke-width:2.3}
+.phone[data-state="done"] .receipt{max-height:24px;opacity:1;margin-top:11px}
+.phone[data-state="done"] .destination{
+  border-color:oklch(0.72 0.075 202 / .40);
+  box-shadow:inset 0 1px 0 #fff,0 0 30px oklch(0.67 0.08 205 / .19);
+}
+.phone[data-state="done"] .featured{
+  min-height:0;max-height:0;opacity:0;transform:translateY(-70px) scale(.4);
+  padding-top:0;padding-bottom:0;margin-top:-8px;border-color:transparent;
+}
+.phone[data-state="done"] .card:not(.featured){transform:translateY(-2px)}
+.dock{
+  position:relative;margin-top:auto;padding:10px 12px max(16px,env(safe-area-inset-bottom));
+  border-top:1px solid oklch(1 0 0 / .42);
+}
+.dock-meta{height:27px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted)}
+.dock-meta strong{font-size:12px;color:var(--accent-d);font-weight:650}
+.command{
+  position:relative;isolation:isolate;height:52px;width:100%;overflow:hidden;
+  border-radius:16px;color:#fff;font-size:15px;font-weight:650;background:var(--accent);
+  box-shadow:0 10px 22px oklch(0.40 0.105 214 / .17),inset 0 1px 0 oklch(1 0 0 / .28);
+  transition:transform .13s ease,background .28s ease,box-shadow .35s ease;
+}
+.command::after{
+  content:"";position:absolute;inset:-52% -72%;pointer-events:none;opacity:.75;
+  background:radial-gradient(ellipse at center,oklch(1 0 0 / .42),transparent 42%);
+  animation:wash 4.1s cubic-bezier(.34,0,.25,1) infinite;
+}
+.command span{position:relative;z-index:1}
+.command:active{transform:scale(.983)}
+.phone[data-state="thinking"] .command{
+  background:var(--accent-d);
+  box-shadow:0 13px 28px oklch(0.38 0.11 214 / .22),0 0 0 5px oklch(0.63 0.07 210 / .07);
+}
+.phone[data-state="done"] .command{background:oklch(0.57 0.075 190)}
+
+/* 01. Porcelain: direct continuation of the ceramic tiles. */
+.porcelain{
+  background:
+    radial-gradient(ellipse 65% 36% at 100% 0%,oklch(0.76 0.045 225 / .12),transparent 63%),
+    radial-gradient(ellipse 80% 39% at 0% 100%,oklch(0.74 0.040 188 / .16),transparent 64%),
+    linear-gradient(164deg,oklch(0.957 0.008 210),oklch(0.902 0.016 215));
+}
+.porcelain::before{
+  background:radial-gradient(ellipse 84% 44% at 50% 94%,oklch(0.67 0.06 195 / .18),transparent 69%);
+}
+.porcelain .dock{background:oklch(0.95 0.01 210 / .54)}
+
+/* 02. Lens: a quiet optical layer, cards floating through a focus field. */
+.lens{
+  --accent:oklch(0.57 0.10 231);
+  --accent-d:oklch(0.40 0.10 232);
+  --soft:oklch(0.94 0.032 232 / .62);
+  --surface:oklch(1 0 0 / .58);
+  --shadow:oklch(0.41 0.045 225 / .09);
+  background:
+    radial-gradient(ellipse 68% 29% at 50% 36%,oklch(0.88 0.048 230 / .44),transparent 64%),
+    radial-gradient(ellipse 68% 34% at 100% 0%,oklch(0.90 0.035 230 / .62),transparent 67%),
+    linear-gradient(180deg,oklch(0.982 0.006 225),oklch(0.925 0.016 225));
+}
+.lens::after{
+  z-index:1;top:184px;left:29px;right:29px;height:236px;border-radius:50%;
+  border:1px solid oklch(0.73 0.06 225 / .17);
+  box-shadow:inset 0 0 55px oklch(0.80 0.045 224 / .14),0 0 0 13px oklch(1 0 0 / .10);
+  opacity:.62;transform:scale(.98);
+}
+.lens::before{
+  background:
+    radial-gradient(ellipse 62% 29% at 50% 42%,oklch(0.77 0.065 230 / .24),transparent 66%),
+    radial-gradient(ellipse 63% 29% at 50% 92%,oklch(0.80 0.05 202 / .16),transparent 70%);
+}
+.lens[data-state="thinking"]::after,.lens[data-state="done"]::after{opacity:1;transform:scale(1.04)}
+.lens .destination{border-radius:999px;margin-left:28px;margin-right:28px;background:oklch(1 0 0 / .53)}
+.lens .notes{padding:8px 10px 0;gap:0;perspective:700px}
+.lens .card{
+  background:linear-gradient(150deg,oklch(1 0 0 / .72),oklch(0.965 0.015 228 / .40));
+  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+}
+.lens .card.featured{
+  z-index:3;min-height:166px;transform:translateY(4px);
+  box-shadow:inset 0 1px 0 #fff,0 19px 39px oklch(0.39 0.05 227 / .15);
+}
+.lens .card:not(.featured){
+  z-index:2;margin:13px 17px 0;transform:translateZ(-3px);
+}
+.lens .card:not(.featured):last-of-type{z-index:1;margin-top:-4px;margin-left:28px;margin-right:28px;opacity:.88}
+.lens[data-state="thinking"] .featured{transform:translateY(-2px) scale(1.012)}
+.lens[data-state="thinking"] .card:not(.featured){transform:translateY(-4px) translateZ(0)}
+.lens[data-state="thinking"] .card:not(.featured):last-of-type{transform:translateY(-9px) translateZ(0)}
+.lens .dock{border:0;padding-left:22px;padding-right:22px;background:transparent}
+.lens .command{border-radius:999px;background:linear-gradient(110deg,oklch(0.57 0.10 231),oklch(0.64 0.075 209))}
+
+/* 03. Atlas: precise planes and an index rail, modern but legible. */
+.atlas{
+  --accent:oklch(0.51 0.078 198);
+  --accent-d:oklch(0.37 0.075 199);
+  --soft:oklch(0.955 0.020 194 / .82);
+  --surface:oklch(0.995 0.003 205 / .90);
+  background:
+    linear-gradient(90deg,transparent 31px,oklch(0.72 0.03 204 / .12) 32px,transparent 33px),
+    repeating-linear-gradient(180deg,transparent 0 79px,oklch(0.74 0.025 205 / .07) 80px),
+    linear-gradient(155deg,oklch(0.97 0.008 205),oklch(0.915 0.014 204));
+}
+.atlas::before{
+  background:radial-gradient(ellipse 74% 31% at 48% 83%,oklch(0.73 0.055 188 / .17),transparent 68%);
+}
+.atlas .brandbar{border-bottom:1px solid oklch(0.73 0.028 204 / .12);margin:0 12px;padding-left:3px;padding-right:3px}
+.atlas .viewhead{padding-top:14px}
+.atlas .depth{padding-bottom:14px}
+.atlas .destination{
+  border-radius:11px;border-color:oklch(0.78 0.035 202 / .22);
+  box-shadow:none;background:oklch(1 0 0 / .64);
+}
+.atlas .folder-mark{border-radius:7px}
+.atlas .notes{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.atlas .card{
+  border-radius:12px;border-color:oklch(0.78 0.027 204 / .18);
+  box-shadow:0 1px 0 oklch(1 0 0 / .94),0 7px 19px oklch(0.34 0.03 205 / .06);
+}
+.atlas .card.featured{grid-column:1/-1;padding-left:16px}
+.atlas .receipt{grid-column:1/-1}
+.atlas .card:not(.featured){
+  min-height:101px;padding:12px 10px;
+}
+.atlas .card:not(.featured) .note-row{display:block}
+.atlas .card:not(.featured) .dot{display:block;margin:0 0 11px}
+.atlas .card:not(.featured) .title{font-size:13px;line-height:1.26}
+.atlas .card:not(.featured) .preview{font-size:11px;margin-top:5px}
+.atlas .card:not(.featured) .time{display:block;margin-top:9px}
+.atlas .suggestion{border-radius:9px}
+.atlas .dock{background:oklch(0.965 0.006 204 / .80);border-color:oklch(0.76 0.028 204 / .16)}
+.atlas .dock-meta{text-transform:uppercase;font-size:10px;font-weight:650}
+.atlas .command{border-radius:11px;background:oklch(0.48 0.075 199);box-shadow:none}
+.atlas[data-state="thinking"] .card:not(.featured){opacity:.66}
+
+/* 04. Tide: the room responds, while the notes remain disciplined. */
+.tide{
+  --accent:oklch(0.56 0.093 203);
+  --accent-d:oklch(0.39 0.085 203);
+  --soft:oklch(0.935 0.030 198 / .57);
+  --surface:oklch(0.995 0.004 200 / .73);
+  background:
+    radial-gradient(ellipse 94% 42% at 50% 101%,oklch(0.77 0.05 189 / .29),transparent 64%),
+    radial-gradient(ellipse 70% 31% at 92% 1%,oklch(0.86 0.042 212 / .33),transparent 62%),
+    linear-gradient(170deg,oklch(0.97 0.007 205),oklch(0.906 0.016 202));
+}
+.tide::before{
+  background:
+    radial-gradient(ellipse 90% 38% at 50% 84%,oklch(0.67 0.065 191 / .27),transparent 68%),
+    radial-gradient(ellipse 44% 25% at 50% 35%,oklch(0.76 0.07 207 / .19),transparent 63%);
+}
+.tide::after{
+  z-index:1;left:7px;right:7px;bottom:72px;height:146px;opacity:.26;
+  border-radius:50% 50% 0 0/84% 84% 0 0;
+  border-top:1px solid oklch(0.69 0.055 193 / .23);
+  transform:translateY(19px);
+}
+.tide[data-state="thinking"]::after,.tide[data-state="done"]::after{opacity:.64;transform:translateY(0)}
+.tide .card{
+  border-radius:22px;background:linear-gradient(155deg,oklch(1 0 0 / .76),oklch(0.96 0.012 202 / .57));
+  box-shadow:inset 0 1px 0 #fff,0 10px 23px oklch(0.34 0.042 201 / .08);
+}
+.tide .destination{border-radius:20px}
+.tide .notes{gap:10px;padding:5px 4px 0}
+.tide .card.featured{margin-right:20px}
+.tide .card:not(.featured):nth-of-type(2){margin-left:26px;margin-right:0}
+.tide .card:not(.featured):last-of-type{margin-left:8px;margin-right:22px}
+.tide .dock{background:transparent;border-top:0;padding-bottom:18px}
+.tide .dock-meta{padding:0 6px}
+.tide .command{
+  height:56px;border-radius:22px;
+  background:linear-gradient(108deg,oklch(0.52 0.09 203),oklch(0.62 0.07 188));
+}
+.tide[data-state="thinking"] .card.featured{transform:translate(-3px,-3px)}
+.tide[data-state="thinking"] .card:not(.featured):nth-of-type(2){transform:translate(4px,-6px)}
+.tide[data-state="thinking"] .card:not(.featured):last-of-type{transform:translate(-2px,-8px)}
+.tide[data-state="thinking"] .card.featured{box-shadow:inset 0 1px 0 #fff,0 17px 37px oklch(0.37 0.055 202 / .14)}
+
+@keyframes wash{
+  0%,15%{transform:translateX(-64%);opacity:0}
+  27%{opacity:.72}
+  48%{transform:translateX(43%);opacity:.28}
+  56%,100%{transform:translateX(62%);opacity:0}
+}
+@keyframes route{to{stroke-dashoffset:-36}}
+@media(max-width:1280px){
+  .gallery{grid-template-columns:repeat(2,minmax(300px,400px));justify-content:center}
+}
+@media(max-width:760px){
+  .lab{padding:19px 12px 28px}
+  .masthead{display:block;margin-bottom:18px}
+  .states{margin-top:17px;width:100%}
+  .state{flex:1;min-width:0;padding:0 6px}
+  .gallery{grid-template-columns:minmax(0,405px)}
+  .phone{height:min(708px,calc(100svh - 114px));min-height:646px}
+}
+</style>
+</head>
+<body>
+<main class="lab">
+  <header class="masthead">
+    <div>
+      <div class="wordmark">Разберёмся</div>
+      <p class="lead">Четыре поверхности одной памяти: легко, спокойно и чуть смелее привычных заметок.</p>
+    </div>
+    <nav class="states" aria-label="Состояние агента">
+      <button class="state" type="button" data-state="idle">Покой</button>
+      <button class="state active" type="button" data-state="thinking">Разбираюсь</button>
+      <button class="state" type="button" data-state="done">Уложено</button>
+    </nav>
+  </header>
+  <section class="gallery" id="gallery"></section>
+</main>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="more" viewBox="0 0 24 24"><path d="M6 12h.1M12 12h.1M18 12h.1"/></symbol>
+  <symbol id="tray" viewBox="0 0 24 24"><path d="M4 17h16M7 13l5 4 5-4M12 4v13"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+</svg>
+
+<template id="phone-template">
+  <div class="screen">
+    <div class="status"><span>10:42</span><span>5G&nbsp;&nbsp;92%</span></div>
+    <div class="brandbar"><div class="brand">Разберёмся</div><div class="date">Сегодня</div></div>
+    <div class="viewhead">
+      <button class="icon" type="button" aria-label="Назад"><svg><use href="#back"></use></svg></button>
+      <div>
+        <div class="where-label">Папка агента</div>
+        <div class="where-title">Деньги</div>
+      </div>
+      <button class="icon" type="button" aria-label="Ещё"><svg><use href="#more"></use></svg></button>
+    </div>
+    <div class="depth"><i></i><i></i><i></i></div>
+    <div class="body">
+      <div class="destination">
+        <div class="folder-mark"><svg><use href="#tray"></use></svg></div>
+        <div class="folder-copy"><span>Раздел</span><strong>Финансы</strong></div>
+        <div class="count">12</div>
+      </div>
+      <div class="path" aria-hidden="true">
+        <svg viewBox="0 0 300 138" preserveAspectRatio="none"><path d="M154 130 C 242 90 253 46 249 8"></path></svg>
+      </div>
+      <div class="notes">
+        <article class="card featured">
+          <div class="note-row">
+            <span class="dot"></span>
+            <div class="copy">
+              <div class="title">Квитанция за апрель</div>
+              <div class="preview">Оплатить до 25-го - 2 840 руб.</div>
+            </div>
+            <time class="time">вчера</time>
+          </div>
+          <div class="suggestion">
+            <span><em>Агент предлагает раздел</em><b>Финансы</b></span>
+            <button class="yes" type="button">верно</button>
+          </div>
+        </article>
+        <div class="receipt"><svg><use href="#check"></use></svg><span>Сохранено в «Финансы»</span></div>
+        <article class="card">
+          <div class="note-row">
+            <span class="dot"></span>
+            <div class="copy">
+              <div class="title">Продлить страховку</div>
+              <div class="preview">Проверить дату полиса</div>
+            </div>
+            <time class="time">2 дня</time>
+          </div>
+        </article>
+        <article class="card">
+          <div class="note-row">
+            <span class="dot"></span>
+            <div class="copy">
+              <div class="title">Расходы на поездку</div>
+              <div class="preview">Собрать чеки</div>
+            </div>
+            <time class="time">май</time>
+          </div>
+        </article>
+      </div>
+    </div>
+    <footer class="dock">
+      <div class="dock-meta"><span>Назначение агента</span><strong>Финансы</strong></div>
+      <button class="command" type="button" data-cycle><span>Разобраться</span></button>
+    </footer>
+  </div>
+</template>
+
+<script>
+const directions=[
+  {key:'porcelain',name:'Фарфор',note:'тактильно'},
+  {key:'lens',name:'Линза',note:'оптически'},
+  {key:'atlas',name:'Атлас',note:'системно'},
+  {key:'tide',name:'Прилив',note:'живо'}
+];
+const gallery=document.getElementById('gallery');
+const template=document.getElementById('phone-template');
+const stateButtons=[...document.querySelectorAll('.state')];
+const commandLabels={idle:'Разобраться',thinking:'Сохранить',done:'Готово'};
+const order=['idle','thinking','done'];
+
+directions.forEach((direction,index)=>{
+  const concept=document.createElement('article');
+  concept.className='concept';
+  concept.innerHTML=`<div class="caption"><span class="number">0${index+1}</span><h2>${direction.name}</h2><small>${direction.note}</small></div>`;
+  const phone=document.createElement('section');
+  phone.className=`phone ${direction.key}`;
+  phone.dataset.state='thinking';
+  phone.setAttribute('aria-label',`Интерфейс ${direction.name}`);
+  phone.append(template.content.cloneNode(true));
+  concept.append(phone);
+  gallery.append(concept);
+});
+
+function setPhoneState(phone,state){
+  phone.dataset.state=state;
+  phone.querySelector('[data-cycle] span').textContent=commandLabels[state];
+}
+function setAll(state){
+  document.querySelectorAll('.phone').forEach(phone=>setPhoneState(phone,state));
+  stateButtons.forEach(button=>button.classList.toggle('active',button.dataset.state===state));
+}
+stateButtons.forEach(button=>button.addEventListener('click',()=>setAll(button.dataset.state)));
+gallery.addEventListener('click',event=>{
+  const button=event.target.closest('[data-cycle]');
+  if(!button)return;
+  const phone=button.closest('.phone');
+  const current=order.indexOf(phone.dataset.state);
+  setPhoneState(phone,order[(current+1)%order.length]);
+});
+setAll('thinking');
+</script>
+</body>
+</html>

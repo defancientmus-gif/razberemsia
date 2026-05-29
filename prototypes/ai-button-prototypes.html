@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Легкие прототипы кнопки ИИ</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#fbf8f1;
+  --paper:rgba(255,255,255,.62);
+  --paper-strong:rgba(255,255,255,.82);
+  --ink:#173a2f;
+  --text:#23302d;
+  --soft:#63706b;
+  --line:rgba(31,58,47,.14);
+  --shadow:0 18px 44px rgba(49,55,50,.10);
+  --green:#779b82;
+  --green-dark:#2f644d;
+  --blue:#4d82af;
+  --blue-soft:#dcecf9;
+  --gold:#dfa03c;
+  --gold-soft:#fff2ce;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+}
+html,body{min-height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--font)}
+body{
+  background:
+    radial-gradient(circle at 20% 8%,rgba(255,255,255,.95),transparent 26rem),
+    radial-gradient(circle at 80% 20%,rgba(239,230,213,.52),transparent 22rem),
+    linear-gradient(180deg,#fbf8f1,#f6f1e8);
+}
+button{font-family:var(--font)}
+.page{width:min(1080px,100%);margin:0 auto;padding:42px 20px 44px}
+.hero{text-align:center;margin-bottom:28px}
+.eyebrow{margin:0 0 8px;font-size:28px;line-height:1.05;font-weight:420;letter-spacing:0;font-family:Georgia,"Times New Roman",serif;color:#1e2d29}
+h1{margin:0;font-size:clamp(54px,9vw,92px);line-height:.95;font-weight:500;letter-spacing:0;font-family:Georgia,"Times New Roman",serif;color:var(--ink)}
+.hero p{margin:18px auto 0;max-width:660px;color:rgba(35,48,45,.66);font-size:20px;line-height:1.35}
+.state-controls{
+  width:min(620px,100%);
+  margin:26px auto 0;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  padding:7px;
+  border:1px solid rgba(31,58,47,.12);
+  border-radius:999px;
+  background:rgba(255,255,255,.50);
+  box-shadow:0 12px 34px rgba(49,55,50,.08);
+}
+.state-controls button{
+  min-height:42px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:rgba(35,48,45,.62);
+  font-size:14px;
+  font-weight:650;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.state-controls button.is-active{
+  color:var(--ink);
+  background:rgba(255,255,255,.76);
+  box-shadow:0 7px 18px rgba(49,55,50,.10), inset 0 0 0 1px rgba(31,58,47,.10);
+}
+.section-title{margin:0 0 14px;color:rgba(35,48,45,.62);font-size:15px;font-weight:650;text-align:center}
+.states{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  margin-bottom:20px;
+}
+.card{
+  min-height:252px;
+  padding:26px;
+  border:1px solid rgba(31,58,47,.10);
+  border-radius:25px;
+  background:var(--paper);
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+}
+.card-head{display:flex;align-items:center;gap:16px;color:rgba(35,48,45,.67);font-size:21px;font-weight:420;margin-bottom:28px}
+.num{
+  width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;
+  color:rgba(35,48,45,.85);
+  background:rgba(225,226,215,.72);
+  font-size:21px;
+  font-weight:420;
+}
+.button-slot{flex:1;display:grid;place-items:center;min-height:86px}
+.caption{margin:22px 0 0;color:rgba(35,48,45,.70);font-size:20px;line-height:1.35;text-align:center}
+.variants{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-top:24px;
+}
+.variant{
+  min-height:230px;
+  border:1px solid rgba(31,58,47,.10);
+  border-radius:24px;
+  background:rgba(255,255,255,.50);
+  box-shadow:0 14px 34px rgba(49,55,50,.08);
+  padding:23px;
+  display:flex;
+  flex-direction:column;
+}
+.variant .button-slot{min-height:112px}
+.variant h2{margin:0;font-size:22px;font-weight:520;letter-spacing:0;color:#23302d}
+.variant p{margin:9px 0 0;color:rgba(35,48,45,.62);font-size:15px;line-height:1.45}
+.ai-button{
+  --accent:var(--green-dark);
+  --accent-soft:rgba(119,155,130,.18);
+  position:relative;
+  min-width:250px;
+  min-height:74px;
+  border:1.5px solid rgba(47,100,77,.32);
+  border-radius:999px;
+  color:var(--ink);
+  background:rgba(255,255,255,.42);
+  box-shadow:0 16px 28px rgba(49,55,50,.10), inset 0 1px 0 rgba(255,255,255,.72);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:15px;
+  padding:15px 26px;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.ai-button:hover{transform:translateY(-1px);box-shadow:0 18px 32px rgba(49,55,50,.12), inset 0 1px 0 rgba(255,255,255,.78)}
+.ai-button[data-state="listen"]{--accent:var(--blue);--accent-soft:rgba(77,130,175,.14);border-color:rgba(223,160,60,.58)}
+.ai-button[data-state="think"]{--accent:var(--blue);--accent-soft:rgba(77,130,175,.13);border-color:rgba(77,130,175,.46);box-shadow:0 16px 32px rgba(77,130,175,.13), inset 0 1px 0 rgba(255,255,255,.72)}
+.ai-button[data-state="done"]{--accent:var(--green-dark);--accent-soft:rgba(47,100,77,.16);border-color:rgba(47,100,77,.30)}
+.glyph{
+  position:relative;
+  flex:0 0 auto;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  color:var(--accent);
+}
+.glyph svg{width:34px;height:34px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.label{display:block;font-size:28px;font-weight:700;line-height:1;color:var(--accent);letter-spacing:0;white-space:nowrap}
+.sub{display:block;margin-top:3px;font-size:15px;font-weight:420;color:rgba(35,48,45,.70);white-space:nowrap}
+.pulse{
+  position:absolute;
+  inset:-13px;
+  border-radius:999px;
+  border:1px solid rgba(77,130,175,.12);
+  opacity:0;
+  pointer-events:none;
+}
+.ai-button[data-state="think"] .pulse{animation:pulse 1.9s ease-out infinite;opacity:1}
+.ai-button[data-state="listen"] .glyph{animation:float 1.6s ease-in-out infinite}
+.ai-button[data-state="think"] .glyph{animation:twinkle 1.25s ease-in-out infinite}
+.ai-button[data-state="done"] .glyph{
+  width:54px;height:54px;border-radius:50%;
+  color:#fff;background:linear-gradient(145deg,rgba(119,155,130,.92),rgba(47,100,77,.72));
+  box-shadow:0 10px 22px rgba(47,100,77,.18);
+}
+.ai-button[data-state="done"] .glyph svg{width:28px;height:28px}
+.ai-button.small{min-width:214px;min-height:66px;padding:13px 22px;gap:12px}
+.ai-button.small .label{font-size:24px}
+.ai-button.small .sub{font-size:13px}
+.ai-button.small .glyph{width:34px;height:34px}
+
+.soft{background:rgba(255,255,255,.36)}
+.glass{background:rgba(255,255,255,.30);backdrop-filter:blur(18px)}
+.line-only{background:rgba(255,255,255,.18);box-shadow:none}
+.cloud{
+  min-width:238px;
+  border-color:rgba(47,100,77,.24);
+  background:
+    radial-gradient(circle at 26% 22%,rgba(255,255,255,.86) 0 22%,transparent 23%),
+    radial-gradient(circle at 54% 13%,rgba(255,255,255,.92) 0 25%,transparent 26%),
+    radial-gradient(circle at 78% 26%,rgba(255,255,255,.76) 0 21%,transparent 22%),
+    rgba(255,255,255,.34);
+}
+.cat-ears::before,.cat-ears::after{
+  content:"";
+  position:absolute;
+  top:-7px;
+  width:0;height:0;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-bottom:22px solid rgba(255,255,255,.74);
+}
+.cat-ears::before{left:70px;transform:rotate(-14deg)}
+.cat-ears::after{right:70px;transform:rotate(14deg)}
+.cat-face{
+  position:absolute;
+  left:50%;
+  top:14px;
+  width:50px;
+  height:16px;
+  transform:translateX(-50%);
+  opacity:.82;
+}
+.cat-face::before,.cat-face::after{
+  content:"";
+  position:absolute;
+  top:4px;
+  width:5px;height:6px;
+  border-radius:50%;
+  background:rgba(23,58,47,.78);
+}
+.cat-face::before{left:13px}
+.cat-face::after{right:13px}
+.cloud .label{padding-top:8px}
+.bookmark{
+  border-radius:24px 24px 10px 10px;
+  min-width:190px;
+}
+.bookmark::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-10px;
+  width:28px;height:28px;
+  background:var(--bg);
+  transform:translateX(-50%) rotate(45deg);
+  border-left:1px solid rgba(31,58,47,.10);
+  border-top:1px solid rgba(31,58,47,.10);
+}
+.orb .glyph{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.86),0 8px 20px var(--accent-soft);
+}
+.footer-note{
+  width:min(820px,100%);
+  margin:24px auto 0;
+  border:1px solid rgba(31,58,47,.11);
+  border-radius:18px;
+  background:rgba(255,255,255,.42);
+  box-shadow:0 12px 28px rgba(49,55,50,.07);
+  padding:18px 22px;
+  display:flex;
+  gap:18px;
+  align-items:center;
+  color:rgba(35,48,45,.78);
+  font-size:20px;
+  line-height:1.35;
+}
+.shield{
+  flex:0 0 auto;
+  width:48px;height:56px;
+  color:rgba(47,100,77,.72);
+}
+.shield svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}
+
+@keyframes pulse{0%{transform:scale(.86);opacity:.38}100%{transform:scale(1.28);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes twinkle{0%,100%{transform:scale(1);opacity:.82}50%{transform:scale(1.08);opacity:1}}
+
+@media (max-width:940px){
+  .states,.variants{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .page{padding:28px 12px 34px}
+  .eyebrow{font-size:23px}
+  h1{font-size:52px}
+  .hero p{font-size:17px}
+  .state-controls{grid-template-columns:repeat(2,minmax(0,1fr));border-radius:24px}
+  .states,.variants{grid-template-columns:1fr}
+  .card{min-height:226px;padding:22px}
+  .ai-button{min-width:0;width:100%;min-height:70px}
+  .label{font-size:25px}
+  .footer-note{font-size:17px;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">Кнопка ИИ-помощника</p>
+    <h1>«Разберёмся»</h1>
+    <p>Легкая, прозрачная, почти невесомая. Без декоративного шума: только форма, состояние и маленький живой жест.</p>
+    <nav class="state-controls" aria-label="Переключатель состояния прототипов">
+      <button class="is-active" type="button" data-set-state="idle">Ожидание</button>
+      <button type="button" data-set-state="listen">Слушаю</button>
+      <button type="button" data-set-state="think">Разбираюсь</button>
+      <button type="button" data-set-state="done">Готово</button>
+    </nav>
+  </header>
+
+  <p class="section-title">4 состояния одной основной кнопки</p>
+  <section class="states" aria-label="Состояния кнопки Разберёмся">
+    <article class="card">
+      <div class="card-head"><span class="num">1</span><span>Ожидание</span></div>
+      <div class="button-slot">
+        <button class="ai-button state-card soft" type="button" data-state="idle" aria-label="Разберёмся">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="feather"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">кнопка готова помочь</span></span>
+        </button>
+      </div>
+      <p class="caption">Спокойная кнопка, почти как стекло на теплом фоне.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-head"><span class="num">2</span><span>Слушаю</span></div>
+      <div class="button-slot">
+        <button class="ai-button state-card glass" type="button" data-state="listen" aria-label="Слушаю">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="mic"></span>
+          <span><span class="label">Слушаю…</span><span class="sub">говорите, пожалуйста</span></span>
+        </button>
+      </div>
+      <p class="caption">Тонкий янтарный контур говорит, что микрофон активен.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-head"><span class="num">3</span><span>Думаю</span></div>
+      <div class="button-slot">
+        <button class="ai-button state-card line-only" type="button" data-state="think" aria-label="Разбираюсь">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="sparkles"></span>
+          <span><span class="label">Разбираюсь…</span><span class="sub">анализирую запрос</span></span>
+        </button>
+      </div>
+      <p class="caption">Легкие круги дыхания вместо тяжелой анимации.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-head"><span class="num">4</span><span>Готово</span></div>
+      <div class="button-slot">
+        <button class="ai-button state-card soft" type="button" data-state="done" aria-label="Вижу">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="check"></span>
+          <span><span class="label">Вижу</span><span class="sub">напоминание готово</span></span>
+        </button>
+      </div>
+      <p class="caption">Готовность показываем не салютом, а уверенной зеленой меткой.</p>
+    </article>
+  </section>
+
+  <p class="section-title">Несколько форм той же идеи</p>
+  <section class="variants" aria-label="Варианты формы кнопки">
+    <article class="variant">
+      <div class="button-slot">
+        <button class="ai-button small cloud cat-ears variant-button" type="button" data-state="idle" aria-label="Облачко с котиком">
+          <span class="cat-face"></span>
+          <span class="pulse"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">рядом</span></span>
+        </button>
+      </div>
+      <h2>Облачко с котиком</h2>
+      <p>Персонаж почти спрятан: только ушки и глаза. Тепло есть, детскости меньше.</p>
+    </article>
+
+    <article class="variant">
+      <div class="button-slot">
+        <button class="ai-button small glass orb variant-button" type="button" data-state="idle" aria-label="Свет">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="sparkles"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">подсвечу</span></span>
+        </button>
+      </div>
+      <h2>Свет</h2>
+      <p>Самый воздушный вариант: маленький огонек внутри прозрачной формы.</p>
+    </article>
+
+    <article class="variant">
+      <div class="button-slot">
+        <button class="ai-button small bookmark variant-button" type="button" data-state="idle" aria-label="Закладка">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="feather"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">на полях</span></span>
+        </button>
+      </div>
+      <h2>Закладка</h2>
+      <p>Для заметок выглядит естественно: помощник как живая пометка на странице.</p>
+    </article>
+
+    <article class="variant">
+      <div class="button-slot">
+        <button class="ai-button small line-only variant-button" type="button" data-state="idle" aria-label="Линия">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="compass"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">направлю</span></span>
+        </button>
+      </div>
+      <h2>Тонкая линия</h2>
+      <p>Самый взрослый путь: почти без фона, работает за счет контура и типографики.</p>
+    </article>
+
+    <article class="variant">
+      <div class="button-slot">
+        <button class="ai-button small soft variant-button" type="button" data-state="idle" aria-label="Лапка">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="paw"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">помогу</span></span>
+        </button>
+      </div>
+      <h2>Лапка</h2>
+      <p>Более явная теплая версия котика, но без полноценного персонажа на кнопке.</p>
+    </article>
+
+    <article class="variant">
+      <div class="button-slot">
+        <button class="ai-button small glass variant-button" type="button" data-state="idle" aria-label="Капсула">
+          <span class="pulse"></span>
+          <span class="glyph" data-icon="message"></span>
+          <span><span class="label">Разберёмся</span><span class="sub">спросите</span></span>
+        </button>
+      </div>
+      <h2>Прозрачная капсула</h2>
+      <p>Самый близкий к текущей кнопке путь: просто легче, чище и человечнее.</p>
+    </article>
+  </section>
+
+  <div class="footer-note">
+    <span class="shield" data-shield></span>
+    <span>Ваш помощник рядом и всё под контролем. Просто нажмите и говорите.</span>
+  </div>
+</main>
+
+<script>
+const icons = {
+  feather: '<svg viewBox="0 0 24 24"><path d="M20.4 3.6c-5.8.7-10.9 3.9-13.8 8.5-1.4 2.3-1.9 4.6-1.8 6.9 2.3.1 4.7-.5 6.9-1.8 4.6-2.8 7.8-8 8.7-13.6Z"/><path d="M4 20c3.1-4.5 7-8.4 11.8-11.5"/><path d="M11 13h4"/><path d="M8.5 15.6h3.4"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><path d="M12 3a3.2 3.2 0 0 0-3.2 3.2v5.6a3.2 3.2 0 0 0 6.4 0V6.2A3.2 3.2 0 0 0 12 3Z"/><path d="M18.5 11.5a6.5 6.5 0 0 1-13 0"/><path d="M12 18v3"/><path d="M8.6 21h6.8"/></svg>',
+  sparkles: '<svg viewBox="0 0 24 24"><path d="M10.5 3.8 8.9 8.7 4 10.5l4.9 1.8 1.6 4.9 1.8-4.9 4.9-1.8-4.9-1.8-1.8-4.9Z"/><path d="M18.5 14.5 17.8 17l-2.3.8 2.3.8.7 2.4.8-2.4 2.2-.8-2.2-.8-.8-2.5Z"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.1L19 7"/></svg>',
+  compass: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m15.4 8.6-2.1 5.1-4.7 1.7 2.1-5 4.7-1.8Z"/></svg>',
+  paw: '<svg viewBox="0 0 24 24"><path d="M8.3 10.2c1.1 0 1.9-1.1 1.9-2.5S9.4 5.2 8.3 5.2 6.4 6.3 6.4 7.7s.8 2.5 1.9 2.5Z"/><path d="M15.7 10.2c1.1 0 1.9-1.1 1.9-2.5s-.8-2.5-1.9-2.5-1.9 1.1-1.9 2.5.8 2.5 1.9 2.5Z"/><path d="M5.4 14.1c.9 0 1.6-.9 1.6-2s-.7-2-1.6-2-1.6.9-1.6 2 .7 2 1.6 2Z"/><path d="M18.6 14.1c.9 0 1.6-.9 1.6-2s-.7-2-1.6-2-1.6.9-1.6 2 .7 2 1.6 2Z"/><path d="M12 12.8c-2.4 0-4.8 2.6-4.8 4.7 0 1.4 1 2.1 2.3 2.1.9 0 1.5-.4 2.5-.4s1.6.4 2.5.4c1.3 0 2.3-.7 2.3-2.1 0-2.1-2.4-4.7-4.8-4.7Z"/></svg>',
+  message: '<svg viewBox="0 0 24 24"><path d="M5.5 6.2h13a2.5 2.5 0 0 1 2.5 2.5v5.7a2.5 2.5 0 0 1-2.5 2.5H12l-4.4 3v-3H5.5A2.5 2.5 0 0 1 3 14.4V8.7a2.5 2.5 0 0 1 2.5-2.5Z"/><path d="M8 10.5h8"/><path d="M8 13.3h5.5"/></svg>'
+};
+
+document.querySelectorAll("[data-icon]").forEach(node => {
+  node.innerHTML = icons[node.dataset.icon] || icons.feather;
+});
+
+document.querySelector("[data-shield]").innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3 5 5.8v5.8c0 4.5 2.9 7.2 7 9.4 4.1-2.2 7-4.9 7-9.4V5.8L12 3Z"/></svg>';
+
+const states = [
+  { key: "idle", label: "Разберёмся", sub: "кнопка готова помочь", icon: "feather" },
+  { key: "listen", label: "Слушаю…", sub: "говорите, пожалуйста", icon: "mic" },
+  { key: "think", label: "Разбираюсь…", sub: "анализирую запрос", icon: "sparkles" },
+  { key: "done", label: "Вижу", sub: "напоминание готово", icon: "check" }
+];
+
+const variantSubs = {
+  "cat-ears": ["рядом", "мурлычу", "ищу суть", "готово"],
+  "orb": ["подсвечу", "слышу", "собираю", "готово"],
+  "bookmark": ["на полях", "слушаю", "размечаю", "готово"],
+  "line-only": ["направлю", "слушаю", "ищу путь", "вижу"],
+  "soft": ["помогу", "слушаю", "разбираю", "готово"],
+  "glass": ["спросите", "слышу", "думаю", "ответ готов"]
+};
+
+const variantIcons = {
+  "cat-ears": ["", "", "", ""],
+  "orb": ["sparkles", "mic", "sparkles", "check"],
+  "bookmark": ["feather", "mic", "sparkles", "check"],
+  "line-only": ["compass", "mic", "sparkles", "check"],
+  "soft": ["paw", "mic", "sparkles", "check"],
+  "glass": ["message", "mic", "sparkles", "check"]
+};
+
+const buttons = Array.from(document.querySelectorAll(".variant-button"));
+const stateControls = Array.from(document.querySelectorAll("[data-set-state]"));
+
+function variantName(button) {
+  return Array.from(button.classList).find(name => variantSubs[name]);
+}
+
+function setVariant(button, stateKey) {
+  const index = Math.max(0, states.findIndex(state => state.key === stateKey));
+  const state = states[index];
+  const name = variantName(button);
+  button.dataset.state = state.key;
+  button.querySelector(".label").textContent = state.label;
+  button.querySelector(".sub").textContent = name ? variantSubs[name][index] : state.sub;
+  const glyph = button.querySelector(".glyph");
+  if (glyph && name) {
+    const iconName = variantIcons[name][index];
+    glyph.innerHTML = iconName ? icons[iconName] : "";
+    glyph.style.display = iconName ? "grid" : "none";
+  }
+}
+
+function setAll(stateKey) {
+  buttons.forEach(button => setVariant(button, stateKey));
+  stateControls.forEach(button => button.classList.toggle("is-active", button.dataset.setState === stateKey));
+}
+
+stateControls.forEach(button => {
+  button.addEventListener("click", () => setAll(button.dataset.setState));
+});
+
+buttons.forEach(button => {
+  button.addEventListener("click", () => {
+    const index = states.findIndex(state => state.key === button.dataset.state);
+    setVariant(button, states[(index + 1) % states.length].key);
+  });
+});
+</script>
+</body>
+</html>

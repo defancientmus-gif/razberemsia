@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="825" height="1024" viewBox="388 246 548 680" role="img" aria-labelledby="title desc">
+  <title id="title">Разберемся - знак без фона</title>
+  <desc id="desc">Прозрачный знак в форме буквы Р и пера без плитки и рамки.</desc>
+  <defs>
+    <linearGradient id="p-fill" x1="0.07" y1="0" x2="0.9" y2="1">
+      <stop stop-color="#a6d0ff"/>
+      <stop offset="0.42" stop-color="#8bbcfb"/>
+      <stop offset="0.78" stop-color="#5b91e4"/>
+      <stop offset="1" stop-color="#3975d4"/>
+    </linearGradient>
+    <linearGradient id="p-light" x1="0" y1="0" x2="1" y2="0.7">
+      <stop stop-color="#e0f0ff" stop-opacity="0.48"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="feather-fill" x1="0.3" y1="0" x2="0.42" y2="1">
+      <stop stop-color="#cce5ff"/>
+      <stop offset="0.38" stop-color="#b1d3fd"/>
+      <stop offset="0.7" stop-color="#78abed"/>
+      <stop offset="1" stop-color="#3a76d0"/>
+    </linearGradient>
+    <linearGradient id="feather-shade" x1="0.86" y1="0.08" x2="0.16" y2="1">
+      <stop stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="0.57" stop-color="#a9ccff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#1e58bf" stop-opacity="0.22"/>
+    </linearGradient>
+  </defs>
+
+  <g id="mark">
+    <path id="letter-p" d="M421 903 C443 896 460 879 471 855 C480 836 484 813 488 790 C491 772 498 750 508 728 L464 782 V319 H700 C796 319 859 387 859 495 C859 602 793 670 691 670 H650 C632 686 611 698 588 704 C611 710 643 712 691 712 C819 712 904 626 904 495 C904 365 824 278 701 278 H421 Z" fill="url(#p-fill)"/>
+    <path d="M422 279 H701 C823 279 902 365 902 495 C902 624 818 710 691 710 C650 710 614 707 589 703" fill="none" stroke="#b8d9ff" stroke-opacity="0.67" stroke-width="2"/>
+    <path d="M423 279 L463 319 H699" fill="none" stroke="url(#p-light)" stroke-width="3"/>
+
+    <path id="feather" d="M424 902 C445 889 460 858 477 816 C495 766 524 731 570 712 C621 692 672 679 713 633 C755 585 778 493 771 387 C741 444 682 466 603 516 C529 563 483 651 465 765 C457 820 443 874 424 902 Z" fill="url(#feather-fill)" stroke="#87b8f8" stroke-width="1.35"/>
+    <path d="M424 902 C445 889 460 858 477 816 C495 766 524 731 570 712 C621 692 672 679 713 633 C755 585 778 493 771 387 C741 444 682 466 603 516 C529 563 483 651 465 765 C457 820 443 874 424 902 Z" fill="url(#feather-shade)"/>
+    <path d="M468 813 C498 733 550 657 637 579 C556 612 498 677 468 813 Z" fill="#fcfdff"/>
+    <path d="M427 895 C462 801 526 674 637 579" fill="none" stroke="#dbeeff" stroke-opacity="0.72" stroke-width="1.7" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разберёмся · оживание ИИ-агента</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#f2efe7;
+  --ink:#17231f;
+  --muted:#66706a;
+  --paper:rgba(255,255,255,.68);
+  --line:rgba(30,48,41,.13);
+  --green:#3f795e;
+  --blue:#477fa4;
+  --amber:#d39a32;
+  --red:#b65a4b;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+html,body{margin:0;min-height:100%;font-family:var(--font);color:var(--ink);background:var(--bg)}
+body{
+  background:
+    radial-gradient(circle at 18% 4%,rgba(255,255,255,.95),transparent 28rem),
+    radial-gradient(circle at 86% 16%,rgba(227,217,197,.56),transparent 25rem),
+    linear-gradient(180deg,#fbf8f1,#ebe5d8);
+}
+button{font-family:var(--font)}
+.page{width:min(1240px,100%);margin:0 auto;padding:34px 18px 44px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px}
+.hero h1{margin:0;font-family:var(--serif);font-weight:420;letter-spacing:0;font-size:clamp(38px,6vw,68px);line-height:.96;color:#17362c}
+.hero p{margin:10px 0 0;max-width:690px;color:rgba(23,35,31,.68);font-size:18px;line-height:1.45}
+.state-switch{
+  display:flex;
+  gap:8px;
+  padding:7px;
+  border:1px solid rgba(30,48,41,.12);
+  border-radius:999px;
+  background:rgba(255,255,255,.50);
+  box-shadow:0 12px 32px rgba(48,54,49,.08);
+}
+.state-switch button{
+  border:0;
+  min-height:40px;
+  border-radius:999px;
+  padding:0 15px;
+  background:transparent;
+  color:rgba(23,35,31,.62);
+  font-size:14px;
+  font-weight:650;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.state-switch button.active{background:rgba(255,255,255,.82);color:#17362c;box-shadow:0 7px 18px rgba(48,54,49,.10)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.concept{display:flex;flex-direction:column;gap:10px}
+.concept-title{padding:0 4px}
+.concept-title h2{margin:0;font-size:18px;font-weight:720;letter-spacing:0;color:#1d2e28}
+.concept-title p{margin:5px 0 0;color:rgba(23,35,31,.62);font-size:13px;line-height:1.4}
+.phone{
+  --awake:#3f795e;
+  position:relative;
+  height:640px;
+  border-radius:38px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.78);
+  box-shadow:0 28px 70px rgba(45,50,46,.18), inset 0 0 0 1px rgba(30,48,41,.08);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,.18)),
+    #edf1ec;
+  isolation:isolate;
+}
+.phone::before,.phone::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  transition:opacity .45s ease,transform .55s cubic-bezier(.22,1,.36,1);
+}
+.phone::before{z-index:-2;background:linear-gradient(180deg,#eef4f0,#e8eee8)}
+.phone::after{z-index:0;opacity:0}
+.phone.is-awake::after{opacity:1}
+.ui{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+.status{height:34px;padding:12px 20px 0;display:flex;justify-content:space-between;color:rgba(23,35,31,.46);font-size:11px;font-weight:650}
+.hdr{padding:8px 18px 10px}
+.brand{font-family:var(--serif);font-size:25px;line-height:1;font-weight:420;color:#17362c;letter-spacing:0}
+.date{font-size:11px;color:rgba(23,35,31,.40);margin-top:5px}
+.stage{position:relative;flex:1;min-height:0;padding:4px 13px 8px}
+.memory-map,.memory-shelves,.memory-orbit,.memory-lights{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s ease}
+.phone.is-awake .memory-map,.phone.is-awake .memory-shelves,.phone.is-awake .memory-orbit,.phone.is-awake .memory-lights{opacity:1}
+.note-list{position:relative;z-index:2;display:flex;flex-direction:column;gap:8px}
+.note{
+  position:relative;
+  min-height:76px;
+  padding:12px 12px 11px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.72);
+  background:rgba(255,255,255,.58);
+  box-shadow:0 8px 20px rgba(36,44,39,.06);
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:10px;
+  align-items:start;
+  transition:transform .42s cubic-bezier(.22,1,.36,1),background .35s ease,border-color .35s ease,box-shadow .35s ease;
+}
+.phone.is-awake .note{background:rgba(255,255,255,.74);box-shadow:0 10px 24px rgba(36,44,39,.08);border-color:rgba(255,255,255,.86)}
+.sig{width:8px;height:8px;border-radius:50%;margin-top:4px;background:rgba(23,35,31,.18)}
+.sig.red{background:var(--red)}
+.sig.amber{background:var(--amber)}
+.sig.green{background:var(--green)}
+.nt{font-size:13px;font-weight:720;line-height:1.25;color:#17231f}
+.np{font-size:11px;line-height:1.35;color:rgba(23,35,31,.55);margin-top:3px}
+.time{font-size:10px;color:rgba(23,35,31,.34);white-space:nowrap}
+.chip-row{grid-column:2/4;display:flex;gap:5px;flex-wrap:wrap;max-height:0;opacity:0;overflow:hidden;transition:max-height .45s ease,opacity .35s ease,margin .35s ease}
+.phone.is-awake .chip-row{max-height:46px;opacity:1;margin-top:7px}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  min-height:20px;
+  border-radius:7px;
+  padding:0 7px;
+  font-size:10px;
+  font-weight:720;
+  color:rgba(23,35,31,.64);
+  background:rgba(255,255,255,.58);
+  border:1px solid rgba(30,48,41,.08);
+}
+.bottom{
+  position:relative;
+  z-index:4;
+  padding:8px 13px 22px;
+  border-top:1px solid rgba(255,255,255,.55);
+  background:rgba(255,255,255,.30);
+  backdrop-filter:blur(16px);
+}
+.new-note{
+  width:100%;
+  height:50px;
+  border:1px solid rgba(30,48,41,.10);
+  border-radius:16px;
+  background:rgba(255,255,255,.55);
+  color:rgba(23,35,31,.54);
+  font-size:14px;
+  font-weight:660;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  box-shadow:0 8px 18px rgba(36,44,39,.06);
+}
+.actions{display:grid;grid-template-columns:1fr 1.24fr 1fr;gap:7px;margin-top:8px;align-items:end}
+.act{
+  height:58px;
+  border:0;
+  border-radius:15px;
+  background:rgba(255,255,255,.52);
+  color:rgba(23,35,31,.52);
+  display:grid;
+  place-items:center;
+  gap:2px;
+  font-size:10px;
+  font-weight:720;
+  cursor:pointer;
+}
+.act svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ai-act{
+  position:relative;
+  height:78px;
+  border-radius:25px;
+  border:1px solid rgba(30,48,41,.15);
+  background:rgba(255,255,255,.58);
+  color:#17362c;
+  box-shadow:0 12px 26px rgba(36,44,39,.10), inset 0 1px 0 rgba(255,255,255,.72);
+  overflow:visible;
+}
+.ai-act::before,.ai-act::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:30px;
+  opacity:0;
+  pointer-events:none;
+}
+.ai-act::before{background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--awake) 28%,transparent),transparent 62%);filter:blur(4px)}
+.ai-act::after{border:1px solid color-mix(in srgb,var(--awake) 26%,transparent)}
+.phone.is-awake .ai-act::before{opacity:1;animation:agent-breathe 2.4s ease-in-out infinite}
+.phone.is-awake .ai-act::after{opacity:1;animation:agent-ring 1.8s ease-out infinite}
+.ai-symbol{display:grid;place-items:center;width:28px;height:28px;margin:0 auto 5px;color:var(--awake)}
+.ai-symbol svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ai-label{font-size:12px;font-weight:760;line-height:1.1;color:#17362c}
+.ai-sub{font-size:9px;color:rgba(23,35,31,.52);margin-top:2px;font-weight:700}
+.phone[data-state="listen"] .ai-label{color:#2f6386}
+.phone[data-state="think"] .ai-label{color:#2f6386}
+.phone[data-state="done"] .ai-label{color:#2f644d}
+.phone[data-state="think"] .ai-symbol{animation:turning 1.4s ease-in-out infinite}
+.phone[data-state="listen"] .ai-symbol{animation:listen 1.2s ease-in-out infinite}
+.phone[data-state="done"] .ai-symbol{color:#fff;background:var(--awake);border-radius:50%}
+
+/* Variant 1: memory glow */
+.v-glow{--awake:#4c8a6b}
+.v-glow.is-awake::after{
+  background:
+    radial-gradient(circle at 50% 86%,rgba(76,138,107,.34),transparent 38%),
+    radial-gradient(circle at 50% 58%,rgba(255,255,255,.36),transparent 34%),
+    linear-gradient(180deg,rgba(255,255,255,0),rgba(226,241,232,.50));
+}
+.v-glow.is-awake .note:nth-child(1){transform:translateY(-2px)}
+.v-glow.is-awake .note:nth-child(2){transform:translateY(-4px)}
+.v-glow.is-awake .note:nth-child(3){transform:translateY(-6px)}
+.v-glow .memory-map svg{position:absolute;inset:0;width:100%;height:100%}
+.v-glow .memory-map path{stroke:rgba(76,138,107,.30);stroke-width:1.1;fill:none;stroke-dasharray:5 7;stroke-dashoffset:70}
+.v-glow.is-awake .memory-map path{animation:dash 2.5s ease-in-out infinite}
+
+/* Variant 2: archive layers */
+.v-layers{--awake:#557c91}
+.v-layers.is-awake::after{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,0),rgba(221,236,242,.48)),
+    radial-gradient(circle at 50% 78%,rgba(85,124,145,.24),transparent 40%);
+}
+.v-layers .memory-shelves{padding:54px 15px 0}
+.v-layers .shelf{
+  height:76px;
+  margin-bottom:8px;
+  border-radius:17px;
+  border:1px solid rgba(85,124,145,.12);
+  background:rgba(255,255,255,.20);
+  transform:translateX(-12px);
+  opacity:0;
+  transition:transform .45s cubic-bezier(.22,1,.36,1),opacity .35s ease;
+}
+.v-layers.is-awake .shelf{transform:translateX(0);opacity:1}
+.v-layers.is-awake .note:nth-child(1){transform:translateX(5px)}
+.v-layers.is-awake .note:nth-child(2){transform:translateX(10px)}
+.v-layers.is-awake .note:nth-child(3){transform:translateX(15px)}
+
+/* Variant 3: quiet spotlight */
+.v-focus{--awake:#c18a2e}
+.v-focus.is-awake::after{
+  background:
+    radial-gradient(circle at 50% 34%,rgba(255,255,255,.62),transparent 36%),
+    radial-gradient(circle at 50% 72%,rgba(193,138,46,.28),transparent 39%),
+    linear-gradient(180deg,rgba(255,255,255,0),rgba(253,244,221,.42));
+}
+.v-focus.is-awake .note{opacity:.62}
+.v-focus.is-awake .note:nth-child(2){opacity:1;transform:scale(1.018);border-color:rgba(193,138,46,.22)}
+.v-focus .memory-lights span{
+  position:absolute;
+  left:22px;
+  right:22px;
+  height:82px;
+  border-radius:18px;
+  background:rgba(255,255,255,.34);
+  box-shadow:0 0 48px rgba(193,138,46,.16);
+}
+.v-focus .memory-lights span:nth-child(1){top:138px;opacity:.25}
+.v-focus .memory-lights span:nth-child(2){top:222px;opacity:.75}
+.v-focus .memory-lights span:nth-child(3){top:306px;opacity:.22}
+
+/* Variant 4: orbit of memory */
+.v-orbit{--awake:#6f7198}
+.v-orbit.is-awake::after{
+  background:
+    radial-gradient(circle at 50% 78%,rgba(111,113,152,.28),transparent 42%),
+    linear-gradient(180deg,rgba(255,255,255,0),rgba(229,229,242,.44));
+}
+.v-orbit .memory-orbit{display:grid;place-items:center;padding-top:164px}
+.orbit-ring{
+  width:235px;
+  height:235px;
+  border-radius:50%;
+  border:1px solid rgba(111,113,152,.15);
+  transform:scale(.88);
+  opacity:0;
+  transition:transform .55s cubic-bezier(.22,1,.36,1),opacity .35s ease;
+}
+.orbit-ring::before,.orbit-ring::after{
+  content:"";
+  position:absolute;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:rgba(111,113,152,.56);
+}
+.orbit-ring::before{left:28px;top:45px}
+.orbit-ring::after{right:35px;bottom:54px}
+.v-orbit.is-awake .orbit-ring{transform:scale(1);opacity:1;animation:slow-turn 7s linear infinite}
+.v-orbit.is-awake .note:nth-child(1){transform:translateX(-4px)}
+.v-orbit.is-awake .note:nth-child(2){transform:translateX(4px)}
+.v-orbit.is-awake .note:nth-child(3){transform:translateX(-4px)}
+
+@keyframes agent-breathe{0%,100%{transform:scale(.98);opacity:.38}50%{transform:scale(1.08);opacity:.72}}
+@keyframes agent-ring{0%{transform:scale(.92);opacity:.42}100%{transform:scale(1.2);opacity:0}}
+@keyframes turning{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(5deg) scale(1.08)}}
+@keyframes listen{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes dash{0%{stroke-dashoffset:70;opacity:.18}50%{opacity:.55}100%{stroke-dashoffset:0;opacity:.18}}
+@keyframes slow-turn{to{transform:scale(1) rotate(360deg)}}
+
+@media (max-width:1160px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.phone{height:620px}}
+@media (max-width:700px){
+  .page{padding:24px 12px 32px}
+  .hero{display:block}
+  .hero p{font-size:16px}
+  .state-switch{margin-top:18px;display:grid;grid-template-columns:repeat(2,1fr);border-radius:24px}
+  .grid{grid-template-columns:1fr}
+  .phone{height:628px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <div>
+      <h1>Когда агент включается</h1>
+      <p>Не просто кнопка слушает. Весь экран показывает: память приняла мысль, разложила по смыслу и теперь держит это вместо пользователя.</p>
+    </div>
+    <nav class="state-switch" aria-label="Общее состояние прототипов">
+      <button class="active" type="button" data-global-state="idle">Покой</button>
+      <button type="button" data-global-state="listen">Слушаю</button>
+      <button type="button" data-global-state="think">Разбираюсь</button>
+      <button type="button" data-global-state="done">Запомнил</button>
+    </nav>
+  </header>
+
+  <section class="grid" aria-label="Варианты оживания приложения">
+    <article class="concept">
+      <div class="concept-title">
+        <h2>1. Тёплая память</h2>
+        <p>Фон мягко загорается снизу, карточки получают связи и метки.</p>
+      </div>
+      <div class="phone v-glow" data-state="idle">
+        <div class="memory-map">
+          <svg viewBox="0 0 320 640" preserveAspectRatio="none">
+            <path d="M160 542 C126 470 68 440 62 366 C57 300 125 266 158 214 C188 168 194 106 242 78"/>
+            <path d="M160 542 C177 458 242 414 234 325 C229 267 173 240 137 185 C111 145 105 102 72 74"/>
+          </svg>
+        </div>
+        <div class="ui"></div>
+      </div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-title">
+        <h2>2. Архив по слоям</h2>
+        <p>На фоне проявляются спокойные “полки”, заметки становятся частью системы.</p>
+      </div>
+      <div class="phone v-layers" data-state="idle">
+        <div class="memory-shelves">
+          <div class="shelf"></div>
+          <div class="shelf"></div>
+          <div class="shelf"></div>
+        </div>
+        <div class="ui"></div>
+      </div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-title">
+        <h2>3. Тихий прожектор</h2>
+        <p>Агент не шумит, а подсвечивает главное: срок, риск или действие.</p>
+      </div>
+      <div class="phone v-focus" data-state="idle">
+        <div class="memory-lights"><span></span><span></span><span></span></div>
+        <div class="ui"></div>
+      </div>
+    </article>
+
+    <article class="concept">
+      <div class="concept-title">
+        <h2>4. Орбита памяти</h2>
+        <p>Вокруг заметок появляется ощущение живой системы связей, но без “дискотеки”.</p>
+      </div>
+      <div class="phone v-orbit" data-state="idle">
+        <div class="memory-orbit"><div class="orbit-ring"></div></div>
+        <div class="ui"></div>
+      </div>
+    </article>
+  </section>
+</main>
+
+<template id="phone-template">
+  <div class="status"><span>10:42</span><span>●●●</span></div>
+  <div class="hdr">
+    <div class="brand">Разберёмся</div>
+    <div class="date">сб, 23 мая · память рядом</div>
+  </div>
+  <div class="stage">
+    <div class="note-list">
+      <div class="note">
+        <span class="sig red"></span>
+        <div><div class="nt">Звонили из банка</div><div class="np">Просили назвать код из смс</div></div>
+        <div class="time">вчера</div>
+        <div class="chip-row"><span class="chip">риск</span><span class="chip">мошенники</span></div>
+      </div>
+      <div class="note">
+        <span class="sig amber"></span>
+        <div><div class="nt">Квитанция апрель</div><div class="np">Оплатить до 25-го · 2 840 руб.</div></div>
+        <div class="time">срок</div>
+        <div class="chip-row"><span class="chip">напомнить</span><span class="chip">25 мая</span></div>
+      </div>
+      <div class="note">
+        <span class="sig green"></span>
+        <div><div class="nt">Список лекарств</div><div class="np">Эналаприл, Аспирин, Магний Б6</div></div>
+        <div class="time">3 дня</div>
+        <div class="chip-row"><span class="chip">здоровье</span><span class="chip">важное</span></div>
+      </div>
+      <div class="note">
+        <span class="sig"></span>
+        <div><div class="nt">Позвонить тёте</div><div class="np">Уточнить документы для поездки</div></div>
+        <div class="time">сегодня</div>
+        <div class="chip-row"><span class="chip">человек</span><span class="chip">дело</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom">
+    <button class="new-note" type="button">
+      <span data-icon="pen"></span><span>Новая заметка</span>
+    </button>
+    <div class="actions">
+      <button class="act" type="button"><span data-icon="mic"></span><span>Голос</span></button>
+      <button class="act ai-act" type="button" data-agent-button>
+        <span class="ai-symbol" data-agent-icon></span>
+        <span class="ai-label" data-agent-label>Разберёмся</span>
+        <span class="ai-sub" data-agent-sub>память рядом</span>
+      </button>
+      <button class="act" type="button"><span data-icon="bell"></span><span>Напомнить</span></button>
+    </div>
+  </div>
+</template>
+
+<script>
+const icons = {
+  pen: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 12.2a6 6 0 0 0-8.4-8.4L5 10.6V19h8.4Z"/><path d="M16 8 2 22"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/><path d="M8 22h8"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  stack: '<svg viewBox="0 0 24 24"><path d="M12 4 4 8l8 4 8-4-8-4Z"/><path d="m4 13 8 4 8-4"/><path d="m4 18 8 4 8-4"/></svg>',
+  listen: '<svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/></svg>',
+  think: '<svg viewBox="0 0 24 24"><path d="M10.5 3.8 8.9 8.7 4 10.5l4.9 1.8 1.6 4.9 1.8-4.9 4.9-1.8-4.9-1.8-1.8-4.9Z"/><path d="M18.5 14.8 17.8 17l-2.3.8 2.3.8.7 2.2.8-2.2 2.2-.8-2.2-.8-.8-2.2Z"/></svg>',
+  done: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.1L19 7"/></svg>'
+};
+
+const states = {
+  idle: { label: 'Разберёмся', sub: 'память рядом', icon: 'stack', awake: false },
+  listen: { label: 'Слушаю…', sub: 'запоминаю', icon: 'listen', awake: true },
+  think: { label: 'Разбираюсь…', sub: 'раскладываю', icon: 'think', awake: true },
+  done: { label: 'Запомнил', sub: 'не потеряется', icon: 'done', awake: true }
+};
+
+const template = document.getElementById('phone-template');
+document.querySelectorAll('.phone .ui').forEach(ui => {
+  ui.appendChild(template.content.cloneNode(true));
+});
+
+document.querySelectorAll('[data-icon]').forEach(node => {
+  node.innerHTML = icons[node.dataset.icon] || '';
+});
+
+const phones = Array.from(document.querySelectorAll('.phone'));
+const controls = Array.from(document.querySelectorAll('[data-global-state]'));
+
+function setPhoneState(phone, stateKey) {
+  const state = states[stateKey] || states.idle;
+  phone.dataset.state = stateKey;
+  phone.classList.toggle('is-awake', state.awake);
+  phone.querySelector('[data-agent-label]').textContent = state.label;
+  phone.querySelector('[data-agent-sub]').textContent = state.sub;
+  phone.querySelector('[data-agent-icon]').innerHTML = icons[state.icon];
+}
+
+function setGlobal(stateKey) {
+  phones.forEach(phone => setPhoneState(phone, stateKey));
+  controls.forEach(control => control.classList.toggle('active', control.dataset.globalState === stateKey));
+}
+
+controls.forEach(control => {
+  control.addEventListener('click', () => setGlobal(control.dataset.globalState));
+});
+
+phones.forEach(phone => {
+  phone.addEventListener('click', event => {
+    if (!event.target.closest('[data-agent-button]')) return;
+    const order = Object.keys(states);
+    const current = order.indexOf(phone.dataset.state || 'idle');
+    setPhoneState(phone, order[(current + 1) % order.length]);
+  });
+});
+
+setGlobal('idle');
+</script>
+</body>
+</html>

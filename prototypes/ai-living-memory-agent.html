@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Разберёмся · живой ИИ-агент</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#14231f;
+  --muted:rgba(20,35,31,.58);
+  --paper:rgba(255,255,255,.64);
+  --line:rgba(24,44,38,.12);
+  --green:#3e8060;
+  --green-soft:#cfe8d7;
+  --blue:#4c83ad;
+  --gold:#d59b36;
+  --red:#b85d50;
+  --violet:#7676a6;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+html,body{margin:0;min-height:100%;background:#f4efe4;color:var(--ink);font-family:var(--font);overflow:hidden}
+button{font-family:var(--font)}
+.app{
+  position:relative;
+  width:min(100vw,430px);
+  height:100svh;
+  min-height:720px;
+  margin:0 auto;
+  overflow:hidden;
+  isolation:isolate;
+  background:#eef2eb;
+  box-shadow:0 0 0 1px rgba(20,35,31,.08),0 30px 90px rgba(25,31,29,.18);
+}
+.world{
+  position:absolute;
+  inset:0;
+  z-index:-4;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,#d9e8f0 0%,#e9f1ec 42%,#edf0e7 68%,#e3eadf 100%);
+}
+.sky-light{
+  position:absolute;
+  inset:-22% -30% 20%;
+  opacity:.46;
+  background:
+    radial-gradient(circle at 32% 16%,rgba(255,255,255,.92),transparent 20%),
+    radial-gradient(circle at 72% 20%,rgba(255,233,181,.42),transparent 22%),
+    radial-gradient(circle at 50% 52%,rgba(207,232,215,.38),transparent 35%);
+  transition:opacity .55s ease,transform .8s cubic-bezier(.22,1,.36,1);
+}
+.hills{
+  position:absolute;
+  inset:auto 0 0;
+  height:58%;
+  background:
+    radial-gradient(ellipse at 22% 28%,rgba(132,190,124,.46) 0 23%,transparent 24%),
+    radial-gradient(ellipse at 82% 34%,rgba(115,178,120,.34) 0 25%,transparent 26%),
+    linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(193,218,190,.38) 20%,rgba(122,171,106,.42) 100%);
+  clip-path:polygon(0 32%,14% 24%,31% 34%,48% 20%,67% 31%,86% 18%,100% 28%,100% 100%,0 100%);
+  opacity:.75;
+}
+.memory-aurora{
+  position:absolute;
+  left:-25%;
+  right:-25%;
+  bottom:-24%;
+  height:62%;
+  opacity:0;
+  filter:blur(2px);
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(67,139,100,.54),transparent 58%),
+    radial-gradient(ellipse at 36% 74%,rgba(76,131,173,.28),transparent 44%),
+    radial-gradient(ellipse at 66% 78%,rgba(213,155,54,.23),transparent 45%);
+  transform:translateY(70px) scale(.92);
+  transition:opacity .65s ease,transform .9s cubic-bezier(.22,1,.36,1);
+}
+.memory-flow{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity .45s ease;
+}
+.memory-flow svg{position:absolute;inset:0;width:100%;height:100%}
+.flow-line{
+  fill:none;
+  stroke:rgba(48,112,82,.24);
+  stroke-width:1.4;
+  stroke-linecap:round;
+  stroke-dasharray:1 12;
+  stroke-dashoffset:160;
+}
+.flow-line.blue{stroke:rgba(76,131,173,.24)}
+.flow-line.gold{stroke:rgba(213,155,54,.25)}
+.memory-cells{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity .45s ease;
+}
+.cell{
+  position:absolute;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:rgba(62,128,96,.46);
+  box-shadow:0 0 0 8px rgba(62,128,96,.07);
+  transform:scale(.2);
+}
+.cell:nth-child(1){left:15%;top:25%}
+.cell:nth-child(2){left:78%;top:30%;background:rgba(76,131,173,.48)}
+.cell:nth-child(3){left:28%;top:52%;background:rgba(213,155,54,.50)}
+.cell:nth-child(4){left:82%;top:57%;background:rgba(62,128,96,.42)}
+.cell:nth-child(5){left:50%;top:40%;background:rgba(118,118,166,.36)}
+.interface{
+  position:relative;
+  z-index:2;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:env(safe-area-inset-top) 14px max(16px,env(safe-area-inset-bottom));
+}
+.status{
+  height:36px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  padding:0 7px 6px;
+  color:rgba(20,35,31,.48);
+  font-size:12px;
+  font-weight:700;
+}
+.top{
+  padding:8px 4px 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+.brand{
+  font-family:var(--serif);
+  font-size:30px;
+  line-height:1;
+  font-weight:420;
+  letter-spacing:0;
+  color:#17362c;
+}
+.today{margin-top:5px;color:rgba(20,35,31,.43);font-size:12px}
+.agent-state{
+  min-width:112px;
+  height:34px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:1px solid rgba(255,255,255,.70);
+  background:rgba(255,255,255,.34);
+  color:rgba(20,35,31,.58);
+  font-size:11px;
+  font-weight:750;
+  box-shadow:0 8px 18px rgba(24,34,30,.06);
+  backdrop-filter:blur(14px);
+}
+.agent-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:rgba(62,128,96,.46);
+}
+.space{
+  position:relative;
+  flex:1;
+  min-height:0;
+  padding-top:138px;
+}
+.ambient-label{
+  position:absolute;
+  left:15px;
+  top:18px;
+  right:15px;
+  min-height:94px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:rgba(20,35,31,.0);
+  font-size:27px;
+  font-family:var(--serif);
+  line-height:1.12;
+  transform:translateY(16px);
+  transition:opacity .55s ease,transform .75s cubic-bezier(.22,1,.36,1),color .45s ease;
+  pointer-events:none;
+}
+.notes{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:3;
+}
+.note{
+  position:relative;
+  min-height:76px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:10px;
+  align-items:start;
+  padding:12px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.70);
+  background:rgba(255,255,255,.56);
+  box-shadow:0 10px 24px rgba(26,36,31,.06);
+  backdrop-filter:blur(16px);
+  transition:
+    transform .7s cubic-bezier(.22,1,.36,1),
+    opacity .45s ease,
+    background .45s ease,
+    border-color .45s ease,
+    box-shadow .45s ease;
+}
+.note::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:0;
+  border:1px solid rgba(62,128,96,.22);
+  box-shadow:0 0 34px rgba(62,128,96,.10);
+  transition:opacity .45s ease;
+}
+.sig{width:8px;height:8px;border-radius:50%;margin-top:4px;background:rgba(20,35,31,.18)}
+.sig.red{background:var(--red)}
+.sig.amber{background:var(--gold)}
+.sig.green{background:var(--green)}
+.nt{font-size:14px;font-weight:760;line-height:1.25;color:#16241f}
+.np{font-size:12px;line-height:1.35;color:rgba(20,35,31,.56);margin-top:3px}
+.time{font-size:10px;color:rgba(20,35,31,.34);white-space:nowrap}
+.tags{
+  grid-column:2/4;
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  max-height:0;
+  opacity:0;
+  margin-top:0;
+  overflow:hidden;
+  transition:max-height .55s ease,opacity .45s ease,margin .45s ease;
+}
+.tag{
+  min-height:21px;
+  display:inline-flex;
+  align-items:center;
+  border-radius:8px;
+  padding:0 8px;
+  font-size:10px;
+  font-weight:760;
+  color:rgba(20,35,31,.64);
+  border:1px solid rgba(20,35,31,.08);
+  background:rgba(255,255,255,.62);
+}
+.bottom{
+  position:relative;
+  z-index:6;
+  padding-top:8px;
+}
+.new-note{
+  width:100%;
+  height:54px;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:18px;
+  background:rgba(255,255,255,.46);
+  color:rgba(20,35,31,.52);
+  box-shadow:0 10px 24px rgba(26,36,31,.07);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  font-size:15px;
+  font-weight:690;
+  backdrop-filter:blur(16px);
+}
+.bar{
+  margin-top:8px;
+  display:grid;
+  grid-template-columns:1fr 1.38fr 1fr;
+  gap:8px;
+  align-items:end;
+}
+.tool,.agent{
+  border:1px solid rgba(255,255,255,.68);
+  background:rgba(255,255,255,.44);
+  color:rgba(20,35,31,.54);
+  box-shadow:0 10px 22px rgba(26,36,31,.06);
+  backdrop-filter:blur(16px);
+  cursor:pointer;
+}
+.tool{
+  height:58px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  gap:2px;
+  font-size:10px;
+  font-weight:760;
+}
+.tool svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.agent{
+  position:relative;
+  height:84px;
+  border-radius:27px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:#17362c;
+  overflow:visible;
+  transition:transform .18s ease,border-color .4s ease,background .4s ease,box-shadow .4s ease;
+}
+.agent:active{transform:scale(.975)}
+.agent::before,.agent::after{
+  content:"";
+  position:absolute;
+  inset:-10px;
+  border-radius:32px;
+  opacity:0;
+  pointer-events:none;
+}
+.agent::before{
+  background:radial-gradient(circle at 50% 50%,rgba(62,128,96,.32),transparent 66%);
+  filter:blur(4px);
+}
+.agent::after{border:1px solid rgba(62,128,96,.22)}
+.agent-icon{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  color:var(--green);
+  margin-bottom:5px;
+}
+.agent-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.agent-label{font-size:13px;font-weight:820;line-height:1;color:#17362c}
+.agent-sub{margin-top:3px;font-size:9px;font-weight:780;color:rgba(20,35,31,.50)}
+.memory-toast{
+  position:absolute;
+  left:26px;
+  right:26px;
+  bottom:126px;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:9px 18px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.70);
+  background:rgba(255,255,255,.54);
+  box-shadow:0 16px 36px rgba(26,36,31,.10);
+  color:rgba(20,35,31,.70);
+  font-size:13px;
+  font-weight:730;
+  backdrop-filter:blur(18px);
+  opacity:0;
+  transform:translateY(18px);
+  transition:opacity .45s ease,transform .65s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+}
+.stage-hints{
+  position:absolute;
+  left:50%;
+  top:105px;
+  width:272px;
+  transform:translateX(-50%);
+  pointer-events:none;
+  z-index:4;
+  opacity:0;
+  transition:opacity .45s ease;
+}
+.hint-node{
+  position:absolute;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:28px;
+  border-radius:999px;
+  padding:0 10px;
+  font-size:11px;
+  font-weight:760;
+  color:rgba(20,35,31,.66);
+  background:rgba(255,255,255,.58);
+  border:1px solid rgba(255,255,255,.70);
+  box-shadow:0 10px 20px rgba(26,36,31,.07);
+  backdrop-filter:blur(14px);
+  transform:translateY(12px) scale(.94);
+  opacity:0;
+}
+.hint-node::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green)}
+.hint-node:nth-child(1){left:5px;top:0}
+.hint-node:nth-child(2){right:0;top:35px}
+.hint-node:nth-child(3){left:46px;top:73px}
+.hint-node:nth-child(4){right:42px;top:108px}
+
+.app.is-awake .memory-aurora{opacity:1;transform:translateY(0) scale(1)}
+.app.is-awake .memory-flow{opacity:1}
+.app.is-awake .flow-line{animation:flow 3.4s linear infinite}
+.app.is-awake .memory-cells{opacity:1}
+.app.is-awake .cell{animation:cell-on 1.8s ease-in-out infinite}
+.app.is-awake .cell:nth-child(2){animation-delay:.15s}
+.app.is-awake .cell:nth-child(3){animation-delay:.32s}
+.app.is-awake .cell:nth-child(4){animation-delay:.48s}
+.app.is-awake .cell:nth-child(5){animation-delay:.64s}
+.app.is-awake .sky-light{opacity:.72;transform:scale(1.04)}
+.app.is-awake .agent{border-color:rgba(62,128,96,.22);background:rgba(255,255,255,.58);box-shadow:0 16px 32px rgba(62,128,96,.12)}
+.app.is-awake .agent::before{opacity:1;animation:agent-glow 2.4s ease-in-out infinite}
+.app.is-awake .agent::after{opacity:1;animation:agent-ring 1.9s ease-out infinite}
+.app.is-awake .note::after{opacity:1}
+.app.is-awake .tags{max-height:48px;opacity:1;margin-top:7px}
+.app.is-awake .memory-toast{opacity:1;transform:translateY(0)}
+.app.is-awake .agent-dot{animation:dot 1.2s ease-in-out infinite}
+
+.app[data-state="listen"] .ambient-label{color:rgba(23,54,44,.36);opacity:1;transform:translateY(0)}
+.app[data-state="listen"] .agent-icon{color:var(--blue);animation:listen 1.2s ease-in-out infinite}
+.app[data-state="listen"] .agent-label{color:#2f6386}
+.app[data-state="listen"] .note{transform:translateY(-2px)}
+.app[data-state="listen"] .memory-toast::before{content:"Мысль принята. Можно говорить обычными словами."}
+
+.app[data-state="think"] .ambient-label{color:rgba(47,99,134,.38);opacity:1;transform:translateY(0)}
+.app[data-state="think"] .stage-hints{opacity:1}
+.app[data-state="think"] .hint-node{animation:hint-in .8s cubic-bezier(.22,1,.36,1) forwards}
+.app[data-state="think"] .hint-node:nth-child(2){animation-delay:.08s}
+.app[data-state="think"] .hint-node:nth-child(3){animation-delay:.16s}
+.app[data-state="think"] .hint-node:nth-child(4){animation-delay:.24s}
+.app[data-state="think"] .agent-icon{color:var(--blue);animation:think 1.35s ease-in-out infinite}
+.app[data-state="think"] .agent-label{color:#2f6386}
+.app[data-state="think"] .note:nth-child(1){transform:translate(-6px,-5px)}
+.app[data-state="think"] .note:nth-child(2){transform:translate(8px,-8px)}
+.app[data-state="think"] .note:nth-child(3){transform:translate(-4px,-11px)}
+.app[data-state="think"] .note:nth-child(4){transform:translate(9px,-13px)}
+.app[data-state="think"] .memory-toast::before{content:"Раскладываю по полкам: срок, риск, человек, действие."}
+
+.app[data-state="done"] .ambient-label{color:rgba(47,100,77,.36);opacity:1;transform:translateY(0)}
+.app[data-state="done"] .agent-icon{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  color:#fff;
+  background:linear-gradient(145deg,rgba(84,145,105,.95),rgba(47,100,77,.80));
+  box-shadow:0 12px 24px rgba(47,100,77,.18);
+}
+.app[data-state="done"] .agent-icon svg{width:25px;height:25px}
+.app[data-state="done"] .agent-label{color:#2f644d}
+.app[data-state="done"] .note{transform:translateY(-6px);border-color:rgba(62,128,96,.18)}
+.app[data-state="done"] .note:nth-child(2){box-shadow:0 12px 30px rgba(213,155,54,.13)}
+.app[data-state="done"] .memory-toast::before{content:"Запомнил. Важное не потеряется."}
+
+@keyframes flow{to{stroke-dashoffset:0}}
+@keyframes cell-on{0%,100%{transform:scale(.55);opacity:.36}50%{transform:scale(1);opacity:.92}}
+@keyframes agent-glow{0%,100%{transform:scale(.96);opacity:.38}50%{transform:scale(1.08);opacity:.70}}
+@keyframes agent-ring{0%{transform:scale(.92);opacity:.42}100%{transform:scale(1.22);opacity:0}}
+@keyframes dot{0%,100%{opacity:.38;transform:scale(.8)}50%{opacity:1;transform:scale(1.25)}}
+@keyframes listen{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes think{0%,100%{transform:rotate(-5deg) scale(1)}50%{transform:rotate(5deg) scale(1.08)}}
+@keyframes hint-in{to{transform:translateY(0) scale(1);opacity:1}}
+
+@media (max-width:460px){
+  .app{width:100vw;min-height:100svh;box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="app" data-state="idle">
+  <div class="world" aria-hidden="true">
+    <div class="sky-light"></div>
+    <div class="hills"></div>
+    <div class="memory-aurora"></div>
+    <div class="memory-flow">
+      <svg viewBox="0 0 430 760" preserveAspectRatio="none">
+        <path class="flow-line" d="M214 654 C168 576 83 525 84 432 C86 339 164 317 208 245 C247 181 246 116 326 70"/>
+        <path class="flow-line blue" d="M214 654 C246 560 338 532 326 422 C319 356 264 326 221 259 C185 203 176 126 93 69"/>
+        <path class="flow-line gold" d="M214 654 C202 577 215 504 166 448 C129 406 78 389 62 328"/>
+      </svg>
+    </div>
+    <div class="memory-cells">
+      <span class="cell"></span>
+      <span class="cell"></span>
+      <span class="cell"></span>
+      <span class="cell"></span>
+      <span class="cell"></span>
+    </div>
+  </div>
+
+  <div class="interface">
+    <div class="status"><span>10:42</span><span>●●●</span></div>
+    <header class="top">
+      <div>
+        <div class="brand">Разберёмся</div>
+        <div class="today">сб, 23 мая · личная память</div>
+      </div>
+      <div class="agent-state"><span class="agent-dot"></span><span data-state-chip>Покой</span></div>
+    </header>
+
+    <section class="space">
+      <div class="ambient-label" data-ambient>Память рядом</div>
+      <div class="stage-hints" aria-hidden="true">
+        <span class="hint-node">срок</span>
+        <span class="hint-node">риск</span>
+        <span class="hint-node">человек</span>
+        <span class="hint-node">действие</span>
+      </div>
+
+      <div class="notes">
+        <article class="note">
+          <span class="sig red"></span>
+          <div><div class="nt">Звонили из банка</div><div class="np">Просили назвать код из смс</div></div>
+          <span class="time">вчера</span>
+          <div class="tags"><span class="tag">риск</span><span class="tag">мошенники</span><span class="tag">не перезванивать</span></div>
+        </article>
+        <article class="note">
+          <span class="sig amber"></span>
+          <div><div class="nt">Квитанция апрель</div><div class="np">Оплатить до 25-го · 2 840 руб.</div></div>
+          <span class="time">срок</span>
+          <div class="tags"><span class="tag">напомнить</span><span class="tag">25 мая</span><span class="tag">платёж</span></div>
+        </article>
+        <article class="note">
+          <span class="sig green"></span>
+          <div><div class="nt">Список лекарств</div><div class="np">Эналаприл, Аспирин, Магний Б6</div></div>
+          <span class="time">3 дня</span>
+          <div class="tags"><span class="tag">здоровье</span><span class="tag">важное</span></div>
+        </article>
+        <article class="note">
+          <span class="sig"></span>
+          <div><div class="nt">Позвонить тёте</div><div class="np">Уточнить документы для поездки</div></div>
+          <span class="time">сегодня</span>
+          <div class="tags"><span class="tag">человек</span><span class="tag">дело</span></div>
+        </article>
+      </div>
+    </section>
+
+    <div class="bottom">
+      <button class="new-note" type="button">
+        <span data-icon="pen"></span>
+        <span>Новая заметка</span>
+      </button>
+      <div class="bar">
+        <button class="tool" type="button"><span data-icon="mic"></span><span>Голос</span></button>
+        <button class="agent" type="button" data-agent>
+          <span class="agent-icon" data-agent-icon></span>
+          <span class="agent-label" data-agent-label>Разберёмся</span>
+          <span class="agent-sub" data-agent-sub>память рядом</span>
+        </button>
+        <button class="tool" type="button"><span data-icon="bell"></span><span>Напомнить</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="memory-toast" aria-live="polite"></div>
+</main>
+
+<script>
+const icons = {
+  pen: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 12.2a6 6 0 0 0-8.4-8.4L5 10.6V19h8.4Z"/><path d="M16 8 2 22"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/><path d="M8 22h8"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  stack: '<svg viewBox="0 0 24 24"><path d="M12 4 4 8l8 4 8-4-8-4Z"/><path d="m4 13 8 4 8-4"/><path d="m4 18 8 4 8-4"/></svg>',
+  listen: '<svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/></svg>',
+  think: '<svg viewBox="0 0 24 24"><path d="M10.5 3.8 8.9 8.7 4 10.5l4.9 1.8 1.6 4.9 1.8-4.9 4.9-1.8-4.9-1.8-1.8-4.9Z"/><path d="M18.5 14.8 17.8 17l-2.3.8 2.3.8.7 2.2.8-2.2 2.2-.8-2.2-.8-.8-2.2Z"/></svg>',
+  done: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.1L19 7"/></svg>'
+};
+
+const states = [
+  { key: 'idle', chip: 'Покой', label: 'Разберёмся', sub: 'память рядом', icon: 'stack', ambient: 'Память рядом' },
+  { key: 'listen', chip: 'Слушаю', label: 'Слушаю…', sub: 'запоминаю', icon: 'listen', ambient: 'Говорите обычными словами' },
+  { key: 'think', chip: 'Разбираюсь', label: 'Разбираюсь…', sub: 'раскладываю', icon: 'think', ambient: 'Раскладываю по полкам' },
+  { key: 'done', chip: 'Запомнил', label: 'Запомнил', sub: 'не потеряется', icon: 'done', ambient: 'Важное под контролем' }
+];
+
+document.querySelectorAll('[data-icon]').forEach(node => {
+  node.innerHTML = icons[node.dataset.icon] || '';
+});
+
+const app = document.querySelector('.app');
+const agent = document.querySelector('[data-agent]');
+const stateChip = document.querySelector('[data-state-chip]');
+const agentIcon = document.querySelector('[data-agent-icon]');
+const agentLabel = document.querySelector('[data-agent-label]');
+const agentSub = document.querySelector('[data-agent-sub]');
+const ambient = document.querySelector('[data-ambient]');
+
+function setState(index) {
+  const state = states[index % states.length];
+  app.dataset.state = state.key;
+  app.classList.toggle('is-awake', state.key !== 'idle');
+  stateChip.textContent = state.chip;
+  agentIcon.innerHTML = icons[state.icon];
+  agentLabel.textContent = state.label;
+  agentSub.textContent = state.sub;
+  ambient.textContent = state.ambient;
+}
+
+agent.addEventListener('click', () => {
+  const current = states.findIndex(state => state.key === app.dataset.state);
+  setState(current + 1);
+});
+
+setState(0);
+</script>
+</body>
+</html>
