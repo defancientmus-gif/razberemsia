@@ -6208,6 +6208,42 @@ function _pushAgentHistory(userText,agentResponse,intent){
   if(_agentHistory.length>4)_agentHistory.shift();  // держим только 4 хода
 }
 
+function _agentRouteWord(text,variants){
+  return new RegExp(`(^|[^a-zа-я0-9_])(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
+}
+function _agentRouteStarts(text,variants){
+  return new RegExp(`^(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
+}
+
+function _agentRoutingPlan(text){
+  const t=String(text||'').toLowerCase().replace(/ё/g,'е').trim();
+  const continuation=_agentRouteWord(t,'это|эту|этот|эта|той|ту|ее|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай');
+  const quickWrite=_agentRouteStarts(t,'запиши|запомни|создай|добавь|сохрани')
+    && !_agentRouteWord(t,'найди|покажи|напомни|напоминай|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
+  const reminder=_agentRouteWord(t,'напомни|напоминай|поставь напоминание|добавь напоминание|будильник');
+  const destructive=_agentRouteWord(t,'удали|сотри|отмени|убери');
+  const noteAction=_agentRouteWord(t,'найди|покажи|открой|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
+  const tagAction=_agentRouteWord(t,'тег|ярлык')&&_agentRouteWord(t,'добавь|поставь|пометь|отнеси|разбери');
+  const broadNotes=/(сводк|что у меня|что запис|что есть|за день|все замет|всё что|расскажи.*замет|список дел)/.test(t);
+  const plan=_agentRouteWord(t,'план|маршрут|составь|распланируй|порядок дел');
+
+  let profile='light';
+  if(quickWrite||reminder)profile='none';
+  if(destructive||tagAction||noteAction||continuation)profile='notes';
+  if(broadNotes||plan)profile='deep';
+
+  const deep=profile==='deep';
+  const notes=profile==='notes'||deep;
+  return{
+    profile,
+    noteLimit:deep?40:(notes?12:0),
+    bodyLimit:deep?400:(notes?140:0),
+    includeMemory:deep,
+    includeHistory:continuation&&_agentHistory.length>0,
+    includeAppContext:deep
+  };
+}
+
 async function _processAgentQuery(text,alts=[]){
   window.speechSynthesis?.cancel(); // прерываем озвучку если агент уже говорит
   _setAgentState('thinking');
@@ -6230,34 +6266,34 @@ async function _processAgentQuery(text,alts=[]){
     const sess=await sb.auth.getSession();
     const token=sess?.data?.session?.access_token;
     if(!token){_cleanTimers();showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
-    const memoryContext=getAiMemoryContext?.()??[];
+    const routing=_agentRoutingPlan(text);
+    const memoryContext=routing.includeMemory?(getAiMemoryContext?.()??[]):[];
     const _allNotes=getNotes();
-    // Для запросов про планы/маршруты/сводку — передаём больше тела заметок
-    const needsDeepCtx=/(план|маршрут|что у меня|сегодня|завтра|расскажи|составь|список дел|прочитай|озвучь|сводк|за день|что записал|покажи|всё что|все заметк)/i.test(text);
     const _tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
     const _fmtDate=(ts)=>{
       if(!ts)return null;
       try{return new Date(ts).toLocaleString('sv-SE',{timeZone:_tz}).slice(0,16);}catch{return null;}
     };
-    const recentNotes=_allNotes.slice(0,40).map((n,i)=>({
+    const recentNotes=routing.noteLimit?_allNotes.slice(0,routing.noteLimit).map((n,i)=>({
       index:i,
       title:n.title||'Без названия',
-      body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,needsDeepCtx?400:80),
+      body:(n.body||n.items?.map(x=>x.text||x).join(', ')||'').slice(0,routing.bodyLimit),
       createdAt:_fmtDate(n.createdAt||n.id),   // когда создана (локальное время)
       updatedAt:_fmtDate(n.updatedAt),           // когда последний раз редактирована
       hasReminder:!!n.reminder,
       isRecurring:!!n.recurring,
       reminderTime:n.reminder||null,
       section:n.aiTags?.find(t=>t.startsWith('_filed_in:'))?.slice(10)||null // в каком разделе
-    }));
+    })):[];
     // Отправляем альтернативы только если они отличаются от основного текста
     const alternatives=alts.filter(a=>a&&a!==text).slice(0,2);
     // Разделы пользователя — агент знает куда предложить сохранить
     const userFolders=(getUserFolders?.()??[]).map(f=>f.name).filter(Boolean);
+    const appContext=routing.includeAppContext?_buildAgentContext():{currentView:_agentViewCtx};
     const res=await fetch(SUPABASE_EDGE_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone,conversationHistory:_agentHistory.length?_agentHistory:undefined,appContext:_buildAgentContext()}}),
+      body:JSON.stringify({action:'agent_query',payload:{text,alternatives,memoryContext,recentNotes,userFolders,contextProfile:routing.profile,clientNow:new Date().toISOString(),clientTz:Intl.DateTimeFormat().resolvedOptions().timeZone,conversationHistory:routing.includeHistory?_agentHistory:undefined,appContext}}),
       signal:ac.signal
     });
     _cleanTimers();

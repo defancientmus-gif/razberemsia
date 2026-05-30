@@ -118,6 +118,83 @@ function parseJsonObject(raw: string) {
   }
 }
 
+type AgentRouteProfile = 'none' | 'light' | 'notes' | 'deep';
+
+const AGENT_PROFILE_RANK: Record<AgentRouteProfile, number> = {
+  none: 0,
+  light: 1,
+  notes: 2,
+  deep: 3,
+};
+
+function normalizeAgentText(value: string) {
+  return value.toLowerCase().replace(/ё/g, 'е').trim();
+}
+
+function hasAgentRouteWord(text: string, variants: string) {
+  return new RegExp(`(^|[^a-zа-я0-9_])(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
+}
+
+function startsWithAgentRouteWord(text: string, variants: string) {
+  return new RegExp(`^(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
+}
+
+function maxAgentProfile(a: AgentRouteProfile, b: AgentRouteProfile): AgentRouteProfile {
+  return AGENT_PROFILE_RANK[a] >= AGENT_PROFILE_RANK[b] ? a : b;
+}
+
+function inferAgentRoute(text: string, rawProfile: unknown) {
+  const t = normalizeAgentText(text);
+  const continuation = hasAgentRouteWord(t, 'это|эту|этот|эта|той|ту|ее|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай');
+  const quickWrite = startsWithAgentRouteWord(t, 'запиши|запомни|создай|добавь|сохрани')
+    && !hasAgentRouteWord(t, 'найди|покажи|напомни|напоминай|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
+  const reminder = hasAgentRouteWord(t, 'напомни|напоминай|поставь напоминание|добавь напоминание|будильник');
+  const destructive = hasAgentRouteWord(t, 'удали|сотри|отмени|убери');
+  const noteAction = hasAgentRouteWord(t, 'найди|покажи|открой|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
+  const tagAction = hasAgentRouteWord(t, 'тег|ярлык') && hasAgentRouteWord(t, 'добавь|поставь|пометь|отнеси|разбери');
+  const broadNotes = /(сводк|что у меня|что запис|что есть|за день|все замет|всё что|расскажи.*замет|список дел)/.test(t);
+  const plan = hasAgentRouteWord(t, 'план|маршрут|составь|распланируй|порядок дел');
+
+  let profile: AgentRouteProfile = 'light';
+  let likelyIntent = 'UNKNOWN';
+
+  if (reminder) {
+    profile = 'none';
+    likelyIntent = 'SET_REMINDER';
+  } else if (plan) {
+    profile = 'deep';
+    likelyIntent = 'MAKE_PLAN';
+  } else if (broadNotes) {
+    profile = 'deep';
+    likelyIntent = 'DAILY_BRIEFING';
+  } else if (destructive) {
+    profile = 'notes';
+    likelyIntent = 'DELETE_OR_CANCEL';
+  } else if (tagAction || noteAction || continuation) {
+    profile = 'notes';
+    likelyIntent = 'NOTE_REFERENCE';
+  } else if (quickWrite) {
+    profile = 'none';
+    likelyIntent = 'CREATE_NOTE';
+  } else if (/\?$/.test(t) || startsWithAgentRouteWord(t, 'что|как|почему|зачем|можно ли|а если')) {
+    profile = 'light';
+    likelyIntent = 'QUESTION';
+  }
+
+  if (typeof rawProfile === 'string' && ['none', 'light', 'notes', 'deep'].includes(rawProfile)) {
+    profile = maxAgentProfile(profile, rawProfile as AgentRouteProfile);
+  }
+
+  return {
+    profile,
+    likelyIntent,
+    useNotes: profile === 'notes' || profile === 'deep',
+    useMemory: profile === 'deep',
+    useHistory: continuation,
+    useAppContext: profile === 'deep',
+  };
+}
+
 // ── Сохранить файл в GitHub через Contents API ──
 async function saveToGitHub(path: string, content: string, message: string): Promise<{ ok: boolean; url?: string; error?: string }> {
   if (!GITHUB_TOKEN) return { ok: false, error: 'GITHUB_TOKEN not configured' };
@@ -423,9 +500,10 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
 
   // ── AGENT QUERY ──
   if (action === 'agent_query') {
-    const { text, memoryContext, alternatives, clientNow: rawClientNow, clientTz: rawClientTz, conversationHistory } = payload ?? {};
+    const { text, memoryContext, alternatives, clientNow: rawClientNow, clientTz: rawClientTz, conversationHistory, contextProfile } = payload ?? {};
     if (typeof text !== 'string' || text.trim().length < 1) return json({ error: 'Empty query' }, 400);
     const safeText = text.trim().slice(0, 800);
+    const route = inferAgentRoute(safeText, contextProfile);
 
     // Часовой пояс и время пользователя (клиент передаёт, иначе UTC)
     const clientTz = (typeof rawClientTz === 'string' && rawClientTz.length > 0) ? rawClientTz : 'UTC';
@@ -439,19 +517,21 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
       ? `\nАльтернативные варианты распознавания: ${alternatives.filter(a => typeof a==='string' && a !== text).slice(0,2).map(a=>`«${a}»`).join(', ')}\n(Если основной текст странный или не имеет смысла — используй альтернативы для понимания намерения.)\n`
       : '';
 
-    const memLines = normalizeArray(memoryContext, 5).map((s) => (s as string).slice(0, 120));
+    const memLines = route.useMemory
+      ? normalizeArray(memoryContext, 5).map((s) => (s as string).slice(0, 120))
+      : [];
     const memBlock = memLines.length > 0
       ? `\nПомни — человек раньше записывал:\n${memLines.join('\n')}\n`
       : '';
 
     // ── История разговора этой сессии (последние 4 хода) ──────────────────
     type HistoryTurn = { user: string; agent: string; intent?: string };
-    const historyBlock = Array.isArray(conversationHistory) && (conversationHistory as HistoryTurn[]).length > 0
+    const historyBlock = route.useHistory && Array.isArray(conversationHistory) && (conversationHistory as HistoryTurn[]).length > 0
       ? '\n═══ ИСТОРИЯ ЭТОГО РАЗГОВОРА ═══\n' +
         (conversationHistory as HistoryTurn[]).map(h =>
           `Пользователь: «${h.user}»\nАгент (${h.intent||'?'}): ${h.agent}`
         ).join('\n—\n') +
-        '\n(«эту», «ту», «её», «первую» — относится к заметкам упомянутым выше в истории. Используй историю чтобы понять контекст текущего запроса.)\n'
+        '\nИстория нужна только для явных продолжений вроде «это», «ту», «её», «первую», «тогда». Не связывай новый самостоятельный запрос со старым разговором.\n'
       : '';
 
     const { recentNotes, userFolders, appContext } = payload ?? {};
@@ -477,27 +557,28 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
                   : v.type === 'all'     ? 'список всех разделов и папок'
                   : 'главная лента';
         lines.push(`📍 Где сейчас: ${loc}`);
-        if (v.type === 'section') lines.push(`(Если запрос без конкретики — отвечай в контексте раздела «${v.name}»)`);
-        if (v.type === 'folder')  lines.push(`(Если запрос без конкретики — отвечай в контексте папки «${v.tag}»)`);
+        lines.push('Текущий экран использовать только для явных слов «здесь», «сюда», «эта папка», «этот раздел». Без таких слов не меняй смысл запроса.');
       }
       // Общая статистика
-      lines.push(`📊 Всего: ${ctx.totalNotes||0} заметок · ${ctx.totalSections||0} разделов · ${ctx.totalInbox||0} папок входящих · ${ctx.trashCount||0} в корзине`);
+      if (route.useAppContext) {
+        lines.push(`📊 Всего: ${ctx.totalNotes||0} заметок · ${ctx.totalSections||0} разделов · ${ctx.totalInbox||0} папок входящих · ${ctx.trashCount||0} в корзине`);
+      }
       // Разделы с количеством
-      if (ctx.sectionStats?.length) {
+      if (route.useAppContext && ctx.sectionStats?.length) {
         lines.push('📁 Разделы: ' + ctx.sectionStats.map(s => `«${s.name}» (${s.noteCount})`).join(' · '));
       }
       // Папки входящих с количеством
-      if (ctx.inboxStats?.length) {
+      if (route.useAppContext && ctx.inboxStats?.length) {
         lines.push('📥 Входящие папки: ' + ctx.inboxStats.map(f => `«${f.label}» (${f.noteCount})`).join(' · '));
       }
       // Часто открываемые — важные для пользователя
-      if (ctx.topOpenedNotes?.length) {
+      if (route.useAppContext && ctx.topOpenedNotes?.length) {
         lines.push('⭐ Часто открывает (важные): ' + ctx.topOpenedNotes.map(n =>
           `«${n.title}» (${n.opens}x${n.section ? ', '+n.section : ''}${n.hasReminder ? ', 🔔' : ''})`
         ).join(' · '));
       }
       // Ближайшие напоминания
-      if (ctx.upcoming?.length) {
+      if (route.useAppContext && ctx.upcoming?.length) {
         lines.push('🔔 Ближайшие напоминания: ' + ctx.upcoming.map(n => `«${n.title}» ${n.reminder}`).join(' · '));
       }
       appCtxBlock = '\n═══ КОНТЕКСТ ПРИЛОЖЕНИЯ ═══\n' + lines.join('\n') + '\n';
@@ -509,7 +590,7 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
       hasReminder?:boolean; isRecurring?:boolean; reminderTime?:string|null;
       section?:string|null;
     };
-    const notesLines = Array.isArray(recentNotes) && recentNotes.length > 0
+    const notesLines = route.useNotes && Array.isArray(recentNotes) && recentNotes.length > 0
       ? '\nЗаметки пользователя (сначала самые свежие):\n' + (recentNotes as NoteCtx[]).map(n => {
           // Метка даты создания
           const isCreatedToday = n.createdAt ? n.createdAt.startsWith(clientISODate) : false;
@@ -534,11 +615,19 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
       ? `\n═══ РАЗДЕЛЫ ПОЛЬЗОВАТЕЛЯ ═══\nПользователь создал разделы: ${(userFolders as string[]).join(', ')}\nПри CREATE_NOTE — если тема ЯВНО совпадает с разделом, добавь в params поле "section": "ИмяРаздела"\nСовпадение должно быть чётким (финансы/деньги → Финансы, врач/здоровье → Здоровье). При малейшем сомнении — НЕ ставить section.\n`
       : '';
 
+    const routeBlock = `\n═══ ROUTER V1 ═══
+Предварительный профиль запроса: ${route.profile}. Вероятное намерение: ${route.likelyIntent}.
+Главный источник смысла — последняя фраза пользователя. Контекст, память и история только помогают, но не имеют права менять намерение.
+Если профиль none/light — не копайся в заметках и не делай сводку. Выбери простое действие или коротко ответь.
+Уточняй только когда без одного ответа можно удалить/переместить/создать явно не то. В остальных случаях действуй по разумному безопасному умолчанию.
+`;
+
     const prompt = `Ты голосовой агент «Разберёмся». Выполни запрос и верни JSON.
 
 ТЕКУЩАЯ ДАТА И ВРЕМЯ ПОЛЬЗОВАТЕЛЯ: ${clientDateStr} ${clientTimeStr} (${clientTz})
 (Используй это время при любых упоминаниях «сегодня», «завтра», «через час», «на этой неделе».)
 
+${routeBlock}
 
 ═══ ДОСТУПНЫЕ ДЕЙСТВИЯ ═══
 CREATE_NOTE       — записать / запомнить / создать заметку (ДЕЙСТВИЕ ПО УМОЛЧАНИЮ при сомнениях)
@@ -550,7 +639,7 @@ DAILY_BRIEFING    — сводка заметок / что у меня сего�
 MAKE_PLAN         — составь план / маршрут / список дел по заметкам
 FIND_NOTES        — найди заметки ПО КОНКРЕТНОЙ ТЕМЕ ("найди про врача", "покажи заметки о работе") — только когда есть конкретный поисковый запрос
 DELETE_NOTE       — удалить заметку в корзину
-CLARIFY           — запрос размытый, нужно уточнить
+CLARIFY           — только если без одного короткого ответа действие невозможно или рискованно
 CREATE_TAG_FOLDER — ТОЛЬКО если явно сказано «папку», «раздел» или «категорию»
 TAG_NOTE          — добавить тег к заметке (только если явно упомянуты «тег», «папка», «категория»)
 OPEN_NOTE         — открыть / показать заметку
@@ -572,13 +661,8 @@ FIND_DOCTOR       — найти врача / клинику
 Для CLARIFY пример:
 {
   "actions": [{"intent": "CLARIFY", "params": {}}],
-  "response": "Уточни когда напомнить?",
-  "options": [
-    {"label": "Через час", "query": "напомни [что] через час"},
-    {"label": "Сегодня вечером", "query": "напомни [что] сегодня в 19:00"},
-    {"label": "Завтра утром", "query": "напомни [что] завтра в 9:00"},
-    {"label": "Выбрать время", "query": "напомни [что] — укажи время"}
-  ]
+  "response": "Что именно записать?",
+  "options": []
 }
 
 ═══ ПАРАМЕТРЫ ПО ДЕЙСТВИЯМ ═══
@@ -722,6 +806,7 @@ ${appCtxBlock}${historyBlock}${foldersBlock}${memBlock}${notesLines}${altsBlock}
       actions,
       response: typeof parsed.response === 'string' ? parsed.response.trim() : '',
       options,
+      router: { profile: route.profile, likelyIntent: route.likelyIntent },
     });
   }
 
