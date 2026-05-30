@@ -93,7 +93,7 @@ const IDEA_TAG = 'идея';
 function normalizeIdeaTag(value: string) {
   const clean = value.replace(/^#/, '').trim();
   const key = clean.toLowerCase().replace(/\s+/g, '_');
-  return ['идея', 'идеи', 'idea', 'ideas'].includes(key) ? IDEA_TAG : clean;
+  return ['идея', 'идеи', 'idea', 'ideas', 'idei', 'ideya', 'ideja'].includes(key) ? IDEA_TAG : clean;
 }
 function normalizeTags(value: unknown, limit: number) {
   const seen = new Set<string>();
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
   "actions": ["что можно сделать 1", "что можно сделать 2"]
 }
 
-Важно про теги: если заметка — это идея, предложение, план что-то создать или улучшить — обязательно добавь тег "идея" в список тегов. Не используй варианты "идеи", "idea", "ideas".
+Важно про теги: если заметка — это идея, предложение, план что-то создать или улучшить — обязательно добавь тег "идея" в список тегов. Не используй варианты "идеи", "idea", "ideas", "idei".
 ${memoryBlock}
 Новая заметка:
 ${safeText}`;

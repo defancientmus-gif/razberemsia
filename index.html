@@ -3906,9 +3906,16 @@ function getTagFolders(){
   try{
     const key=tagFoldersStorageKey();
     let raw=localStorage.getItem(key);
-    if(raw===null&&key!==TAG_FOLDERS_KEY)raw=localStorage.getItem(TAG_FOLDERS_KEY);
+    const legacyRaw=key!==TAG_FOLDERS_KEY?localStorage.getItem(TAG_FOLDERS_KEY):null;
+    const usedLegacy=raw===null&&legacyRaw!==null;
+    if(usedLegacy)raw=legacyRaw;
     const arr=JSON.parse(raw||'[]');
-    return typeof normalizeTagFolderList==='function'?normalizeTagFolderList(arr):arr;
+    const next=typeof normalizeTagFolderList==='function'?normalizeTagFolderList(arr):arr;
+    if(usedLegacy||JSON.stringify(arr)!==JSON.stringify(next)){
+      localStorage.setItem(key, JSON.stringify(next));
+      if(typeof queueCloudSave==='function') queueCloudSave();
+    }
+    return next;
   } catch(e){ return []; }
 }
 function saveTagFolders(arr){

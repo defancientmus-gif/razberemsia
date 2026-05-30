@@ -18,11 +18,11 @@ function readJson(key,fallback){try{const raw=localStorage.getItem(scopedKey(key
 function writeJson(key,value){localStorage.setItem(scopedKey(key),JSON.stringify(value));queueCloudSave();}
 function readText(key){return localStorage.getItem(scopedKey(key))||'';}
 function writeText(key,value){localStorage.setItem(scopedKey(key),String(value||''));queueCloudSave();}
-function migrateLegacyLocal(){['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{const target=scopedKey(key);if(localStorage.getItem(target)!==null)return;const legacy=localStorage.getItem(key);if(legacy!==null)localStorage.setItem(target,legacy);});}
+function migrateLegacyLocal(){['rz_notes','rz_trash','rz_history','rz_name','rz_tag_folders'].forEach(key=>{const target=scopedKey(key);if(localStorage.getItem(target)!==null)return;const legacy=localStorage.getItem(key);if(legacy!==null)localStorage.setItem(target,legacy);});}
 
 const IDEA_TAG='идея';
 const IDEA_INBOX_LABEL='Входящие';
-const IDEA_TAG_ALIASES=new Set(['идея','идеи','idea','ideas']);
+const IDEA_TAG_ALIASES=new Set(['идея','идеи','idea','ideas','idei','ideya','ideja']);
 function _cleanTag(raw){return String(raw||'').replace(/^#/,'').trim();}
 function _tagKey(raw){
   const clean=_cleanTag(raw).toLowerCase().replace(/\s+/g,'_');
