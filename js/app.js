@@ -6,7 +6,7 @@ const sb=sbConfigured&&window.supabase?window.supabase.createClient(SUPABASE_URL
 }):null;
 
 let CU=null,ST=null,EI=null;
-let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false;
+let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false,CLOUD_SAVE_PENDING=false;
 // Флаг: если Promise.race timeout выиграл раньше чем пришли облачные данные,
 // loadCloudData не должна перезаписывать localStorage — пользователь уже работает.
 let _cloudStale=false;
@@ -104,6 +104,43 @@ function normalizeTagFolderList(arr){
     out.push({...item,tag:key,label});
   });
   return out;
+}
+function _sameJson(a,b){return JSON.stringify(a||[])===JSON.stringify(b||[]);}
+function _mergeByKey(local,cloud,keyFn,mergeFn){
+  const out=[];
+  const put=item=>{
+    const key=keyFn(item);
+    if(!key)return;
+    const existing=out.find(x=>keyFn(x)===key);
+    if(existing)Object.assign(existing,mergeFn(existing,item));
+    else out.push({...item});
+  };
+  (Array.isArray(local)?local:[]).forEach(put);
+  (Array.isArray(cloud)?cloud:[]).forEach(put);
+  return out;
+}
+function _mergeUserFolderList(local,cloud){
+  const merged=_mergeByKey(local,cloud,item=>String(item?.name||'').trim().toLowerCase(),(a,b)=>({
+    ...a,...b,
+    name:a.name||b.name,
+    idx:a.idx!==undefined?a.idx:b.idx,
+    createdAt:Math.min(a.createdAt||Date.now(),b.createdAt||Date.now())
+  }));
+  return merged.map((folder,idx)=>({...folder,idx:folder.idx!==undefined?folder.idx:idx}));
+}
+function _mergeTagFolderList(local,cloud){
+  return normalizeTagFolderList(_mergeByKey(
+    normalizeTagFolderList(local),
+    normalizeTagFolderList(cloud),
+    item=>_tagKey(item?.tag||item?.label||''),
+    (a,b)=>({
+      ...a,...b,
+      tag:_tagKey(a.tag||b.tag),
+      label:isIdeaTag(a.tag||b.tag)?IDEA_INBOX_LABEL:(b.label||a.label||b.tag||a.tag),
+      pinned:!!(a.pinned||b.pinned),
+      createdAt:Math.min(a.createdAt||Date.now(),b.createdAt||Date.now())
+    })
+  ));
 }
 function getNotes(){
   const notes=readJson('rz_notes',[]);
@@ -260,33 +297,42 @@ function _getLocalSyncedAt(){return localStorage.getItem('rz_folders_synced_at')
 function _setLocalSyncedAt(ts){if(ts)localStorage.setItem('rz_folders_synced_at',ts);}
 
 function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
-  // Last-write-wins: если облако обновилось после последнего нашего push — доверяем облаку
-  // даже если оно вернуло пустой массив (пользователь удалил все папки с другого устройства).
+  let changed=false;
+  // Папки мержим по смысловому ключу, а не просто last-write-wins.
+  // Иначе одно устройство может стереть AI-папку, созданную другим, если держало старый localStorage.
   const localSyncedAt=_getLocalSyncedAt();
   const cloudIsNewer=cloudUpdatedAt&&(!localSyncedAt||cloudUpdatedAt>localSyncedAt);
 
   if(Array.isArray(cloudUserFolders)){
     const local=getUserFolders();
+    const merged=_mergeUserFolderList(local,cloudUserFolders);
+    const next=cloudIsNewer?merged:((cloudUserFolders.length>0||local.length>0)?merged:local);
     if(cloudIsNewer){
       // Облако новее → берём как есть (включая пустой массив = «удалено»)
-      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(cloudUserFolders));
+      if(!_sameJson(local,next)){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;}
     } else if(cloudUserFolders.length>0&&!local.length){
       // Облако не новее, но локально пусто → берём облако (первый вход на новом устройстве)
-      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(cloudUserFolders));
+      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;
     } else if(local.length>0&&!cloudUserFolders.length){
       // Локальные есть, облако пустое и не новее → пушим локальное в облако
       queueCloudSave();
+    } else if(!_sameJson(local,next)){
+      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;queueCloudSave();
     }
   }
   if(Array.isArray(cloudTagFolders)){
     const localTags=typeof getTagFolders==='function'?getTagFolders():[];
     const normalizedCloudTags=normalizeTagFolderList(cloudTagFolders);
+    const mergedTags=_mergeTagFolderList(localTags,normalizedCloudTags);
+    const nextTags=cloudIsNewer?mergedTags:((normalizedCloudTags.length>0||localTags.length>0)?mergedTags:localTags);
     if(cloudIsNewer){
-      localStorage.setItem('rz_tag_folders',JSON.stringify(normalizedCloudTags));
+      if(!_sameJson(localTags,nextTags)){localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(nextTags));changed=true;}
     } else if(cloudTagFolders.length>0&&!localTags.length){
-      localStorage.setItem('rz_tag_folders',JSON.stringify(normalizedCloudTags));
+      localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(nextTags));changed=true;
     } else if(localTags.length>0&&!cloudTagFolders.length){
       queueCloudSave();
+    } else if(!_sameJson(localTags,nextTags)){
+      localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(nextTags));changed=true;queueCloudSave();
     }
   }
   // Если после мёрджа разделы всё ещё пустые — восстанавливаем из тегов заметок
@@ -294,6 +340,7 @@ function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
   if(!afterMerge.length){
     _recoverUserFoldersFromNotes();
   }
+  return changed;
 }
 function _recoverUserFoldersFromNotes(){
   // Восстанавливает разделы пользователя из тегов _filed_in:ИМЯ в заметках
@@ -313,6 +360,16 @@ function _recoverUserFoldersFromNotes(){
     console.info('[rz] Восстановлено разделов из заметок:',recovered.length);
     queueCloudSave();
   }
+}
+function _ensureIdeaInboxTagFolder(notes){
+  if(typeof getTagFolders!=='function'||typeof saveTagFolders!=='function')return typeof getTagFolders==='function'?getTagFolders():[];
+  const list=Array.isArray(notes)?notes:getNotes();
+  if(!list.some(_noteHasIdea))return getTagFolders();
+  const folders=getTagFolders();
+  if(folders.some(f=>isIdeaTag(f.tag)))return folders;
+  const next=normalizeTagFolderList([...folders,{tag:IDEA_TAG,label:IDEA_INBOX_LABEL,system:true,createdAt:Date.now()}]);
+  saveTagFolders(next);
+  return next;
 }
 function isMissingFoldersColumns(error){
   const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
@@ -373,13 +430,30 @@ async function loadCloudData(){
       }catch(e2){
         console.warn('cloud load failed (attempt 2)',e2);
         // Только теперь говорим пользователю — и то без тоста, данные есть локально
-      }finally{CLOUD_LOADING=false;}
+      }finally{
+        CLOUD_LOADING=false;
+        if(CLOUD_SAVE_PENDING){
+          CLOUD_SAVE_PENDING=false;
+          queueCloudSave();
+        }
+      }
     },3000);
     return; // данные локальные уже в localStorage — приложение работает
   }
-  finally{CLOUD_LOADING=false;}
+  finally{
+    CLOUD_LOADING=false;
+    if(CLOUD_SAVE_PENDING){
+      CLOUD_SAVE_PENDING=false;
+      queueCloudSave();
+    }
+  }
 }
-function queueCloudSave(){if(CLOUD_LOADING||!cloudAllowed())return;clearTimeout(CLOUD_SAVE_TIMER);CLOUD_SAVE_TIMER=setTimeout(saveCloudNow,700);}
+function queueCloudSave(){
+  if(!cloudAllowed())return;
+  if(CLOUD_LOADING){CLOUD_SAVE_PENDING=true;return;}
+  clearTimeout(CLOUD_SAVE_TIMER);
+  CLOUD_SAVE_TIMER=setTimeout(saveCloudNow,700);
+}
 async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
@@ -1585,9 +1659,15 @@ async function _pullCloudIfStale(){
     if(Array.isArray(data.trash)){
       localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
     }
-    _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
-    if(changed)loadAll();
-    else if(document.getElementById('drill-p0')?.offsetParent!==null)_drillP0(); // обновить разделы
+    const foldersChanged=_mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
+    if(changed){
+      loadAll();
+    }else if(foldersChanged&&cur==='notes'){
+      _drillRender(drillLevel);
+      _drillNav();
+    }else if(document.getElementById('drill-p0')?.offsetParent!==null){
+      _drillP0(); // обновить разделы
+    }
   }catch(_){}
 }
 document.addEventListener('visibilitychange',()=>{
@@ -1597,13 +1677,28 @@ document.addEventListener('visibilitychange',()=>{
     _pullCloudIfStale();
   }
 });
+window.addEventListener('focus',()=>{_lastPullAt=0;_pullCloudIfStale();});
+window.addEventListener('online',()=>{_lastPullAt=0;_pullCloudIfStale();});
+setInterval(()=>{
+  if(document.visibilityState==='visible'&&cloudAllowed())_pullCloudIfStale();
+},18000);
 
 // ── Pull-to-refresh на ленте и списке заметок ──
-let _ptrActive=false,_ptrSY=0,_ptrTriggered=false;
+let _ptrActive=false,_ptrSY=0,_ptrTriggered=false,_activePtrBar=null;
+function _ptrBarFor(scrollEl){
+  if(scrollEl?.closest?.('#s-notes'))return document.getElementById('notes-ptr-bar');
+  return document.getElementById('ptr-bar');
+}
+function _setNotesRefreshBusy(busy){
+  const btn=document.getElementById('drill-refresh-btn');
+  if(!btn)return;
+  btn.classList.toggle('refreshing',!!busy);
+  btn.disabled=!!busy;
+}
 function _initPTR(scrollEl){
   if(!scrollEl||scrollEl._ptrInited)return;
   scrollEl._ptrInited=true;
-  const bar=document.getElementById('ptr-bar');
+  const bar=_ptrBarFor(scrollEl);
   const THRESHOLD=72;
   scrollEl.addEventListener('touchstart',e=>{
     if(scrollEl.scrollTop===0){_ptrActive=true;_ptrSY=e.touches[0].clientY;_ptrTriggered=false;}
@@ -1614,6 +1709,7 @@ function _initPTR(scrollEl){
     if(dy>0&&scrollEl.scrollTop===0){
       const pull=Math.min(dy*0.45,THRESHOLD);
       if(bar){bar.style.height=pull+'px';}
+      _activePtrBar=bar;
       _ptrTriggered=pull>=THRESHOLD*0.75;
       if(bar)bar.style.opacity=String(Math.min(pull/(THRESHOLD*0.5),1));
     }
@@ -1630,15 +1726,23 @@ let _ptrRunning=false;
 async function _doPTR(){
   if(_ptrRunning)return;
   _ptrRunning=true;
-  const bar=document.getElementById('ptr-bar');
-  if(bar){bar.style.height='36px';bar.classList.add('spinning');}
-  _lastPullAt=0;
-  CLOUD_READY_UID=null; // принудительно перегружаем с облака
-  await loadCloudData();
-  await new Promise(r=>setTimeout(r,600));
-  if(bar){bar.classList.remove('spinning');bar.style.height='0';}
-  _ptrRunning=false;
-  showToast('Обновлено ✓');
+  const bar=_activePtrBar||document.getElementById(cur==='notes'?'notes-ptr-bar':'ptr-bar')||document.getElementById('ptr-bar');
+  _setNotesRefreshBusy(true);
+  try{
+    if(bar){bar.style.height='36px';bar.classList.add('spinning');}
+    _lastPullAt=0;
+    CLOUD_READY_UID=null; // принудительно перегружаем с облака
+    _cloudStale=false;
+    await loadCloudData();
+    loadAll();
+    await new Promise(r=>setTimeout(r,600));
+    showToast('Обновлено ✓');
+  }finally{
+    if(bar){bar.classList.remove('spinning');bar.style.height='0';}
+    _setNotesRefreshBusy(false);
+    _activePtrBar=null;
+    _ptrRunning=false;
+  }
 }
 
 // ── Умная обработка напоминания после сохранения заметки ──
@@ -3304,7 +3408,7 @@ function _buildAgentContext(){
   const stats=_getNoteStats();
   const allNotes=getNotes();
   const sections=getUserFolders?.()??[];
-  const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
+  const tagFolders=_ensureIdeaInboxTagFolder(allNotes);
 
   // Топ часто открываемых заметок
   const topNotes=allNotes
@@ -3510,8 +3614,9 @@ function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
   const _savedScroll=el.scrollTop; // сохранить скролл перед перерисовкой
   const notes=getNotes();
+  _initPTR(el);
   const userFolders=getUserFolders();
-  const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
+  const tagFolders=_ensureIdeaInboxTagFolder(notes);
   const userFolderNames=userFolders.map(f=>String(f.name||'').trim().toLowerCase()).filter(Boolean);
   const tagHasUserSection=f=>!isIdeaTag(f.tag)&&userFolderNames.includes(String(f.tag||'').trim().toLowerCase());
   const pinnedFolders=tagFolders.filter(f=>f.pinned&&!tagHasUserSection(f));
@@ -6462,7 +6567,7 @@ function _showAgentCard(intent,response,params,options){
   let openFolderBtn='';
   let promoteBtn='';
   if(intent==='CREATE_TAG_FOLDER'&&params?.tag){
-    const folderLabel=params.label||params.tag;
+    const folderLabel=isIdeaTag(params.tag)?IDEA_INBOX_LABEL:(params.label||params.tag);
     openFolderBtn=`<button class="agent-card-open" onclick="_agentOpenFolder(${jsAttr(params.tag)})">Открыть «${esc(String(folderLabel).slice(0,25))}»</button>`;
     promoteBtn=`<button class="agent-card-promote" onclick="promoteToSection(${jsAttr(params.tag)});_closeAgentCard(this);">📚 В Архив</button>`;
   }

@@ -184,7 +184,7 @@
   <div class="hdr-title">Карта здоровья системы</div>
   <div class="hdr-meta">
     <span class="live-badge"><span class="live-dot"></span>Live</span>
-    <span id="ver-badge">rz-v277</span>
+    <span id="ver-badge">rz-v279</span>
     <span id="date-badge"></span>
   </div>
 </div>
@@ -286,10 +286,11 @@
   <div class="block">
     <div class="block-head"><span class="block-icon">☁️</span><span class="block-title">Синхронизация</span><span class="badge badge-y">нестабильно</span></div>
     <div class="items">
-      <div class="item"><div class="dot g"></div><div><div class="item-name">Supabase cloud sync</div><div class="item-note">user_state + notes, каждые 30с</div></div></div>
-      <div class="item"><div class="dot g"></div><div><div class="item-name">Pull-to-refresh (свайп вниз)</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Supabase cloud sync</div><div class="item-note">user_state + notes, live-pull каждые 18с</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Pull-to-refresh и кнопка обновления</div><div class="item-note">Главная лента + раздел заметок</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Обновление при возврате в приложение</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Два устройства одновременно</div><div class="item-note">Конфликт: побеждает последняя запись</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">AI-папки между устройствами</div><div class="item-note">tag_folders мержатся по тегу; `идея` восстанавливается как `Входящие`</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Два устройства одновременно</div><div class="item-note">Заметки еще живут в last-write/polling модели, без полноценного конфликт-резолвера</div></div></div>
       <div class="item"><div class="dot r"></div><div><div class="item-name">Realtime WebSocket</div><div class="item-note">Нет Supabase Realtime — только polling</div></div></div>
     </div>
   </div>
@@ -302,7 +303,7 @@
       <div class="item"><div class="dot g"></div><div><div class="item-name">Компактный режим / swipe-delete</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Поиск и фильтрация</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Splash без дёрганья (rz-v247)</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Входящие (Inbox) swipe-delete</div><div class="item-note">Новая реализация rz-v248 — не верифицирована</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Входящие</div><div class="item-note">Системная папка тега `идея`, видимое имя не конфликтует с пользовательской папкой</div></div></div>
       <div class="item"><div class="dot y"></div><div><div class="item-name">Event listeners (drill)</div><div class="item-note">Утечка памяти при повторных открытиях</div></div></div>
     </div>
   </div>
@@ -336,8 +337,8 @@
     <div class="items">
       <div class="item"><div class="dot g"></div><div><div class="item-name">Новая цепочка save_idea</div><div class="item-note">Работает: идеи дописываются в texts/IDEAS_NEAR_TERM.md</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Папка приложения «Идея»</div><div class="item-note">26 заметок сейчас видно в интерфейсе приложения</div></div></div>
-      <div class="item"><div class="dot g"></div><div><div class="item-name">Новая GitHub-полка</div><div class="item-note">2 идеи от 2026-05-29 дописаны в texts/IDEAS_NEAR_TERM.md</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Legacy raw ideas/</div><div class="item-note">22 файла 2026-05-25..28, часть дублируется и требует выжимки</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Новая GitHub-полка</div><div class="item-note">6 идей 2026-05-29..30 дописаны в texts/IDEAS_NEAR_TERM.md</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Legacy raw ideas/</div><div class="item-note">23 файла 2026-05-25..28 + README; часть дублируется и требует выжимки</div></div></div>
       <div class="item"><div class="dot y"></div><div><div class="item-name">Архив raw-ideas</div><div class="item-note">15 файлов 2026-05-19..22 + session log, не активный план</div></div></div>
       <div class="item"><div class="dot y"></div><div><div class="item-name">GitHub raw-выгрузки</div><div class="item-note">39 записей в repo-истории/файлах; это не равно 26 заметкам в приложении</div></div></div>
     </div>
