@@ -6208,6 +6208,18 @@ function _pushAgentHistory(userText,agentResponse,intent){
   if(_agentHistory.length>4)_agentHistory.shift();  // держим только 4 хода
 }
 
+function _syncAppVersionBadge(){
+  const el=document.getElementById('app-version-badge');
+  if(!el)return;
+  fetch('sw.js?version='+Date.now(),{cache:'no-store'})
+    .then(r=>r.ok?r.text():'')
+    .then(t=>{
+      const m=String(t).match(/const CACHE = ['"]([^'"]+)['"]/);
+      if(m?.[1])el.textContent='β '+m[1];
+    })
+    .catch(()=>{});
+}
+
 function _agentRouteWord(text,variants){
   return new RegExp(`(^|[^a-zа-я0-9_])(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
 }
@@ -6341,9 +6353,12 @@ function _runSingleIntent(intent,params,originalText){
     if(params.section&&isUserFolderName?.(params.section)){
       aiTags.push(_filedFolderTag(params.section));
     }
-    notes.push({id,title:params.title||auto.title,body:params.body||originalText,
+    const note={id,title:params.title||auto.title,body:params.body||originalText,
       label:auto.label||'заметка',createdAt:ts,updatedAt:ts,fromPad:true,
-      ...(aiTags.length?{aiTags}:{})});
+      ...(aiTags.length?{aiTags}:{})};
+    notes.push(note);
+    params.createdNoteId=id;
+    params.createdNoteTitle=note.title;
     saveNotes(notes);_reloadViews();
   }
 
@@ -6352,9 +6367,12 @@ function _runSingleIntent(intent,params,originalText){
     const body=params.body||originalText;
     const reminderTime=parseVoiceReminder(originalText)||parseVoiceReminder(params.when||'')||null;
     const auto=analyzeText(body);
-    notes.push({id,title:params.title||auto.title,body,label:'заметка',
+    const note={id,title:params.title||auto.title,body,label:'заметка',
       reminder:reminderTime,  // parseVoiceReminder уже возвращает ISO
-      createdAt:ts,updatedAt:ts});
+      createdAt:ts,updatedAt:ts};
+    notes.push(note);
+    params.createdNoteId=id;
+    params.createdNoteTitle=note.title;
     saveNotes(notes);
     if(reminderTime)_handleReminderAfterSave(reminderTime,id,params.title||auto.title,body.slice(0,200));
     loadHomeFeed();loadNotes();
@@ -6423,13 +6441,18 @@ function _runSingleIntent(intent,params,originalText){
       notes[existIdx].recurring={times,days:params.days||'daily'};
       notes[existIdx].reminder=_tsToIso(nextTs);
       notes[existIdx].updatedAt=Date.now();
+      params.createdNoteId=notes[existIdx].id;
+      params.createdNoteTitle=notes[existIdx].title||title;
       saveNotes(notes);
       _handleReminderAfterSave(nextTs,notes[existIdx].id,title,title);
     } else {
       const ts=Date.now();const id=genId();
-      notes.push({id,title,body:title,label:'заметка',
+      const note={id,title,body:title,label:'заметка',
         reminder:_tsToIso(nextTs),recurring:{times,days:params.days||'daily'},
-        createdAt:ts,updatedAt:ts});
+        createdAt:ts,updatedAt:ts};
+      notes.push(note);
+      params.createdNoteId=id;
+      params.createdNoteTitle=note.title;
       saveNotes(notes);
       _handleReminderAfterSave(nextTs,id,title,title);
     }
@@ -6576,18 +6599,15 @@ function _showAgentCard(intent,response,params,options){
     if(params?.section){
       openBtn=`<button class="agent-card-open" onclick="_agentOpenFolder(${jsAttr(params.section)})">Открыть в «${esc(String(params.section).slice(0,25))}»</button>`;
     } else {
-      // Ведём к самой свежей заметке (index 0 после prepend)
-      const newNote=getNotes()[0];
-      const noteTitle=newNote?.title||'заметку';
-      const noteId=newNote?.id||'';
+      const noteId=params?.createdNoteId||'';
+      const noteTitle=params?.createdNoteTitle||getNotes().find(n=>n.id===noteId)?.title||'заметку';
       openBtn=noteId
         ?`<button class="agent-card-open" onclick="_closeAgentCard(this);openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
         :`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть заметку</button>`;
     }
   } else if(['SET_REMINDER','SET_RECURRING'].includes(intent)){
-    const newNote=getNotes()[0];
-    const noteTitle=newNote?.title||'напоминание';
-    const noteId=newNote?.id||'';
+    const noteId=params?.createdNoteId||'';
+    const noteTitle=params?.createdNoteTitle||getNotes().find(n=>n.id===noteId)?.title||'напоминание';
     openBtn=noteId
       ?`<button class="agent-card-open" onclick="_closeAgentCard(this);openNoteSheetById(${jsAttr(noteId)})">Открыть «${esc(noteTitle.slice(0,28))}»</button>`
       :`<button class="agent-card-open" onclick="_agentOpenNote(0)">Открыть напоминание</button>`;
@@ -6888,3 +6908,4 @@ window.addEventListener('load',()=>{
 })();
 
 initAuth();
+_syncAppVersionBadge();

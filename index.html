@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Разберёмся v5.30</title>
+<title>Разберёмся β rz-v282</title>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="manifest" href="manifest.json">
@@ -63,11 +63,11 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
 
 /* ── HEADER ── */
 header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:6px;min-width:0;max-width:168px;flex:0 1 auto;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:6px;min-width:0;max-width:188px;flex:0 1 auto;}
 .logo-feather{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .logo-feather svg{width:22px;height:22px;stroke:var(--accent-d);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 6px oklch(0.54 0.13 210 / 0.25));}
 .logo-name{overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.logo-ver{font-size:9px;color:oklch(0.52 0.012 210 / 0.45);font-family:var(--sys);font-weight:500;vertical-align:middle;letter-spacing:.02em;}
+.logo-ver{font-size:9px;color:oklch(0.40 0.04 210 / 0.58);font-family:var(--sys);font-weight:650;letter-spacing:.02em;padding:2px 5px;border-radius:999px;background:oklch(0.96 0.01 210 / 0.42);border:1px solid oklch(0.82 0.04 210 / 0.38);line-height:1;flex:0 0 auto;}
 
 .hcenter{display:flex;flex-direction:column;align-items:center;margin:0 auto;}
 .hdate{font-size:11px;font-weight:500;color:var(--fg-l);letter-spacing:.01em;}
@@ -3368,6 +3368,7 @@ header{padding:15px 16px 9px;}
   <header>
     <div class="logo">
       <span class="logo-name">Разберёмся</span>
+      <span class="logo-ver" id="app-version-badge">β rz-v282</span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
