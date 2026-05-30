@@ -3052,6 +3052,158 @@ header{padding:15px 16px 9px;}
 .inbox-del-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;border:none;background:none;padding:0;margin:-4px -6px -4px 0;font-size:20px;line-height:1;color:oklch(0.50 0.10 15);opacity:0.38;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s,background .12s;}
 .inbox-del-btn:active{opacity:1;background:oklch(0.88 0.09 15/0.28);}
 .agent-folder-empty{text-align:center;padding:60px 20px;color:var(--fg-l);font-size:16px;}
+
+/* ── SOFT CERAMIC / GLASS UPSCALE ── */
+:root{
+  --ceramic-hi:oklch(1 0 0 / .88);
+  --ceramic-mid:oklch(0.976 0.007 214 / .74);
+  --ceramic-low:oklch(0.925 0.020 214 / .34);
+  --ceramic-line:oklch(1 0 0 / .72);
+  --ceramic-shadow:oklch(0.30 0.035 215 / .105);
+  --idea-soft:oklch(0.80 0.055 292 / .22);
+  --idea-line:oklch(0.72 0.075 292 / .34);
+}
+.bg{
+  background:
+    radial-gradient(ellipse 62% 48% at 8% 96%,oklch(0.62 0.070 196 / .18) 0%,transparent 58%),
+    radial-gradient(ellipse 48% 38% at 94% 6%,oklch(0.72 0.055 250 / .14) 0%,transparent 54%),
+    radial-gradient(ellipse 44% 30% at 52% 60%,oklch(0.82 0.035 185 / .13) 0%,transparent 48%),
+    linear-gradient(165deg,oklch(0.93 0.010 205) 0%,oklch(0.895 0.014 214) 56%,oklch(0.865 0.017 220) 100%);
+}
+.jq-btn,.hf-card,.drill-sec-row,.drill-note-row,.drill-grid-card,.agent-note,.folder-card,.bell-bar-btn,.home-act-btn,.emg-opt,.sr-item,.trash-item,.stats-rows,.cal-trigger{
+  background:
+    radial-gradient(ellipse 100% 64% at 18% 0%,oklch(1 0 0 / .58),transparent 62%),
+    linear-gradient(154deg,var(--ceramic-hi),var(--ceramic-mid)) !important;
+  border-color:var(--ceramic-line) !important;
+  box-shadow:
+    inset 0 1.5px 0 oklch(1 0 0 / .92),
+    inset 0 -18px 36px var(--ceramic-low),
+    0 7px 22px -10px var(--ceramic-shadow) !important;
+  backdrop-filter:blur(22px) saturate(1.18);
+  -webkit-backdrop-filter:blur(22px) saturate(1.18);
+}
+.sect-card{
+  background:
+    radial-gradient(ellipse 115% 74% at 16% 0%,var(--card-tint,oklch(0.70 0.035 210 / .10)),transparent 64%),
+    linear-gradient(154deg,oklch(1 0 0 / .80),oklch(0.975 0.008 214 / .58)) !important;
+  border-color:oklch(1 0 0 / .72) !important;
+  box-shadow:inset 0 1.5px 0 oklch(1 0 0 / .92),0 6px 20px -12px oklch(0.28 0.035 215 / .16) !important;
+  backdrop-filter:blur(22px) saturate(1.16);
+  -webkit-backdrop-filter:blur(22px) saturate(1.16);
+}
+.sect-card-ico,.drill-sec-ico{
+  background:oklch(1 0 0 / .42) !important;
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .85),0 4px 12px oklch(0.30 0.035 210 / .06);
+}
+.hf-card.section-glass-note,.drill-note-row.section-glass-note,.drill-grid-card.section-glass-note{
+  box-shadow:
+    inset 0 1.5px 0 oklch(1 0 0 / .94),
+    inset 0 0 38px var(--section-line,transparent),
+    0 7px 22px -10px var(--ceramic-shadow) !important;
+}
+.hf-card.idea-note:not(.section-glass-note),.drill-note-row.idea-note:not(.section-glass-note),.drill-grid-card.idea-note:not(.section-glass-note),.agent-note.idea-note{
+  background:
+    radial-gradient(ellipse 92% 62% at 16% 8%,var(--idea-soft),transparent 68%),
+    linear-gradient(154deg,oklch(1 0 0 / .84),oklch(0.972 0.010 292 / .68)) !important;
+  border-color:oklch(1 0 0 / .76) !important;
+}
+.hf-card.idea-note,.drill-note-row.idea-note,.drill-grid-card.idea-note,.agent-note.idea-note{
+  box-shadow:
+    inset 0 1.5px 0 oklch(1 0 0 / .94),
+    inset 0 0 38px var(--idea-soft),
+    0 8px 24px -12px oklch(0.38 0.060 292 / .18) !important;
+}
+.hf-tags,.agent-note-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;overflow:hidden;}
+.hf-tag-chip,.agent-note-tag{
+  display:inline-flex;align-items:center;max-width:100%;min-height:18px;padding:2px 8px;border-radius:8px;
+  color:oklch(0.34 0.060 218);background:oklch(0.86 0.030 218 / .32);
+  border:1px solid oklch(0.70 0.045 218 / .28);
+  font-size:10.5px;font-weight:650;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.idea-tag-chip{
+  color:oklch(0.36 0.090 292) !important;
+  background:oklch(0.82 0.055 292 / .28) !important;
+  border-color:var(--idea-line) !important;
+}
+.drill-note-swipe-wrap{position:relative;overflow:hidden;border-radius:20px;margin-bottom:10px;}
+.drill-note-swipe-wrap .drill-note-row{margin-bottom:0;}
+.note-swipe-panel{background:linear-gradient(90deg,transparent,oklch(0.96 0.030 20 / .58));}
+.sheet-more-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+.sheet-more-btn{
+  width:30px;height:30px;border-radius:10px;border:none;background:transparent;color:var(--fg-l);
+  display:flex;align-items:center;justify-content:center;gap:2.5px;cursor:pointer;-webkit-appearance:none;
+  transition:background .14s,color .14s,transform .12s;
+}
+.sheet-more-btn span{width:3.5px;height:3.5px;border-radius:50%;background:currentColor;}
+.sheet-more-btn:active,.sheet-more-btn.open{background:oklch(0.55 0.10 210 / .10);color:var(--accent-d);transform:scale(.95);}
+.sheet-more-menu{
+  position:absolute;right:0;top:36px;z-index:20;min-width:138px;padding:6px;border-radius:15px;
+  background:linear-gradient(155deg,oklch(1 0 0 / .88),oklch(0.970 0.008 214 / .82));
+  border:1px solid oklch(1 0 0 / .72);
+  box-shadow:0 14px 34px -16px oklch(0 0 0 / .30),inset 0 1px 0 oklch(1 0 0 / .90);
+  backdrop-filter:blur(24px) saturate(1.18);-webkit-backdrop-filter:blur(24px) saturate(1.18);
+  opacity:0;pointer-events:none;transform:translateY(-5px) scale(.97);
+  transition:opacity .16s ease,transform .18s cubic-bezier(.22,1,.36,1);
+}
+.sheet-more-menu.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+.sheet-more-item{
+  width:100%;display:flex;align-items:center;gap:8px;border:none;border-radius:11px;padding:9px 10px;
+  background:transparent;color:var(--fg-m);font-size:13px;font-weight:650;font-family:var(--sys);cursor:pointer;text-align:left;
+}
+.sheet-more-item:active{background:oklch(0.52 0.10 210 / .08);}
+.sheet-more-danger{color:oklch(0.48 0.125 18);}
+.sheet-more-danger:active{background:oklch(0.72 0.080 18 / .16);}
+.ai-overlay{
+  align-items:center;justify-content:center;
+  padding:max(58px,env(safe-area-inset-top,0px) + 42px) 14px max(64px,env(safe-area-inset-bottom,0px) + 48px);
+  background:
+    radial-gradient(ellipse 72% 54% at 50% 50%,oklch(0.82 0.035 215 / .22),transparent 70%),
+    oklch(0.10 0.020 210 / .42);
+  backdrop-filter:blur(12px) saturate(1.05);-webkit-backdrop-filter:blur(12px) saturate(1.05);
+}
+.ai-overlay-sheet{
+  width:min(620px,calc(100vw - 28px));max-height:min(72vh,650px);min-height:0;
+  border-radius:28px;border:1px solid oklch(1 0 0 / .16);
+  background:linear-gradient(154deg,oklch(0.985 0.006 220 / .92),oklch(0.955 0.010 230 / .86));
+  box-shadow:0 34px 90px -28px oklch(0 0 0 / .46),0 10px 30px -18px oklch(0.34 0.055 225 / .34),inset 0 1px 0 oklch(1 0 0 / .78);
+  transform:translateY(18px) scale(.965);opacity:0;overflow:hidden;
+  transition:transform .36s cubic-bezier(.22,1,.36,1),opacity .24s ease;
+}
+.ai-overlay.show .ai-overlay-sheet{transform:translateY(0) scale(1);opacity:1;}
+.ai-overlay-handle{background:oklch(0.62 0.040 220 / .42);}
+.ai-overlay-hdr{border-bottom-color:oklch(0.70 0.025 220 / .20);padding:12px 16px 10px;}
+.ai-overlay-body .ai-panel-inner{padding:15px 18px 18px;}
+.ai-section{
+  margin-bottom:0 !important;padding:12px 13px;border-radius:16px;
+  background:oklch(1 0 0 / .42);
+  border:1px solid oklch(1 0 0 / .48);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .72);
+}
+.ai-section+.ai-section{margin-top:9px;}
+.remind-sheet,.rem-edit-sheet,#qrem-sheet{
+  background:
+    radial-gradient(ellipse 78% 38% at 50% 0%,oklch(0.90 0.035 74 / .24),transparent 64%),
+    linear-gradient(180deg,oklch(0.982 0.010 72 / .96),oklch(0.948 0.014 82 / .92)) !important;
+  border-color:oklch(1 0 0 / .70) !important;
+  box-shadow:0 -16px 54px -28px oklch(0.32 0.055 70 / .38),inset 0 1.5px 0 oklch(1 0 0 / .88) !important;
+}
+.remind-item,.remind-item2,.remind-settings,.rem-edit-q,.rem-edit-custom-row,.rcal{
+  background:linear-gradient(154deg,oklch(1 0 0 / .68),oklch(0.972 0.010 74 / .54)) !important;
+  border-color:oklch(1 0 0 / .62) !important;
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .88),0 5px 17px -12px oklch(0.36 0.050 70 / .20) !important;
+  backdrop-filter:blur(18px) saturate(1.12);-webkit-backdrop-filter:blur(18px) saturate(1.12);
+}
+.remind-item.overdue-card,.remind-item2.rem-overdue{
+  background:radial-gradient(ellipse 90% 60% at 15% 0%,oklch(0.85 0.060 24 / .20),transparent 66%),linear-gradient(154deg,oklch(1 0 0 / .72),oklch(0.982 0.010 32 / .58)) !important;
+  border-color:oklch(0.78 0.060 24 / .32) !important;
+}
+.remind-item2.rem-soon{
+  background:radial-gradient(ellipse 90% 60% at 15% 0%,oklch(0.88 0.060 70 / .22),transparent 66%),linear-gradient(154deg,oklch(1 0 0 / .70),oklch(0.978 0.014 78 / .58)) !important;
+}
+@media(max-width:560px){
+  .ai-overlay{padding:max(54px,env(safe-area-inset-top,0px) + 34px) 12px max(58px,env(safe-area-inset-bottom,0px) + 40px);}
+  .ai-overlay-sheet{width:calc(100vw - 24px);max-height:72vh;border-radius:26px;}
+}
 </style>
 </head>
 <body>
@@ -3548,6 +3700,17 @@ header{padding:15px 16px 9px;}
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         <span id="spell-stage-dot" style="display:none;position:absolute;bottom:2px;right:2px;font-size:7px;font-weight:700;color:oklch(0.40 0.12 270);line-height:1;"></span>
       </button>
+      <div class="sheet-more-wrap" id="sheet-more-wrap" style="display:none;">
+        <button class="sheet-more-btn" id="sheet-more-btn" type="button" onclick="toggleSheetMoreMenu(event)" title="Действия" aria-label="Действия">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="sheet-more-menu" id="sheet-more-menu">
+          <button class="sheet-more-item sheet-more-danger" type="button" onclick="deleteOpenNoteFromMenu()">
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Удалить
+          </button>
+        </div>
+      </div>
       <button class="sheet-close-btn" onclick="closeSheet()">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -3748,10 +3911,11 @@ function tagFolderExists(tag){
 function toggleTagFolder(tag){
   const label = typeof normalizeIdeaTag==='function'?normalizeIdeaTag(tag):String(tag||'').trim();
   const t = typeof tagKey==='function'?tagKey(label):label.toLowerCase();
+  const folderLabel = (typeof isIdeaTag==='function'&&isIdeaTag(t))?'Входящие':label;
   const folders = getTagFolders();
   const exists = folders.some(f => (typeof tagKey==='function'?tagKey(f.tag):String(f.tag||'').toLowerCase()) === t);
   if(exists){
-    showToast('Папка «'+label+'» — открываем');
+    showToast('Папка «'+folderLabel+'» — открываем');
     if(typeof closeSheet === 'function') closeSheet();
     setTimeout(()=>{
       if(typeof go === 'function') go('notes');
@@ -3759,9 +3923,9 @@ function toggleTagFolder(tag){
       setTimeout(()=>{if(typeof drillGo === 'function') drillGo(1,{aiTag:t});},80);
     }, 180);
   } else {
-    folders.push({tag:t, label, createdAt:Date.now()});
+    folders.push({tag:t, label:folderLabel, createdAt:Date.now()});
     saveTagFolders(folders);
-    showToast('✓ Папка «'+label+'» создана');
+    showToast('✓ Папка «'+folderLabel+'» создана');
     document.querySelectorAll('.ai-tag[data-tag="'+CSS.escape(label)+'"]').forEach(el=>{
       el.classList.add('ai-tag--active');
     });

@@ -21,6 +21,7 @@ function writeText(key,value){localStorage.setItem(scopedKey(key),String(value||
 function migrateLegacyLocal(){['rz_notes','rz_trash','rz_history','rz_name'].forEach(key=>{const target=scopedKey(key);if(localStorage.getItem(target)!==null)return;const legacy=localStorage.getItem(key);if(legacy!==null)localStorage.setItem(target,legacy);});}
 
 const IDEA_TAG='идея';
+const IDEA_INBOX_LABEL='Входящие';
 const IDEA_TAG_ALIASES=new Set(['идея','идеи','idea','ideas']);
 function _cleanTag(raw){return String(raw||'').replace(/^#/,'').trim();}
 function _tagKey(raw){
@@ -57,6 +58,27 @@ function _noteHasAiTag(note,tag){
   const key=_tagKey(tag);
   return !!key&&Array.isArray(note?.aiTags)&&note.aiTags.some(t=>_tagKey(t)===key);
 }
+function _noteHasIdea(note){
+  return isIdeaTag(note?.label)||_noteHasAiTag(note,IDEA_TAG);
+}
+function _noteToneClass(note){
+  return _noteHasIdea(note)?' idea-note':'';
+}
+function _notePreviewTags(note,{limit=3,currentTag=''}={}){
+  const tags=normalizeAiTags(note?.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
+  const currentKey=_tagKey(currentTag||'');
+  const out=[];
+  const push=tag=>{
+    const clean=normalizeIdeaTag(tag);
+    if(!clean)return;
+    if(!out.some(t=>_tagKey(t)===_tagKey(clean)))out.push(clean);
+  };
+  tags.filter(tag=>!currentKey||_tagKey(tag)!==currentKey).forEach(push);
+  if(!out.length)tags.forEach(push);
+  const label=safeLabel(note?.label||'заметка');
+  if(label&&label!=='заметка'&&!out.some(t=>_tagKey(t)===_tagKey(label)))out.unshift(label);
+  return out.slice(0,limit);
+}
 function textLooksLikeIdea(text){
   return /^\s*(?:есть\s+)?иде[яи](?:[^а-яёa-zA-Z]|$)/i.test(String(text||'').trim());
 }
@@ -71,7 +93,7 @@ function normalizeTagFolderList(arr){
     const rawTag=item.tag||item.label||'';
     const key=_tagKey(rawTag);
     if(!key)return;
-    const label=isIdeaTag(rawTag)?IDEA_TAG:(_cleanTag(item.label||item.tag)||key);
+    const label=isIdeaTag(rawTag)?IDEA_INBOX_LABEL:(_cleanTag(item.label||item.tag)||key);
     const existing=out.find(f=>_tagKey(f.tag)===key);
     if(existing){
       existing.label=existing.label||label;
@@ -1368,6 +1390,10 @@ function openListSheet(noteId){
   const overlay=document.getElementById('overlay');
   if(overlay)overlay.classList.add('list-mode');
   EI=noteId||null;
+  const moreWrap=document.getElementById('sheet-more-wrap');
+  if(moreWrap)moreWrap.style.display=noteId?'flex':'none';
+  const delBtn=document.getElementById('tool-delete-btn');
+  if(delBtn)delBtn.style.display=noteId?'inline-flex':'none';
   document.getElementById('sheet-title').textContent='Список';
   if(noteId){
     const n=getNotes().find(x=>x.id===noteId);
@@ -2994,7 +3020,7 @@ function isUserFolderName(name){
   return !!value&&getUserFolders().some(folder=>String(folder.name||'').toLowerCase()===value);
 }
 // Palette for user-created folders
-const _FOLDER_COLORS=['oklch(0.58 0.12 180)','oklch(0.58 0.12 60)','oklch(0.58 0.12 300)','oklch(0.58 0.12 25)','oklch(0.55 0.12 270)','oklch(0.58 0.12 220)'];
+const _FOLDER_COLORS=['oklch(0.56 0.09 178)','oklch(0.62 0.08 72)','oklch(0.60 0.09 292)','oklch(0.62 0.09 25)','oklch(0.56 0.09 268)','oklch(0.56 0.08 220)'];
 function _folderColor(idx){return _FOLDER_COLORS[idx%_FOLDER_COLORS.length];}
 function _folderTint(idx,alpha){
   return _folderColor(idx).replace(/\)$/,` / ${alpha})`);
@@ -3008,9 +3034,9 @@ function getNoteUserFolder(note){
 }
 function _sectionNoteStyle(note){
   const folder=getNoteUserFolder(note);if(!folder)return '';
-  const tint=_folderTint(folder.colorIndex,'.13');
-  const line=_folderTint(folder.colorIndex,'.11');
-  return `--section-line:${line};background:radial-gradient(ellipse 86% 72% at 12% 10%,${tint},transparent 62%),linear-gradient(158deg,oklch(1 0 0 / .84),oklch(0.965 0.012 210 / .73));`;
+  const tint=_folderTint(folder.colorIndex,'.10');
+  const line=_folderTint(folder.colorIndex,'.14');
+  return `--section-line:${line};background:radial-gradient(ellipse 86% 64% at 14% 8%,${tint},transparent 64%),radial-gradient(ellipse 70% 54% at 88% 100%,${line},transparent 70%),linear-gradient(158deg,oklch(1 0 0 / .86),oklch(0.972 0.008 214 / .74));`;
 }
 // Одноразовая очистка дублей рекуррентных заметок (fix для старых данных)
 function _deduplicateRecurringNotes(){
@@ -3060,6 +3086,7 @@ function migrateLegacyFolderPlacements(){
   localStorage.setItem(key,'1');
 }
 function _agentFolderDisplayName(tag){
+  if(isIdeaTag(tag))return IDEA_INBOX_LABEL;
   if(typeof getTagFolders==='function'){
     const folder=getTagFolders().find(item=>_tagKey(item.tag)===_tagKey(tag));
     if(folder?.label)return folder.label;
@@ -3164,14 +3191,14 @@ function deleteUserFolder(name){
 
 // ── STRIPES (oklch) ──
 const STRIPES={
-  здоровье:'oklch(0.62 0.14 25)',
-  покупки:'oklch(0.58 0.10 250)',
-  контакт:'oklch(0.58 0.10 210)',
-  событие:'oklch(0.65 0.12 80)',
-  идея:'oklch(0.55 0.12 290)',
-  рецепт:'oklch(0.62 0.10 60)',
-  адрес:'oklch(0.60 0.10 195)',
-  заметка:'oklch(0.70 0.04 210)'
+  здоровье:'oklch(0.61 0.11 25)',
+  покупки:'oklch(0.57 0.085 255)',
+  контакт:'oklch(0.56 0.080 210)',
+  событие:'oklch(0.64 0.095 82)',
+  идея:'oklch(0.58 0.095 292)',
+  рецепт:'oklch(0.63 0.085 62)',
+  адрес:'oklch(0.58 0.080 195)',
+  заметка:'oklch(0.70 0.030 210)'
 };
 const CATS=Object.keys(STRIPES);
 const ICONS={
@@ -3485,9 +3512,10 @@ function _drillP0(){
   const notes=getNotes();
   const userFolders=getUserFolders();
   const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
-  const userFolderKeys=userFolders.map(f=>_tagKey(f.name));
-  const pinnedFolders=tagFolders.filter(f=>f.pinned&&!userFolderKeys.includes(_tagKey(f.tag)));
-  const aiOnlyFolders=tagFolders.filter(f=>!f.pinned&&!userFolderKeys.includes(_tagKey(f.tag)));
+  const userFolderNames=userFolders.map(f=>String(f.name||'').trim().toLowerCase()).filter(Boolean);
+  const tagHasUserSection=f=>!isIdeaTag(f.tag)&&userFolderNames.includes(String(f.tag||'').trim().toLowerCase());
+  const pinnedFolders=tagFolders.filter(f=>f.pinned&&!tagHasUserSection(f));
+  const aiOnlyFolders=tagFolders.filter(f=>!f.pinned&&!tagHasUserSection(f));
 
   // Встроенные стрипы (здоровье, покупки...) у которых есть заметки
   const stripeEntries=Object.keys(STRIPES).filter(l=>l!=='заметка'&&notes.some(n=>safeLabel(n.label||'заметка')===l));
@@ -3740,12 +3768,15 @@ function _applyCompactFeedState(){
 }
 function _agentInboxCard(note,index){
   const preview=_notePreview(note);
-  return `<article class="agent-note" onclick="drillPickNote(${index})" data-nid="${esc(note.id)}">
+  const tags=_notePreviewTags(note,{limit:3,currentTag:drillAiTag});
+  const tagChips=tags.map(tag=>`<span class="agent-note-tag${isIdeaTag(tag)?' idea-tag-chip':''}">${esc(tag)}</span>`).join('');
+  return `<article class="agent-note${_noteToneClass(note)}" onclick="drillPickNote(${index})" data-nid="${esc(note.id)}">
     <div class="agent-note-top">
       <span class="agent-note-dot"></span>
       <span class="agent-note-copy">
         <span class="agent-note-title">${esc(note.title)}</span>
         ${preview?`<span class="agent-note-body">${esc(preview)}</span>`:''}
+        ${tagChips?`<span class="agent-note-tags">${tagChips}</span>`:''}
       </span>
       <span class="agent-note-time">${esc(fmtMeta(note.updatedAt||note.createdAt))}</span>
       <button class="inbox-del-btn" onclick="event.stopPropagation();_deleteInboxNote('${esc(note.id)}')" aria-label="Удалить">&#215;</button>
@@ -3816,7 +3847,7 @@ function _drillP1(){
       const hasBell=!!n.reminder;
       const resolved=!viewingUserFolder&&isNoteResolved(n);
       const sectionStyle=_sectionNoteStyle(n);
-      const cardClass=sectionStyle?' section-glass-note':'';
+      const cardClass=(sectionStyle?' section-glass-note':'')+_noteToneClass(n);
       const bg=sectionStyle?sectionStyle:`background:${_drillCardBg(i,notes.length)};`;
       const selGrid=_selectMode&&_selectedNoteIds.has(n.id);
       h+=`<div class="drill-grid-card${resolved?' resolved':''}${cardClass}${selGrid?' note-selected':''}" style="${bg}" data-nid="${esc(n.id)}" onclick="drillPickNote(${i})">
@@ -3844,9 +3875,9 @@ function _drillP1(){
       const bellBadge=hasBell?`<span class="drill-note-bell"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
       const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
       const sectionStyle=_sectionNoteStyle(n);
-      const tagChips=visibleTags.slice(0,3).map(t=>`<span class="drill-note-tag-chip" onclick="event.stopPropagation();drillGo(1,{aiTag:${jsAttr(t)}})">${esc(t)}</span>`).join('');
+      const tagChips=visibleTags.slice(0,3).map(t=>`<span class="drill-note-tag-chip${isIdeaTag(t)?' idea-tag-chip':''}" onclick="event.stopPropagation();drillGo(1,{aiTag:${jsAttr(t)}})">${esc(t)}</span>`).join('');
       const selRow=_selectMode&&_selectedNoteIds.has(n.id);
-      h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}${selRow?' note-selected':''}" ${sectionStyle?`style="${sectionStyle}"`:''} data-nid="${esc(n.id)}" onclick="drillPickNote(${i})">
+      h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}${_noteToneClass(n)}${selRow?' note-selected':''}" ${sectionStyle?`style="${sectionStyle}"`:''} data-nid="${esc(n.id)}" onclick="drillPickNote(${i})">
         <div class="note-select-circle${selRow?' note-sel-checked':''}"></div>
         <div class="drill-note-body">
           <div class="drill-note-title">${esc(n.title)}</div>
@@ -3866,6 +3897,7 @@ function _drillP1(){
     h+=`<button class="drill-show-more" onclick="_drillShowMore()">\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0435\u0449\u0451 ${rem}</button>`;
   }
   el.innerHTML=h;
+  _attachDrillNoteSwipe(el);
 }
 function _drillShowMore(){
   const el=document.getElementById('drill-p1');
@@ -3873,6 +3905,20 @@ function _drillShowMore(){
   _drillP1Limit+=10;
   _drillP1();
   if(el)requestAnimationFrame(()=>{el.scrollTop=prev;});
+}
+function _attachDrillNoteSwipe(root){
+  if(_drillGrid||_selectMode||!root)return;
+  root.querySelectorAll('.drill-note-row[data-nid]').forEach(card=>{
+    if(card.parentElement?.classList.contains('drill-note-swipe-wrap'))return;
+    const nid=card.dataset.nid;
+    const wrap=document.createElement('div');
+    wrap.className='drill-note-swipe-wrap';
+    card.parentNode.insertBefore(wrap,card);
+    const panel=buildNoteSwipePanel('row',20,()=>delNoteById(nid));
+    wrap.appendChild(panel);
+    wrap.appendChild(card);
+    attachSwipeDelete(card,panel);
+  });
 }
 
 function _drillP2(){
@@ -4097,6 +4143,7 @@ function toggleFinderFolders(){}
 function buildNoteSwipePanel(shape, radius, onDelete){
   const r=(radius||16)+'px';
   const el=document.createElement('div');
+  el.className='note-swipe-panel';
   el.style.cssText=`position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 ${r} ${r} 0;opacity:0;transition:opacity .15s;pointer-events:none;`;
   el.innerHTML=`<div class="del-x-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="oklch(0.45 0.20 15)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
   el._onDelete=onDelete;
@@ -4143,7 +4190,14 @@ function _makeSwipeAttach(card,xEl){
     if(dx<-6){_cardSwiping=true;const shift=Math.max(dx,-W*1.4);card.style.transform=`translateX(${shift}px)`;if(xEl)xEl.style.opacity=String(Math.min(-shift/(W*0.5),1));triggered=-shift>W*0.55;}
   },{passive:true});
   card.addEventListener('touchend',()=>{if(triggered)openConfirm();else reset();},{passive:true});
-  card.addEventListener('click',e=>{if(isOpen&&!e.target.closest('.del-x-btn')){e.stopPropagation();reset();}});
+  card.addEventListener('click',e=>{
+    if((_cardSwiping||isOpen)&&!e.target.closest('.del-x-btn')){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if(isOpen)reset();
+      setTimeout(()=>{_cardSwiping=false;},0);
+    }
+  },true);
 }
 function attachSwipeDelete(card,xEl){_makeSwipeAttach(card,xEl);}
 function attachSwipeBubble(card,xEl){_makeSwipeAttach(card,xEl);}
@@ -4201,6 +4255,8 @@ function _openNoteWith(n){
   ST='note';EI=n.id||null;
   const delBtn=document.getElementById('tool-delete-btn');
   if(delBtn)delBtn.style.display='inline-flex';
+  const moreWrap=document.getElementById('sheet-more-wrap');
+  if(moreWrap)moreWrap.style.display='flex';
   document.getElementById('sheet-title').textContent='Заметка';
   document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
   document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' символов';
@@ -4231,6 +4287,9 @@ function openSheet(type){
   ST=type;EI=null;_chatNoteId=null;
   const delBtn=document.getElementById('tool-delete-btn');
   if(delBtn)delBtn.style.display='none';
+  const moreWrap=document.getElementById('sheet-more-wrap');
+  if(moreWrap)moreWrap.style.display='none';
+  closeSheetMoreMenu();
   document.getElementById('sheet-title').textContent='Новая заметка';
   document.getElementById('sheet-body').innerHTML=noteForm('');
   document.getElementById('sheet-char-count').textContent='0 символов';
@@ -4454,6 +4513,7 @@ function onSheetPaste(e){
 
 function closeSheet(){
   closeAiOverlay();
+  closeSheetMoreMenu();
   stopNoteSheetVoice();
   stopSheetVoice();
   stopSheetAudioNote();
@@ -4662,7 +4722,7 @@ function selectUserFolderTag(folderName){
 
 function selectAiTagFolder(tag,label){
   tag=_tagKey(tag);
-  label=isIdeaTag(tag)?IDEA_TAG:(label||tag);
+  label=isIdeaTag(tag)?IDEA_INBOX_LABEL:(label||tag);
   const btn=document.getElementById('sheet-cat-btn');
   if(btn){
     btn.dataset.label=label;
@@ -5080,6 +5140,27 @@ function _saveSheetCore(){
 function editNote(i){openNoteSheet(i);}
 function editNoteById(id){openNoteSheetById(id);}
 
+function closeSheetMoreMenu(){
+  document.getElementById('sheet-more-menu')?.classList.remove('open');
+  document.getElementById('sheet-more-btn')?.classList.remove('open');
+}
+function toggleSheetMoreMenu(event){
+  event?.stopPropagation();
+  const menu=document.getElementById('sheet-more-menu');
+  const btn=document.getElementById('sheet-more-btn');
+  if(!menu||!btn)return;
+  const open=!menu.classList.contains('open');
+  menu.classList.toggle('open',open);
+  btn.classList.toggle('open',open);
+}
+function deleteOpenNoteFromMenu(){
+  closeSheetMoreMenu();
+  deleteOpenNote();
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest?.('.sheet-more-wrap'))closeSheetMoreMenu();
+});
+
 // Удалить заметку прямо из открытого листа
 function deleteOpenNote(){
   if(!EI)return;
@@ -5400,6 +5481,7 @@ function loadHomeFeed(){
     const timeStr=fmtMeta(n.updatedAt||n.createdAt);
     const aiBadge=hasAi?`<span class="hf-ai-badge">✶︎ AI</span>`:'';
     const typeTag=n.type==='list'?`<span class="hf-ai-badge" style="color:var(--accent-d);background:oklch(0.52 0.10 210/0.08);border-color:oklch(0.52 0.10 210/0.20);">☰ список</span>`:'';
+    const tagChips=_notePreviewTags(n,{limit:2}).map(tag=>`<span class="hf-tag-chip${isIdeaTag(tag)?' idea-tag-chip':''}">${esc(tag)}</span>`).join('');
 
     // Обёртка со свайпом
     const wrap=document.createElement('div');
@@ -5408,7 +5490,7 @@ function loadHomeFeed(){
     // Карточка
     const card=document.createElement('button');
     const sectionStyle=_sectionNoteStyle(n);
-    card.className='hf-card'+(sectionStyle?' section-glass-note':'');
+    card.className='hf-card'+(sectionStyle?' section-glass-note':'')+_noteToneClass(n);
     if(sectionStyle)card.style.cssText=sectionStyle;
     const isPinned=!!n.pinned;
     const pinIcon=isPinned?`<span class="hf-pin-mark"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0015 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg></span>`:'';
@@ -5418,6 +5500,7 @@ function loadHomeFeed(){
       <div class="hf-body">
         <div class="hf-title">${esc(title)}${pinIcon}</div>
         ${preview?`<div class="hf-preview">${esc(preview)}</div>`:''}
+        ${tagChips?`<div class="hf-tags">${tagChips}</div>`:''}
         <div style="margin-top:${(hasAi||n.type==='list')?'4px':'0'}">${aiBadge}${typeTag}</div>
       </div>
       <div class="hf-right">
@@ -6177,7 +6260,7 @@ function _runSingleIntent(intent,params,originalText){
 
   if(intent==='CREATE_TAG_FOLDER'){
     const tag=_tagKey(params.tag||params.label||'');
-    const label=isIdeaTag(tag)?IDEA_TAG:(params.label||tag);
+    const label=isIdeaTag(tag)?IDEA_INBOX_LABEL:(params.label||tag);
     if(tag&&typeof getTagFolders==='function'){
       const folders=getTagFolders();
       if(!folders.some(f=>_tagKey(f.tag)===tag)){
@@ -6250,7 +6333,7 @@ function _runSingleIntent(intent,params,originalText){
         if(typeof getTagFolders==='function'){
           const folders=getTagFolders();
           if(!folders.some(f=>_tagKey(f.tag)===tag)){
-            folders.push({tag,label:isIdeaTag(tag)?IDEA_TAG:(params.tag||tag),createdAt:Date.now()});
+            folders.push({tag,label:isIdeaTag(tag)?IDEA_INBOX_LABEL:(params.tag||tag),createdAt:Date.now()});
             saveTagFolders(folders);
           }
         }
