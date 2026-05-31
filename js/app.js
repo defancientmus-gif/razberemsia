@@ -254,8 +254,7 @@ function _ensureIdeaInboxTagFolder(notes){
 }
 // Применить данные из облака в localStorage. Возвращает true если данные изменились.
 function _applyCloudData(data){
-  if(!data){console.warn('[rz:sync] data is null — row missing in user_state');return false;}
-  console.log('[rz:sync] applying cloud data:',data.notes?.length,'notes, updated_at:',data.updated_at);
+  if(!data)return false;
   if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
   if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
   if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
@@ -266,9 +265,7 @@ function _applyCloudData(data){
 }
 
 async function loadCloudData(){
-  if(!cloudAllowed()){console.warn('[rz:sync] cloudAllowed=false, sb=',!!sb,'CU=',!!CU);return;}
-  if(CLOUD_READY_UID===CU.id){console.log('[rz:sync] already loaded, skip');return;}
-  console.log('[rz:sync] loadCloudData start, user:',CU.id);
+  if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
   const _finish=()=>{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}};
   const _fetch=async()=>{
@@ -281,25 +278,19 @@ async function loadCloudData(){
   try{
     const data=await _fetch();
     if(data){_applyCloudData(data);}
-    else{
-      console.warn('[rz:sync] no row in user_state for user',CU.id);
-      if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
-        await saveCloudNow();
-      }
+    else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
+      await saveCloudNow();
     }
     CLOUD_READY_UID=CU.id;
     _finish();
   }catch(e){
-    console.warn('[rz:sync] load failed, retry in 800ms',e);
     _finish();
     setTimeout(async()=>{
       if(CLOUD_READY_UID===CU?.id)return;
       CLOUD_LOADING=true;
       try{
         const data=await _fetch();
-        const applied=_applyCloudData(data);
-        console.log('[rz:sync] retry result: applied=',applied,'notes=',getNotes().length);
-        if(applied)loadAll();
+        if(_applyCloudData(data))loadAll();
         CLOUD_READY_UID=CU?.id;
       }catch(e2){console.warn('[rz:sync] load failed (attempt 2)',e2);}
       finally{_finish();}
@@ -1486,22 +1477,32 @@ function scheduleAll(){
 // ── REALTIME SYNC ──
 // WebSocket-подписка на изменения user_state — мгновенная синхронизация между устройствами.
 // Polling остаётся как fallback если WS отвалился (iOS background, плохая сеть).
-let _realtimeChannel=null;
+let _realtimeChannel=null,_realtimeRetryT=null;
 function _subscribeRealtime(){
-  if(!cloudAllowed()||_realtimeChannel)return;
+  if(!cloudAllowed())return;
+  _unsubscribeRealtime();
+  clearTimeout(_realtimeRetryT);
   _realtimeChannel=sb.channel('rz_sync_'+CU.id)
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_state',filter:'user_id=eq.'+CU.id},(payload)=>{
       const cloudUpdatedAt=payload.new?.updated_at||'';
       const localSyncedAt=_getLocalSyncedAt();
-      // Реагируем только на чужие изменения (другое устройство опередило нас)
       if(!localSyncedAt||cloudUpdatedAt>localSyncedAt){
-        _lastPullAt=0; // сбросить throttle — хотим забрать данные сразу
+        _lastPullAt=0;
         _pullCloudIfStale();
       }
     })
-    .subscribe();
+    .subscribe((status)=>{
+      if(status==='SUBSCRIBED'){
+        // Realtime подключён — всё хорошо
+      } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        // Переподключаемся через 5 секунд
+        _realtimeChannel=null;
+        _realtimeRetryT=setTimeout(()=>{if(cloudAllowed())_subscribeRealtime();},5000);
+      }
+    });
 }
 function _unsubscribeRealtime(){
+  clearTimeout(_realtimeRetryT);
   if(_realtimeChannel){sb.removeChannel(_realtimeChannel);_realtimeChannel=null;}
 }
 
@@ -6737,7 +6738,6 @@ function loadAll(){
   _loadAllT=setTimeout(_doLoadAll,40);
 }
 function _doLoadAll(){
-  console.log('[rz:render] _doLoadAll, notes in storage:',getNotes().length);
   _deduplicateRecurringNotes();
   loadHomeFeed();
   loadNotes();
