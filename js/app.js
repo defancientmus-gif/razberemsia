@@ -290,18 +290,20 @@ async function loadCloudData(){
     CLOUD_READY_UID=CU.id;
     _finish();
   }catch(e){
-    console.warn('[rz:sync] load failed, retry in 3s',e);
+    console.warn('[rz:sync] load failed, retry in 800ms',e);
     _finish();
     setTimeout(async()=>{
       if(CLOUD_READY_UID===CU?.id)return;
       CLOUD_LOADING=true;
       try{
         const data=await _fetch();
-        if(_applyCloudData(data))loadAll();
+        const applied=_applyCloudData(data);
+        console.log('[rz:sync] retry result: applied=',applied,'notes=',getNotes().length);
+        if(applied)loadAll();
         CLOUD_READY_UID=CU?.id;
       }catch(e2){console.warn('[rz:sync] load failed (attempt 2)',e2);}
       finally{_finish();}
-    },3000);
+    },800);
   }
 }
 function queueCloudSave(){
@@ -6735,6 +6737,7 @@ function loadAll(){
   _loadAllT=setTimeout(_doLoadAll,40);
 }
 function _doLoadAll(){
+  console.log('[rz:render] _doLoadAll, notes in storage:',getNotes().length);
   _deduplicateRecurringNotes();
   loadHomeFeed();
   loadNotes();
