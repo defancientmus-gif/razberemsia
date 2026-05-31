@@ -1506,28 +1506,48 @@ function _unsubscribeRealtime(){
   if(_realtimeChannel){sb.removeChannel(_realtimeChannel);_realtimeChannel=null;}
 }
 
-// Пересылаем в SW при каждом возвращении в приложение
+// Merge заметок по id — не теряем локальные изменения при pull.
+// Сценарий: заметка создана офлайн → пуш не прошёл → при pull облако перезапишет её.
+// Решение: объединяем по id, для дублей берём более новый updatedAt.
+function _mergeNoteArrays(local,cloud){
+  const byId=new Map();
+  // Сначала кладём все облачные заметки
+  (Array.isArray(cloud)?cloud:[]).forEach(n=>{if(n.id)byId.set(n.id,n);});
+  // Потом локальные — перезаписываем если локальная новее
+  (Array.isArray(local)?local:[]).forEach(n=>{
+    if(!n.id)return;
+    const c=byId.get(n.id);
+    if(!c){
+      // Заметка только локально (офлайн-создание) — добавляем
+      byId.set(n.id,n);
+    } else if((n.updatedAt||0)>(c.updatedAt||0)){
+      // Локальная правка новее облачной — берём локальную
+      byId.set(n.id,n);
+    }
+    // Иначе облачная новее — оставляем как есть
+  });
+  return Array.from(byId.values());
+}
+
 let _lastPullAt=0;
 async function _pullCloudIfStale(){
   if(!cloudAllowed()||!CU)return;
   const age=Date.now()-_lastPullAt;
-  if(age<3000)return; // не чаще раза в 3 секунды (fallback-polling)
+  if(age<3000)return;
   _lastPullAt=Date.now();
   try{
-    const {data}=await sb.from('user_state')
-      .select('*')
-      .eq('user_id',CU.id).maybeSingle();
+    const {data}=await sb.from('user_state').select('*').eq('user_id',CU.id).maybeSingle();
     if(!data)return;
     let changed=false;
     const cloudUpdatedAt=data.updated_at||'';
     const localSyncedAt=_getLocalSyncedAt();
-    // Заметки обновляем только если облако новее нашего последнего пуша
-    // (защита от перезаписи локальных изменений чужим устаревшим снимком)
     const cloudHasNewer=!localSyncedAt||(cloudUpdatedAt&&cloudUpdatedAt>localSyncedAt);
     if(cloudHasNewer&&Array.isArray(data.notes)){
+      const localNotes=getNotes();
+      const merged=_mergeNoteArrays(localNotes,data.notes);
+      const mergedJson=JSON.stringify(merged);
       const localJson=localStorage.getItem(scopedKey('rz_notes'));
-      const cloudJson=JSON.stringify(data.notes);
-      if(localJson!==cloudJson){localStorage.setItem(scopedKey('rz_notes'),cloudJson);changed=true;}
+      if(localJson!==mergedJson){localStorage.setItem(scopedKey('rz_notes'),mergedJson);changed=true;}
     }
     if(cloudHasNewer&&Array.isArray(data.trash)){
       localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
@@ -1539,21 +1559,25 @@ async function _pullCloudIfStale(){
       localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
     }
     const foldersChanged=_mergeCloudFolders(data.user_folders,data.tag_folders,cloudUpdatedAt);
-    // Обновляем UI если что-то изменилось — независимо от текущего экрана
-    if(changed||foldersChanged){
-      loadAll();
-    }
+    if(changed||foldersChanged)loadAll();
+    // Если после merge локальные заметки отличаются от облака — пушим мерж в облако
+    if(changed)queueCloudSave();
   }catch(_){}
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
     if(notifGranted())scheduleAll();
-    _lastPullAt=0; // сбрасываем throttle при возврате в приложение
+    _lastPullAt=0;
     _pullCloudIfStale();
   }
 });
 window.addEventListener('focus',()=>{_lastPullAt=0;_pullCloudIfStale();});
-window.addEventListener('online',()=>{_lastPullAt=0;_pullCloudIfStale();});
+// При появлении сети — сначала пушим локальные изменения, потом тянем облако
+window.addEventListener('online',()=>{
+  queueCloudSave();          // пушим всё что не успело сохраниться офлайн
+  _lastPullAt=0;
+  setTimeout(_pullCloudIfStale,1500); // тянем после того как пуш завершится
+});
 setInterval(()=>{
   if(document.visibilityState==='visible'&&cloudAllowed())_pullCloudIfStale();
 },8000);
