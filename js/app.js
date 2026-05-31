@@ -254,7 +254,8 @@ function _ensureIdeaInboxTagFolder(notes){
 }
 // Применить данные из облака в localStorage. Возвращает true если данные изменились.
 function _applyCloudData(data){
-  if(!data)return false;
+  if(!data){console.warn('[rz:sync] data is null — row missing in user_state');return false;}
+  console.log('[rz:sync] applying cloud data:',data.notes?.length,'notes, updated_at:',data.updated_at);
   if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
   if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
   if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
@@ -265,7 +266,9 @@ function _applyCloudData(data){
 }
 
 async function loadCloudData(){
-  if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
+  if(!cloudAllowed()){console.warn('[rz:sync] cloudAllowed=false, sb=',!!sb,'CU=',!!CU);return;}
+  if(CLOUD_READY_UID===CU.id){console.log('[rz:sync] already loaded, skip');return;}
+  console.log('[rz:sync] loadCloudData start, user:',CU.id);
   CLOUD_LOADING=true;
   const _finish=()=>{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}};
   const _fetch=async()=>{
@@ -278,13 +281,16 @@ async function loadCloudData(){
   try{
     const data=await _fetch();
     if(data){_applyCloudData(data);}
-    else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
-      await saveCloudNow();
+    else{
+      console.warn('[rz:sync] no row in user_state for user',CU.id);
+      if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
+        await saveCloudNow();
+      }
     }
     CLOUD_READY_UID=CU.id;
     _finish();
   }catch(e){
-    console.warn('cloud load failed, retry in 3s',e);
+    console.warn('[rz:sync] load failed, retry in 3s',e);
     _finish();
     setTimeout(async()=>{
       if(CLOUD_READY_UID===CU?.id)return;
@@ -293,7 +299,7 @@ async function loadCloudData(){
         const data=await _fetch();
         if(_applyCloudData(data))loadAll();
         CLOUD_READY_UID=CU?.id;
-      }catch(e2){console.warn('cloud load failed (attempt 2)',e2);}
+      }catch(e2){console.warn('[rz:sync] load failed (attempt 2)',e2);}
       finally{_finish();}
     },3000);
   }
