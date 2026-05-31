@@ -27,14 +27,14 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 :root{
   /* oklch palette — hue 210, clear blue */
   --bg:         oklch(0.89 0.018 210);
-  --fg:         oklch(0.14 0.02 210);
-  --fg-m:       oklch(0.26 0.015 210);
-  --fg-l:       oklch(0.48 0.012 210);
-  --glass-bg:   oklch(0.97 0.005 210 / 0.52);
-  --glass-bd:   oklch(0.90 0.02 210 / 0.5);
-  --accent:     oklch(0.54 0.13 210);
-  --accent-d:   oklch(0.40 0.13 210);
-  --accent-sub: oklch(0.54 0.13 210 / 0.12);
+  --fg:         oklch(0.13 0.015 230);
+  --fg-m:       oklch(0.26 0.010 230);
+  --fg-l:       oklch(0.48 0.008 230);
+  --glass-bg:   oklch(0.97 0.004 225 / 0.52);
+  --glass-bd:   oklch(0.90 0.012 225 / 0.5);
+  --accent:     oklch(0.52 0.11 235);
+  --accent-d:   oklch(0.38 0.10 238);
+  --accent-sub: oklch(0.52 0.11 235 / 0.12);
   --rose:       oklch(0.58 0.16 25);
   --gold:       oklch(0.68 0.12 80);
   --stone:      oklch(0.78 0.02 210);
@@ -52,7 +52,7 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
 /* ── AMBIENT BACKGROUND ── */
 .bg{position:fixed;inset:0;z-index:0;
   background:
-    radial-gradient(ellipse 60% 45% at 8% 95%, oklch(0.52 0.13 210 / 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 45% at 8% 95%, oklch(0.52 0.08 235 / 0.18) 0%, transparent 55%),
     radial-gradient(ellipse 50% 40% at 92% 10%, oklch(0.60 0.10 230 / 0.16) 0%, transparent 50%),
     radial-gradient(ellipse 40% 30% at 55% 60%, oklch(0.56 0.08 200 / 0.10) 0%, transparent 45%),
     linear-gradient(165deg, oklch(0.92 0.012 210) 0%, oklch(0.88 0.016 215) 55%, oklch(0.85 0.020 218) 100%);
@@ -782,13 +782,13 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   /* Парение: сверху — половина первой заметки видна, снизу — плавное растворение */
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0px,
-    black 52px,
-    black calc(100% - 110px),
+    black 20px,
+    black calc(100% - 56px),
     transparent 100%);
   mask-image:linear-gradient(to bottom,
     transparent 0px,
-    black 52px,
-    black calc(100% - 110px),
+    black 20px,
+    black calc(100% - 56px),
     transparent 100%);
 }
 .home-feed-wrap::-webkit-scrollbar{display:none;}
@@ -798,7 +798,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .hf-dot{width:8px;height:8px;border-radius:50%;}
 .hf-dot-red{background:oklch(0.55 0.20 25);animation:blink-dot 2s ease-in-out infinite;}
 .hf-dot-amber{background:oklch(0.65 0.16 65);}
-.hf-dot-green{background:oklch(0.52 0.13 210);}
+.hf-dot-green{background:oklch(0.50 0.10 245);}
 .hf-dot-none{background:oklch(0.78 0.02 210);}
 @keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.25}}
 .hf-body{flex:1;min-width:0;}
@@ -817,20 +817,20 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 
 /* ── HOME ACTION ROW ── */
 .home-act-row{display:flex;align-items:center;gap:8px;overflow:visible;}
-/* Боковые кнопки — воздушный хрусталь */
+/* Боковые кнопки — капля на стекле */
 .home-act-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:11px 6px 10px;border-radius:20px;border:none;cursor:pointer;
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 6px 7px;border-radius:18px;border:none;cursor:pointer;
   font-family:var(--sys);-webkit-appearance:none;
-  background:linear-gradient(155deg,oklch(1 0 0/.46),oklch(0.98 0.008 215/.32));
-  backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
-  border:1px solid oklch(1 0 0/.52);
-  box-shadow:0 1px 6px oklch(0 0 0/.04),inset 0 1.5px 0 oklch(1 0 0/.80);
+  background:linear-gradient(155deg,oklch(1 0 0/.46),oklch(0.98 0.004 230/.28));
+  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+  border:1px solid oklch(1 0 0/.50);
+  box-shadow:0 1px 5px oklch(0 0 0/.04),inset 0 1.5px 0 oklch(1 0 0/.82);
   transition:transform .1s,box-shadow .1s;
 }
-.home-act-btn:active{transform:scale(.93);box-shadow:0 1px 3px oklch(0 0 0/.04),inset 0 1px 0 oklch(1 0 0/.60);}
-.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.38 0.08 220);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.home-act-btn span{font-size:10px;font-weight:500;color:oklch(0.44 0.06 220);letter-spacing:.01em;}
+.home-act-btn:active{transform:scale(.93);box-shadow:0 1px 2px oklch(0 0 0/.04),inset 0 1px 0 oklch(1 0 0/.60);}
+.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.42 0.03 240);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.home-act-btn span{font-size:10px;font-weight:500;color:oklch(0.46 0.03 240);letter-spacing:.01em;}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.62 0.22 25);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
 /* ── ПОРТАЛ РАЗБЕРЁМСЯ ── liquid glass agent ── */
@@ -2773,16 +2773,15 @@ header{padding:15px 16px 9px;}
     0 6px 18px oklch(0.34 0.04 210 / .08);
 }
 .home-bar{
-  /* Воздушная подложка — fade сверху вниз, кнопки парят */
   background:linear-gradient(to bottom,
-    oklch(0.97 0.008 210 / 0) 0%,
-    oklch(0.97 0.008 210 / 0.55) 38%,
-    oklch(0.97 0.008 210 / 0.78) 100%);
-  backdrop-filter:blur(18px) saturate(1.3);
-  -webkit-backdrop-filter:blur(18px) saturate(1.3);
+    oklch(0.97 0.006 225 / 0) 0%,
+    oklch(0.97 0.006 225 / 0.50) 35%,
+    oklch(0.97 0.006 225 / 0.72) 100%);
+  backdrop-filter:blur(18px) saturate(1.2);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
   border-top:none;
   box-shadow:none;
-  padding:14px 14px max(env(safe-area-inset-bottom,14px),14px);
+  padding:8px 14px max(env(safe-area-inset-bottom,10px),10px);
 }
 .new-note-btn{
   flex:0 0 100px;
@@ -2799,9 +2798,9 @@ header{padding:15px 16px 9px;}
   align-items:center;
 }
 .home-act-btn{
-  flex:1;max-width:120px;padding:10px 8px;border-radius:18px;
-  background:linear-gradient(155deg,oklch(1 0 0/.44),oklch(0.97 0.008 215/.30));
-  border:1px solid oklch(1 0 0/.50);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.78);
+  flex:1;max-width:110px;padding:7px 8px 6px;border-radius:16px;
+  background:linear-gradient(155deg,oklch(1 0 0/.44),oklch(0.97 0.004 230/.28));
+  border:1px solid oklch(1 0 0/.48);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.80);
 }
 .rz-portal{
   background:
