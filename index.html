@@ -777,11 +777,19 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* ── HOME FEED (notification cards) ── */
 .home-feed-wrap{
   flex:1;overflow-y:auto;
-  padding:6px 14px 130px; /* отступ снизу = высота home-bar, чтоб заметки не уходили под кнопки */
+  padding:6px 14px 130px;
   -webkit-overflow-scrolling:touch;
-  /* Мягкое исчезание заметок перед панелью кнопок — без резкой границы */
-  -webkit-mask-image:linear-gradient(to bottom,black calc(100% - 100px),transparent 100%);
-  mask-image:linear-gradient(to bottom,black calc(100% - 100px),transparent 100%);
+  /* Парение: сверху — половина первой заметки видна, снизу — плавное растворение */
+  -webkit-mask-image:linear-gradient(to bottom,
+    transparent 0px,
+    black 52px,
+    black calc(100% - 110px),
+    transparent 100%);
+  mask-image:linear-gradient(to bottom,
+    transparent 0px,
+    black 52px,
+    black calc(100% - 110px),
+    transparent 100%);
 }
 .home-feed-wrap::-webkit-scrollbar{display:none;}
 .hf-card{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;background:oklch(1 0 0/0.80);border:0.5px solid oklch(1 0 0/0.92);border-radius:16px;margin-bottom:8px;cursor:pointer;transition:transform .1s;-webkit-appearance:none;width:100%;text-align:left;font-family:var(--sys);box-shadow:0 1px 3px oklch(0.35 0.08 210/0.07),0 4px 14px oklch(0.35 0.08 210/0.05);}
@@ -809,20 +817,20 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 
 /* ── HOME ACTION ROW ── */
 .home-act-row{display:flex;align-items:center;gap:8px;overflow:visible;}
-/* Боковые кнопки — матовый хрусталь, спокойнее центра */
+/* Боковые кнопки — воздушный хрусталь */
 .home-act-btn{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
   padding:11px 6px 10px;border-radius:20px;border:none;cursor:pointer;
   font-family:var(--sys);-webkit-appearance:none;
-  background:linear-gradient(155deg,oklch(1 0 0/.70),oklch(0.98 0.008 215/.55));
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid oklch(0.94 0.01 210/.60);
-  box-shadow:0 2px 8px oklch(0 0 0/.06),inset 0 1.5px 0 oklch(1 0 0/.85);
+  background:linear-gradient(155deg,oklch(1 0 0/.46),oklch(0.98 0.008 215/.32));
+  backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+  border:1px solid oklch(1 0 0/.52);
+  box-shadow:0 1px 6px oklch(0 0 0/.04),inset 0 1.5px 0 oklch(1 0 0/.80);
   transition:transform .1s,box-shadow .1s;
 }
-.home-act-btn:active{transform:scale(.93);box-shadow:0 1px 4px oklch(0 0 0/.06),inset 0 1px 0 oklch(1 0 0/.75);}
-.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.40 0.09 220);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.home-act-btn span{font-size:10px;font-weight:600;color:oklch(0.42 0.08 220);letter-spacing:.02em;text-transform:uppercase;}
+.home-act-btn:active{transform:scale(.93);box-shadow:0 1px 3px oklch(0 0 0/.04),inset 0 1px 0 oklch(1 0 0/.60);}
+.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.38 0.08 220);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.home-act-btn span{font-size:10px;font-weight:500;color:oklch(0.44 0.06 220);letter-spacing:.01em;}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.62 0.22 25);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
 /* ── ПОРТАЛ РАЗБЕРЁМСЯ ── liquid glass agent ── */
@@ -2765,12 +2773,15 @@ header{padding:15px 16px 9px;}
     0 6px 18px oklch(0.34 0.04 210 / .08);
 }
 .home-bar{
-  background:transparent;
-  backdrop-filter:none;
-  -webkit-backdrop-filter:none;
+  /* Воздушная подложка — fade сверху вниз, кнопки парят */
+  background:linear-gradient(to bottom,
+    oklch(0.97 0.008 210 / 0) 0%,
+    oklch(0.97 0.008 210 / 0.55) 38%,
+    oklch(0.97 0.008 210 / 0.78) 100%);
+  backdrop-filter:blur(18px) saturate(1.3);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);
   border-top:none;
   box-shadow:none;
-  /* padding-top: кнопка должна быть внутри home-bar bounds (iOS touch clip) */
   padding:14px 14px max(env(safe-area-inset-bottom,14px),14px);
 }
 .new-note-btn{
@@ -2789,8 +2800,8 @@ header{padding:15px 16px 9px;}
 }
 .home-act-btn{
   flex:1;max-width:120px;padding:10px 8px;border-radius:18px;
-  background:linear-gradient(155deg,oklch(1 0 0/.64),oklch(0.97 0.008 215/.50));
-  border:1px solid oklch(1 0 0/.58);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.85);
+  background:linear-gradient(155deg,oklch(1 0 0/.44),oklch(0.97 0.008 215/.30));
+  border:1px solid oklch(1 0 0/.50);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.78);
 }
 .rz-portal{
   background:
