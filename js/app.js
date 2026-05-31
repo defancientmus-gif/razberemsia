@@ -123,10 +123,17 @@ function _mergeUserFolderList(local,cloud){
   const merged=_mergeByKey(local,cloud,item=>String(item?.name||'').trim().toLowerCase(),(a,b)=>({
     ...a,...b,
     name:a.name||b.name,
-    idx:a.idx!==undefined?a.idx:b.idx,
+    // Берём наименьший idx — созданный раньше имеет приоритет
+    idx:Math.min(
+      a.idx!==undefined?a.idx:Infinity,
+      b.idx!==undefined?b.idx:Infinity
+    ),
     createdAt:Math.min(a.createdAt||Date.now(),b.createdAt||Date.now())
   }));
-  return merged.map((folder,idx)=>({...folder,idx:folder.idx!==undefined?folder.idx:idx}));
+  // Сортируем по idx чтобы порядок был одинаковым на всех устройствах
+  return merged
+    .map((folder,i)=>({...folder,idx:isFinite(folder.idx)?folder.idx:i}))
+    .sort((a,b)=>a.idx-b.idx);
 }
 function _mergeTagFolderList(local,cloud){
   return normalizeTagFolderList(_mergeByKey(
@@ -363,10 +370,12 @@ function _recoverUserFoldersFromNotes(){
 }
 function _ensureIdeaInboxTagFolder(notes){
   if(typeof getTagFolders!=='function'||typeof saveTagFolders!=='function')return typeof getTagFolders==='function'?getTagFolders():[];
-  const list=Array.isArray(notes)?notes:getNotes();
-  if(!list.some(_noteHasIdea))return getTagFolders();
   const folders=getTagFolders();
+  // Папка уже есть (пришла с облака или создана ранее) — просто возвращаем
   if(folders.some(f=>isIdeaTag(f.tag)))return folders;
+  // Создаём только если есть хотя бы одна заметка с тегом идея
+  const list=Array.isArray(notes)?notes:getNotes();
+  if(!list.some(_noteHasIdea))return folders;
   const next=normalizeTagFolderList([...folders,{tag:IDEA_TAG,label:IDEA_INBOX_LABEL,system:true,createdAt:Date.now()}]);
   saveTagFolders(next);
   return next;
