@@ -27,6 +27,7 @@
 | `MASTER_PROMPT.md` | стартовый промпт для Claude |
 | `PROMPTS.md` | промпты и AI-actions продукта |
 | `TERMINOLOGY.md` | краткие термины для папок, разделов, тегов |
+| `TEST_GRID.md` | тестовая сетка: авто-smoke и живые сценарии |
 
 ## Идеи
 

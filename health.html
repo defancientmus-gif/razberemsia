@@ -287,12 +287,12 @@
   <div class="block">
     <div class="block-head"><span class="block-icon">☁️</span><span class="block-title">Синхронизация</span><span class="badge badge-y">нестабильно</span></div>
     <div class="items">
-      <div class="item"><div class="dot g"></div><div><div class="item-name">Supabase cloud sync</div><div class="item-note">user_state + notes, live-pull каждые 18с</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Supabase cloud sync</div><div class="item-note">user_state + notes, Realtime + fallback polling 8с</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Pull-to-refresh и кнопка обновления</div><div class="item-note">Главная лента + раздел заметок</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">Обновление при возврате в приложение</div></div></div>
       <div class="item"><div class="dot g"></div><div><div class="item-name">AI-папки между устройствами</div><div class="item-note">tag_folders мержатся по тегу; `идея/idei` восстанавливается как `Входящие`</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Два устройства одновременно</div><div class="item-note">Заметки еще живут в last-write/polling модели, без полноценного конфликт-резолвера</div></div></div>
-      <div class="item"><div class="dot r"></div><div><div class="item-name">Realtime WebSocket</div><div class="item-note">Нет Supabase Realtime — только polling</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Два устройства одновременно</div><div class="item-note">Realtime ускоряет pull, но конфликт-резолвер всё ещё last-write/snapshot</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Realtime WebSocket</div><div class="item-note">Клиентская подписка есть; SQL publication/миграцию надо подтвердить на Supabase</div></div></div>
     </div>
   </div>
 

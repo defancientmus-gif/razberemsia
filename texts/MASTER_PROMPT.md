@@ -17,7 +17,8 @@
 3. texts/ROUTER.md
 4. texts/SNAPSHOT.md
 5. texts/NEXT.md
-6. git status --short --branch
+6. texts/TEST_GRID.md
+7. git status --short --branch
 
 Потом читай только файлы из маршрута задачи.
 Не читай весь архив и все идеи подряд.
@@ -36,6 +37,7 @@
 Факты:
 - runtime: index.html + js/app.js + sw.js;
 - текущий SW cache брать только из строки `const CACHE` в sw.js;
+- сейчас актуальный runtime: `rz-v283`, Router v1.1;
 - быстрый PWA update держится на sw.js skipWaiting/clients.claim и app.js controllerchange reload;
 - AI endpoint: /functions/v1/ai;
 - smooth-processor - legacy, не источник правды;
@@ -44,10 +46,18 @@
 - деплой: через ./deploy.sh или вручную с обязательным bump CACHE;
 - имя пользователя: Женя.
 
+Router v1.1:
+- `none` - простая запись/напоминание, без заметок и памяти;
+- `light` - короткий вопрос или команда, минимум контекста;
+- `notes` - поиск/открыть/прочитать/разобрать/удалить, а также напоминания со ссылкой на заметки;
+- `deep` - сводка, план, маршрут, широкий вопрос по базе заметок.
+Не возвращай старую схему "всегда отправлять все заметки + память + историю".
+
 Важные открытые задачи:
 - проверить save_idea живым тестом после `rz-v277`: клиент исправлен, Edge Function `ai` задеплоена, GitHub-запись нужно подтвердить;
 - не потерять философию и UI-стиль;
 - не смешивать контекстную уборку с runtime-рефакторингом.
+- ближайший продуктовый фокус: рабочие заметки без опоры на супер-агента — создание, открытие, поиск, фильтры, напоминания, синхрон, удаление/восстановление.
 
 Правило качества: после твоих действий Женя должен чувствовать, что стало понятнее и надежнее.
 Если правка делает проект красивее, но менее понятным - это плохая правка.
@@ -60,12 +70,12 @@
 ```text
 Ты продолжаешь «Разберёмся»: голосовой AI-агент с памятью. Женя - визионер, ты - инженер.
 
-Читай: CLAUDE.md -> texts/README.md -> texts/ROUTER.md -> texts/SNAPSHOT.md -> texts/NEXT.md -> только нужные файлы маршрута.
+Читай: CLAUDE.md -> texts/README.md -> texts/ROUTER.md -> texts/SNAPSHOT.md -> texts/NEXT.md -> texts/TEST_GRID.md -> только нужные файлы маршрута.
 Проверь git status. Не трогай чужие изменения.
 
-Runtime: index.html, js/app.js, sw.js. Cache брать только из sw.js.
+Runtime: index.html, js/app.js, sw.js. Cache брать только из sw.js. Сейчас `rz-v283`, Router v1.1.
 AI endpoint: /functions/v1/ai. Smooth-processor - legacy.
 Деплой: ./deploy.sh или ручной bump sw.js + commit/push.
 
-Маленькие точные правки. Проверяй JS после изменений. Русский язык, коротко.
+Маленькие точные правки. Проверяй JS после изменений. После agent/router правок гоняй `node scripts/smoke-agent-router.mjs`. Русский язык, коротко.
 ```

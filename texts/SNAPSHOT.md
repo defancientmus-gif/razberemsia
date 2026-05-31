@@ -57,6 +57,8 @@
 - Секреты в Supabase Dashboard: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `YANDEX_STT_KEY`, `GITHUB_TOKEN`.
 - Локальный код `save_idea` нацелен на `texts/IDEAS_NEAR_TERM.md`.
 - Серверная Edge Function нормализует теги, но не форсирует `идея`, потому что тот же action используется для фидбека.
+- Клиент уже использует Supabase Realtime для `user_state` + fallback polling 8с.
+- Локально есть untracked migration `supabase/migrations/20260531_realtime_user_state.sql`; не считать её официальной, пока не решено применить/закоммитить.
 
 ## Открытые риски
 
@@ -64,6 +66,7 @@
 2. `ideas/`: считать legacy raw-историей. Решить, оставляем ли папку readonly или переносим новые автосохранения только в `texts/IDEAS_NEAR_TERM.md`.
 3. `save_idea`: нужен периодический живой тест заметкой с тегом/контекстом `идея`, чтобы подтвердить запись в GitHub.
 4. Supabase deployed function `ai`: если агент ведёт себя по-старому, сначала проверить, задеплоена ли новая Edge Function.
+5. Realtime migration: проверить, применялась ли `20260531_realtime_user_state.sql`; затем либо закоммитить как официальную схему, либо убрать как черновик.
 
 ## Проверки перед деплоем
 

@@ -32,6 +32,7 @@ for file in \
   UI_PHILOSOPHY.md \
   MASTER_PROMPT.md \
   PROMPTS.md \
+  TEST_GRID.md \
   TERMINOLOGY.md \
   IDEAS_NEAR_TERM.md \
   IDEAS_DONE_OR_DORMANT.md \
@@ -47,6 +48,7 @@ copy_if_exists "$root/js/app.js" "$out/js/app.js"
 copy_if_exists "$root/sw.js" "$out/sw.js"
 copy_if_exists "$root/manifest.json" "$out/manifest.json"
 copy_if_exists "$root/deploy.sh" "$out/deploy.sh"
+copy_if_exists "$root/scripts/smoke-agent-router.mjs" "$out/scripts/smoke-agent-router.mjs"
 
 # Supabase source of truth.
 copy_if_exists "$root/supabase/functions/ai/index.ts" "$out/supabase/functions/ai/index.ts"
