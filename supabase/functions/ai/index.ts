@@ -118,86 +118,18 @@ function parseJsonObject(raw: string) {
   }
 }
 
+// Роутинг — клиент единственный источник правды (валидируется smoke-тестами в scripts/).
+// Сервер доверяет contextProfile который прислал клиент.
 type AgentRouteProfile = 'none' | 'light' | 'notes' | 'deep';
-
-const AGENT_PROFILE_RANK: Record<AgentRouteProfile, number> = {
-  none: 0,
-  light: 1,
-  notes: 2,
-  deep: 3,
-};
-
-function normalizeAgentText(value: string) {
-  return value.toLowerCase().replace(/ё/g, 'е').trim();
-}
-
-function hasAgentRouteWord(text: string, variants: string) {
-  return new RegExp(`(^|[^a-zа-я0-9_])(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
-}
-
-function startsWithAgentRouteWord(text: string, variants: string) {
-  return new RegExp(`^(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
-}
-
-function maxAgentProfile(a: AgentRouteProfile, b: AgentRouteProfile): AgentRouteProfile {
-  return AGENT_PROFILE_RANK[a] >= AGENT_PROFILE_RANK[b] ? a : b;
-}
-
-function inferAgentRoute(text: string, rawProfile: unknown) {
-  const t = normalizeAgentText(text);
-  // Продолжение — ссылки на уже сказанное: «этом/которую/него» и т.д.
-  const continuation = hasAgentRouteWord(t, 'это|эту|этот|эта|этом|этого|этому|этими|той|ту|ее|него|ней|них|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай|которую|которого|которой|которые|которых');
-  const quickWrite = startsWithAgentRouteWord(t, 'запиши|запомни|создай|добавь|сохрани')
-    && !hasAgentRouteWord(t, 'найди|покажи|напомни|напоминай|напоминани[а-я]*|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
-  const reminder = hasAgentRouteWord(t, 'напомни|напоминай|напоминалк[а-я]*|поставь напоминание|добавь напоминание|создай напоминание|будильник');
-  // Напоминание со ссылкой на контекст заметок — нужны notes (фикс if-else priority)
-  const reminderNeedsNotes = reminder && (continuation || /что (я |мне |мы |нам |нужно |надо |было |хотел|хотела|планировал|собирался|собиралась)/.test(t));
-  const destructive = hasAgentRouteWord(t, 'удали|сотри|отмени|убери');
-  const noteAction = hasAgentRouteWord(t, 'найди|покажи|открой|прочитай|расскажи|перечисли|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
-  const tagAction = hasAgentRouteWord(t, 'тег|ярлык') && hasAgentRouteWord(t, 'добавь|поставь|пометь|отнеси|разбери');
-  const broadNotes = /(сводк|что у меня|что запис|что есть|за день|все замет|всё что|список дел)/.test(t);
-  const plan = hasAgentRouteWord(t, 'план[а-я]*|маршрут|составь|составить|распланируй|порядок дел|расписани[а-я]*');
-
-  let profile: AgentRouteProfile = 'light';
-  let likelyIntent = 'UNKNOWN';
-
-  // reminderNeedsNotes проверяем ДО reminder — иначе if-else остановится на reminder
-  if (reminderNeedsNotes) {
-    profile = 'notes';
-    likelyIntent = 'SET_REMINDER';
-  } else if (reminder) {
-    profile = 'none';
-    likelyIntent = 'SET_REMINDER';
-  } else if (plan) {
-    profile = 'deep';
-    likelyIntent = 'MAKE_PLAN';
-  } else if (broadNotes) {
-    profile = 'deep';
-    likelyIntent = 'DAILY_BRIEFING';
-  } else if (destructive) {
-    profile = 'notes';
-    likelyIntent = 'DELETE_OR_CANCEL';
-  } else if (tagAction || noteAction || continuation) {
-    profile = 'notes';
-    likelyIntent = 'NOTE_REFERENCE';
-  } else if (quickWrite) {
-    profile = 'none';
-    likelyIntent = 'CREATE_NOTE';
-  } else if (/\?$/.test(t) || startsWithAgentRouteWord(t, 'что|как|почему|зачем|можно ли|а если')) {
-    profile = 'light';
-    likelyIntent = 'QUESTION';
-  }
-
-  if (typeof rawProfile === 'string' && ['none', 'light', 'notes', 'deep'].includes(rawProfile)) {
-    profile = maxAgentProfile(profile, rawProfile as AgentRouteProfile);
-  }
-
+function buildRoute(contextProfile: unknown, conversationHistory: unknown) {
+  const VALID = ['none','light','notes','deep'];
+  const profile = (typeof contextProfile === 'string' && VALID.includes(contextProfile)
+    ? contextProfile : 'light') as AgentRouteProfile;
   return {
     profile,
-    likelyIntent,
     useNotes: profile === 'notes' || profile === 'deep',
     useMemory: profile === 'deep',
-    useHistory: continuation,
+    useHistory: Array.isArray(conversationHistory) && conversationHistory.length > 0,
     useAppContext: profile === 'deep',
   };
 }
@@ -510,7 +442,7 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
     const { text, memoryContext, alternatives, clientNow: rawClientNow, clientTz: rawClientTz, conversationHistory, contextProfile } = payload ?? {};
     if (typeof text !== 'string' || text.trim().length < 1) return json({ error: 'Empty query' }, 400);
     const safeText = text.trim().slice(0, 800);
-    const route = inferAgentRoute(safeText, contextProfile);
+    const route = buildRoute(contextProfile, conversationHistory);
 
     // Часовой пояс и время пользователя (клиент передаёт, иначе UTC)
     const clientTz = (typeof rawClientTz === 'string' && rawClientTz.length > 0) ? rawClientTz : 'UTC';
@@ -622,11 +554,10 @@ ${actionsLine ? `\n**Можно сделать:**\n${actionsLine}` : ''}`;
       ? `\n═══ РАЗДЕЛЫ ПОЛЬЗОВАТЕЛЯ ═══\nПользователь создал разделы: ${(userFolders as string[]).join(', ')}\nПри CREATE_NOTE — если тема ЯВНО совпадает с разделом, добавь в params поле "section": "ИмяРаздела"\nСовпадение должно быть чётким (финансы/деньги → Финансы, врач/здоровье → Здоровье). При малейшем сомнении — НЕ ставить section.\n`
       : '';
 
-    const routeBlock = `\n═══ ROUTER V1 ═══
-Предварительный профиль запроса: ${route.profile}. Вероятное намерение: ${route.likelyIntent}.
-Главный источник смысла — последняя фраза пользователя. Контекст, память и история только помогают, но не имеют права менять намерение.
-Если профиль none/light — не копайся в заметках и не делай сводку. Выбери простое действие или коротко ответь.
-Уточняй только когда без одного ответа можно удалить/переместить/создать явно не то. В остальных случаях действуй по разумному безопасному умолчанию.
+    const routeBlock = `\n═══ ROUTER ═══
+Профиль: ${route.profile}. Главный источник смысла — последняя фраза пользователя.
+none/light → простое действие или короткий ответ, не делай сводку.
+Уточняй только если без ответа можно создать/удалить явно не то.
 `;
 
     const prompt = `Ты голосовой агент «Разберёмся». Выполни запрос и верни JSON.
@@ -813,7 +744,7 @@ ${appCtxBlock}${historyBlock}${foldersBlock}${memBlock}${notesLines}${altsBlock}
       actions,
       response: typeof parsed.response === 'string' ? parsed.response.trim() : '',
       options,
-      router: { profile: route.profile, likelyIntent: route.likelyIntent },
+      router: { profile: route.profile },
     });
   }
 
