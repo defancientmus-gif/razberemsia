@@ -310,7 +310,11 @@ async function saveCloudNow(){
     const{error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
     if(error)throw error;
     _setLocalSyncedAt(payload.updated_at);
-  }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
+  }catch(e){
+    console.warn('cloud save failed',e);
+    // Офлайн — не показываем ошибку, online-event сделает retry автоматически
+    if(navigator.onLine)showToast('Не удалось сохранить в облако');
+  }
 }
 function setAuthChecking(checking){
   const card=document.querySelector('#auth-screen .auth-card');
@@ -1574,9 +1578,14 @@ document.addEventListener('visibilitychange',()=>{
 window.addEventListener('focus',()=>{_lastPullAt=0;_pullCloudIfStale();});
 // При появлении сети — сначала пушим локальные изменения, потом тянем облако
 window.addEventListener('online',()=>{
-  queueCloudSave();          // пушим всё что не успело сохраниться офлайн
+  queueCloudSave(); // пушим всё что не успело сохраниться офлайн
   _lastPullAt=0;
-  setTimeout(_pullCloudIfStale,1500); // тянем после того как пуш завершится
+  // Если начальная загрузка с облака не удалась (стартовали без сети) — грузим сейчас
+  if(CLOUD_READY_UID!==CU?.id&&cloudAllowed()){
+    loadCloudData().then(()=>loadAll());
+  } else {
+    setTimeout(_pullCloudIfStale,1500);
+  }
 });
 setInterval(()=>{
   if(document.visibilityState==='visible'&&cloudAllowed())_pullCloudIfStale();
