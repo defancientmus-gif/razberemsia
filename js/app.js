@@ -170,89 +170,8 @@ function saveTrash(trash){writeJson('rz_trash',trash);}
 function getHistory(){return readJson('rz_history',[]);}
 function saveHistory(hist){writeJson('rz_history',hist);}
 
-// ── NOTES TABLE — конвертеры client ↔ Supabase ──
-function _noteToRow(n,userId,deletedAt){
-  const aiTags=normalizeAiTags(n.aiTags||[]);
-  return{
-    id:n.id,user_id:userId,
-    title:n.title||null,body:n.body||null,label:n.label||'заметка',
-    reminder:n.reminder||null,recurring:n.recurring||null,
-    ai_tags:aiTags.length?aiTags:null,
-    ai_summary:n.aiSummary||null,ai_cache:n.aiCache||null,
-    items:Array.isArray(n.items)&&n.items.length?n.items:null,
-    from_pad:n.fromPad||false,
-    created_at:n.createdAt?new Date(n.createdAt).toISOString():new Date().toISOString(),
-    updated_at:n.updatedAt?new Date(n.updatedAt).toISOString():new Date().toISOString(),
-    deleted_at:deletedAt||null
-  };
-}
-function _rowToNote(r){
-  return{
-    id:r.id,title:r.title||'',body:r.body||'',label:r.label||'заметка',
-    reminder:r.reminder||null,recurring:r.recurring||null,
-    aiTags:normalizeAiTags(r.ai_tags||[]),
-    aiSummary:r.ai_summary||'',aiCache:r.ai_cache||null,
-    items:r.items||null,fromPad:r.from_pad||false,
-    createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
-    updatedAt:r.updated_at?new Date(r.updated_at).getTime():Date.now(),
-    ...(r.deleted_at?{_deletedAt:new Date(r.deleted_at).getTime()}:{})
-  };
-}
-
-// Одноразовая миграция: перенос из user_state.notes в таблицу notes
-async function _migrateNotesToTable(){
-  if(!cloudAllowed())return;
-  if(localStorage.getItem('rz_notes_migrated_v1'))return;
-  const localNotes=getNotes();const localTrash=getTrash();
-  const rows=[
-    ...localNotes.map(n=>_noteToRow(n,CU.id,null)),
-    ...localTrash.map(n=>_noteToRow(n,CU.id,n._deletedAt?new Date(n._deletedAt).toISOString():new Date().toISOString()))
-  ];
-  if(!rows.length){localStorage.setItem('rz_notes_migrated_v1','1');return;}
-  const{error}=await sb.from('notes').upsert(rows,{onConflict:'id'});
-  if(!error){
-    localStorage.setItem('rz_notes_migrated_v1','1');
-    console.log('✅ notes migrated:',rows.length);
-  } else {
-    console.warn('notes migration failed:',error.message);
-  }
-}
-
-// Загрузить заметки из таблицы notes (вызывается при старте)
-async function _syncFromNotesTable(){
-  if(!cloudAllowed())return;
-  try{
-    const{data:rows,error}=await sb.from('notes').select('*').eq('user_id',CU.id).order('updated_at',{ascending:false}).limit(500);
-    if(error){
-      // Таблица ещё не создана — норм, используем user_state
-      console.warn('notes table not ready:',error.message);return;
-    }
-    if(rows&&rows.length>0){
-      // Таблица есть — она источник правды
-      const active=rows.filter(r=>!r.deleted_at).map(_rowToNote);
-      const trashed=rows.filter(r=>!!r.deleted_at).map(_rowToNote);
-      localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(active));
-      if(trashed.length)localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(trashed));
-      if(!localStorage.getItem('rz_notes_migrated_v1'))localStorage.setItem('rz_notes_migrated_v1','1');
-    } else {
-      // Таблица пустая — запускаем одноразовую миграцию
-      await _migrateNotesToTable();
-    }
-  }catch(e){console.warn('_syncFromNotesTable error:',e);}
-}
-
-// Синхронизировать текущие заметки в таблицу notes (fire-and-forget)
-function _syncNotesToTable(){
-  if(!cloudAllowed()||!localStorage.getItem('rz_notes_migrated_v1'))return;
-  const rows=[
-    ...getNotes().map(n=>_noteToRow(n,CU.id,null)),
-    ...getTrash().map(n=>_noteToRow(n,CU.id,n._deletedAt?new Date(n._deletedAt).toISOString():new Date().toISOString()))
-  ];
-  if(!rows.length)return;
-  sb.from('notes').upsert(rows,{onConflict:'id'}).then(({error})=>{
-    if(error)console.warn('notes upsert failed:',error.message);
-  });
-}
+// Удалены: _noteToRow, _rowToNote, _migrateNotesToTable, _syncFromNotesTable, _syncNotesToTable
+// Единственный источник правды — user_state. Таблица notes больше не используется.
 function getAiMemory(){try{const raw=localStorage.getItem(scopedKey('rz_ai_memory'));return raw?JSON.parse(raw):[];}catch(e){return[];}}
 function _saveAiMemoryRaw(mem){try{localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(mem));}catch(e){}}
 function getSheetDraft(){try{const raw=localStorage.getItem(scopedKey('rz_sheet_draft'));return raw?JSON.parse(raw):null;}catch(e){return null;}}
@@ -303,70 +222,30 @@ function isMissingAiMemoryColumn(error){
 function _getLocalSyncedAt(){return localStorage.getItem('rz_folders_synced_at')||'';}
 function _setLocalSyncedAt(ts){if(ts)localStorage.setItem('rz_folders_synced_at',ts);}
 
+// Простой last-write-wins: если облако новее нашего последнего пуша — берём папки с облака.
+// Для личного приложения этого достаточно: один пользователь редко меняет папки одновременно на двух устройствах.
 function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
   let changed=false;
-  // Папки мержим по смысловому ключу, а не просто last-write-wins.
-  // Иначе одно устройство может стереть AI-папку, созданную другим, если держало старый localStorage.
   const localSyncedAt=_getLocalSyncedAt();
-  const cloudIsNewer=cloudUpdatedAt&&(!localSyncedAt||cloudUpdatedAt>localSyncedAt);
+  const cloudIsNewer=!localSyncedAt||(cloudUpdatedAt&&cloudUpdatedAt>localSyncedAt);
 
-  if(Array.isArray(cloudUserFolders)){
-    const local=getUserFolders();
-    const merged=_mergeUserFolderList(local,cloudUserFolders);
-    const next=cloudIsNewer?merged:((cloudUserFolders.length>0||local.length>0)?merged:local);
-    if(cloudIsNewer){
-      // Облако новее → берём как есть (включая пустой массив = «удалено»)
+  if(cloudIsNewer){
+    if(Array.isArray(cloudUserFolders)){
+      const local=getUserFolders();
+      // Если облако пустое, а локально есть данные — доверяем локальным
+      const next=cloudUserFolders.length===0&&local.length>0?local:_mergeUserFolderList(local,cloudUserFolders);
       if(!_sameJson(local,next)){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;}
-    } else if(cloudUserFolders.length>0&&!local.length){
-      // Облако не новее, но локально пусто → берём облако (первый вход на новом устройстве)
-      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;
-    } else if(local.length>0&&!cloudUserFolders.length){
-      // Локальные есть, облако пустое и не новее → пушим локальное в облако
-      queueCloudSave();
-    } else if(!_sameJson(local,next)){
-      localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;queueCloudSave();
     }
-  }
-  if(Array.isArray(cloudTagFolders)){
-    const localTags=typeof getTagFolders==='function'?getTagFolders():[];
-    const normalizedCloudTags=normalizeTagFolderList(cloudTagFolders);
-    const mergedTags=_mergeTagFolderList(localTags,normalizedCloudTags);
-    const nextTags=cloudIsNewer?mergedTags:((normalizedCloudTags.length>0||localTags.length>0)?mergedTags:localTags);
-    if(cloudIsNewer){
-      if(!_sameJson(localTags,nextTags)){localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(nextTags));changed=true;}
-    } else if(cloudTagFolders.length>0&&!localTags.length){
-      localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(nextTags));changed=true;
-    } else if(localTags.length>0&&!cloudTagFolders.length){
-      queueCloudSave();
-    } else if(!_sameJson(localTags,nextTags)){
-      localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(nextTags));changed=true;queueCloudSave();
+    if(Array.isArray(cloudTagFolders)&&typeof getTagFolders==='function'){
+      const localTags=getTagFolders();
+      const next=cloudTagFolders.length===0&&localTags.length>0?localTags:_mergeTagFolderList(localTags,cloudTagFolders);
+      if(!_sameJson(localTags,next)){localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(next));changed=true;}
     }
-  }
-  // Если после мёрджа разделы всё ещё пустые — восстанавливаем из тегов заметок
-  const afterMerge=getUserFolders();
-  if(!afterMerge.length){
-    _recoverUserFoldersFromNotes();
-  }
-  return changed;
-}
-function _recoverUserFoldersFromNotes(){
-  // Восстанавливает разделы пользователя из тегов _filed_in:ИМЯ в заметках
-  const notes=getNotes();
-  const seen=new Set();
-  const recovered=[];
-  notes.forEach(n=>{
-    const filed=getFiledFolderName(n);
-    if(filed&&!seen.has(filed)){
-      seen.add(filed);
-      const displayName=filed.charAt(0).toUpperCase()+filed.slice(1);
-      recovered.push({name:displayName,createdAt:Date.now(),idx:recovered.length});
-    }
-  });
-  if(recovered.length>0){
-    localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(recovered));
-    console.info('[rz] Восстановлено разделов из заметок:',recovered.length);
+  } else {
+    // Локальное новее — пушим в облако
     queueCloudSave();
   }
+  return changed;
 }
 function _ensureIdeaInboxTagFolder(notes){
   if(typeof getTagFolders!=='function'||typeof saveTagFolders!=='function')return typeof getTagFolders==='function'?getTagFolders():[];
@@ -409,8 +288,6 @@ async function loadCloudData(){
     } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
       await saveCloudNow();
     }
-    // Синхронизация с таблицей notes (новый источник правды)
-    await _syncFromNotesTable();
     CLOUD_READY_UID=CU.id;
   }catch(e){
     console.warn('cloud load failed (attempt 1)',e);
@@ -475,10 +352,7 @@ async function saveCloudNow(){
       error=fallback.error;
     }
     if(error)throw error;
-    // Запомнить timestamp последнего успешного push (для last-write-wins в _mergeCloudFolders)
     _setLocalSyncedAt(payload.updated_at);
-    // Параллельная синхронизация в таблицу notes (fire-and-forget)
-    _syncNotesToTable();
   }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
 }
 function setAuthChecking(checking){
@@ -952,8 +826,6 @@ function rerunAiAnalysis(){
   toggleAiPanel();
 }
 
-// toggleAiCollapse не нужен в overlay — оставляем как заглушку
-function toggleAiCollapse(){}
 
 // ── ИСПРАВЛЕНИЕ ТЕКСТА ──
 // _spellOriginal и _spellActive — var-глобалы из inline-скрипта index.html
@@ -1029,7 +901,6 @@ function _updateSpellBtn(btn){
     if(dot){dot.textContent=stage;dot.style.display='inline';}
   }
 }
-function _scrollToAiPanel(){} // no-op — overlay не требует скролла
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function isAiOverloaded(message){
   const raw=String(message||'').toLowerCase();
