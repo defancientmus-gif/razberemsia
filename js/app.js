@@ -6229,19 +6229,22 @@ function _agentRouteStarts(text,variants){
 
 function _agentRoutingPlan(text){
   const t=String(text||'').toLowerCase().replace(/ё/g,'е').trim();
-  const continuation=_agentRouteWord(t,'это|эту|этот|эта|той|ту|ее|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай');
+  // Продолжение — ссылки на уже сказанное: «это/этом/которую/него» и т.д.
+  const continuation=_agentRouteWord(t,'это|эту|этот|эта|этом|этого|этому|этими|той|ту|ее|него|ней|них|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай|которую|которого|которой|которые|которых');
   const quickWrite=_agentRouteStarts(t,'запиши|запомни|создай|добавь|сохрани')
-    && !_agentRouteWord(t,'найди|покажи|напомни|напоминай|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
-  const reminder=_agentRouteWord(t,'напомни|напоминай|поставь напоминание|добавь напоминание|будильник');
+    && !_agentRouteWord(t,'найди|покажи|напомни|напоминай|напоминани[а-я]*|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
+  const reminder=_agentRouteWord(t,'напомни|напоминай|напоминалк[а-я]*|поставь напоминание|добавь напоминание|создай напоминание|будильник');
+  // Напоминание со ссылкой на контекст заметок — нужны notes
+  const reminderNeedsNotes=reminder&&(continuation||/что (я |мне |мы |нам |нужно |надо |было |хотел|хотела|планировал|собирался|собиралась)/.test(t));
   const destructive=_agentRouteWord(t,'удали|сотри|отмени|убери');
-  const noteAction=_agentRouteWord(t,'найди|покажи|открой|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
+  const noteAction=_agentRouteWord(t,'найди|покажи|открой|прочитай|расскажи|перечисли|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
   const tagAction=_agentRouteWord(t,'тег|ярлык')&&_agentRouteWord(t,'добавь|поставь|пометь|отнеси|разбери');
   const broadNotes=/(сводк|что у меня|что запис|что есть|за день|все замет|всё что|расскажи.*замет|список дел)/.test(t);
-  const plan=_agentRouteWord(t,'план|маршрут|составь|распланируй|порядок дел');
+  const plan=_agentRouteWord(t,'план[а-я]*|маршрут|составь|составить|распланируй|порядок дел|расписани[а-я]*');
 
   let profile='light';
-  if(quickWrite||reminder)profile='none';
-  if(destructive||tagAction||noteAction||continuation)profile='notes';
+  if(quickWrite||(reminder&&!reminderNeedsNotes))profile='none';
+  if(reminderNeedsNotes||destructive||tagAction||noteAction||continuation)profile='notes';
   if(broadNotes||plan)profile='deep';
 
   const deep=profile==='deep';
