@@ -214,10 +214,6 @@ function getAiMemoryContext(){
   return mem.slice(0,7);
 }
 function cloudAllowed(){return !!(sb&&CU&&CU.id);}
-function isMissingAiMemoryColumn(error){
-  const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
-  return msg.includes('ai_memory')&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
-}
 // Timestamp последнего успешного cloud-push (ISO string)
 function _getLocalSyncedAt(){return localStorage.getItem('rz_folders_synced_at')||'';}
 function _setLocalSyncedAt(ts){if(ts)localStorage.setItem('rz_folders_synced_at',ts);}
@@ -259,80 +255,44 @@ function _ensureIdeaInboxTagFolder(notes){
   saveTagFolders(next);
   return next;
 }
-function isMissingFoldersColumns(error){
-  const msg=String(error?.message||error?.details||error?.hint||error||'').toLowerCase();
-  return (msg.includes('user_folders')||msg.includes('tag_folders'))&&(msg.includes('column')||msg.includes('schema cache')||msg.includes('does not exist')||msg.includes('could not find'));
+// Применить данные из облака в localStorage. Возвращает true если что-то изменилось.
+function _applyCloudData(data){
+  if(!data||_cloudStale)return false;
+  if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
+  if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+  if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
+  if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
+  _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
+  if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
+  return true;
 }
 async function loadCloudData(){
   if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
   try{
-    let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
-    if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
-      console.warn('new columns not ready yet, loading cloud state without them');
-      const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
-      data=fallback.data;error=fallback.error;
-    }
+    const{data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
     if(error)throw error;
-    if(data){
-      // Если timeout уже прошёл (_cloudStale), пользователь работает с локальными данными —
-      // не перезаписываем localStorage: это может затереть только что созданные заметки.
-      if(!_cloudStale){
-        if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
-        if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
-        if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
-        if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-        _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
-        if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
-      }
-    } else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
-      await saveCloudNow();
-    }
+    if(data){_applyCloudData(data);}
+    else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){await saveCloudNow();}
     CLOUD_READY_UID=CU.id;
   }catch(e){
     console.warn('cloud load failed (attempt 1)',e);
     CLOUD_LOADING=false;
-    // Сеть при старте PWA может ещё не быть готова — ждём 3 сек и тихо пробуем снова
+    // Сеть при старте PWA может не быть готова — пробуем снова через 3 сек
     setTimeout(async()=>{
-      if(CLOUD_READY_UID===CU?.id)return; // уже загрузилось
+      if(CLOUD_READY_UID===CU?.id)return;
       try{
         CLOUD_LOADING=true;
-        let {data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
-        if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
-          const fallback=await sb.from('user_state').select('notes,trash,history,name').eq('user_id',CU.id).maybeSingle();
-          data=fallback.data;error=fallback.error;
-        }
+        const{data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
         if(error)throw error;
-        if(data&&!_cloudStale){
-          if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
-          if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
-          if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
-          if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-          _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
-          if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
-          loadAll(); // обновляем UI с данными из облака
-        }
+        if(_applyCloudData(data))loadAll();
         CLOUD_READY_UID=CU?.id;
-      }catch(e2){
-        console.warn('cloud load failed (attempt 2)',e2);
-        // Только теперь говорим пользователю — и то без тоста, данные есть локально
-      }finally{
-        CLOUD_LOADING=false;
-        if(CLOUD_SAVE_PENDING){
-          CLOUD_SAVE_PENDING=false;
-          queueCloudSave();
-        }
-      }
+      }catch(e2){console.warn('cloud load failed (attempt 2)',e2);}
+      finally{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}}
     },3000);
-    return; // данные локальные уже в localStorage — приложение работает
+    return;
   }
-  finally{
-    CLOUD_LOADING=false;
-    if(CLOUD_SAVE_PENDING){
-      CLOUD_SAVE_PENDING=false;
-      queueCloudSave();
-    }
-  }
+  finally{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}}
 }
 function queueCloudSave(){
   if(!cloudAllowed())return;
@@ -344,13 +304,7 @@ async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
     const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),ai_memory:getAiMemory(),user_folders:getUserFolders(),tag_folders:typeof getTagFolders==='function'?getTagFolders():[],name:readText('rz_name'),updated_at:new Date().toISOString()};
-    let {error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
-    if(error&&(isMissingAiMemoryColumn(error)||isMissingFoldersColumns(error))){
-      console.warn('new columns not ready yet, saving cloud state without them');
-      const {ai_memory,user_folders,tag_folders,...fallbackPayload}=payload;
-      const fallback=await sb.from('user_state').upsert(fallbackPayload,{onConflict:'user_id'});
-      error=fallback.error;
-    }
+    const{error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
     if(error)throw error;
     _setLocalSyncedAt(payload.updated_at);
   }catch(e){console.warn('cloud save failed',e);showToast('Не удалось сохранить в облако');}
@@ -6767,8 +6721,14 @@ function _reloadViews(){
   loadNotepad();
 }
 
-// ── LOAD ALL ──
+// ── LOAD ALL — с дебаунсом 40ms ──
+// Несколько вызовов в одном тике сливаются в один рендер.
+let _loadAllT=null;
 function loadAll(){
+  clearTimeout(_loadAllT);
+  _loadAllT=setTimeout(_doLoadAll,40);
+}
+function _doLoadAll(){
   _deduplicateRecurringNotes();
   loadHomeFeed();
   loadNotes();
