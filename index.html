@@ -2082,24 +2082,33 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .home-wrap{position:relative;overflow:hidden;}
 .home-wrap .home-feed-wrap{
   position:absolute;inset:0;z-index:1;
-  padding:68px 14px 118px;
+  padding:122px 14px 118px;
   -webkit-mask-image:linear-gradient(to bottom,
-    transparent 0,black 66px,
-    black calc(100% - 114px),transparent 100%);
+    transparent 0,
+    oklch(0 0 0 / .10) 30px,
+    oklch(0 0 0 / .42) 76px,
+    black 122px,
+    black calc(100% - 114px),
+    transparent 100%);
   mask-image:linear-gradient(to bottom,
-    transparent 0,black 66px,
-    black calc(100% - 114px),transparent 100%);
+    transparent 0,
+    oklch(0 0 0 / .10) 30px,
+    oklch(0 0 0 / .42) 76px,
+    black 122px,
+    black calc(100% - 114px),
+    transparent 100%);
 }
 /* Quick nav buttons — glass shelf at top */
 .home-wrap .jarvis-top{
   position:absolute;top:0;left:0;right:0;z-index:3;
   background:linear-gradient(to bottom,
-    oklch(0.97 0.006 225 / 0.90) 0%,
-    oklch(0.97 0.006 225 / 0.72) 60%,
+    oklch(0.97 0.006 225 / 0.72) 0%,
+    oklch(0.97 0.006 225 / 0.48) 52%,
+    oklch(0.97 0.006 225 / 0.18) 82%,
     oklch(0.97 0.006 225 / 0) 100%);
-  backdrop-filter:blur(16px) saturate(1.2);
-  -webkit-backdrop-filter:blur(16px) saturate(1.2);
-  padding-bottom:18px;
+  backdrop-filter:blur(20px) saturate(1.18);
+  -webkit-backdrop-filter:blur(20px) saturate(1.18);
+  padding-bottom:54px;
 }
 /* Compact button — floats inside the top shelf */
 .home-wrap .hf-toolbar{
@@ -2796,9 +2805,30 @@ header{padding:15px 16px 9px;}
 }
 .jq-feedback svg{stroke:var(--accent-d);}
 .jq-feedback .jq-label{color:var(--fg);font-weight:600;}
-.home-wrap .home-feed-wrap{padding:68px 14px 118px;}
+.home-wrap .home-feed-wrap{
+  padding:122px 14px 118px;
+  -webkit-mask-image:linear-gradient(to bottom,
+    transparent 0,
+    oklch(0 0 0 / .08) 28px,
+    oklch(0 0 0 / .38) 74px,
+    black 122px,
+    black calc(100% - 118px),
+    transparent 100%);
+  mask-image:linear-gradient(to bottom,
+    transparent 0,
+    oklch(0 0 0 / .08) 28px,
+    oklch(0 0 0 / .38) 74px,
+    black 122px,
+    black calc(100% - 118px),
+    transparent 100%);
+}
 .hf-wrap{border-radius:19px;margin-bottom:9px;}
-.hf-card{padding:16px 15px;border-radius:0;}
+.hf-card{
+  padding:16px 15px;border-radius:0;
+  background:linear-gradient(158deg,oklch(1 0 0 / .68),oklch(0.965 0.012 210 / .48));
+  border-color:oklch(1 0 0 / .48);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / .74),0 3px 12px oklch(0.34 0.04 210 / .055);
+}
 .hf-title{font-size:16px;}
 .hf-preview{font-size:13px;line-height:1.5;}
 .hf-time{font-size:12px;}

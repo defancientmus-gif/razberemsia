@@ -262,7 +262,10 @@ function _applyCloudData(data){
     // Если в локале были заметки которых нет в облаке (офлайн) — пушим обратно
     if(merged.length>data.notes.length)queueCloudSave();
   }
-  if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+  if(Array.isArray(data.trash)){
+    const merged=_mergeTrashArrays(getTrash(),data.trash);
+    localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(merged));
+  }
   if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
   if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
   _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
@@ -1528,24 +1531,41 @@ function _unsubscribeRealtime(){
 // Merge заметок по id — не теряем локальные изменения при pull.
 // Сценарий: заметка создана офлайн → пуш не прошёл → при pull облако перезапишет её.
 // Решение: объединяем по id, для дублей берём более новый updatedAt.
+// Важно: заметки из облака, которые уже удалены локально (есть в trash), не восстанавливаем.
 function _mergeNoteArrays(local,cloud){
+  const trashIds=new Set(getTrash().map(n=>n.id));
   const byId=new Map();
-  // Сначала кладём все облачные заметки
-  (Array.isArray(cloud)?cloud:[]).forEach(n=>{if(n.id)byId.set(n.id,n);});
+  // Сначала кладём облачные заметки, пропуская те что удалены локально
+  (Array.isArray(cloud)?cloud:[]).forEach(n=>{
+    if(n.id&&!trashIds.has(n.id))byId.set(n.id,n);
+  });
   // Потом локальные — перезаписываем если локальная новее
   (Array.isArray(local)?local:[]).forEach(n=>{
     if(!n.id)return;
     const c=byId.get(n.id);
     if(!c){
-      // Заметка только локально (офлайн-создание) — добавляем
       byId.set(n.id,n);
     } else if((n.updatedAt||0)>(c.updatedAt||0)){
-      // Локальная правка новее облачной — берём локальную
       byId.set(n.id,n);
     }
-    // Иначе облачная новее — оставляем как есть
   });
   return Array.from(byId.values());
+}
+
+// Merge корзин по id — union, победитель по _deletedAt.
+// Защищает от потери локально-удалённых заметок при pull до push.
+function _mergeTrashArrays(local,cloud){
+  const byId=new Map();
+  (Array.isArray(cloud)?cloud:[]).forEach(n=>{if(n.id)byId.set(n.id,n);});
+  (Array.isArray(local)?local:[]).forEach(n=>{
+    if(!n.id)return;
+    const c=byId.get(n.id);
+    if(!c||(n._deletedAt||0)>=(c._deletedAt||0))byId.set(n.id,n);
+  });
+  const result=Array.from(byId.values());
+  result.sort((a,b)=>(b._deletedAt||0)-(a._deletedAt||0));
+  while(result.length>200)result.pop();
+  return result;
 }
 
 let _lastPullAt=0;
@@ -1569,7 +1589,8 @@ async function _pullCloudIfStale(){
       if(localJson!==mergedJson){localStorage.setItem(scopedKey('rz_notes'),mergedJson);changed=true;}
     }
     if(cloudHasNewer&&Array.isArray(data.trash)){
-      localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
+      const merged=_mergeTrashArrays(getTrash(),data.trash);
+      localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(merged));
     }
     if(cloudHasNewer&&Array.isArray(data.history)){
       localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
@@ -5211,8 +5232,7 @@ function delNote(i){
     deleted._deletedAt=Date.now();
     const trash=getTrash();
     trash.unshift(deleted);
-    // Держим корзину не более 50 записей
-    if(trash.length>50)trash.pop();
+    if(trash.length>200)trash.pop();
     saveTrash(trash);
     // Снять напоминание с сервера (иначе cron продолжит слать пуши)
     if(deleted.reminder)_deleteReminderFromServer(deleted.id);
