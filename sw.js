@@ -1,4 +1,4 @@
-const CACHE = 'rz-v294';
+const CACHE = 'rz-v295';
 const ASSETS = [
   './',
   'index.html',
@@ -33,8 +33,9 @@ const FONT_CACHE = 'rz-fonts-v1';
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
 
-  // Google Fonts — cache-first, без версии (шрифты не меняются)
   const url = e.request.url;
+
+  // Google Fonts — cache-first, без версии (шрифты не меняются)
   if (url.includes('fonts.gstatic.com') || url.includes('fonts.googleapis.com')) {
     e.respondWith(
       caches.open(FONT_CACHE).then(fc =>
@@ -50,12 +51,17 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  // Кросс-доменные запросы (Supabase, CDN и т.д.) — не перехватываем.
+  // SW не должен мешать API-запросам возвращать их ошибки напрямую клиенту.
+  if (!url.startsWith(self.location.origin)) return;
+
+  // Только наши статичные ресурсы: cache-first, fallback → index.html для навигации
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => {
       if (e.request.mode === 'navigate') {
         return caches.match('./').then(home => home || caches.match('index.html'));
       }
-      return caches.match('index.html');
+      return new Response('', { status: 503 });
     }))
   );
 });
