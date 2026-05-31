@@ -252,10 +252,16 @@ function _ensureIdeaInboxTagFolder(notes){
   saveTagFolders(next);
   return next;
 }
-// Применить данные из облака в localStorage. Возвращает true если данные изменились.
+// Применить данные из облака в localStorage. Merge по id — офлайн-заметки не теряются.
 function _applyCloudData(data){
   if(!data)return false;
-  if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
+  if(Array.isArray(data.notes)){
+    const local=getNotes();
+    const merged=_mergeNoteArrays(local,data.notes);
+    localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(merged));
+    // Если в локале были заметки которых нет в облаке (офлайн) — пушим обратно
+    if(merged.length>data.notes.length)queueCloudSave();
+  }
   if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
   if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
   if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
