@@ -2722,16 +2722,11 @@ header{padding:15px 16px 9px;}
 .auth-wordmark{
   font-family:'Playfair Display',serif;
   font-size:49px;line-height:1;color:oklch(0.25 0.055 190);
-  /* Скрыт до загрузки шрифта — без этого display:swap вызывает джерк */
-  opacity:0;
-}
-/* Шрифт готов → JS добавляет .wm-ready → анимация запускается */
-.auth-wordmark.wm-ready{
-  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both;
+  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) .05s both;
 }
 @keyframes wm-appear{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes wm-shimmer{0%{background-position:-240% center;}100%{background-position:240% center;}}
-#auth-screen.checking .auth-wordmark.wm-ready{
+#auth-screen.checking .auth-wordmark{
   background:linear-gradient(90deg,
     oklch(0.25 0.055 190) 0%,
     oklch(0.25 0.055 190) 28%,
@@ -2741,7 +2736,7 @@ header{padding:15px 16px 9px;}
   );
   background-size:280% auto;
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both,wm-shimmer 2s linear infinite .55s;
+  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) .05s both,wm-shimmer 2s linear infinite .6s;
 }
 .auth-logo{margin-bottom:28px;}
 .jarvis-top{padding:7px 14px 3px;}

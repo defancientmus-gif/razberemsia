@@ -6924,25 +6924,8 @@ window.addEventListener('load',()=>{
 });
 
 // ── INIT ──
-// Логотип появляется только когда Playfair Display загружен И auth-screen ещё активен.
-// Три пути: fonts.load → fonts.ready → fallback 500ms (офлайн, iOS PWA, медленный Google Fonts).
-(function(){
-  let _wmDone=false;
-  const _showWordmark=()=>{
-    if(_wmDone)return;_wmDone=true;
-    const scr=document.getElementById('auth-screen');
-    if(!scr||scr.classList.contains('gone')||scr.classList.contains('hidden'))return;
-    const wm=scr.querySelector('.auth-wordmark');
-    if(wm)wm.classList.add('wm-ready');
-  };
-  // Fallback: показать не позже 500ms в любом случае
-  const _fb=setTimeout(_showWordmark,500);
-  const _done=()=>{clearTimeout(_fb);_showWordmark();};
-  if(document.fonts){
-    document.fonts.load('400 49px "Playfair Display"').then(_done).catch(_done);
-    document.fonts.ready.then(_done).catch(()=>{});
-  }
-})();
+// Логотип — чистый CSS-анимация, никакого JS не нужно.
+// Google Fonts использует display=swap, поэтому логотип виден сразу.
 
 initAuth();
 _syncAppVersionBadge();
