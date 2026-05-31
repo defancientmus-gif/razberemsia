@@ -6270,7 +6270,7 @@ function _agentRoutingPlan(text){
   const destructive=_agentRouteWord(t,'удали|сотри|отмени|убери');
   const noteAction=_agentRouteWord(t,'найди|покажи|открой|прочитай|расскажи|перечисли|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
   const tagAction=_agentRouteWord(t,'тег|ярлык')&&_agentRouteWord(t,'добавь|поставь|пометь|отнеси|разбери');
-  const broadNotes=/(сводк|что у меня|что запис|что есть|за день|все замет|всё что|расскажи.*замет|список дел)/.test(t);
+  const broadNotes=/(сводк|что у меня|что запис|что есть|за день|все замет|всё что|список дел)/.test(t);
   const plan=_agentRouteWord(t,'план[а-я]*|маршрут|составь|составить|распланируй|порядок дел|расписани[а-я]*');
 
   let profile='light';
