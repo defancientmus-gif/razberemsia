@@ -273,7 +273,7 @@ async function loadCloudData(){
   const _finish=()=>{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}};
   const _fetch=async()=>{
     const{data,error}=await sb.from('user_state')
-      .select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at')
+      .select('*')
       .eq('user_id',CU.id).maybeSingle();
     if(error)throw error;
     return data;
@@ -1512,7 +1512,7 @@ async function _pullCloudIfStale(){
   _lastPullAt=Date.now();
   try{
     const {data}=await sb.from('user_state')
-      .select('notes,trash,history,ai_memory,user_folders,tag_folders,updated_at')
+      .select('*')
       .eq('user_id',CU.id).maybeSingle();
     if(!data)return;
     let changed=false;
