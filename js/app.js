@@ -7,9 +7,6 @@ const sb=sbConfigured&&window.supabase?window.supabase.createClient(SUPABASE_URL
 
 let CU=null,ST=null,EI=null;
 let CLOUD_READY_UID=null,CLOUD_SAVE_TIMER=null,CLOUD_LOADING=false,CLOUD_SAVE_PENDING=false;
-// Флаг: если Promise.race timeout выиграл раньше чем пришли облачные данные,
-// loadCloudData не должна перезаписывать localStorage — пользователь уже работает.
-let _cloudStale=false;
 let _cardSwiping=false; // флаг: карточка перехватила свайп, подавить навигацию
 
 function userScope(){return CU&&CU.id?CU.id:'signed-out';}
@@ -255,9 +252,9 @@ function _ensureIdeaInboxTagFolder(notes){
   saveTagFolders(next);
   return next;
 }
-// Применить данные из облака в localStorage. Возвращает true если что-то изменилось.
+// Применить данные из облака в localStorage. Возвращает true если данные изменились.
 function _applyCloudData(data){
-  if(!data||_cloudStale)return false;
+  if(!data)return false;
   if(Array.isArray(data.notes))localStorage.setItem(scopedKey('rz_notes'),JSON.stringify(data.notes));
   if(Array.isArray(data.trash))localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
   if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
@@ -266,33 +263,40 @@ function _applyCloudData(data){
   if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
   return true;
 }
+
 async function loadCloudData(){
   if(!cloudAllowed()||CLOUD_READY_UID===CU.id)return;
   CLOUD_LOADING=true;
-  try{
-    const{data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
+  const _finish=()=>{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}};
+  const _fetch=async()=>{
+    const{data,error}=await sb.from('user_state')
+      .select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at')
+      .eq('user_id',CU.id).maybeSingle();
     if(error)throw error;
+    return data;
+  };
+  try{
+    const data=await _fetch();
     if(data){_applyCloudData(data);}
-    else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){await saveCloudNow();}
+    else if(getNotes().length||getTrash().length||getHistory().length||getAiMemory().length||readText('rz_name')){
+      await saveCloudNow();
+    }
     CLOUD_READY_UID=CU.id;
+    _finish();
   }catch(e){
-    console.warn('cloud load failed (attempt 1)',e);
-    CLOUD_LOADING=false;
-    // Сеть при старте PWA может не быть готова — пробуем снова через 3 сек
+    console.warn('cloud load failed, retry in 3s',e);
+    _finish();
     setTimeout(async()=>{
       if(CLOUD_READY_UID===CU?.id)return;
+      CLOUD_LOADING=true;
       try{
-        CLOUD_LOADING=true;
-        const{data,error}=await sb.from('user_state').select('notes,trash,history,ai_memory,user_folders,tag_folders,name,updated_at').eq('user_id',CU.id).maybeSingle();
-        if(error)throw error;
+        const data=await _fetch();
         if(_applyCloudData(data))loadAll();
         CLOUD_READY_UID=CU?.id;
       }catch(e2){console.warn('cloud load failed (attempt 2)',e2);}
-      finally{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}}
+      finally{_finish();}
     },3000);
-    return;
   }
-  finally{CLOUD_LOADING=false;if(CLOUD_SAVE_PENDING){CLOUD_SAVE_PENDING=false;queueCloudSave();}}
 }
 function queueCloudSave(){
   if(!cloudAllowed())return;
@@ -397,14 +401,11 @@ function showAuthErr(msg){
   if(errEl){errEl.textContent=msg;errEl.style.display='block';}
 }
 async function enterUser(user){
-  CU=user;migrateLegacyLocal();_cloudStale=false;
-  // Таймаут 7с: если облако не ответило — запускаем с локальными данными (не висим на логотипе)
-  // После timeout флаг _cloudStale=true: loadCloudData не перезапишет localStorage пока пользователь работает
-  await Promise.race([
-    loadCloudData(),
-    new Promise(r=>setTimeout(()=>{_cloudStale=true;r();},7000))
-  ]);
+  CU=user;migrateLegacyLocal();
+  // Показываем приложение сразу — облако загружается параллельно.
+  // Если данные придут позже — _pullCloudIfStale и Realtime синхронизируют автоматически.
   showApp();updUI(user);loadAll();
+  loadCloudData().then(()=>loadAll()); // применить облако и перерисовать когда придёт
   _maybeOnboard();
   // Мгновенная синхронизация через WebSocket (fallback — polling каждые 8с)
   _subscribeRealtime();
@@ -1597,7 +1598,6 @@ async function _doPTR(){
     if(bar){bar.style.height='36px';bar.classList.add('spinning');}
     _lastPullAt=0;
     CLOUD_READY_UID=null; // принудительно перегружаем с облака
-    _cloudStale=false;
     await loadCloudData();
     loadAll();
     await new Promise(r=>setTimeout(r,600));
