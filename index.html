@@ -2077,6 +2077,43 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* ── HOME BAR — matches screenshot layout ── */
 .home-bar{padding:6px 14px 28px;flex-shrink:0;background:transparent;border-top:none;box-shadow:none;position:relative;z-index:2;overflow:visible;}
 
+/* ── FLOATING NOTES ARCHITECTURE ──
+   Feed is full-screen absolute, everything else floats on top as glass layers */
+.home-wrap{position:relative;overflow:hidden;}
+.home-wrap .home-feed-wrap{
+  position:absolute;inset:0;z-index:1;
+  padding:68px 14px 118px;
+  -webkit-mask-image:linear-gradient(to bottom,
+    transparent 0,black 66px,
+    black calc(100% - 114px),transparent 100%);
+  mask-image:linear-gradient(to bottom,
+    transparent 0,black 66px,
+    black calc(100% - 114px),transparent 100%);
+}
+/* Quick nav buttons — glass shelf at top */
+.home-wrap .jarvis-top{
+  position:absolute;top:0;left:0;right:0;z-index:3;
+  background:linear-gradient(to bottom,
+    oklch(0.97 0.006 225 / 0.90) 0%,
+    oklch(0.97 0.006 225 / 0.72) 60%,
+    oklch(0.97 0.006 225 / 0) 100%);
+  backdrop-filter:blur(16px) saturate(1.2);
+  -webkit-backdrop-filter:blur(16px) saturate(1.2);
+  padding-bottom:18px;
+}
+/* Compact button — floats inside the top shelf */
+.home-wrap .hf-toolbar{
+  position:absolute;top:8px;right:4px;z-index:4;padding:0;
+}
+/* PTR spinner — just below top shelf */
+.home-wrap .ptr-bar{
+  position:absolute;top:62px;left:0;right:0;z-index:2;
+}
+/* Bottom bar — glass shelf at bottom */
+.home-wrap .home-bar{
+  position:absolute;bottom:0;left:0;right:0;z-index:3;flex-shrink:unset;
+}
+
 /* ── ANIMATIONS ── */
 @keyframes fIn{from{opacity:0}to{opacity:1}}
 @keyframes sUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -2759,7 +2796,7 @@ header{padding:15px 16px 9px;}
 }
 .jq-feedback svg{stroke:var(--accent-d);}
 .jq-feedback .jq-label{color:var(--fg);font-weight:600;}
-.home-feed-wrap{padding:9px 14px 10px;}
+.home-wrap .home-feed-wrap{padding:68px 14px 118px;}
 .hf-wrap{border-radius:19px;margin-bottom:9px;}
 .hf-card{padding:16px 15px;border-radius:0;}
 .hf-title{font-size:16px;}
@@ -3398,7 +3435,7 @@ header{padding:15px 16px 9px;}
 
     <!-- HOME -->
     <div class="scr active" id="s-home" style="padding:0;overflow:hidden;">
-      <div style="height:100%;display:flex;flex-direction:column;">
+      <div class="home-wrap" style="height:100%;position:relative;overflow:hidden;">
         <!-- Quick nav buttons -->
         <div class="jarvis-top">
           <div class="jarvis-quick">
