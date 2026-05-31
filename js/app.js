@@ -543,7 +543,7 @@ async function initAuth(){
       await enterUser(session.user);
     } else {
       if(!CU)return;
-      CU=null;CLOUD_READY_UID=null;
+      CU=null;CLOUD_READY_UID=null;_unsubscribeRealtime();
       const m=document.getElementById('main-app');
       if(m)m.style.display='none';
       showAuthScr();
@@ -569,6 +569,8 @@ async function enterUser(user){
   ]);
   showApp();updUI(user);loadAll();
   _maybeOnboard();
+  // Мгновенная синхронизация через WebSocket (fallback — polling каждые 8с)
+  _subscribeRealtime();
   // Восстановить push-подписку при каждом логине (endpoint может смениться)
   if(notifGranted())_ensurePushSubscription();
 }
@@ -844,7 +846,7 @@ async function doSignOut(e){
   if(e)e.preventDefault();
   if(!confirm('Выйти из аккаунта?'))return;
   try{if(sb)await sb.auth.signOut();}catch(err){console.warn('sign out failed',err);}
-  CU=null;CLOUD_READY_UID=null;closeMenu();go('home');
+  CU=null;CLOUD_READY_UID=null;_unsubscribeRealtime();closeMenu();go('home');
   const m=document.getElementById('main-app');if(m)m.style.display='none';
   showAuthScr();setAuthChecking(false);
 }
@@ -1638,12 +1640,34 @@ function scheduleAll(){
   updateReminderDot();
 }
 
+// ── REALTIME SYNC ──
+// WebSocket-подписка на изменения user_state — мгновенная синхронизация между устройствами.
+// Polling остаётся как fallback если WS отвалился (iOS background, плохая сеть).
+let _realtimeChannel=null;
+function _subscribeRealtime(){
+  if(!cloudAllowed()||_realtimeChannel)return;
+  _realtimeChannel=sb.channel('rz_sync_'+CU.id)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_state',filter:'user_id=eq.'+CU.id},(payload)=>{
+      const cloudUpdatedAt=payload.new?.updated_at||'';
+      const localSyncedAt=_getLocalSyncedAt();
+      // Реагируем только на чужие изменения (другое устройство опередило нас)
+      if(!localSyncedAt||cloudUpdatedAt>localSyncedAt){
+        _lastPullAt=0; // сбросить throttle — хотим забрать данные сразу
+        _pullCloudIfStale();
+      }
+    })
+    .subscribe();
+}
+function _unsubscribeRealtime(){
+  if(_realtimeChannel){sb.removeChannel(_realtimeChannel);_realtimeChannel=null;}
+}
+
 // Пересылаем в SW при каждом возвращении в приложение
 let _lastPullAt=0;
 async function _pullCloudIfStale(){
   if(!cloudAllowed()||!CU)return;
   const age=Date.now()-_lastPullAt;
-  if(age<12000)return; // не чаще раза в 12 секунд
+  if(age<3000)return; // не чаще раза в 3 секунды (fallback-polling)
   _lastPullAt=Date.now();
   try{
     const {data}=await sb.from('user_state')
@@ -1688,7 +1712,7 @@ window.addEventListener('focus',()=>{_lastPullAt=0;_pullCloudIfStale();});
 window.addEventListener('online',()=>{_lastPullAt=0;_pullCloudIfStale();});
 setInterval(()=>{
   if(document.visibilityState==='visible'&&cloudAllowed())_pullCloudIfStale();
-},18000);
+},8000);
 
 // ── Pull-to-refresh на ленте и списке заметок ──
 let _ptrActive=false,_ptrSY=0,_ptrTriggered=false,_activePtrBar=null;
