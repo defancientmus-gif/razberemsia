@@ -74,4 +74,6 @@
 
 - `node --check js/app.js`
 - Проверка inline-скриптов из `index.html`
+- `node scripts/smoke-agent-router.mjs` после правок голосового агента/маршрутизатора
+- `texts/TEST_GRID.md` - живая сетка для Mac/iPhone/Windows
 - Живой сценарий: вход -> загрузка -> новая заметка -> обновление -> заметка осталась.

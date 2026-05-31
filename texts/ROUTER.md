@@ -19,8 +19,9 @@
 
 1. `texts/STATUS.md`
 2. `texts/RULES.md`
-3. `texts/CONTEXT.md`
-4. `texts/IDEAS_DONE_OR_DORMANT.md`, если похоже на уже сделанную или сломанную функцию.
+3. `texts/TEST_GRID.md`
+4. `texts/CONTEXT.md`
+5. `texts/IDEAS_DONE_OR_DORMANT.md`, если похоже на уже сделанную или сломанную функцию.
 
 Потом смотреть только нужные runtime-файлы:
 
