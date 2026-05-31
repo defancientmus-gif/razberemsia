@@ -6242,11 +6242,11 @@ function _pushAgentHistory(userText,agentResponse,intent){
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
   if(!el)return;
-  fetch('sw.js?version='+Date.now(),{cache:'no-store'})
+  fetch('sw.js?v='+Date.now(),{cache:'no-store'})
     .then(r=>r.ok?r.text():'')
     .then(t=>{
-      const m=String(t).match(/const CACHE = ['"]([^'"]+)['"]/);
-      if(m?.[1])el.textContent='β '+m[1];
+      const m=String(t).match(/const CACHE = ['"]rz-v(\d+)['"]/);
+      if(m?.[1])el.textContent=m[1]; // только цифра: "286"
     })
     .catch(()=>{});
 }
@@ -6925,19 +6925,22 @@ window.addEventListener('load',()=>{
 
 // ── INIT ──
 // Логотип появляется только когда Playfair Display загружен И auth-screen ещё активен.
-// Если сессия найдена раньше чем шрифт загрузился — лого не мигает (экран уходит плавно).
+// Три пути: fonts.load → fonts.ready → fallback 500ms (офлайн, iOS PWA, медленный Google Fonts).
 (function(){
+  let _wmDone=false;
   const _showWordmark=()=>{
+    if(_wmDone)return;_wmDone=true;
     const scr=document.getElementById('auth-screen');
     if(!scr||scr.classList.contains('gone')||scr.classList.contains('hidden'))return;
     const wm=scr.querySelector('.auth-wordmark');
     if(wm)wm.classList.add('wm-ready');
   };
-  if(document.fonts&&document.fonts.load){
-    document.fonts.load('400 49px "Playfair Display"')
-      .then(_showWordmark).catch(_showWordmark);
-  } else {
-    setTimeout(_showWordmark,300);
+  // Fallback: показать не позже 500ms в любом случае
+  const _fb=setTimeout(_showWordmark,500);
+  const _done=()=>{clearTimeout(_fb);_showWordmark();};
+  if(document.fonts){
+    document.fonts.load('400 49px "Playfair Display"').then(_done).catch(_done);
+    document.fonts.ready.then(_done).catch(()=>{});
   }
 })();
 
