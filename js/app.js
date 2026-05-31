@@ -316,9 +316,13 @@ async function saveCloudNow(){
     const{error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
     if(error)throw error;
     _setLocalSyncedAt(payload.updated_at);
+    // Broadcast: сигналим другим устройствам что данные обновились
+    // Не ждём postgres_changes — устройство само говорит «я сохранил»
+    if(_realtimeChannel){
+      _realtimeChannel.send({type:'broadcast',event:'saved',payload:{at:payload.updated_at}}).catch(()=>{});
+    }
   }catch(e){
     console.warn('cloud save failed',e);
-    // Офлайн — не показываем ошибку, online-event сделает retry автоматически
     if(navigator.onLine)showToast('Не удалось сохранить в облако');
   }
 }
@@ -1493,19 +1497,24 @@ function _subscribeRealtime(){
   _unsubscribeRealtime();
   clearTimeout(_realtimeRetryT);
   _realtimeChannel=sb.channel('rz_sync_'+CU.id)
+    // Канал 1: postgres_changes — пассивный, срабатывает при записи в БД
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_state',filter:'user_id=eq.'+CU.id},(payload)=>{
       const cloudUpdatedAt=payload.new?.updated_at||'';
       const localSyncedAt=_getLocalSyncedAt();
-      if(!localSyncedAt||cloudUpdatedAt>localSyncedAt){
+      if(!localSyncedAt||cloudUpdatedAt>localSyncedAt){_lastPullAt=0;_pullCloudIfStale();}
+    })
+    // Канал 2: broadcast — активный, Device A сам сигналит при сохранении
+    // Работает без postgres_changes миграции, мгновенно
+    .on('broadcast',{event:'saved'},(payload)=>{
+      const cloudUpdatedAt=payload?.payload?.at||'';
+      const localSyncedAt=_getLocalSyncedAt();
+      if(!localSyncedAt||!cloudUpdatedAt||cloudUpdatedAt>localSyncedAt){
         _lastPullAt=0;
         _pullCloudIfStale();
       }
     })
     .subscribe((status)=>{
-      if(status==='SUBSCRIBED'){
-        // Realtime подключён — всё хорошо
-      } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
-        // Переподключаемся через 5 секунд
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
         _realtimeChannel=null;
         _realtimeRetryT=setTimeout(()=>{if(cloudAllowed())_subscribeRealtime();},5000);
       }
