@@ -145,20 +145,27 @@ function maxAgentProfile(a: AgentRouteProfile, b: AgentRouteProfile): AgentRoute
 
 function inferAgentRoute(text: string, rawProfile: unknown) {
   const t = normalizeAgentText(text);
-  const continuation = hasAgentRouteWord(t, 'это|эту|этот|эта|той|ту|ее|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай');
+  // Продолжение — ссылки на уже сказанное: «этом/которую/него» и т.д.
+  const continuation = hasAgentRouteWord(t, 'это|эту|этот|эта|этом|этого|этому|этими|той|ту|ее|него|ней|них|последн[a-zа-я0-9_]*|предыдущ[a-zа-я0-9_]*|перв[a-zа-я0-9_]*|здесь|сюда|туда|тогда|давай|которую|которого|которой|которые|которых');
   const quickWrite = startsWithAgentRouteWord(t, 'запиши|запомни|создай|добавь|сохрани')
-    && !hasAgentRouteWord(t, 'найди|покажи|напомни|напоминай|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
-  const reminder = hasAgentRouteWord(t, 'напомни|напоминай|поставь напоминание|добавь напоминание|будильник');
+    && !hasAgentRouteWord(t, 'найди|покажи|напомни|напоминай|напоминани[а-я]*|удали|отмени|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|проанализ[a-zа-я0-9_]*');
+  const reminder = hasAgentRouteWord(t, 'напомни|напоминай|напоминалк[а-я]*|поставь напоминание|добавь напоминание|создай напоминание|будильник');
+  // Напоминание со ссылкой на контекст заметок — нужны notes (фикс if-else priority)
+  const reminderNeedsNotes = reminder && (continuation || /что (я |мне |мы |нам |нужно |надо |было |хотел|хотела|планировал|собирался|собиралась)/.test(t));
   const destructive = hasAgentRouteWord(t, 'удали|сотри|отмени|убери');
-  const noteAction = hasAgentRouteWord(t, 'найди|покажи|открой|прочитай|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
+  const noteAction = hasAgentRouteWord(t, 'найди|покажи|открой|прочитай|расскажи|перечисли|озвуч[a-zа-я0-9_]*|разбер[a-zа-я0-9_]*|разбери|проанализ[a-zа-я0-9_]*|посмотри');
   const tagAction = hasAgentRouteWord(t, 'тег|ярлык') && hasAgentRouteWord(t, 'добавь|поставь|пометь|отнеси|разбери');
   const broadNotes = /(сводк|что у меня|что запис|что есть|за день|все замет|всё что|расскажи.*замет|список дел)/.test(t);
-  const plan = hasAgentRouteWord(t, 'план|маршрут|составь|распланируй|порядок дел');
+  const plan = hasAgentRouteWord(t, 'план[а-я]*|маршрут|составь|составить|распланируй|порядок дел|расписани[а-я]*');
 
   let profile: AgentRouteProfile = 'light';
   let likelyIntent = 'UNKNOWN';
 
-  if (reminder) {
+  // reminderNeedsNotes проверяем ДО reminder — иначе if-else остановится на reminder
+  if (reminderNeedsNotes) {
+    profile = 'notes';
+    likelyIntent = 'SET_REMINDER';
+  } else if (reminder) {
     profile = 'none';
     likelyIntent = 'SET_REMINDER';
   } else if (plan) {
