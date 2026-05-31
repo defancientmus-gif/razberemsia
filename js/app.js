@@ -406,8 +406,8 @@ async function enterUser(user){
   showApp();updUI(user);loadAll();
   loadCloudData().then(()=>loadAll()); // применить облако и перерисовать когда придёт
   _maybeOnboard();
-  // Мгновенная синхронизация через WebSocket (fallback — polling каждые 8с)
-  _subscribeRealtime();
+  // Realtime WebSocket — задержка 1.5с чтобы auth-сессия успела установиться
+  setTimeout(_subscribeRealtime, 1500);
   // Восстановить push-подписку при каждом логине (endpoint может смениться)
   if(notifGranted())_ensurePushSubscription();
 }
