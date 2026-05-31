@@ -1647,26 +1647,33 @@ async function _pullCloudIfStale(){
   _lastPullAt=Date.now();
   try{
     const {data}=await sb.from('user_state')
-      .select('notes,trash,user_folders,tag_folders,updated_at')
+      .select('notes,trash,history,ai_memory,user_folders,tag_folders,updated_at')
       .eq('user_id',CU.id).maybeSingle();
     if(!data)return;
     let changed=false;
-    if(Array.isArray(data.notes)){
+    const cloudUpdatedAt=data.updated_at||'';
+    const localSyncedAt=_getLocalSyncedAt();
+    // Заметки обновляем только если облако новее нашего последнего пуша
+    // (защита от перезаписи локальных изменений чужим устаревшим снимком)
+    const cloudHasNewer=!localSyncedAt||(cloudUpdatedAt&&cloudUpdatedAt>localSyncedAt);
+    if(cloudHasNewer&&Array.isArray(data.notes)){
       const localJson=localStorage.getItem(scopedKey('rz_notes'));
       const cloudJson=JSON.stringify(data.notes);
       if(localJson!==cloudJson){localStorage.setItem(scopedKey('rz_notes'),cloudJson);changed=true;}
     }
-    if(Array.isArray(data.trash)){
+    if(cloudHasNewer&&Array.isArray(data.trash)){
       localStorage.setItem(scopedKey('rz_trash'),JSON.stringify(data.trash));
     }
-    const foldersChanged=_mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
-    if(changed){
+    if(cloudHasNewer&&Array.isArray(data.history)){
+      localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
+    }
+    if(cloudHasNewer&&Array.isArray(data.ai_memory)){
+      localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
+    }
+    const foldersChanged=_mergeCloudFolders(data.user_folders,data.tag_folders,cloudUpdatedAt);
+    // Обновляем UI если что-то изменилось — независимо от текущего экрана
+    if(changed||foldersChanged){
       loadAll();
-    }else if(foldersChanged&&cur==='notes'){
-      _drillRender(drillLevel);
-      _drillNav();
-    }else if(document.getElementById('drill-p0')?.offsetParent!==null){
-      _drillP0(); // обновить разделы
     }
   }catch(_){}
 }
