@@ -169,3 +169,13 @@
 - Настроить автоматизацию через агента для минимизации ручного ввода
 - Определить категории расходов для классификации
 - Начать регулярно вносить расходы
+
+
+---
+
+## Идея — 2026-06-01
+
+https://www.instagram.com/p/DZAITgEAE9c/?igsh=YmhlNTJnc3VwYmYx
+
+> **AI:** Идея: https://www.instagram.com/p/DZAITgEAE9c/?igsh=YmhlNTJnc3VwYmYx
+> **Теги:** идея
