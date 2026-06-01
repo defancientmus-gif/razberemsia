@@ -2086,49 +2086,45 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .home-bar{padding:6px 14px 28px;flex-shrink:0;background:transparent;border-top:none;box-shadow:none;position:relative;z-index:2;overflow:visible;}
 
 /* ── FLOATING NOTES ARCHITECTURE ──
-   Feed is full-screen absolute, everything else floats on top as glass layers.
-   Туман — только через mask-gradient (backdrop-filter на ::before/::after
-   не работает через overflow:hidden в iOS Safari, даёт жёсткую полосу). */
+   Feed z:1, fog overlays z:2, glass z:3.
+   Туман через bg-цвет overlay (не mask), иначе backdrop-filter стекла
+   уничтожает полупрозрачности маски → стена вместо тумана. */
 .home-wrap{position:relative;overflow:hidden;}
+
+/* ── ТУМАН СВЕРХУ: bg-цвет тает в прозрачность ── */
+.home-wrap::before{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:calc(env(safe-area-inset-top,0px) + 150px);
+  background:linear-gradient(to bottom,
+    oklch(0.91 0.011 212) 0%,
+    oklch(0.91 0.011 212) env(safe-area-inset-top,0px),
+    oklch(0.91 0.011 212 / 0.90) calc(env(safe-area-inset-top,0px) + 30px),
+    oklch(0.91 0.011 212 / 0.74) calc(env(safe-area-inset-top,0px) + 72px),
+    oklch(0.91 0.011 212 / 0.58) calc(env(safe-area-inset-top,0px) + 106px),
+    oklch(0.91 0.011 212 / 0.36) calc(env(safe-area-inset-top,0px) + 120px),
+    oklch(0.91 0.011 212 / 0.14) calc(env(safe-area-inset-top,0px) + 132px),
+    oklch(0.91 0.011 212 / 0.03) calc(env(safe-area-inset-top,0px) + 142px),
+    transparent calc(env(safe-area-inset-top,0px) + 148px));
+  pointer-events:none;z-index:2;
+}
+/* ── ТУМАН СНИЗУ ── */
+.home-wrap::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:110px;
+  background:linear-gradient(to top,
+    oklch(0.91 0.011 212 / 0.72) 0%,
+    oklch(0.91 0.011 212 / 0.50) 22%,
+    oklch(0.91 0.011 212 / 0.28) 45%,
+    oklch(0.91 0.011 212 / 0.10) 68%,
+    oklch(0.91 0.011 212 / 0.03) 85%,
+    transparent 100%);
+  pointer-events:none;z-index:2;
+}
 
 .home-wrap .home-feed-wrap{
   position:absolute;inset:0;z-index:1;
-  /* jarvis-top высота: env+72(pad)+6(margin)+38(btn)+4(margin)+14(pad)=env+134.
-     Нота стартует на env+138 — гарантированно ниже стекла.
-     Туман: 8 шагов на 30px = плавный, полосы не видно. */
+  /* Ноты всегда полностью видны — туман создаёт overlay, не mask */
   padding:calc(env(safe-area-inset-top,0px) + 138px) 14px 100px;
-  -webkit-mask-image:linear-gradient(to bottom,
-    transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 106px),
-    oklch(0 0 0/.04) calc(env(safe-area-inset-top,0px) + 111px),
-    oklch(0 0 0/.14) calc(env(safe-area-inset-top,0px) + 117px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 123px),
-    oklch(0 0 0/.64) calc(env(safe-area-inset-top,0px) + 129px),
-    oklch(0 0 0/.88) calc(env(safe-area-inset-top,0px) + 135px),
-    black calc(env(safe-area-inset-top,0px) + 138px),
-    black calc(100% - 78px),
-    oklch(0 0 0/.88) calc(100% - 70px),
-    oklch(0 0 0/.64) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 53px),
-    oklch(0 0 0/.14) calc(100% - 44px),
-    oklch(0 0 0/.04) calc(100% - 38px),
-    transparent calc(100% - 33px));
-  mask-image:linear-gradient(to bottom,
-    transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 106px),
-    oklch(0 0 0/.04) calc(env(safe-area-inset-top,0px) + 111px),
-    oklch(0 0 0/.14) calc(env(safe-area-inset-top,0px) + 117px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 123px),
-    oklch(0 0 0/.64) calc(env(safe-area-inset-top,0px) + 129px),
-    oklch(0 0 0/.88) calc(env(safe-area-inset-top,0px) + 135px),
-    black calc(env(safe-area-inset-top,0px) + 138px),
-    black calc(100% - 78px),
-    oklch(0 0 0/.88) calc(100% - 70px),
-    oklch(0 0 0/.64) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 53px),
-    oklch(0 0 0/.14) calc(100% - 44px),
-    oklch(0 0 0/.04) calc(100% - 38px),
-    transparent calc(100% - 33px));
 }
 /* Единое стекло: статус-бар = цвет фона, дальше — совсем прозрачно */
 .home-wrap .jarvis-top{
@@ -2840,38 +2836,6 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
 .jq-feedback .jq-label{color:var(--fg);font-weight:600;}
 .home-wrap .home-feed-wrap{
   padding:calc(env(safe-area-inset-top,0px) + 138px) 14px 100px;
-  -webkit-mask-image:linear-gradient(to bottom,
-    transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 106px),
-    oklch(0 0 0/.04) calc(env(safe-area-inset-top,0px) + 111px),
-    oklch(0 0 0/.14) calc(env(safe-area-inset-top,0px) + 117px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 123px),
-    oklch(0 0 0/.64) calc(env(safe-area-inset-top,0px) + 129px),
-    oklch(0 0 0/.88) calc(env(safe-area-inset-top,0px) + 135px),
-    black calc(env(safe-area-inset-top,0px) + 138px),
-    black calc(100% - 78px),
-    oklch(0 0 0/.88) calc(100% - 70px),
-    oklch(0 0 0/.64) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 53px),
-    oklch(0 0 0/.14) calc(100% - 44px),
-    oklch(0 0 0/.04) calc(100% - 38px),
-    transparent calc(100% - 33px));
-  mask-image:linear-gradient(to bottom,
-    transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 106px),
-    oklch(0 0 0/.04) calc(env(safe-area-inset-top,0px) + 111px),
-    oklch(0 0 0/.14) calc(env(safe-area-inset-top,0px) + 117px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 123px),
-    oklch(0 0 0/.64) calc(env(safe-area-inset-top,0px) + 129px),
-    oklch(0 0 0/.88) calc(env(safe-area-inset-top,0px) + 135px),
-    black calc(env(safe-area-inset-top,0px) + 138px),
-    black calc(100% - 78px),
-    oklch(0 0 0/.88) calc(100% - 70px),
-    oklch(0 0 0/.64) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 53px),
-    oklch(0 0 0/.14) calc(100% - 44px),
-    oklch(0 0 0/.04) calc(100% - 38px),
-    transparent calc(100% - 33px));
 }
 .hf-wrap{border-radius:19px;margin-bottom:9px;}
 .hf-card{
