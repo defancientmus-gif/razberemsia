@@ -2111,17 +2111,17 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
     transparent calc(env(safe-area-inset-top,0px) + 163px));
   pointer-events:none;z-index:2;
 }
-/* ── ТУМАН СНИЗУ — мягкий, длинный ── */
+/* ── ТУМАН СНИЗУ — выше кнопок, нежный хвост ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:130px;
+  height:150px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.52) 0%,
-    oklch(0.91 0.011 212 / 0.34) 20%,
-    oklch(0.91 0.011 212 / 0.16) 42%,
-    oklch(0.91 0.011 212 / 0.06) 62%,
-    oklch(0.91 0.011 212 / 0.018) 78%,
-    oklch(0.91 0.011 212 / 0.005) 90%,
+    oklch(0.91 0.011 212 / 0.48) 0%,
+    oklch(0.91 0.011 212 / 0.30) 22%,
+    oklch(0.91 0.011 212 / 0.14) 44%,
+    oklch(0.91 0.011 212 / 0.05) 64%,
+    oklch(0.91 0.011 212 / 0.015) 80%,
+    oklch(0.91 0.011 212 / 0.004) 92%,
     transparent 100%);
   pointer-events:none;z-index:2;
 }
@@ -2860,12 +2860,14 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
     0 6px 18px oklch(0.34 0.04 210 / .08);
 }
 .home-bar{
+  /* Без backdrop-filter на контейнере — убирает жёсткий прямоугольник.
+     Кнопки сохраняют свой blur через home-act-btn backdrop-filter. */
   background:linear-gradient(to bottom,
     oklch(0.97 0.006 225 / 0) 0%,
-    oklch(0.97 0.006 225 / 0.50) 35%,
-    oklch(0.97 0.006 225 / 0.72) 100%);
-  backdrop-filter:blur(18px) saturate(1.2);
-  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+    oklch(0.97 0.006 225 / 0.40) 40%,
+    oklch(0.97 0.006 225 / 0.62) 100%);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
   border-top:none;
   box-shadow:none;
   padding:8px 14px max(env(safe-area-inset-bottom,10px),10px);
