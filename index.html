@@ -2085,26 +2085,46 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* ── FLOATING NOTES ARCHITECTURE ──
    Feed is full-screen absolute, everything else floats on top as glass layers */
 .home-wrap{position:relative;overflow:hidden;}
+
+/* Blur-рассеивание на краях: сверху и снизу по 18px, внутри — чисто */
+.home-wrap::before,.home-wrap::after{
+  content:'';
+  position:absolute;left:0;right:0;
+  height:18px;
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+  pointer-events:none;
+  z-index:2;
+}
+/* Верхний край — чуть ниже конца стекла */
+.home-wrap::before{
+  top:calc(env(safe-area-inset-top,0px) + 104px);
+  -webkit-mask-image:linear-gradient(to bottom,oklch(0 0 0/.85) 0%,transparent 100%);
+  mask-image:linear-gradient(to bottom,oklch(0 0 0/.85) 0%,transparent 100%);
+}
+/* Нижний край — чуть выше кнопок */
+.home-wrap::after{
+  bottom:74px;
+  -webkit-mask-image:linear-gradient(to top,oklch(0 0 0/.85) 0%,transparent 100%);
+  mask-image:linear-gradient(to top,oklch(0 0 0/.85) 0%,transparent 100%);
+}
+
 .home-wrap .home-feed-wrap{
   position:absolute;inset:0;z-index:1;
   padding:calc(env(safe-area-inset-top,0px) + 116px) 14px 112px;
-  /* Рассеянные края — короткий мягкий переход, не широкая зона */
+  /* Короткий снэппи fade — 10px, без широкой зоны */
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 98px),
-    oklch(0 0 0 / .55) calc(env(safe-area-inset-top,0px) + 108px),
-    black calc(env(safe-area-inset-top,0px) + 116px),
-    black calc(100% - 88px),
-    oklch(0 0 0 / .55) calc(100% - 50px),
-    transparent 100%);
+    transparent calc(env(safe-area-inset-top,0px) + 104px),
+    black calc(env(safe-area-inset-top,0px) + 114px),
+    black calc(100% - 82px),
+    transparent calc(100% - 72px));
   mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 98px),
-    oklch(0 0 0 / .55) calc(env(safe-area-inset-top,0px) + 108px),
-    black calc(env(safe-area-inset-top,0px) + 116px),
-    black calc(100% - 88px),
-    oklch(0 0 0 / .55) calc(100% - 50px),
-    transparent 100%);
+    transparent calc(env(safe-area-inset-top,0px) + 104px),
+    black calc(env(safe-area-inset-top,0px) + 114px),
+    black calc(100% - 82px),
+    transparent calc(100% - 72px));
 }
 /* Единое стекло: статус-бар = цвет фона, ниже — тонкий полупрозрачный слой */
 .home-wrap .jarvis-top{
@@ -2818,20 +2838,16 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
   padding:calc(env(safe-area-inset-top,0px) + 116px) 14px 112px;
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 98px),
-    oklch(0 0 0 / .55) calc(env(safe-area-inset-top,0px) + 108px),
-    black calc(env(safe-area-inset-top,0px) + 116px),
-    black calc(100% - 88px),
-    oklch(0 0 0 / .55) calc(100% - 50px),
-    transparent 100%);
+    transparent calc(env(safe-area-inset-top,0px) + 104px),
+    black calc(env(safe-area-inset-top,0px) + 114px),
+    black calc(100% - 82px),
+    transparent calc(100% - 72px));
   mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 98px),
-    oklch(0 0 0 / .55) calc(env(safe-area-inset-top,0px) + 108px),
-    black calc(env(safe-area-inset-top,0px) + 116px),
-    black calc(100% - 88px),
-    oklch(0 0 0 / .55) calc(100% - 50px),
-    transparent 100%);
+    transparent calc(env(safe-area-inset-top,0px) + 104px),
+    black calc(env(safe-area-inset-top,0px) + 114px),
+    black calc(100% - 82px),
+    transparent calc(100% - 72px));
 }
 .hf-wrap{border-radius:19px;margin-bottom:9px;}
 .hf-card{
