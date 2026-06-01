@@ -12,8 +12,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Разберёмся">
-<meta name="theme-color" content="#f0ede6">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e2e8ed">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="pwa-logo-180.png" sizes="180x180" id="ati">
 <link rel="icon" type="image/png" href="pwa-logo-192.png">
@@ -62,7 +62,7 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
 .app{position:relative;z-index:10;height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── HEADER ── */
-header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+header{padding:12px 16px 8px;padding-top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
   position:absolute;top:0;left:0;right:0;z-index:20;
   background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;}
 .logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);white-space:nowrap;letter-spacing:-.3px;display:flex;align-items:center;gap:6px;min-width:0;max-width:188px;flex:0 1 auto;}
@@ -187,7 +187,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .screens{flex:1;overflow:hidden;position:relative;}
 .scr{position:absolute;inset:0;overflow-y:auto;padding:4px 14px 36px;opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .24s cubic-bezier(.4,0,.2,1),transform .24s cubic-bezier(.4,0,.2,1);}
 /* Экраны без своего glass-покрытия — добавляем отступ под шапку */
-.scr:not(#s-home){padding-top:62px;}
+.scr:not(#s-home){padding-top:calc(env(safe-area-inset-top,0px) + 62px);}
 .scr.active{opacity:1;pointer-events:all;transform:translateY(0);}
 .scr.sl{transform:translateX(-20px);opacity:0;}
 .scr.sr{transform:translateX(20px);opacity:0;}
@@ -2087,39 +2087,42 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .home-wrap{position:relative;overflow:hidden;}
 .home-wrap .home-feed-wrap{
   position:absolute;inset:0;z-index:1;
-  padding:122px 14px 118px;
+  padding:calc(env(safe-area-inset-top,0px) + 114px) 14px 120px;
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0,
-    oklch(0 0 0 / .10) 30px,
-    oklch(0 0 0 / .42) 76px,
-    black 122px,
-    black calc(100% - 114px),
+    oklch(0 0 0 / .06) calc(env(safe-area-inset-top,0px) + 22px),
+    oklch(0 0 0 / .28) calc(env(safe-area-inset-top,0px) + 66px),
+    black calc(env(safe-area-inset-top,0px) + 112px),
+    black calc(100% - 108px),
+    oklch(0 0 0 / .30) calc(100% - 48px),
     transparent 100%);
   mask-image:linear-gradient(to bottom,
     transparent 0,
-    oklch(0 0 0 / .10) 30px,
-    oklch(0 0 0 / .42) 76px,
-    black 122px,
-    black calc(100% - 114px),
+    oklch(0 0 0 / .06) calc(env(safe-area-inset-top,0px) + 22px),
+    oklch(0 0 0 / .28) calc(env(safe-area-inset-top,0px) + 66px),
+    black calc(env(safe-area-inset-top,0px) + 112px),
+    black calc(100% - 108px),
+    oklch(0 0 0 / .30) calc(100% - 48px),
     transparent 100%);
 }
-/* Единое стекло — шапка + quick nav как один лист */
+/* Единое стекло — шапка + quick nav + safe-area — один лист */
 .home-wrap .jarvis-top{
   position:absolute;top:0;left:0;right:0;z-index:3;
-  padding-top:56px;
-  padding-bottom:22px;
+  padding-top:calc(env(safe-area-inset-top,0px) + 54px);
+  padding-bottom:26px;
   background:linear-gradient(to bottom,
-    oklch(0.97 0.005 225 / 0.65) 0%,
-    oklch(0.97 0.005 225 / 0.50) 50%,
+    oklch(0.96 0.008 225 / 0.58) 0%,
+    oklch(0.97 0.005 225 / 0.40) 52%,
+    oklch(0.97 0.005 225 / 0.10) 82%,
     oklch(0.97 0.005 225 / 0) 100%);
-  backdrop-filter:blur(10px) saturate(1.08);
-  -webkit-backdrop-filter:blur(10px) saturate(1.08);
+  backdrop-filter:blur(8px) saturate(1.06);
+  -webkit-backdrop-filter:blur(8px) saturate(1.06);
 }
 .home-wrap .hf-toolbar{
-  position:absolute;top:60px;right:4px;z-index:4;padding:0;
+  position:absolute;top:calc(env(safe-area-inset-top,0px) + 60px);right:4px;z-index:4;padding:0;
 }
 .home-wrap .ptr-bar{
-  position:absolute;top:122px;left:0;right:0;z-index:2;
+  position:absolute;top:calc(env(safe-area-inset-top,0px) + 124px);left:0;right:0;z-index:2;
 }
 /* Bottom bar — glass shelf at bottom */
 .home-wrap .home-bar{
@@ -2765,7 +2768,7 @@ html.dark .bubble{
 .app *,.auth-logo *{letter-spacing:0;}
 .logo{font-size:25px;max-width:none;color:oklch(0.24 0.055 190);}
 .logo-name{overflow:visible;}
-header{padding:15px 16px 9px;}
+header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15px);}
 .hbtn{
   background:oklch(1 0 0 / .44);
   border-color:oklch(1 0 0 / .70);
@@ -2809,20 +2812,22 @@ header{padding:15px 16px 9px;}
 .jq-feedback svg{stroke:var(--accent-d);}
 .jq-feedback .jq-label{color:var(--fg);font-weight:600;}
 .home-wrap .home-feed-wrap{
-  padding:122px 14px 118px;
+  padding:calc(env(safe-area-inset-top,0px) + 114px) 14px 120px;
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0,
-    oklch(0 0 0 / .08) 28px,
-    oklch(0 0 0 / .38) 74px,
-    black 122px,
-    black calc(100% - 118px),
+    oklch(0 0 0 / .06) calc(env(safe-area-inset-top,0px) + 22px),
+    oklch(0 0 0 / .28) calc(env(safe-area-inset-top,0px) + 66px),
+    black calc(env(safe-area-inset-top,0px) + 112px),
+    black calc(100% - 108px),
+    oklch(0 0 0 / .30) calc(100% - 48px),
     transparent 100%);
   mask-image:linear-gradient(to bottom,
     transparent 0,
-    oklch(0 0 0 / .08) 28px,
-    oklch(0 0 0 / .38) 74px,
-    black 122px,
-    black calc(100% - 118px),
+    oklch(0 0 0 / .06) calc(env(safe-area-inset-top,0px) + 22px),
+    oklch(0 0 0 / .28) calc(env(safe-area-inset-top,0px) + 66px),
+    black calc(env(safe-area-inset-top,0px) + 112px),
+    black calc(100% - 108px),
+    oklch(0 0 0 / .30) calc(100% - 48px),
     transparent 100%);
 }
 .hf-wrap{border-radius:19px;margin-bottom:9px;}
