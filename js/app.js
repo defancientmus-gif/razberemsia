@@ -4300,6 +4300,9 @@ function openNoteSheetById(id){
 }
 function _openNoteWith(n){
   if(n.type==='list'){openListSheet(n.id);return;}
+  // Highlight карточки в ленте пока открыт sheet
+  document.querySelectorAll('.hf-wrap.hf-is-open').forEach(w=>w.classList.remove('hf-is-open'));
+  if(n.id){const hw=document.querySelector(`.hf-wrap[data-nid="${CSS.escape(String(n.id))}"]`);if(hw)hw.classList.add('hf-is-open');}
   ST='note';EI=n.id||null;
   const delBtn=document.getElementById('tool-delete-btn');
   if(delBtn)delBtn.style.display='inline-flex';
@@ -4560,6 +4563,7 @@ function onSheetPaste(e){
 }
 
 function closeSheet(){
+  document.querySelectorAll('.hf-wrap.hf-is-open').forEach(w=>w.classList.remove('hf-is-open'));
   closeAiOverlay();
   closeSheetMoreMenu();
   stopNoteSheetVoice();
@@ -5533,6 +5537,7 @@ function loadHomeFeed(){
     // Обёртка со свайпом
     const wrap=document.createElement('div');
     wrap.className='hf-wrap';
+    if(n.id)wrap.dataset.nid=n.id;
 
     // Карточка
     const card=document.createElement('button');

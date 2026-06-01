@@ -844,6 +844,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .hf-card{border-radius:0;margin-bottom:0;}
 .hf-del-panel{position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .15s;pointer-events:none;background:oklch(0.94 0.05 15/0.55);}
 .hf-desk-del{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3;-webkit-appearance:none;}
+/* Карточка подсвечивается пока открыт sheet */
+.hf-wrap.hf-is-open .hf-card{
+  background:oklch(0.91 0.018 215 / 0.72);
+  border-color:oklch(0.76 0.06 212 / 0.40);
+  transition:background .18s,border-color .18s;
+}
 @media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
 
 /* ── HOME ACTION ROW ── */
@@ -1577,15 +1583,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   max-height:calc(var(--vvh) - 12px);
   margin-bottom:0;
   display:flex;flex-direction:column;
-  background:
-    radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 210 / 0.20), transparent 55%),
-    radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.62) 0%, transparent 36%),
-    oklch(0.975 0.010 210 / 0.96);
-  backdrop-filter:blur(60px) saturate(2);
-  -webkit-backdrop-filter:blur(60px) saturate(2);
+  background:oklch(0.980 0.006 215 / 0.97);
+  backdrop-filter:blur(48px) saturate(1.55);
+  -webkit-backdrop-filter:blur(48px) saturate(1.55);
   border-radius:28px;
-  border:1px solid oklch(1 0 0 / 0.68);
-  box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.34),0 4px 24px -16px oklch(0.22 0.05 210 / 0.28), inset 0 1px 0 oklch(1 0 0 / 0.82);
+  border:1px solid oklch(0.91 0.02 215 / 0.52);
+  box-shadow:0 12px 48px -18px oklch(0 0 0 / 0.22),0 3px 18px -10px oklch(0.22 0.05 210 / 0.16), inset 0 1px 0 oklch(1 0 0 / 0.72);
   animation:sheetRise .32s cubic-bezier(.22,1,.36,1);
   overflow:hidden;
   will-change:transform;
@@ -1607,15 +1610,13 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
-/* Shine line at top */
-.sheet-shine{height:1.5px;flex-shrink:0;
-  background:linear-gradient(90deg,transparent 5%,oklch(1 0 0 / 0.92) 30%,oklch(1 0 0 / 1) 50%,oklch(1 0 0 / 0.92) 70%,transparent 95%);}
+/* Shine line at top — тонкая, без бликов */
+.sheet-shine{height:1px;flex-shrink:0;
+  background:linear-gradient(90deg,transparent 8%,oklch(1 0 0 / 0.55) 35%,oklch(1 0 0 / 0.70) 50%,oklch(1 0 0 / 0.55) 65%,transparent 92%);}
 .sheet-handle{display:none;}
 
-/* Ambient blob */
-.sheet-ambient{position:absolute;bottom:-25%;right:-10%;width:50%;height:50%;border-radius:50%;
-  background:radial-gradient(circle,oklch(0.55 0.10 210 / 0.08),transparent 70%);
-  filter:blur(35px);pointer-events:none;}
+/* Ambient blob — убран */
+.sheet-ambient{display:none;}
 
 /* Header — icon + title + undo/redo + X */
 .sheet-hdr-row{
@@ -2134,17 +2135,17 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
     transparent calc(env(safe-area-inset-top,0px) + 163px));
   pointer-events:none;z-index:2;
 }
-/* ── ТУМАН СНИЗУ — выше кнопок, нежный хвост ── */
+/* ── ТУМАН СНИЗУ — нижняя некликабельная нота уходит в туман ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:150px;
+  height:200px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.48) 0%,
-    oklch(0.91 0.011 212 / 0.30) 22%,
-    oklch(0.91 0.011 212 / 0.14) 44%,
-    oklch(0.91 0.011 212 / 0.05) 64%,
-    oklch(0.91 0.011 212 / 0.015) 80%,
-    oklch(0.91 0.011 212 / 0.004) 92%,
+    oklch(0.91 0.011 212 / 0.72) 0%,
+    oklch(0.91 0.011 212 / 0.55) 18%,
+    oklch(0.91 0.011 212 / 0.34) 38%,
+    oklch(0.91 0.011 212 / 0.16) 58%,
+    oklch(0.91 0.011 212 / 0.06) 74%,
+    oklch(0.91 0.011 212 / 0.018) 88%,
     transparent 100%);
   pointer-events:none;z-index:2;
 }
