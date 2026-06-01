@@ -2089,53 +2089,54 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
    Feed is full-screen absolute, everything else floats on top as glass layers */
 .home-wrap{position:relative;overflow:hidden;}
 
-/* Blur-облака: узкая полоска 12px, сильный blur — нота влетает за облако */
-.home-wrap::before,.home-wrap::after{
-  content:'';
-  position:absolute;left:0;right:0;
-  height:12px;
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  pointer-events:none;
-  z-index:2;
-}
-/* Верхний горизонт — ровно там где кончается стекло */
+/* Blur-облака:
+   ПРАВИЛО: blur_top + height < feed_padding_top (иначе нота под блюром)
+   Верх: env+108 + 16px = env+124 < env+130 (padding) ✓
+   Низ: в зоне fade маски — нота выше уже чёткая ✓ */
 .home-wrap::before{
-  top:calc(env(safe-area-inset-top,0px) + 118px);
-  -webkit-mask-image:linear-gradient(to bottom,black 0%,oklch(0 0 0/.4) 60%,transparent 100%);
-  mask-image:linear-gradient(to bottom,black 0%,oklch(0 0 0/.4) 60%,transparent 100%);
+  content:'';position:absolute;left:0;right:0;
+  top:calc(env(safe-area-inset-top,0px) + 108px);
+  height:16px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  -webkit-mask-image:linear-gradient(to bottom,oklch(0 0 0/.9) 0%,oklch(0 0 0/.5) 50%,transparent 100%);
+  mask-image:linear-gradient(to bottom,oklch(0 0 0/.9) 0%,oklch(0 0 0/.5) 50%,transparent 100%);
+  pointer-events:none;z-index:2;
 }
-/* Нижний горизонт — чуть выше кнопок, смещён ниже */
 .home-wrap::after{
-  bottom:60px;
-  -webkit-mask-image:linear-gradient(to top,black 0%,oklch(0 0 0/.4) 60%,transparent 100%);
-  mask-image:linear-gradient(to top,black 0%,oklch(0 0 0/.4) 60%,transparent 100%);
+  content:'';position:absolute;left:0;right:0;
+  bottom:52px;
+  height:16px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  -webkit-mask-image:linear-gradient(to top,oklch(0 0 0/.9) 0%,oklch(0 0 0/.5) 50%,transparent 100%);
+  mask-image:linear-gradient(to top,oklch(0 0 0/.9) 0%,oklch(0 0 0/.5) 50%,transparent 100%);
+  pointer-events:none;z-index:2;
 }
 
 .home-wrap .home-feed-wrap{
   position:absolute;inset:0;z-index:1;
-  padding:calc(env(safe-area-inset-top,0px) + 124px) 14px 106px;
-  /* S-кривая — плавный вход через 3 шага, нота чёткая сразу после горизонта */
+  /* padding-top = env+130: нота стартует ПОСЛЕ конца blur (env+124) — 6px зазор */
+  padding:calc(env(safe-area-inset-top,0px) + 130px) 14px 106px;
+  /* Маска: чётко чёрная на env+130 — нота появляется сразу чёткой */
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 112px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 118px),
-    oklch(0 0 0/.85) calc(env(safe-area-inset-top,0px) + 122px),
-    black calc(env(safe-area-inset-top,0px) + 126px),
+    transparent calc(env(safe-area-inset-top,0px) + 108px),
+    oklch(0 0 0/.30) calc(env(safe-area-inset-top,0px) + 118px),
+    oklch(0 0 0/.80) calc(env(safe-area-inset-top,0px) + 126px),
+    black calc(env(safe-area-inset-top,0px) + 130px),
     black calc(100% - 68px),
-    oklch(0 0 0/.85) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 57px),
-    transparent calc(100% - 52px));
+    oklch(0 0 0/.80) calc(100% - 60px),
+    oklch(0 0 0/.30) calc(100% - 54px),
+    transparent calc(100% - 48px));
   mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 112px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 118px),
-    oklch(0 0 0/.85) calc(env(safe-area-inset-top,0px) + 122px),
-    black calc(env(safe-area-inset-top,0px) + 126px),
+    transparent calc(env(safe-area-inset-top,0px) + 108px),
+    oklch(0 0 0/.30) calc(env(safe-area-inset-top,0px) + 118px),
+    oklch(0 0 0/.80) calc(env(safe-area-inset-top,0px) + 126px),
+    black calc(env(safe-area-inset-top,0px) + 130px),
     black calc(100% - 68px),
-    oklch(0 0 0/.85) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 57px),
-    transparent calc(100% - 52px));
+    oklch(0 0 0/.80) calc(100% - 60px),
+    oklch(0 0 0/.30) calc(100% - 54px),
+    transparent calc(100% - 48px));
 }
 /* Единое стекло: статус-бар = цвет фона, дальше — совсем прозрачно */
 .home-wrap .jarvis-top{
@@ -2846,27 +2847,27 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
 .jq-feedback svg{stroke:var(--accent-d);}
 .jq-feedback .jq-label{color:var(--fg);font-weight:600;}
 .home-wrap .home-feed-wrap{
-  padding:calc(env(safe-area-inset-top,0px) + 124px) 14px 106px;
+  padding:calc(env(safe-area-inset-top,0px) + 130px) 14px 106px;
   -webkit-mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 112px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 118px),
-    oklch(0 0 0/.85) calc(env(safe-area-inset-top,0px) + 122px),
-    black calc(env(safe-area-inset-top,0px) + 126px),
+    transparent calc(env(safe-area-inset-top,0px) + 108px),
+    oklch(0 0 0/.30) calc(env(safe-area-inset-top,0px) + 118px),
+    oklch(0 0 0/.80) calc(env(safe-area-inset-top,0px) + 126px),
+    black calc(env(safe-area-inset-top,0px) + 130px),
     black calc(100% - 68px),
-    oklch(0 0 0/.85) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 57px),
-    transparent calc(100% - 52px));
+    oklch(0 0 0/.80) calc(100% - 60px),
+    oklch(0 0 0/.30) calc(100% - 54px),
+    transparent calc(100% - 48px));
   mask-image:linear-gradient(to bottom,
     transparent 0,
-    transparent calc(env(safe-area-inset-top,0px) + 112px),
-    oklch(0 0 0/.35) calc(env(safe-area-inset-top,0px) + 118px),
-    oklch(0 0 0/.85) calc(env(safe-area-inset-top,0px) + 122px),
-    black calc(env(safe-area-inset-top,0px) + 126px),
+    transparent calc(env(safe-area-inset-top,0px) + 108px),
+    oklch(0 0 0/.30) calc(env(safe-area-inset-top,0px) + 118px),
+    oklch(0 0 0/.80) calc(env(safe-area-inset-top,0px) + 126px),
+    black calc(env(safe-area-inset-top,0px) + 130px),
     black calc(100% - 68px),
-    oklch(0 0 0/.85) calc(100% - 62px),
-    oklch(0 0 0/.35) calc(100% - 57px),
-    transparent calc(100% - 52px));
+    oklch(0 0 0/.80) calc(100% - 60px),
+    oklch(0 0 0/.30) calc(100% - 54px),
+    transparent calc(100% - 48px));
 }
 .hf-wrap{border-radius:19px;margin-bottom:9px;}
 .hf-card{
