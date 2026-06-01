@@ -837,19 +837,11 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .hf-time{font-size:10px;color:var(--fg-l);white-space:nowrap;}
 .hf-arr{font-size:18px;color:var(--fg-l);opacity:.35;line-height:1;}
 .hf-empty{text-align:center;padding:40px 20px;color:var(--fg-l);font-size:14px;line-height:1.6;}
-.hf-wrap{position:relative;overflow:hidden;border-radius:18px;margin-bottom:10px;}
-.hf-card{border-radius:0;margin-bottom:0;}
-/* Двойной блик хрусталя — луч сверху-слева + отлив справа */
-.hf-wrap::before{
-  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
-  background:
-    /* Верхний луч */
-    linear-gradient(to bottom,oklch(1 0 0/.22) 0%,oklch(1 0 0/.06) 28%,transparent 48%),
-    /* Правый отлив */
-    linear-gradient(to left,oklch(0.84 0.022 220/.12) 0%,transparent 40%);
-  border-radius:inherit;
-  pointer-events:none;z-index:1;
+/* Папка: квадратная с мягкими углами, не колет */
+.hf-wrap{position:relative;overflow:hidden;border-radius:12px;margin-bottom:9px;
+  filter:drop-shadow(0 2px 5px oklch(0.38 0.06 215/.07)) drop-shadow(0 7px 18px oklch(0.38 0.06 215/.09));
 }
+.hf-card{border-radius:0;margin-bottom:0;}
 .hf-del-panel{position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .15s;pointer-events:none;background:oklch(0.94 0.05 15/0.55);}
 .hf-desk-del{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3;-webkit-appearance:none;}
 @media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
@@ -2879,22 +2871,8 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
     drop-shadow(0 2px 4px oklch(0.38 0.06 215 / 0.08))
     drop-shadow(0 8px 20px oklch(0.38 0.06 215 / 0.10));
 }
-.hf-card{
-  padding:16px 15px;border-radius:0;
-  background:
-    linear-gradient(155deg,
-      oklch(1 0 0 / 0.64) 0%,
-      oklch(0.97 0.010 215 / 0.40) 55%,
-      oklch(0.94 0.015 220 / 0.28) 100%);
-  backdrop-filter:blur(14px) saturate(1.4) brightness(1.04);
-  -webkit-backdrop-filter:blur(14px) saturate(1.4) brightness(1.04);
-  border:1px solid oklch(1 0 0 / 0.58);
-  box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / 0.92),
-    inset 0 -1px 0 oklch(0.80 0.04 210 / 0.12),
-    0 2px 8px oklch(0.35 0.08 210 / 0.05),
-    0 10px 28px oklch(0.35 0.08 210 / 0.08);
-}
+.hf-card{padding:16px 15px;border-radius:0;}
+.hf-wrap{border-radius:13px;}
 .hf-title{font-size:16px;}
 .hf-preview{font-size:13px;line-height:1.5;}
 .hf-time{font-size:12px;}
@@ -3196,19 +3174,10 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
 
 /* ── LIQUID GLASS UPSCALE ── */
 :root{
-  /* Заметки — стеклянная капсула с преломлением */
-  --glass-hi:   oklch(1 0 0 / .72);
-  --glass-mid:  oklch(0.968 0.012 218 / .42);
-  --glass-low:  oklch(0.920 0.022 218 / .24);
-  --glass-line: oklch(1 0 0 / .68);
-  --glass-shadow: oklch(0.28 0.040 218 / .12);
-  /* Кнопки — легче */
-  --btn-hi:     oklch(1 0 0 / .58);
-  --btn-mid:    oklch(0.975 0.008 214 / .38);
-  --ceramic-low:oklch(0.925 0.020 214 / .34);
-  --ceramic-shadow:oklch(0.30 0.035 215 / .105);
-  --idea-soft:  oklch(0.80 0.055 292 / .22);
-  --idea-line:  oklch(0.72 0.075 292 / .34);
+  --ceramic-low:   oklch(0.925 0.020 214 / .28);
+  --ceramic-shadow:oklch(0.30 0.035 215 / .10);
+  --idea-soft:     oklch(0.80 0.055 292 / .22);
+  --idea-line:     oklch(0.72 0.075 292 / .34);
 }
 .bg{
   background:
@@ -3218,35 +3187,35 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
     linear-gradient(165deg,oklch(0.93 0.010 205) 0%,oklch(0.895 0.014 214) 56%,oklch(0.865 0.017 220) 100%);
 }
 
-/* ── Заметки — жидкое стекло, капсула с двойным преломлением ── */
+/* ── ЗАМЕТКИ — стеклянная папка с сильной прозрачностью ──
+   Фон минимальный — стекло живёт за счёт backdrop-filter.
+   Акцент: верхняя грань (блик неба) + левая грань (ребро папки). */
 .hf-card,.drill-sec-row,.drill-note-row,.drill-grid-card,.agent-note{
   background:
-    radial-gradient(ellipse 90% 55% at 12% 0%,  oklch(1 0 0 / .52),transparent 58%),
-    radial-gradient(ellipse 60% 40% at 88% 100%,oklch(0.82 0.028 220 / .20),transparent 62%),
-    linear-gradient(148deg,var(--glass-hi),var(--glass-mid),var(--glass-low)) !important;
-  border-color:var(--glass-line) !important;
+    radial-gradient(ellipse 85% 50% at 10% 0%, oklch(1 0 0 / .28), transparent 55%),
+    oklch(1 0 0 / .12) !important;
+  border:1px solid oklch(1 0 0 / .55) !important;
+  border-left:2px solid oklch(1 0 0 / .70) !important;
   box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / .94),
-    inset 0 -1px 0   oklch(0.76 0.04 215 / .14),
-    inset -1px 0 0    oklch(1 0 0 / .22),
-    0 4px 16px -4px  oklch(0.30 0.040 218 / .10),
-    0 12px 32px -8px oklch(0.30 0.040 218 / .12) !important;
-  backdrop-filter:blur(18px) saturate(1.5) brightness(1.05);
-  -webkit-backdrop-filter:blur(18px) saturate(1.5) brightness(1.05);
+    inset 0 1.5px 0  oklch(1 0 0 / .90),
+    inset 0 -1px 0   oklch(0.74 0.04 215 / .10),
+    0 3px 10px -3px  oklch(0.32 0.040 218 / .08),
+    0 10px 26px -6px oklch(0.32 0.040 218 / .10) !important;
+  backdrop-filter:blur(22px) saturate(1.8) brightness(1.06);
+  -webkit-backdrop-filter:blur(22px) saturate(1.8) brightness(1.06);
 }
 
-/* ── Кнопки (jq-btn) — то же стекло но легче ── */
+/* ── КНОПКИ СВЕРХУ — то же стекло, вполовину легче ── */
 .jq-btn,.folder-card,.bell-bar-btn,.home-act-btn,.emg-opt,.sr-item,.stats-rows,.cal-trigger{
   background:
-    radial-gradient(ellipse 88% 52% at 14% 0%,oklch(1 0 0 / .38),transparent 60%),
-    linear-gradient(154deg,var(--btn-hi),var(--btn-mid)) !important;
-  border-color:oklch(1 0 0 / .58) !important;
+    radial-gradient(ellipse 80% 48% at 14% 0%, oklch(1 0 0 / .22), transparent 58%),
+    oklch(1 0 0 / .18) !important;
+  border-color:oklch(1 0 0 / .50) !important;
   box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / .86),
-    inset 0 -12px 28px oklch(0.925 0.018 214 / .22),
-    0 4px 14px -6px var(--ceramic-shadow) !important;
-  backdrop-filter:blur(18px) saturate(1.25);
-  -webkit-backdrop-filter:blur(18px) saturate(1.25);
+    inset 0 1.5px 0 oklch(1 0 0 / .82),
+    0 3px 10px -4px var(--ceramic-shadow) !important;
+  backdrop-filter:blur(16px) saturate(1.4);
+  -webkit-backdrop-filter:blur(16px) saturate(1.4);
 }
 .trash-item{backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);}
 .sect-card{
