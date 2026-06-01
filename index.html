@@ -2091,32 +2091,37 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
    уничтожает полупрозрачности маски → стена вместо тумана. */
 .home-wrap{position:relative;overflow:hidden;}
 
-/* ── ТУМАН СВЕРХУ: bg-цвет тает в прозрачность ── */
+/* ── ТУМАН СВЕРХУ ──
+   На env+138 (верх первой ноты) overlay = 0.025 — почти ничего.
+   Затем ещё 24px до полного нуля — нота обволакивается, не разрубается. */
 .home-wrap::before{
   content:'';position:absolute;top:0;left:0;right:0;
-  height:calc(env(safe-area-inset-top,0px) + 150px);
+  height:calc(env(safe-area-inset-top,0px) + 165px);
   background:linear-gradient(to bottom,
     oklch(0.91 0.011 212) 0%,
     oklch(0.91 0.011 212) env(safe-area-inset-top,0px),
-    oklch(0.91 0.011 212 / 0.90) calc(env(safe-area-inset-top,0px) + 30px),
-    oklch(0.91 0.011 212 / 0.74) calc(env(safe-area-inset-top,0px) + 72px),
-    oklch(0.91 0.011 212 / 0.58) calc(env(safe-area-inset-top,0px) + 106px),
-    oklch(0.91 0.011 212 / 0.36) calc(env(safe-area-inset-top,0px) + 120px),
-    oklch(0.91 0.011 212 / 0.14) calc(env(safe-area-inset-top,0px) + 132px),
-    oklch(0.91 0.011 212 / 0.03) calc(env(safe-area-inset-top,0px) + 142px),
-    transparent calc(env(safe-area-inset-top,0px) + 148px));
+    oklch(0.91 0.011 212 / 0.78) calc(env(safe-area-inset-top,0px) + 30px),
+    oklch(0.91 0.011 212 / 0.55) calc(env(safe-area-inset-top,0px) + 72px),
+    oklch(0.91 0.011 212 / 0.34) calc(env(safe-area-inset-top,0px) + 106px),
+    oklch(0.91 0.011 212 / 0.16) calc(env(safe-area-inset-top,0px) + 120px),
+    oklch(0.91 0.011 212 / 0.06) calc(env(safe-area-inset-top,0px) + 132px),
+    oklch(0.91 0.011 212 / 0.025) calc(env(safe-area-inset-top,0px) + 138px),
+    oklch(0.91 0.011 212 / 0.010) calc(env(safe-area-inset-top,0px) + 148px),
+    oklch(0.91 0.011 212 / 0.003) calc(env(safe-area-inset-top,0px) + 158px),
+    transparent calc(env(safe-area-inset-top,0px) + 163px));
   pointer-events:none;z-index:2;
 }
-/* ── ТУМАН СНИЗУ ── */
+/* ── ТУМАН СНИЗУ — мягкий, длинный ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:110px;
+  height:130px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.72) 0%,
-    oklch(0.91 0.011 212 / 0.50) 22%,
-    oklch(0.91 0.011 212 / 0.28) 45%,
-    oklch(0.91 0.011 212 / 0.10) 68%,
-    oklch(0.91 0.011 212 / 0.03) 85%,
+    oklch(0.91 0.011 212 / 0.52) 0%,
+    oklch(0.91 0.011 212 / 0.34) 20%,
+    oklch(0.91 0.011 212 / 0.16) 42%,
+    oklch(0.91 0.011 212 / 0.06) 62%,
+    oklch(0.91 0.011 212 / 0.018) 78%,
+    oklch(0.91 0.011 212 / 0.005) 90%,
     transparent 100%);
   pointer-events:none;z-index:2;
 }
