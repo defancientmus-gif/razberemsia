@@ -184,7 +184,7 @@
   <div class="hdr-title">Карта здоровья системы</div>
   <div class="hdr-meta">
     <span class="live-badge"><span class="live-dot"></span>Live</span>
-    <span id="ver-badge">rz-v282</span>
+    <span id="ver-badge">rz-v336</span>
     <span id="date-badge"></span>
   </div>
 </div>
@@ -196,13 +196,9 @@
     <button class="refresh-btn" id="refresh-btn" onclick="checkLive()">↻ Обновить</button>
   </div>
   <div class="services-grid" id="services-grid">
-    <div class="svc-card checking" id="svc-yandex">
-      <div class="svc-dot"></div>
-      <div class="svc-info"><div class="svc-name">Yandex SpeechKit</div><div class="svc-detail">проверяем…</div></div>
-    </div>
     <div class="svc-card checking" id="svc-groq">
       <div class="svc-dot"></div>
-      <div class="svc-info"><div class="svc-name">Groq (резервный STT)</div><div class="svc-detail">проверяем…</div></div>
+      <div class="svc-info"><div class="svc-name">Groq Whisper STT</div><div class="svc-detail">проверяем…</div></div>
     </div>
     <div class="svc-card checking" id="svc-supabase">
       <div class="svc-dot"></div>
@@ -240,8 +236,8 @@
     <div class="block-head"><span class="block-icon">🎙</span><span class="block-title">Голосовой ввод</span><span class="badge badge-y">нестабильно</span></div>
     <div class="items">
       <div class="item"><div class="dot g"></div><div><div class="item-name">Запись аудио (AudioContext WAV)</div><div class="item-note">iOS, Android, Mac, Windows</div></div></div>
-      <div class="item"><div class="dot y"></div><div><div class="item-name">Yandex SpeechKit (основной)</div><div class="item-note">Новый — статус выше ↑</div></div></div>
-      <div class="item"><div class="dot g"></div><div><div class="item-name">Groq Whisper (резервный)</div><div class="item-note">Статус выше ↑</div></div></div>
+      <div class="item"><div class="dot g"></div><div><div class="item-name">Groq Whisper (основной STT)</div><div class="item-note">Тестируем один провайдер</div></div></div>
+      <div class="item"><div class="dot y"></div><div><div class="item-name">Постобработка текста</div><div class="item-note">Пока выключена, включим после тестового дня при необходимости</div></div></div>
       <div class="item"><div class="dot y"></div><div><div class="item-name">iOS Safari аудио</div><div class="item-note">AudioContext требует жеста пользователя</div></div></div>
     </div>
   </div>
@@ -467,8 +463,7 @@
     const btn = document.getElementById('refresh-btn');
     if (btn) { btn.disabled = true; btn.textContent = '↻ …'; }
 
-    setChecking('svc-yandex',   'Yandex SpeechKit');
-    setChecking('svc-groq',     'Groq (резервный STT)');
+    setChecking('svc-groq',     'Groq Whisper STT');
     setChecking('svc-supabase', 'Supabase / Edge Function');
     setChecking('svc-github',   'GitHub Pages (хостинг)');
     setChecking('svc-ideas',    'Идеи → GitHub');
@@ -488,15 +483,13 @@
 
     if (data && data.services) {
       const s = data.services;
-      setCard('svc-yandex',   s.yandex_stt?.ok,   'Yandex SpeechKit',        s.yandex_stt?.detail ?? '—', s.yandex_stt?.latency_ms);
-      setCard('svc-groq',     s.groq?.ok,          'Groq (резервный STT)',     s.groq?.detail ?? '—',       s.groq?.latency_ms);
+      setCard('svc-groq',     s.groq?.ok,          'Groq Whisper STT',         s.groq?.detail ?? '—',       s.groq?.latency_ms);
       setCard('svc-supabase', true,                'Supabase / Edge Function', `ответил за ${edgeLatency}мс`, edgeLatency);
       setCard('svc-github',   true,                'GitHub Pages (хостинг)',   'страница загружена', null);
       setCard('svc-ideas',    ideas.ok,            'Идеи → GitHub',            ideas.detail, ideas.latency);
     } else {
       // Edge Function не ответила
-      setCard('svc-yandex',   false, 'Yandex SpeechKit',        'нет данных', null);
-      setCard('svc-groq',     false, 'Groq (резервный STT)',     'нет данных', null);
+      setCard('svc-groq',     false, 'Groq Whisper STT',         'нет данных', null);
       setCard('svc-supabase', false, 'Supabase / Edge Function', `нет ответа (${edgeLatency}мс)`, null);
       setCard('svc-github',   true,  'GitHub Pages (хостинг)',   'страница загружена', null);
       setCard('svc-ideas',    ideas.ok, 'Идеи → GitHub', ideas.detail, ideas.latency);
