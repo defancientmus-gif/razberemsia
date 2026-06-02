@@ -3790,10 +3790,11 @@ function pinToggleFromSheet(){
   if(btn)btn.classList.toggle('pinned',n.pinned);
   showToast(n.pinned?'Заметка закреплена':'Откреплено');
 }function _drillCardBg(i,total){
+  // Полупрозрачное стекло с лёгким циановым тинтом, глубина по индексу.
   const t=total>1?i/(total-1):0;
-  const l=(0.93+t*0.06).toFixed(3);
-  const c=(0.065-t*0.06).toFixed(4);
-  const a=(0.90-t*0.35).toFixed(2);
+  const l=(0.96+t*0.02).toFixed(3);
+  const c=(0.050-t*0.040).toFixed(4);
+  const a=(0.56-t*0.20).toFixed(2);
   return `oklch(${l} ${c} 210 / ${a})`;
 }
 
@@ -5563,6 +5564,7 @@ function loadHomeFeed(){
     const sectionStyle=_sectionNoteStyle(n);
     card.className='hf-card'+(sectionStyle?' section-glass-note':'')+_noteToneClass(n);
     if(sectionStyle)card.style.cssText=sectionStyle;
+    if(_feedView==='grid')card.style.background=_drillCardBg(i,sorted.length);
     const isPinned=!!n.pinned;
     const pinIcon=isPinned?`<span class="hf-pin-mark"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0015 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg></span>`:'';
     if(isPinned)card.classList.add('pinned');
