@@ -765,38 +765,47 @@ ${appCtxBlock}${historyBlock}${foldersBlock}${memBlock}${notesLines}${altsBlock}
       return json({ error: 'Invalid base64 audio data' }, 400);
     }
 
-    // ── Groq Whisper ──
+    // ── Groq Whisper (с фолбэком модели) ──
     if (!GROQ_KEY) return json({ error: 'No STT provider configured' }, 500);
-    try {
-      const tStt = Date.now();
-      const form = new FormData();
-      form.append('file', new File([wavBytes], 'audio.wav', { type: 'audio/wav' }));
-      form.append('model', 'whisper-large-v3-turbo');
-      form.append('language', 'ru');
-      form.append('response_format', 'json');
+    const tStt = Date.now();
+    const models = ['whisper-large-v3-turbo', 'whisper-large-v3'];
+    let lastStatus = 0;
+    let lastErr = '';
+    for (const model of models) {
+      try {
+        const form = new FormData();
+        form.append('file', new File([wavBytes], 'audio.wav', { type: 'audio/wav' }));
+        form.append('model', model);
+        form.append('language', 'ru');
+        form.append('response_format', 'json');
 
-      const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
-        body: form,
-      });
+        const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
+          body: form,
+        });
 
-      if (!groqRes.ok) {
-        const errText = await groqRes.text();
-        console.error('[rz] Groq transcription error:', groqRes.status, errText);
-        return json({ error: 'Transcription failed', groq_status: groqRes.status }, 500);
+        if (!groqRes.ok) {
+          lastStatus = groqRes.status;
+          lastErr = (await groqRes.text()).slice(0, 300);
+          console.error('[rz] Groq error', model, groqRes.status, lastErr);
+          // 400/404 — проблема модели/запроса: пробуем следующую модель; иначе выходим
+          if (groqRes.status === 400 || groqRes.status === 404) continue;
+          break;
+        }
+        const result = await groqRes.json();
+        return json({
+          text: (result.text ?? '').trim(),
+          provider: 'groq',
+          model,
+          duration_ms: Date.now() - tStt,
+        });
+      } catch (e) {
+        lastErr = String(e).slice(0, 300);
+        console.error('[rz] Groq exception', model, lastErr);
       }
-      const result = await groqRes.json();
-      return json({
-        text: (result.text ?? '').trim(),
-        provider: 'groq',
-        model: 'whisper-large-v3-turbo',
-        duration_ms: Date.now() - tStt,
-      });
-    } catch (e) {
-      console.error('[rz] Groq exception:', e);
-      return json({ error: 'Transcription failed' }, 500);
     }
+    return json({ error: 'Transcription failed', groq_status: lastStatus, groq_detail: lastErr }, 500);
   }
 
   return json({ error: 'Unknown action' }, 400);
