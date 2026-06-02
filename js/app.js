@@ -3799,6 +3799,13 @@ function pinToggleFromSheet(){
 
 // ── КОМПАКТНЫЙ ВИД ЛЕНТЫ ──
 let _homeFeedCompact=!!localStorage.getItem('rz_compact_feed');
+let _homeGrid=!!localStorage.getItem('rz_home_grid');
+function toggleHomeGrid(){
+  _homeGrid=!_homeGrid;
+  if(_homeGrid)localStorage.setItem('rz_home_grid','1');
+  else localStorage.removeItem('rz_home_grid');
+  _applyCompactFeedState();
+}
 function toggleCompactFeed(){
   _homeFeedCompact=!_homeFeedCompact;
   if(_homeFeedCompact)localStorage.setItem('rz_compact_feed','1');
@@ -3811,8 +3818,13 @@ function toggleCompactFeed(){
 function _applyCompactFeedState(){
   const wrap=document.getElementById('home-feed');
   const btn=document.getElementById('compact-feed-btn');
-  if(wrap){if(_homeFeedCompact)wrap.classList.add('compact');else wrap.classList.remove('compact');}
+  if(wrap){
+    wrap.classList.toggle('compact',_homeFeedCompact);
+    wrap.classList.toggle('hf-grid',_homeGrid);
+  }
   if(btn)btn.classList.toggle('active',_homeFeedCompact);
+  const gBtn=document.getElementById('grid-feed-btn');
+  if(gBtn)gBtn.classList.toggle('active',_homeGrid);
 }
 function _agentInboxCard(note,index){
   const preview=_notePreview(note);

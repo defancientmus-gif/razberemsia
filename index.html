@@ -860,8 +860,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   transition:transform .1s,box-shadow .1s;
 }
 .home-act-btn:active{transform:scale(.93);box-shadow:0 1px 2px oklch(0 0 0/.04),inset 0 1px 0 oklch(1 0 0/.60);}
-.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.42 0.03 240);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-.home-act-btn span{font-size:10px;font-weight:500;color:oklch(0.46 0.03 240);letter-spacing:.01em;}
+.home-act-btn svg{width:20px;height:20px;stroke:oklch(0.40 0.09 220);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 3px oklch(0.52 0.12 210/0.18));}
+.home-act-btn span{font-size:10px;font-weight:650;color:oklch(0.40 0.07 222);letter-spacing:.03em;text-transform:uppercase;}
 .home-act-live-dot{width:5px;height:5px;border-radius:50%;background:oklch(0.62 0.22 25);display:inline-block;animation:blink-dot 2s ease-in-out infinite;margin-left:2px;vertical-align:middle;}
 
 /* ── ПОРТАЛ РАЗБЕРЁМСЯ ── liquid glass agent ── */
@@ -2145,31 +2145,31 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* ── ТУМАН СНИЗУ — блюр растворяется вверх, мягкий уход заметки ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:168px;
+  height:200px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.50) 0%,
-    oklch(0.91 0.011 212 / 0.30) 26%,
-    oklch(0.91 0.011 212 / 0.14) 50%,
-    oklch(0.91 0.011 212 / 0.05) 70%,
-    oklch(0.91 0.011 212 / 0.012) 86%,
+    oklch(0.91 0.011 212 / 0.52) 0%,
+    oklch(0.91 0.011 212 / 0.34) 28%,
+    oklch(0.91 0.011 212 / 0.16) 52%,
+    oklch(0.91 0.011 212 / 0.06) 72%,
+    oklch(0.91 0.011 212 / 0.014) 88%,
     transparent 100%);
   backdrop-filter:blur(10px) saturate(1.04);
   -webkit-backdrop-filter:blur(10px) saturate(1.04);
   -webkit-mask-image:linear-gradient(to top,
     black 0,
-    black 34%,
-    transparent 96%);
+    black 44%,
+    transparent 98%);
   mask-image:linear-gradient(to top,
     black 0,
-    black 34%,
-    transparent 96%);
+    black 44%,
+    transparent 98%);
   pointer-events:none;z-index:2;
 }
 
 .home-wrap .home-feed-wrap{
   position:absolute;inset:0;z-index:1;
-  /* Ноты всегда полностью видны — туман создаёт overlay, не mask */
-  padding:calc(env(safe-area-inset-top,0px) + 138px) 14px 100px;
+  /* Нижний отступ больше — последняя заметка поднимается над парящими кнопками */
+  padding:calc(env(safe-area-inset-top,0px) + 138px) 14px 162px;
 }
 /* Единое стекло: статус-бар = цвет фона, дальше — совсем прозрачно */
 .home-wrap .jarvis-top{
@@ -2190,10 +2190,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .home-wrap .ptr-bar{
   position:absolute;top:calc(env(safe-area-inset-top,0px) + 138px);left:0;right:0;z-index:2;
 }
-/* Bottom bar — glass shelf at bottom */
+/* Bottom bar — glass shelf at bottom. Контейнер не ловит тапы, только кнопки. */
 .home-wrap .home-bar{
   position:absolute;bottom:0;left:0;right:0;z-index:3;flex-shrink:unset;
+  pointer-events:none;
 }
+.home-wrap .home-bar button,.home-wrap .home-bar .home-act-row{pointer-events:auto;}
 
 /* ── ANIMATIONS ── */
 @keyframes fIn{from{opacity:0}to{opacity:1}}
@@ -2339,7 +2341,7 @@ html.dark .bubble{
 }
 /* ── FEED TOOLBAR ── */
 .hf-toolbar {
-  display:flex;align-items:center;justify-content:flex-end;
+  display:flex;align-items:center;justify-content:flex-end;gap:2px;
   padding:0 14px 4px;flex-shrink:0;
 }
 .hf-toolbar-btn {
@@ -2355,6 +2357,21 @@ html.dark .bubble{
 .home-feed-wrap.compact .hf-preview { display:none; }
 .home-feed-wrap.compact .hf-body > div:last-child { display:none; }
 .home-feed-wrap.compact .hf-title { font-size:14px;margin-bottom:0; }
+
+/* ── GRID FEED MODE — заметки плиткой 2 в ряд ── */
+.home-feed-wrap.hf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;}
+.home-feed-wrap.hf-grid .hf-wrap{margin-bottom:0;}
+.home-feed-wrap.hf-grid .hf-card{
+  flex-direction:column;align-items:stretch;gap:7px;position:relative;
+  min-height:118px;padding:13px 13px 11px;border-radius:16px;
+}
+.home-feed-wrap.hf-grid .hf-sig{position:absolute;top:13px;right:13px;width:auto;padding:0;}
+.home-feed-wrap.hf-grid .hf-body{order:1;}
+.home-feed-wrap.hf-grid .hf-title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:14px;}
+.home-feed-wrap.hf-grid .hf-preview{-webkit-line-clamp:3;}
+.home-feed-wrap.hf-grid .hf-right{order:2;flex-direction:row;align-items:center;justify-content:space-between;margin-top:auto;}
+.home-feed-wrap.hf-grid .hf-arr{display:none;}
+.home-feed-wrap.hf-grid.compact .hf-card{min-height:0;}
 
 /* ── LIST TOGGLE BUTTON ── */
 .sheet-list-toggle { display: none; color: var(--fg-l); }
@@ -2925,10 +2942,30 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
   justify-content:center;   /* кнопки по центру */
   align-items:center;
 }
-.home-act-btn{
-  flex:1;max-width:110px;padding:7px 8px 6px;border-radius:16px;
-  background:linear-gradient(155deg,oklch(1 0 0/.44),oklch(0.97 0.004 230/.28));
-  border:1px solid oklch(1 0 0/.48);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.80);
+/* Боковые кнопки — парящие живые капсулы, как АГЕНТ (но спокойнее) */
+.home-bar .home-act-btn{
+  flex:1;max-width:110px;padding:12px 8px 10px;border-radius:22px;
+  background:linear-gradient(155deg,oklch(1 0 0/.86),oklch(0.975 0.014 212/.66),oklch(0.95 0.024 215/.48))!important;
+  backdrop-filter:blur(18px) saturate(1.45)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.45)!important;
+  border:1px solid oklch(0.97 0.018 210/.82)!important;
+  box-shadow:
+    0 -4px 16px oklch(0.52 0.13 210/.12),
+    0 4px 14px oklch(0 0 0/.10),
+    inset 0 2px 0 oklch(1 0 0/.94),
+    inset 0 -1.5px 0 oklch(0.82 0.04 210/.20),
+    inset 1.5px 0 0 oklch(1 0 0/.50),
+    inset -1.5px 0 0 oklch(1 0 0/.50)!important;
+  transform:perspective(700px) rotateX(-5deg);
+  animation:nnb-float-side 4.6s ease-in-out infinite;
+  transition:transform .15s,box-shadow .15s;
+}
+.home-bar .home-act-btn:nth-child(1){animation-delay:-.9s;}
+.home-bar .home-act-btn:last-child{animation-delay:-2.3s;}
+.home-bar .home-act-btn:active{transform:perspective(700px) rotateX(-3deg) scale(.95);animation:none;}
+@keyframes nnb-float-side{
+  0%,100%{transform:perspective(700px) rotateX(-5deg);}
+  50%{transform:perspective(700px) rotateX(-6deg) scale(1.018);}
 }
 .rz-portal{
   background:
@@ -3527,6 +3564,9 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
         </div>
         <!-- Feed toolbar -->
         <div class="hf-toolbar">
+          <button class="hf-toolbar-btn" id="grid-feed-btn" onclick="toggleHomeGrid()" title="Сетка / список">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </button>
           <button class="hf-toolbar-btn" id="compact-feed-btn" onclick="toggleCompactFeed()" title="Компактный вид">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
