@@ -179,3 +179,13 @@ https://www.instagram.com/p/DZAITgEAE9c/?igsh=YmhlNTJnc3VwYmYx
 
 > **AI:** Идея: https://www.instagram.com/p/DZAITgEAE9c/?igsh=YmhlNTJnc3VwYmYx
 > **Теги:** идея
+
+
+---
+
+## Идея — 2026-06-02
+
+Изменить шапку, добавить красивый календарь, убрать лишнее в домик
+
+> **AI:** Идея: Изменить шапку, добавить красивый календарь, убрать...
+> **Теги:** идея
