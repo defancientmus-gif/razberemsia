@@ -240,9 +240,28 @@ function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
   }
   return changed;
 }
+// Мусорный тег: односимвольный, повтор одной буквы (ооо, ааа), без букв/цифр.
+// Системные "идея" и "_filed_in:" — не трогаем.
+function _isJunkTag(tag){
+  const t=String(tag||'').trim().toLowerCase();
+  if(!t)return true;
+  if(isIdeaTag(t)||t.startsWith('_filed_in:'))return false;
+  if(t.length<2)return true;
+  const uniq=new Set(t.replace(/\s/g,'').split(''));
+  if(uniq.size<=1)return true;           // "ооо", "аа", "жжжж"
+  if(!/[\p{L}\p{N}]/u.test(t))return true; // нет ни одной буквы/цифры
+  return false;
+}
 function _ensureIdeaInboxTagFolder(notes){
   if(typeof getTagFolders!=='function'||typeof saveTagFolders!=='function')return typeof getTagFolders==='function'?getTagFolders():[];
-  const folders=getTagFolders();
+  let folders=getTagFolders();
+  // Чистим мусорные тег-папки (ооо и пр.) и проталкиваем в облако, чтобы не возвращались
+  const cleaned=folders.filter(f=>!_isJunkTag(f.tag));
+  if(cleaned.length!==folders.length){
+    folders=cleaned;
+    saveTagFolders(folders);
+    if(typeof queueCloudSave==='function')queueCloudSave();
+  }
   // Папка уже есть (пришла с облака или создана ранее) — просто возвращаем
   if(folders.some(f=>isIdeaTag(f.tag)))return folders;
   // Создаём только если есть хотя бы одна заметка с тегом идея
@@ -6420,7 +6439,7 @@ function _runSingleIntent(intent,params,originalText){
   if(intent==='CREATE_TAG_FOLDER'){
     const tag=_tagKey(params.tag||params.label||'');
     const label=isIdeaTag(tag)?IDEA_INBOX_LABEL:(params.label||tag);
-    if(tag&&typeof getTagFolders==='function'){
+    if(tag&&!_isJunkTag(tag)&&typeof getTagFolders==='function'){
       const folders=getTagFolders();
       if(!folders.some(f=>_tagKey(f.tag)===tag)){
         folders.push({tag,label,createdAt:Date.now()});
@@ -6493,8 +6512,8 @@ function _runSingleIntent(intent,params,originalText){
           note.updatedAt=Date.now();
           saveNotes(notes);loadHomeFeed();loadNotes();
         }
-        // Создать тег-папку если нет
-        if(typeof getTagFolders==='function'){
+        // Создать тег-папку если нет (мусорные теги пропускаем)
+        if(typeof getTagFolders==='function'&&!_isJunkTag(tag)){
           const folders=getTagFolders();
           if(!folders.some(f=>_tagKey(f.tag)===tag)){
             folders.push({tag,label:isIdeaTag(tag)?IDEA_INBOX_LABEL:(params.tag||tag),createdAt:Date.now()});
