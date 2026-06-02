@@ -3083,7 +3083,7 @@ function _sectionNoteStyle(note){
   const folder=getNoteUserFolder(note);if(!folder)return '';
   const tint=_folderTint(folder.colorIndex,'.10');
   const line=_folderTint(folder.colorIndex,'.14');
-  return `--section-line:${line};background:radial-gradient(ellipse 86% 64% at 14% 8%,${tint},transparent 64%),radial-gradient(ellipse 70% 54% at 88% 100%,${line},transparent 70%),linear-gradient(158deg,oklch(1 0 0 / .86),oklch(0.972 0.008 214 / .74));`;
+  return '';
 }
 // Одноразовая очистка дублей рекуррентных заметок (fix для старых данных)
 function _deduplicateRecurringNotes(){
