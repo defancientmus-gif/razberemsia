@@ -222,3 +222,16 @@ https://www.instagram.com/p/DYf2bsICkhh/?img_index=1&igsh=dmcyaDF0ODNxbmFu - о�
 
 > **AI:** Идея: https://www.instagram.com/reel/DXHHJQ6kgic/?igsh=OTI1c3A5YnZ3emo2 - анимация https://www.instagram.com/reel/DZCnrIwsXk9/?igsh=MWluNG1sbXkxYTBzNA== - реалтайм...
 > **Теги:** идея
+
+
+---
+
+## Идея — 2026-06-02
+
+https://www.instagram.com/reel/DXHHJQ6kgic/?igsh=OTI1c3A5YnZ3emo2 - анимация
+https://www.instagram.com/reel/DZCnrIwsXk9/?igsh=MWluNG1sbXkxYTBzNA== - реалтайм индаудио
+https://www.instagram.com/p/DYf2bsICkhh/?img_index=1&igsh=dmcyaDF0ODNxbmFu - опенсорс проекты
+https://www.instagram.com/p/DZAITgEAE9c/?igsh=YmhlNTJnc3VwYmYx
+
+> **AI:** Идея: https://www.instagram.com/reel/DXHHJQ6kgic/?igsh=OTI1c3A5YnZ3emo2 - анимация https://www.instagram.com/reel/DZCnrIwsXk9/?igsh=MWluNG1sbXkxYTBzNA== - реалтайм...
+> **Теги:** идея
