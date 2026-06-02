@@ -6131,8 +6131,9 @@ async function _startAgentVoiceWAV(){
           wav_kb: Math.round(wav.byteLength/1024)
         });
         if(!res.ok||data.error){
-          console.warn('[rz] transcribe failed:',data.error);
-          showToast('Не удалось распознать — попробуйте ещё раз');
+          console.warn('[rz] transcribe failed:',data.error,data.groq_status,data.groq_detail);
+          const diag=data.groq_status?` [${data.groq_status}${data.groq_detail?': '+String(data.groq_detail).slice(0,60):''}]`:'';
+          showToast('Не удалось распознать'+diag);
           _setAgentState('idle');return;
         }
         const text=(data.text||'').trim();
