@@ -853,11 +853,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .hf-card{border-radius:0;margin-bottom:0;}
 .hf-del-panel{position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .15s;pointer-events:none;background:oklch(0.94 0.05 15/0.55);}
 .hf-desk-del{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3;-webkit-appearance:none;}
-/* Карточка подсвечивается пока открыт sheet */
+/* Карточка при открытии — сжимается и остаётся "нажатой" */
 .hf-wrap.hf-is-open .hf-card{
-  background:oklch(0.91 0.018 215 / 0.72);
-  border-color:oklch(0.76 0.06 212 / 0.40);
-  transition:background .18s,border-color .18s;
+  animation:cardOpen .18s cubic-bezier(.4,0,.2,1) forwards;
+  background:oklch(1 0 0 / 0.13);
 }
 @media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
 
@@ -1598,13 +1597,14 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   border-radius:28px;
   border:1px solid oklch(0.91 0.02 215 / 0.52);
   box-shadow:0 12px 48px -18px oklch(0 0 0 / 0.22),0 3px 18px -10px oklch(0.22 0.05 210 / 0.16), inset 0 1px 0 oklch(1 0 0 / 0.72);
-  animation:sheetRise .32s cubic-bezier(.22,1,.36,1);
+  animation:sheetRise .38s cubic-bezier(.22,1,.36,1);
   overflow:hidden;
   will-change:transform;
   transition:background .4s cubic-bezier(.4,0,.2,1);
 }
-@keyframes sheetRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
-@keyframes sheetDrop{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(12px);}}
+@keyframes sheetRise{from{opacity:0;transform:translateY(52px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes sheetDrop{from{opacity:1;transform:translateY(0) scale(1);}to{opacity:0;transform:translateY(20px) scale(0.97);}}
+@keyframes cardOpen{0%{transform:scale(1);}40%{transform:scale(0.955);}100%{transform:scale(0.955);}}
 .sheet.closing{animation:sheetDrop .20s cubic-bezier(.4,0,1,1) forwards;}
 
 .keyboard-open .overlay.open{align-items:flex-end;padding:8px 8px 0;}
@@ -2144,17 +2144,13 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
     transparent calc(env(safe-area-inset-top,0px) + 163px));
   pointer-events:none;z-index:2;
 }
-/* ── ТУМАН СНИЗУ — нижняя некликабельная нота уходит в туман ── */
+/* ── ТУМАН СНИЗУ — лёгкий хвост, основное стекло в home-bar ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:200px;
+  height:140px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.72) 0%,
-    oklch(0.91 0.011 212 / 0.55) 18%,
-    oklch(0.91 0.011 212 / 0.34) 38%,
-    oklch(0.91 0.011 212 / 0.16) 58%,
-    oklch(0.91 0.011 212 / 0.06) 74%,
-    oklch(0.91 0.011 212 / 0.018) 88%,
+    oklch(0.91 0.011 212 / 0.22) 0%,
+    oklch(0.91 0.011 212 / 0.10) 40%,
     transparent 100%);
   pointer-events:none;z-index:2;
 }
@@ -2186,8 +2182,20 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   position:absolute;top:calc(env(safe-area-inset-top,0px) + 138px);left:0;right:0;z-index:2;
 }
 /* Bottom bar — glass shelf at bottom */
+/* Нижняя панель — стекло как шапка, заметки уплывают под неё */
 .home-wrap .home-bar{
   position:absolute;bottom:0;left:0;right:0;z-index:3;flex-shrink:unset;
+  background:linear-gradient(to top,
+    oklch(0.91 0.011 212) 0%,
+    oklch(0.91 0.011 212) env(safe-area-inset-bottom,0px),
+    oklch(0.94 0.010 213 / 0.82) calc(env(safe-area-inset-bottom,0px) + 14px),
+    oklch(0.95 0.008 215 / 0.55) calc(env(safe-area-inset-bottom,0px) + 38px),
+    oklch(0.96 0.006 217 / 0.28) calc(env(safe-area-inset-bottom,0px) + 62px),
+    oklch(0.97 0.005 220 / 0.10) calc(env(safe-area-inset-bottom,0px) + 82px),
+    oklch(0.97 0.005 220 / 0.02) calc(env(safe-area-inset-bottom,0px) + 96px),
+    transparent 100%);
+  backdrop-filter:blur(8px) saturate(1.04);
+  -webkit-backdrop-filter:blur(8px) saturate(1.04);
 }
 
 /* ── ANIMATIONS ── */
