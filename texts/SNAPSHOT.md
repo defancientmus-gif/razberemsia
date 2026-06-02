@@ -54,7 +54,7 @@
 
 - Основная Edge Function: `ai`.
 - Legacy: `smooth-processor`, не считать источником правды.
-- Секреты в Supabase Dashboard: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `YANDEX_STT_KEY`, `GITHUB_TOKEN`.
+- Секреты в Supabase Dashboard: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `GITHUB_TOKEN`.
 - Локальный код `save_idea` нацелен на `texts/IDEAS_NEAR_TERM.md`.
 - Серверная Edge Function нормализует теги, но не форсирует `идея`, потому что тот же action используется для фидбека.
 - Клиент уже использует Supabase Realtime для `user_state` + fallback polling 8с.

@@ -3928,7 +3928,7 @@ function _drillP1(){
         <div class="drill-grid-title">${esc(n.title)}</div>
         ${preview?`<div class="drill-grid-preview">${esc(preview)}</div>`:''}
         <div class="drill-grid-foot">
-          <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
+          <span class="drill-note-time">${esc(fmtMeta(n.createdAt||n.updatedAt))}</span>
           ${hasBell?'<span style="font-size:10px">\ud83d\udd14</span>':''}
           ${hasAi&&!resolved?'<span style="font-size:9px;color:var(--accent-d);font-weight:700">AI</span>':''}
         </div>
@@ -3956,7 +3956,7 @@ function _drillP1(){
           <div class="drill-note-title">${esc(n.title)}</div>
           ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
           <div class="drill-note-foot">
-            <span class="drill-note-time">${esc(fmtMeta(n.updatedAt||n.createdAt))}</span>
+            <span class="drill-note-time">${esc(fmtMeta(n.createdAt||n.updatedAt))}</span>
             ${bellBadge}${aiBadge}
           </div>
           ${tagChips?`<div class="drill-note-tags">${tagChips}</div>`:''}
@@ -5420,7 +5420,7 @@ function loadNotepad(){
     d.innerHTML=`<div class="pad-cat">${esc(safeLabel(n.label||'заметка'))}</div>
       <div class="pad-title">${esc(n.title)}</div>
       <div class="pad-text">${esc(n.body||'')}</div>
-      <div class="pad-meta">${esc(fmtMeta(n.updatedAt||n.createdAt))}</div>`;
+      <div class="pad-meta">${esc(fmtMeta(n.createdAt||n.updatedAt))}</div>`;
     d.onclick=(e)=>{e.stopPropagation();n.id?openNoteSheetById(n.id):openNoteSheet(i);};
     attachSwipeDelete(d,delBg,null,116);
     const dBtn2=document.createElement('button');dBtn2.className='desk-del';
@@ -5532,7 +5532,7 @@ function loadHomeFeed(){
   const withRem=unpinned.filter(n=>n.reminder&&new Date(n.reminder).getTime()>now)
     .sort((a,b)=>new Date(a.reminder)-new Date(b.reminder));
   const rest=unpinned.filter(n=>!n.reminder||new Date(n.reminder).getTime()<=now)
-    .sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+    .sort((a,b)=>(b.createdAt||b.updatedAt||0)-(a.createdAt||a.updatedAt||0));
   const sorted=[...pinned,...withRem,...rest].slice(0,25);
   _homeFeedNotes=sorted;
 
@@ -5550,7 +5550,7 @@ function loadHomeFeed(){
 
     const title=n.title||(n.body||'').split('\n')[0].trim().slice(0,60)||'Заметка';
     const preview=_notePreview(n);
-    const timeStr=fmtMeta(n.updatedAt||n.createdAt);
+    const timeStr=fmtMeta(n.createdAt||n.updatedAt);
     const aiBadge=hasAi?`<span class="hf-ai-badge">✶︎ AI</span>`:'';
     const typeTag=n.type==='list'?`<span class="hf-ai-badge" style="color:var(--accent-d);background:oklch(0.52 0.10 210/0.08);border-color:oklch(0.52 0.10 210/0.20);">☰ список</span>`:'';
     const tagChips=_notePreviewTags(n,{limit:2}).map(tag=>`<span class="hf-tag-chip${isIdeaTag(tag)?' idea-tag-chip':''}">${esc(tag)}</span>`).join('');
@@ -5997,6 +5997,9 @@ function stopHomeVoice(){
 let _agentRec=null,_agentRecording=false,_agentCollected='';
 let _agentAlts=[];
 let _agentStopWAV=null; // функция остановки AudioContext-записи
+const AGENT_LEAD_SILENCE_MS=250;
+const AGENT_TAIL_RECORD_MS=320;
+const AGENT_TRAIL_SILENCE_MS=450;
 
 function agentTap(){
   // Разблокировка TTS на iOS — должна быть в обработчике жеста
@@ -6008,8 +6011,8 @@ function agentTap(){
   _agentRecording?stopAgentVoice():startAgentVoice();
 }
 
-// ── AGENT VOICE — Yandex SpeechKit (основной) + Groq Whisper (резерв) ──
-// Запись: AudioContext → WAV → единый формат для обоих провайдеров
+// ── AGENT VOICE — Groq Whisper ──
+// Запись: AudioContext → WAV → единый формат для серверной транскрибации
 function startAgentVoice(){
   if(_agentRecording||_agentRec||_agentStopWAV)return;
   if(!CU){showToast('Сначала войдите в аккаунт');return;}
@@ -6044,11 +6047,25 @@ function _bufToBase64(buf){
   return btoa(s);
 }
 
+function _padAgentPCM(pcm,sampleRate){
+  const lead=Math.round(sampleRate*AGENT_LEAD_SILENCE_MS/1000);
+  const trail=Math.round(sampleRate*AGENT_TRAIL_SILENCE_MS/1000);
+  const padded=new Float32Array(lead+pcm.length+trail);
+  padded.set(pcm,lead);
+  return padded;
+}
+
 async function _startAgentVoiceWAV(){
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{
+      channelCount:1,
+      echoCancellation:true,
+      noiseSuppression:true,
+      autoGainControl:true
+    }});
     const AC=window.AudioContext||window.webkitAudioContext;
     const ctx=new AC({sampleRate:16000});
+    if(ctx.state==='suspended'&&ctx.resume)await ctx.resume();
     const actualRate=ctx.sampleRate;
     const src=ctx.createMediaStreamSource(stream);
     const proc=ctx.createScriptProcessor(4096,1,1);
@@ -6060,28 +6077,40 @@ async function _startAgentVoiceWAV(){
 
     _agentStopWAV=async()=>{
       _agentStopWAV=null;
+      await new Promise(r=>setTimeout(r,AGENT_TAIL_RECORD_MS));
       proc.disconnect();src.disconnect();stream.getTracks().forEach(t=>t.stop());
       ctx.close();_agentRecording=false;
 
       const total=chunks.reduce((s,c)=>s+c.length,0);
       if(total<actualRate*0.3){showToast('Не услышал — попробуйте ещё раз');_setAgentState('idle');return;}
 
+      const localStart=performance.now();
       const pcm=new Float32Array(total);let off=0;
       chunks.forEach(c=>{pcm.set(c,off);off+=c.length;});
-      const wav=_encodeWAV(pcm,actualRate);
+      const wav=_encodeWAV(_padAgentPCM(pcm,actualRate),actualRate);
       const b64=_bufToBase64(wav);
+      const encodeMs=Math.round(performance.now()-localStart);
 
       _setAgentState('transcribing');
       try{
         const sess=await sb.auth.getSession();
         const token=sess?.data?.session?.access_token;
         if(!token){showToast('Войдите в аккаунт');_setAgentState('idle');return;}
+        const sttStart=performance.now();
         const res=await fetch(SUPABASE_EDGE_URL,{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({action:'transcribe',payload:{audio_base64:b64,mime_type:'audio/wav',sample_rate:actualRate}})
+          body:JSON.stringify({action:'transcribe',payload:{audio_base64:b64}})
         });
         const data=await res.json();
+        console.info('[rz] agent voice timing', {
+          encode_ms: encodeMs,
+          stt_roundtrip_ms: Math.round(performance.now()-sttStart),
+          provider: data?.provider,
+          provider_ms: data?.duration_ms,
+          audio_sec: Math.round((total/actualRate)*10)/10,
+          wav_kb: Math.round(wav.byteLength/1024)
+        });
         if(!res.ok||data.error){
           console.warn('[rz] transcribe failed:',data.error);
           showToast('Не удалось распознать — попробуйте ещё раз');
