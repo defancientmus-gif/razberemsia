@@ -700,7 +700,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 
 /* ── HOME QUICK BUTTONS ── */
 .jarvis-top{padding:6px 14px 2px;flex-shrink:0;}
-.jarvis-quick{display:flex;gap:8px;margin-top:6px;margin-bottom:4px;flex-wrap:wrap;}
+.jarvis-quick{display:flex;gap:8px;margin-top:6px;margin-bottom:4px;align-items:center;justify-content:space-between;}
 .jq-btn{display:inline-flex;align-items:center;gap:7px;
   background:oklch(1 0 0 / 0.68);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
@@ -708,6 +708,45 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   border-radius:50px;padding:8px 14px;font-size:14px;font-weight:600;color:var(--fg);cursor:pointer;font-family:var(--sys);-webkit-appearance:none;transition:background .12s;white-space:nowrap;}
 .jq-btn:active{background:oklch(0.52 0.10 210 / 0.10);transform:scale(.97);}
 .jq-btn svg{width:16px;height:16px;stroke:var(--accent-d);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+/* Кнопка «Все заметки» — главная, заметная */
+.jq-notes{
+  padding:12px 22px;font-size:15px;font-weight:700;border-radius:20px;
+  background:linear-gradient(155deg,oklch(1 0 0/.94),oklch(0.975 0.018 212/.74))!important;
+  border:1px solid oklch(0.97 0.020 210/.85)!important;
+  box-shadow:0 -3px 14px oklch(0.52 0.13 210/.10),0 4px 14px oklch(0 0 0/.10),inset 0 2px 0 oklch(1 0 0/.92);
+}
+.jq-notes svg{width:18px;height:18px;}
+.jq-notes:active{transform:scale(.96);}
+/* Кнопка формата отображения — квадратная иконка */
+.jq-view{
+  flex:0 0 auto;width:46px;height:46px;padding:0;justify-content:center;border-radius:16px;
+  background:linear-gradient(155deg,oklch(1 0 0/.90),oklch(0.975 0.014 212/.68))!important;
+  border:1px solid oklch(0.97 0.018 210/.82)!important;
+  box-shadow:0 3px 12px oklch(0 0 0/.08),inset 0 2px 0 oklch(1 0 0/.90);
+}
+.jq-view svg{width:18px;height:18px;stroke:var(--accent-d);}
+.jq-view:active{transform:scale(.94);}
+/* Дропдаун формата */
+.view-menu{
+  position:absolute;top:calc(env(safe-area-inset-top,0px) + 118px);right:14px;z-index:30;
+  min-width:168px;padding:5px;display:flex;flex-direction:column;gap:2px;
+  background:oklch(1 0 0/.88);
+  backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);
+  border:1px solid oklch(1 0 0/.62);border-radius:16px;
+  box-shadow:0 14px 38px -14px oklch(0.30 0.04 215/.34);
+  opacity:0;pointer-events:none;transform:translateY(-6px) scale(.97);transform-origin:top right;
+  transition:opacity .16s,transform .16s;
+}
+.view-menu.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1);}
+.view-menu-item{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border:none;background:none;
+  border-radius:11px;font-family:var(--sys);font-size:14px;font-weight:600;color:var(--fg);
+  cursor:pointer;width:100%;text-align:left;-webkit-appearance:none;transition:background .1s;
+}
+.view-menu-item svg{stroke:var(--fg-l);flex-shrink:0;fill:none;}
+.view-menu-item:active{background:oklch(0 0 0/.05);}
+.view-menu-item.active{background:oklch(0.52 0.10 210/.12);color:var(--accent-d);}
+.view-menu-item.active svg{stroke:var(--accent-d);}
 .jq-emer{background:oklch(0.58 0.16 25 / 0.06);border-color:oklch(0.58 0.16 25 / 0.15);padding:7px 10px;font-size:12px;}
 .jq-emer svg{stroke:var(--rose);width:15px;height:15px;}
 .jq-emer .jq-label{color:var(--rose);}
@@ -2358,20 +2397,23 @@ html.dark .bubble{
 .home-feed-wrap.compact .hf-body > div:last-child { display:none; }
 .home-feed-wrap.compact .hf-title { font-size:14px;margin-bottom:0; }
 
-/* ── GRID FEED MODE — заметки плиткой 2 в ряд ── */
-.home-feed-wrap.hf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;}
+/* ── GRID FEED MODE — компактные плитки 2 в ряд ── */
+.home-feed-wrap.hf-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-content:start;}
 .home-feed-wrap.hf-grid .hf-wrap{margin-bottom:0;}
 .home-feed-wrap.hf-grid .hf-card{
-  flex-direction:column;align-items:stretch;gap:7px;position:relative;
-  min-height:118px;padding:13px 13px 11px;border-radius:16px;
+  display:flex;flex-direction:column;align-items:stretch;gap:5px;position:relative;
+  min-height:94px;padding:11px 12px 9px;border-radius:15px;
 }
-.home-feed-wrap.hf-grid .hf-sig{position:absolute;top:13px;right:13px;width:auto;padding:0;}
-.home-feed-wrap.hf-grid .hf-body{order:1;}
-.home-feed-wrap.hf-grid .hf-title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:14px;}
-.home-feed-wrap.hf-grid .hf-preview{-webkit-line-clamp:3;}
-.home-feed-wrap.hf-grid .hf-right{order:2;flex-direction:row;align-items:center;justify-content:space-between;margin-top:auto;}
+.home-feed-wrap.hf-grid .hf-sig{position:absolute;top:11px;right:11px;width:auto;padding:0;}
+.home-feed-wrap.hf-grid .hf-body{order:1;display:flex;flex-direction:column;gap:4px;}
+.home-feed-wrap.hf-grid .hf-title{font-size:13.5px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:14px;margin-bottom:0;}
+.home-feed-wrap.hf-grid .hf-preview{font-size:11.5px;-webkit-line-clamp:2;}
+.home-feed-wrap.hf-grid .hf-right{order:2;flex-direction:row;align-items:center;justify-content:flex-end;margin-top:auto;}
 .home-feed-wrap.hf-grid .hf-arr{display:none;}
+.home-feed-wrap.hf-grid .hf-time{font-size:10px;}
+/* В плитках компакт делает ещё плотнее */
 .home-feed-wrap.hf-grid.compact .hf-card{min-height:0;}
+.home-feed-wrap.hf-grid.compact .hf-preview{display:none;}
 
 /* ── LIST TOGGLE BUTTON ── */
 .sheet-list-toggle { display: none; color: var(--fg-l); }
@@ -2916,12 +2958,9 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
     0 6px 18px oklch(0.34 0.04 210 / .08);
 }
 .home-bar{
-  /* Без backdrop-filter на контейнере — убирает жёсткий прямоугольник.
-     Кнопки сохраняют свой blur через home-act-btn backdrop-filter. */
-  background:linear-gradient(to bottom,
-    oklch(0.97 0.006 225 / 0) 0%,
-    oklch(0.97 0.006 225 / 0.40) 40%,
-    oklch(0.97 0.006 225 / 0.62) 100%);
+  /* Фон прозрачный — стекло/блюр даёт .home-wrap::after (как туман сверху).
+     Кнопки парят со своим собственным blur. Без молочной заливки. */
+  background:transparent;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
   border-top:none;
@@ -3448,6 +3487,19 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
       <div><div class="hmenu-t" id="theme-menu-t">Тёмная тема</div><div class="hmenu-s">Переключить вид</div></div>
     </button>
   </div>
+  <button class="hmenu-item" onclick="openStats();closeMenu()">
+    <div class="hmenu-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-4 4 3 5-7"/></svg></div>
+    <div><div class="hmenu-t">Аналитика</div><div class="hmenu-s"><span id="hstat-hcnt">–</span> ♥ · <span id="hstat-scnt">–</span> ★</div></div>
+  </button>
+  <button class="hmenu-item" onclick="openFeedbackSheet();closeMenu()">
+    <div class="hmenu-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+    <div><div class="hmenu-t">Помочь проекту</div><div class="hmenu-s">Идеи и отзывы</div></div>
+  </button>
+  <button class="hmenu-item" onclick="go('emergency');closeMenu()">
+    <div class="hmenu-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+    <div><div class="hmenu-t">Что-то случилось?</div><div class="hmenu-s">Экстренная помощь</div></div>
+  </button>
+  <div class="hmenu-sep"></div>
   <button class="hmenu-item" onclick="go('settings');closeMenu()">
     <div class="hmenu-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
     <div><div class="hmenu-t">Настройки</div><div class="hmenu-s">Имя, аккаунт</div></div>
@@ -3527,11 +3579,6 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
       <div class="hclock" id="hclock"></div>
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="hstat-pill" id="hstat-pill" onclick="openStats()" title="Статистика">
-        <span class="hstat-emo">♥</span><span class="hstat-num" id="hstat-hcnt">–</span>
-        <span class="hstat-sep"></span>
-        <span class="hstat-emo">★</span><span class="hstat-num" id="hstat-scnt">–</span>
-      </button>
       <button class="hbtn" onclick="openSearch()" title="Поиск">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
@@ -3549,26 +3596,28 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
         <!-- Quick nav buttons -->
         <div class="jarvis-top">
           <div class="jarvis-quick">
-            <button class="jq-btn jq-emer" onclick="go('emergency')" title="Что-то случилось?">
-              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </button>
-            <button class="jq-btn" onclick="go('notes')">
+            <button class="jq-btn jq-notes" onclick="go('notes')">
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              Заметки<span id="notes-count-badge" style="opacity:.45;font-weight:500;margin-left:2px;font-size:12px;"></span>
+              Все заметки<span id="notes-count-badge" style="opacity:.5;font-weight:600;margin-left:3px;">·</span>
             </button>
-            <button class="jq-btn jq-feedback" onclick="openFeedbackSheet()">
-              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              <span class="jq-label">Помочь проекту</span>
+            <button class="jq-btn jq-view" id="view-mode-btn" onclick="toggleViewMenu(event)" title="Формат отображения">
+              <svg id="view-mode-ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
           </div>
         </div>
-        <!-- Feed toolbar -->
-        <div class="hf-toolbar">
-          <button class="hf-toolbar-btn" id="grid-feed-btn" onclick="toggleHomeGrid()" title="Сетка / список">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <!-- Меню формата отображения -->
+        <div class="view-menu" id="view-menu">
+          <button class="view-menu-item" data-view="list" onclick="setFeedView('list')">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <span>Список</span>
           </button>
-          <button class="hf-toolbar-btn" id="compact-feed-btn" onclick="toggleCompactFeed()" title="Компактный вид">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <button class="view-menu-item" data-view="compact" onclick="setFeedView('compact')">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="17" x2="21" y2="17"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+            <span>Компактно</span>
+          </button>
+          <button class="view-menu-item" data-view="grid" onclick="setFeedView('grid')">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>Плитки</span>
           </button>
         </div>
         <!-- PTR индикатор -->
