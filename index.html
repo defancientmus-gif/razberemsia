@@ -804,11 +804,22 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   display:flex;align-items:flex-start;gap:12px;padding:13px 14px;
   border-radius:16px;margin-bottom:8px;cursor:pointer;
   transition:transform .1s;-webkit-appearance:none;width:100%;text-align:left;font-family:var(--sys);
-  background:oklch(1 0 0 / 0.55);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  /* Стеклянная капсула: матовое стекло + лёгкий голубой отлив */
+  background:
+    linear-gradient(155deg,
+      oklch(1 0 0 / 0.62) 0%,
+      oklch(0.97 0.010 215 / 0.38) 55%,
+      oklch(0.94 0.015 220 / 0.28) 100%);
+  backdrop-filter:blur(12px) saturate(1.35) brightness(1.04);
+  -webkit-backdrop-filter:blur(12px) saturate(1.35) brightness(1.04);
+  /* Рамка: верхний блик + тонкая боковая грань */
   border:1px solid oklch(1 0 0 / 0.55);
-  box-shadow:0 1px 4px oklch(0 0 0 / 0.05);
+  /* Тень парения: мягкий ореол снизу */
+  box-shadow:
+    inset 0 1.5px 0 oklch(1 0 0 / 0.90),
+    inset 0 -1px 0 oklch(0.80 0.04 210 / 0.12),
+    0 2px 8px oklch(0.35 0.08 210 / 0.06),
+    0 8px 24px oklch(0.35 0.08 210 / 0.08);
 }
 .hf-card:active{transform:scale(.98);}
 .hf-sig{width:10px;padding-top:5px;flex-shrink:0;display:flex;justify-content:center;}
@@ -828,16 +839,11 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .hf-empty{text-align:center;padding:40px 20px;color:var(--fg-l);font-size:14px;line-height:1.6;}
 /* Папка: квадратная с мягкими углами, не колет */
 .hf-wrap{position:relative;overflow:hidden;border-radius:12px;margin-bottom:9px;
-  box-shadow:0 2px 8px oklch(0.38 0.06 215/.08),0 6px 20px oklch(0.38 0.06 215/.10);
+  filter:drop-shadow(0 2px 5px oklch(0.38 0.06 215/.07)) drop-shadow(0 7px 18px oklch(0.38 0.06 215/.09));
 }
 .hf-card{border-radius:0;margin-bottom:0;}
 .hf-del-panel{position:absolute;right:0;top:0;bottom:0;width:64px;display:flex;align-items:center;justify-content:center;border-radius:0 16px 16px 0;opacity:0;transition:opacity .15s;pointer-events:none;background:oklch(0.94 0.05 15/0.55);}
 .hf-desk-del{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3;-webkit-appearance:none;}
-/* Карточка при открытии — сжимается и остаётся "нажатой" */
-.hf-wrap.hf-is-open .hf-card{
-  animation:cardOpen .18s cubic-bezier(.4,0,.2,1) forwards;
-  background:oklch(1 0 0 / 0.13);
-}
 @media(hover:hover){.hf-wrap:hover .hf-desk-del{opacity:1;pointer-events:all;}.hf-desk-del:hover{background:oklch(0.76 0.05 15/0.18);}}
 
 /* ── HOME ACTION ROW ── */
@@ -1571,20 +1577,22 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   max-height:calc(var(--vvh) - 12px);
   margin-bottom:0;
   display:flex;flex-direction:column;
-  background:oklch(0.980 0.006 215 / 0.97);
-  backdrop-filter:blur(48px) saturate(1.55);
-  -webkit-backdrop-filter:blur(48px) saturate(1.55);
+  background:
+    radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 210 / 0.20), transparent 55%),
+    radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.62) 0%, transparent 36%),
+    oklch(0.975 0.010 210 / 0.96);
+  backdrop-filter:blur(60px) saturate(2);
+  -webkit-backdrop-filter:blur(60px) saturate(2);
   border-radius:28px;
-  border:1px solid oklch(0.91 0.02 215 / 0.52);
-  box-shadow:0 12px 48px -18px oklch(0 0 0 / 0.22),0 3px 18px -10px oklch(0.22 0.05 210 / 0.16), inset 0 1px 0 oklch(1 0 0 / 0.72);
-  animation:sheetRise .38s cubic-bezier(.22,1,.36,1);
+  border:1px solid oklch(1 0 0 / 0.68);
+  box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.34),0 4px 24px -16px oklch(0.22 0.05 210 / 0.28), inset 0 1px 0 oklch(1 0 0 / 0.82);
+  animation:sheetRise .32s cubic-bezier(.22,1,.36,1);
   overflow:hidden;
   will-change:transform;
   transition:background .4s cubic-bezier(.4,0,.2,1);
 }
-@keyframes sheetRise{from{opacity:0;transform:translateY(52px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
-@keyframes sheetDrop{from{opacity:1;transform:translateY(0) scale(1);}to{opacity:0;transform:translateY(20px) scale(0.97);}}
-@keyframes cardOpen{0%{transform:scale(1);}40%{transform:scale(0.955);}100%{transform:scale(0.955);}}
+@keyframes sheetRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes sheetDrop{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(12px);}}
 .sheet.closing{animation:sheetDrop .20s cubic-bezier(.4,0,1,1) forwards;}
 
 .keyboard-open .overlay.open{align-items:flex-end;padding:8px 8px 0;}
@@ -1599,13 +1607,15 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
-/* Shine line at top — тонкая, без бликов */
-.sheet-shine{height:1px;flex-shrink:0;
-  background:linear-gradient(90deg,transparent 8%,oklch(1 0 0 / 0.55) 35%,oklch(1 0 0 / 0.70) 50%,oklch(1 0 0 / 0.55) 65%,transparent 92%);}
+/* Shine line at top */
+.sheet-shine{height:1.5px;flex-shrink:0;
+  background:linear-gradient(90deg,transparent 5%,oklch(1 0 0 / 0.92) 30%,oklch(1 0 0 / 1) 50%,oklch(1 0 0 / 0.92) 70%,transparent 95%);}
 .sheet-handle{display:none;}
 
-/* Ambient blob — убран */
-.sheet-ambient{display:none;}
+/* Ambient blob */
+.sheet-ambient{position:absolute;bottom:-25%;right:-10%;width:50%;height:50%;border-radius:50%;
+  background:radial-gradient(circle,oklch(0.55 0.10 210 / 0.08),transparent 70%);
+  filter:blur(35px);pointer-events:none;}
 
 /* Header — icon + title + undo/redo + X */
 .sheet-hdr-row{
@@ -2124,13 +2134,17 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
     transparent calc(env(safe-area-inset-top,0px) + 163px));
   pointer-events:none;z-index:2;
 }
-/* ── ТУМАН СНИЗУ — лёгкий хвост, основное стекло в home-bar ── */
+/* ── ТУМАН СНИЗУ — выше кнопок, нежный хвост ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:140px;
+  height:150px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.22) 0%,
-    oklch(0.91 0.011 212 / 0.10) 40%,
+    oklch(0.91 0.011 212 / 0.48) 0%,
+    oklch(0.91 0.011 212 / 0.30) 22%,
+    oklch(0.91 0.011 212 / 0.14) 44%,
+    oklch(0.91 0.011 212 / 0.05) 64%,
+    oklch(0.91 0.011 212 / 0.015) 80%,
+    oklch(0.91 0.011 212 / 0.004) 92%,
     transparent 100%);
   pointer-events:none;z-index:2;
 }
@@ -2162,20 +2176,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   position:absolute;top:calc(env(safe-area-inset-top,0px) + 138px);left:0;right:0;z-index:2;
 }
 /* Bottom bar — glass shelf at bottom */
-/* Нижняя панель — стекло как шапка, заметки уплывают под неё */
 .home-wrap .home-bar{
   position:absolute;bottom:0;left:0;right:0;z-index:3;flex-shrink:unset;
-  background:linear-gradient(to top,
-    oklch(0.91 0.011 212) 0%,
-    oklch(0.91 0.011 212) env(safe-area-inset-bottom,0px),
-    oklch(0.94 0.010 213 / 0.82) calc(env(safe-area-inset-bottom,0px) + 14px),
-    oklch(0.95 0.008 215 / 0.55) calc(env(safe-area-inset-bottom,0px) + 38px),
-    oklch(0.96 0.006 217 / 0.28) calc(env(safe-area-inset-bottom,0px) + 62px),
-    oklch(0.97 0.005 220 / 0.10) calc(env(safe-area-inset-bottom,0px) + 82px),
-    oklch(0.97 0.005 220 / 0.02) calc(env(safe-area-inset-bottom,0px) + 96px),
-    transparent 100%);
-  backdrop-filter:blur(8px) saturate(1.04);
-  -webkit-backdrop-filter:blur(8px) saturate(1.04);
 }
 
 /* ── ANIMATIONS ── */
@@ -2875,10 +2877,11 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
 .hf-preview{font-size:13px;line-height:1.5;}
 .hf-time{font-size:12px;}
 .hf-card.section-glass-note,.drill-note-row.section-glass-note,.drill-grid-card.section-glass-note{
-  border-color:oklch(1 0 0 / .42);
+  border-color:oklch(1 0 0 / .76);
   box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / .88),
-    0 1px 4px oklch(0 0 0 / .04);
+    inset 0 1px 0 oklch(1 0 0 / .94),
+    inset 0 0 30px var(--section-line,transparent),
+    0 6px 18px oklch(0.34 0.04 210 / .08);
 }
 .home-bar{
   /* Без backdrop-filter на контейнере — убирает жёсткий прямоугольник.
@@ -3235,12 +3238,16 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
     0 7px 22px -10px var(--ceramic-shadow) !important;
 }
 .hf-card.idea-note:not(.section-glass-note),.drill-note-row.idea-note:not(.section-glass-note),.drill-grid-card.idea-note:not(.section-glass-note),.agent-note.idea-note{
-  border-color:oklch(1 0 0 / .50) !important;
+  background:
+    radial-gradient(ellipse 92% 62% at 16% 8%,var(--idea-soft),transparent 68%),
+    linear-gradient(154deg,oklch(1 0 0 / .84),oklch(0.972 0.010 292 / .68)) !important;
+  border-color:oklch(1 0 0 / .76) !important;
 }
 .hf-card.idea-note,.drill-note-row.idea-note,.drill-grid-card.idea-note,.agent-note.idea-note{
   box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / .88),
-    0 1px 4px oklch(0 0 0 / .04) !important;
+    inset 0 1.5px 0 oklch(1 0 0 / .94),
+    inset 0 0 38px var(--idea-soft),
+    0 8px 24px -12px oklch(0.38 0.060 292 / .18) !important;
 }
 .hf-tags,.agent-note-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;overflow:hidden;}
 .hf-tag-chip,.agent-note-tag{

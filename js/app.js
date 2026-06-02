@@ -3083,7 +3083,7 @@ function _sectionNoteStyle(note){
   const folder=getNoteUserFolder(note);if(!folder)return '';
   const tint=_folderTint(folder.colorIndex,'.10');
   const line=_folderTint(folder.colorIndex,'.14');
-  return `--section-line:${line};`;
+  return `--section-line:${line};background:radial-gradient(ellipse 86% 64% at 14% 8%,${tint},transparent 64%),radial-gradient(ellipse 70% 54% at 88% 100%,${line},transparent 70%),linear-gradient(158deg,oklch(1 0 0 / .86),oklch(0.972 0.008 214 / .74));`;
 }
 // Одноразовая очистка дублей рекуррентных заметок (fix для старых данных)
 function _deduplicateRecurringNotes(){
@@ -4300,9 +4300,6 @@ function openNoteSheetById(id){
 }
 function _openNoteWith(n){
   if(n.type==='list'){openListSheet(n.id);return;}
-  // Highlight карточки в ленте пока открыт sheet
-  document.querySelectorAll('.hf-wrap.hf-is-open').forEach(w=>w.classList.remove('hf-is-open'));
-  if(n.id){const hw=document.querySelector(`.hf-wrap[data-nid="${CSS.escape(String(n.id))}"]`);if(hw)hw.classList.add('hf-is-open');}
   ST='note';EI=n.id||null;
   const delBtn=document.getElementById('tool-delete-btn');
   if(delBtn)delBtn.style.display='inline-flex';
@@ -4563,7 +4560,6 @@ function onSheetPaste(e){
 }
 
 function closeSheet(){
-  document.querySelectorAll('.hf-wrap.hf-is-open').forEach(w=>w.classList.remove('hf-is-open'));
   closeAiOverlay();
   closeSheetMoreMenu();
   stopNoteSheetVoice();
@@ -5537,7 +5533,6 @@ function loadHomeFeed(){
     // Обёртка со свайпом
     const wrap=document.createElement('div');
     wrap.className='hf-wrap';
-    if(n.id)wrap.dataset.nid=n.id;
 
     // Карточка
     const card=document.createElement('button');
