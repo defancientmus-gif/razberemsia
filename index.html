@@ -2119,33 +2119,50 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
    Затем ещё 24px до полного нуля — нота обволакивается, не разрубается. */
 .home-wrap::before{
   content:'';position:absolute;top:0;left:0;right:0;
-  height:calc(env(safe-area-inset-top,0px) + 165px);
+  height:calc(env(safe-area-inset-top,0px) + 168px);
   background:linear-gradient(to bottom,
     oklch(0.91 0.011 212) 0%,
     oklch(0.91 0.011 212) env(safe-area-inset-top,0px),
-    oklch(0.91 0.011 212 / 0.78) calc(env(safe-area-inset-top,0px) + 30px),
-    oklch(0.91 0.011 212 / 0.55) calc(env(safe-area-inset-top,0px) + 72px),
-    oklch(0.91 0.011 212 / 0.34) calc(env(safe-area-inset-top,0px) + 106px),
-    oklch(0.91 0.011 212 / 0.16) calc(env(safe-area-inset-top,0px) + 120px),
-    oklch(0.91 0.011 212 / 0.06) calc(env(safe-area-inset-top,0px) + 132px),
-    oklch(0.91 0.011 212 / 0.025) calc(env(safe-area-inset-top,0px) + 138px),
-    oklch(0.91 0.011 212 / 0.010) calc(env(safe-area-inset-top,0px) + 148px),
-    oklch(0.91 0.011 212 / 0.003) calc(env(safe-area-inset-top,0px) + 158px),
-    transparent calc(env(safe-area-inset-top,0px) + 163px));
+    oklch(0.91 0.011 212 / 0.72) calc(env(safe-area-inset-top,0px) + 36px),
+    oklch(0.91 0.011 212 / 0.42) calc(env(safe-area-inset-top,0px) + 78px),
+    oklch(0.91 0.011 212 / 0.20) calc(env(safe-area-inset-top,0px) + 112px),
+    oklch(0.91 0.011 212 / 0.08) calc(env(safe-area-inset-top,0px) + 134px),
+    oklch(0.91 0.011 212 / 0.02) calc(env(safe-area-inset-top,0px) + 152px),
+    transparent calc(env(safe-area-inset-top,0px) + 166px));
+  /* Прогрессивный блюр — растворяется маской, без жёсткой границы */
+  backdrop-filter:blur(11px) saturate(1.05);
+  -webkit-backdrop-filter:blur(11px) saturate(1.05);
+  -webkit-mask-image:linear-gradient(to bottom,
+    black 0,
+    black calc(env(safe-area-inset-top,0px) + 112px),
+    transparent calc(env(safe-area-inset-top,0px) + 162px));
+  mask-image:linear-gradient(to bottom,
+    black 0,
+    black calc(env(safe-area-inset-top,0px) + 112px),
+    transparent calc(env(safe-area-inset-top,0px) + 162px));
   pointer-events:none;z-index:2;
 }
-/* ── ТУМАН СНИЗУ — выше кнопок, нежный хвост ── */
+/* ── ТУМАН СНИЗУ — блюр растворяется вверх, мягкий уход заметки ── */
 .home-wrap::after{
   content:'';position:absolute;bottom:0;left:0;right:0;
-  height:150px;
+  height:168px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.48) 0%,
-    oklch(0.91 0.011 212 / 0.30) 22%,
-    oklch(0.91 0.011 212 / 0.14) 44%,
-    oklch(0.91 0.011 212 / 0.05) 64%,
-    oklch(0.91 0.011 212 / 0.015) 80%,
-    oklch(0.91 0.011 212 / 0.004) 92%,
+    oklch(0.91 0.011 212 / 0.50) 0%,
+    oklch(0.91 0.011 212 / 0.30) 26%,
+    oklch(0.91 0.011 212 / 0.14) 50%,
+    oklch(0.91 0.011 212 / 0.05) 70%,
+    oklch(0.91 0.011 212 / 0.012) 86%,
     transparent 100%);
+  backdrop-filter:blur(10px) saturate(1.04);
+  -webkit-backdrop-filter:blur(10px) saturate(1.04);
+  -webkit-mask-image:linear-gradient(to top,
+    black 0,
+    black 34%,
+    transparent 96%);
+  mask-image:linear-gradient(to top,
+    black 0,
+    black 34%,
+    transparent 96%);
   pointer-events:none;z-index:2;
 }
 
@@ -2159,15 +2176,13 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   position:absolute;top:0;left:0;right:0;z-index:3;
   padding-top:calc(env(safe-area-inset-top,0px) + 72px);
   padding-bottom:14px;
+  /* Блюр перенесён на ::before (растворяется маской). Здесь только тонкий тон сверху. */
   background:linear-gradient(to bottom,
     oklch(0.91 0.011 212) 0%,
     oklch(0.91 0.011 212) env(safe-area-inset-top,0px),
-    oklch(0.95 0.008 218 / 0.16) calc(env(safe-area-inset-top,0px) + 28px),
-    oklch(0.97 0.005 225 / 0.08) calc(env(safe-area-inset-top,0px) + 62px),
-    oklch(0.97 0.005 225 / 0.02) calc(env(safe-area-inset-top,0px) + 88px),
+    oklch(0.93 0.009 218 / 0.10) calc(env(safe-area-inset-top,0px) + 30px),
+    oklch(0.95 0.006 225 / 0.02) calc(env(safe-area-inset-top,0px) + 64px),
     oklch(0.97 0.005 225 / 0) 100%);
-  backdrop-filter:blur(8px) saturate(1.04);
-  -webkit-backdrop-filter:blur(8px) saturate(1.04);
 }
 .home-wrap .hf-toolbar{
   position:absolute;top:calc(env(safe-area-inset-top,0px) + 76px);right:4px;z-index:4;padding:0;
