@@ -674,6 +674,16 @@ function toggleTheme(){
   updateThemeMeta();
   syncThemeMenu();
 }
+function toggleSceneBg(){
+  const on=document.documentElement.classList.toggle('scene-on');
+  localStorage.setItem('rz_bg_scene',on?'1':'0');
+  syncSceneMenu();
+}
+function syncSceneMenu(){
+  const on=document.documentElement.classList.contains('scene-on');
+  const s=document.getElementById('bg-scene-s');
+  if(s)s.textContent=on?'Природа · луг':'Стандартный';
+}
 
 function updateThemeMeta(){
   const meta=document.querySelector('meta[name="theme-color"]');
@@ -694,7 +704,7 @@ function syncThemeMenu(){
 function toggleMenu(e){
   e.stopPropagation();
   const m=document.getElementById('hmenu'),b=document.getElementById('hbtn');
-  m.classList.contains('open')?closeMenu():(syncThemeMenu(),m.classList.add('open'),b.classList.add('open'));
+  m.classList.contains('open')?closeMenu():(syncThemeMenu(),syncSceneMenu(),m.classList.add('open'),b.classList.add('open'));
 }
 function closeMenu(){
   document.getElementById('hmenu').classList.remove('open');
