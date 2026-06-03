@@ -380,3 +380,24 @@ https://www.instagram.com/reel/DV_aUOvCYll/?igsh=eHV0M2oxeXMza25q Пиксель
 
 > **AI:** Идея: Сделать умный и удобный календарь В...
 > **Теги:** идея
+
+
+---
+
+## Идея — 2026-06-03
+
+Улучшенный текст:
+
+https://www.instagram.com/reel/DWEvnyYDfzL/?igsh=ZWdrbTUxemd5YWFk - пророк
+
+https://www.instagram.com/reel/DXHHJQ6kgic/?igsh=OTI1c3A5YnZ3emo2 — анимация
+https://www.instagram.com/reel/DZCnrIwsXk9/?igsh=MWluNG1sbXkxYTBzNA== — реалтайм индаудио
+https://www.instagram.com/p/DYf2bsICkhh/?img_index=1&igsh=dmcyaDF0ODNxbmFu — open source проекты
+https://www.instagram.com/p/DZAITgEAE9c/?igsh=YmhlNTJnc3VwYmYx
+https://www.instagram.com/reel/DZEuIXBtPid/?igsh=MWx6Zm8zcmRzOHM2MA== — анимация сайта
+https://www.instagram.com/p/DYuE00tgMQX/?img_index=2&igsh=NnF2ZnVwYXB3b2ky
+
+https://www.instagram.com/reel/DV_aUOvCYll/?igsh=eHV0M2oxeXMza25q Пиксельная анимация
+
+> **AI:** Идея: Улучшенный текст: https://www.instagram.com/reel/DWEvnyYDfzL/?igsh=ZWdrbTUxemd5YWFk - пророк https://www.instagram.com/reel/DXHHJQ6kgic/?igsh=OTI1c3A5YnZ3emo2...
+> **Теги:** идея, Ai Инструменты, __filed__:ai инструменты
