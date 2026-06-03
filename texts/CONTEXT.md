@@ -63,7 +63,7 @@
 - Код: `supabase/functions/ai/index.ts`.
 - Legacy: `smooth-processor`, не источник правды.
 - Модель по env: `ANTHROPIC_MODEL`.
-- Секреты: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `GITHUB_TOKEN`.
+- Секреты: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `YANDEX_STT_KEY`, `GITHUB_TOKEN`.
 
 ## Идеи
 

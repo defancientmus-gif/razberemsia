@@ -1,12 +1,13 @@
 // supabase/functions/ai/index.ts
 // Деплой: supabase functions deploy ai --no-verify-jwt
-// Secrets: ANTHROPIC_API_KEY, GROQ_API_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
+// Secrets: ANTHROPIC_API_KEY, GROQ_API_KEY, YANDEX_STT_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const ANTHROPIC_KEY   = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const ANTHROPIC_MODEL = Deno.env.get('ANTHROPIC_MODEL')?.trim() || 'claude-haiku-4-5-20251001';
 const GROQ_KEY        = Deno.env.get('GROQ_API_KEY') ?? '';
+const YANDEX_STT_KEY  = Deno.env.get('YANDEX_STT_KEY') ?? '';
 const SB_URL          = Deno.env.get('SUPABASE_URL') ?? '';
 const SB_ANON         = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const GITHUB_TOKEN    = Deno.env.get('GITHUB_TOKEN') ?? '';
@@ -747,10 +748,10 @@ ${appCtxBlock}${historyBlock}${foldersBlock}${memBlock}${notesLines}${altsBlock}
     });
   }
 
-  // ── TRANSCRIBE — Groq Whisper only ──
+  // ── TRANSCRIBE — Yandex SpeechKit (основной) + Groq Whisper (резерв) ──
   // Клиент всегда присылает audio/wav (AudioContext → WAV encoder)
   if (action === 'transcribe') {
-    const { audio_base64 } = payload ?? {};
+    const { audio_base64, sample_rate } = payload ?? {};
     if (typeof audio_base64 !== 'string' || audio_base64.length < 100) {
       return json({ error: 'No audio data' }, 400);
     }
@@ -765,7 +766,33 @@ ${appCtxBlock}${historyBlock}${foldersBlock}${memBlock}${notesLines}${altsBlock}
       return json({ error: 'Invalid base64 audio data' }, 400);
     }
 
-    // ── Groq Whisper (с фолбэком модели) ──
+    // ── Попытка 1: Yandex SpeechKit (основной) ──
+    if (YANDEX_STT_KEY) {
+      try {
+        const sampleRate = typeof sample_rate === 'number' ? sample_rate : 16000;
+        const pcmBytes = wavBytes.slice(44); // снять WAV-заголовок → lpcm
+        const yRes = await fetch(
+          `https://stt.api.cloud.yandex.net/speech/v1/stt:recognize?lang=ru-RU&format=lpcm&sampleRateHertz=${sampleRate}`,
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Api-Key ${YANDEX_STT_KEY}`, 'Content-Type': 'application/octet-stream' },
+            body: pcmBytes,
+          }
+        );
+        if (yRes.ok) {
+          const yData = await yRes.json();
+          const text = (yData.result ?? '').trim();
+          if (text) return json({ text, provider: 'yandex' });
+          console.warn('[rz] Yandex returned empty result, trying Groq');
+        } else {
+          console.warn('[rz] Yandex STT error:', yRes.status, (await yRes.text()).slice(0, 200));
+        }
+      } catch (e) {
+        console.warn('[rz] Yandex STT exception:', e);
+      }
+    }
+
+    // ── Попытка 2: Groq Whisper (резерв, с фолбэком модели) ──
     if (!GROQ_KEY) return json({ error: 'No STT provider configured' }, 500);
     const tStt = Date.now();
     const models = ['whisper-large-v3-turbo', 'whisper-large-v3'];
