@@ -1,4 +1,4 @@
-const CACHE = 'rz-v341';
+const CACHE = 'rz-v342';
 const ASSETS = [
   './',
   'index.html',
@@ -8,6 +8,8 @@ const ASSETS = [
   'pwa-logo-180.png',
   'pwa-logo-192.png',
   'pwa-logo-512.png',
+  'fonts/playfair-cyrillic.woff2',
+  'fonts/playfair-latin.woff2',
   'manifest.json'
 ];
 

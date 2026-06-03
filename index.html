@@ -17,9 +17,20 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="pwa-logo-180.png" sizes="180x180" id="ati">
 <link rel="icon" type="image/png" href="pwa-logo-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
+<!-- Playfair Display — само-хостинг, чтобы логотип не моргал на первом входе -->
+<link rel="preload" href="fonts/playfair-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{
+  font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:block;
+  src:url('fonts/playfair-cyrillic.woff2') format('woff2');
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
+}
+@font-face{
+  font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:block;
+  src:url('fonts/playfair-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+</style>
 <script>
 // Логотип-вордмарк показываем только когда Playfair реально загружен —
 // иначе виден скачок с запасного serif на Playfair (FOUT).
@@ -2962,9 +2973,10 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
 }
 .hf-wrap{
   border-radius:20px;margin-bottom:10px;
-  filter:
-    drop-shadow(0 2px 4px oklch(0.38 0.06 215 / 0.08))
-    drop-shadow(0 8px 20px oklch(0.38 0.06 215 / 0.10));
+  /* box-shadow вместо filter:drop-shadow — иначе filter убивает backdrop-filter карточки */
+  box-shadow:
+    0 2px 4px oklch(0.38 0.06 215 / 0.07),
+    0 8px 20px -6px oklch(0.38 0.06 215 / 0.10);
 }
 .hf-card{padding:16px 15px;border-radius:0;}
 .hf-wrap{border-radius:13px;}
@@ -3298,16 +3310,18 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
     linear-gradient(165deg,oklch(0.93 0.010 205) 0%,oklch(0.895 0.014 214) 56%,oklch(0.865 0.017 220) 100%);
 }
 
-/* ── КАРТОЧКИ ЗАМЕТОК — liquid glass: фон просвечивает, один rim, парение ── */
+/* ── КАРТОЧКИ ЗАМЕТОК — liquid glass: фон просвечивает (как шапка) ──
+   Базовый фон сильно прозрачный; точная непрозрачность задаётся инлайном
+   per-note (новее = чуть плотнее) в loadHomeFeed → _drillCardBg. */
 .hf-card,.drill-note-row,.drill-grid-card,.agent-note{
-  background:oklch(1 0 0 / .50);
-  border-color:oklch(1 0 0 / .55);
+  background:oklch(1 0 0 / .22);
+  border-color:oklch(1 0 0 / .50);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / .80),
-    0 1px 3px oklch(0.30 0.03 215 / .06),
-    0 7px 20px -6px oklch(0.30 0.04 215 / .10);
-  backdrop-filter:blur(20px) saturate(1.7);
-  -webkit-backdrop-filter:blur(20px) saturate(1.7);
+    inset 0 1px 0 oklch(1 0 0 / .55),
+    0 1px 3px oklch(0.30 0.03 215 / .05),
+    0 7px 20px -6px oklch(0.30 0.04 215 / .09);
+  backdrop-filter:blur(22px) saturate(1.8);
+  -webkit-backdrop-filter:blur(22px) saturate(1.8);
 }
 
 /* ── КНОПКИ — чуть светлее ── */
