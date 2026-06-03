@@ -20,6 +20,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
+<script>
+// Логотип-вордмарк показываем только когда Playfair реально загружен —
+// иначе виден скачок с запасного serif на Playfair (FOUT).
+(function(){
+  function ready(){document.documentElement.classList.add('fonts-ready');}
+  try{
+    if(document.fonts&&document.fonts.load){
+      Promise.race([
+        document.fonts.load('400 48px "Playfair Display"').then(()=>document.fonts.ready),
+        new Promise(r=>setTimeout(r,1500)) // фолбэк: не ждём вечно
+      ]).then(ready,ready);
+    }else{setTimeout(ready,300);}
+  }catch(e){ready();}
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;}
 input,textarea{-webkit-user-select:text;user-select:text;}
@@ -2903,12 +2918,21 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
 }
 .auth-wordmark{
   font-family:'Playfair Display',serif;
-  font-size:49px;line-height:1;color:oklch(0.25 0.055 190);
-  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) .05s both;
+  font-size:clamp(36px,12vw,48px);
+  line-height:1.12;
+  padding-top:.06em;            /* запас под диакритику «ё» — не обрезается */
+  color:oklch(0.25 0.055 190);
+  text-align:center;
+  /* Скрыт пока Playfair не готов — чтобы не было скачка с serif */
+  opacity:0;
 }
 @keyframes wm-appear{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes wm-shimmer{0%{background-position:-240% center;}100%{background-position:240% center;}}
-#auth-screen.checking .auth-wordmark{
+/* Появление логотипа — только после загрузки шрифта */
+html.fonts-ready .auth-wordmark{
+  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both;
+}
+html.fonts-ready #auth-screen.checking .auth-wordmark{
   background:linear-gradient(90deg,
     oklch(0.25 0.055 190) 0%,
     oklch(0.25 0.055 190) 28%,
@@ -2918,7 +2942,7 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
   );
   background-size:280% auto;
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) .05s both,wm-shimmer 2s linear infinite .6s;
+  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both,wm-shimmer 2s linear infinite .6s;
 }
 .auth-logo{margin-bottom:28px;}
 .jarvis-top{padding:7px 14px 3px;}
