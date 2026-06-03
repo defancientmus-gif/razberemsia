@@ -1,4 +1,4 @@
-const CACHE = 'rz-v340';
+const CACHE = 'rz-v341';
 const ASSETS = [
   './',
   'index.html',
@@ -18,17 +18,19 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
+// Долгоживущие кеши — НЕ чистятся при обновлении версии CACHE.
+const FONT_CACHE = 'rz-fonts-v1';
+const LIB_CACHE  = 'rz-lib-v1';
+const KEEP_CACHES = [CACHE, FONT_CACHE, LIB_CACHE];
+
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => !KEEP_CACHES.includes(k)).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
-
-// Отдельный долгоживущий кеш для шрифтов (не чистится при обновлении CACHE).
-const FONT_CACHE = 'rz-fonts-v1';
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
@@ -51,7 +53,24 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Кросс-доменные запросы (Supabase, CDN и т.д.) — не перехватываем.
+  // CDN-библиотека supabase-js — cache-first, чтобы приложение стартовало ОФЛАЙН.
+  // Без неё sb=null → не пускает в приложение даже с локальными заметками.
+  if (url.includes('cdn.jsdelivr.net')) {
+    e.respondWith(
+      caches.open(LIB_CACHE).then(lc =>
+        lc.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(r => {
+            if (r.ok) lc.put(e.request, r.clone());
+            return r;
+          }).catch(() => cached || new Response('', {status: 503}));
+        })
+      )
+    );
+    return;
+  }
+
+  // Прочие кросс-доменные запросы (Supabase API и т.д.) — не перехватываем.
   // SW не должен мешать API-запросам возвращать их ошибки напрямую клиенту.
   if (!url.startsWith(self.location.origin)) return;
 
