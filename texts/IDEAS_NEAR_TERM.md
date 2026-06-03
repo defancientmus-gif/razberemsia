@@ -345,3 +345,13 @@ https://www.instagram.com/reel/DV_aUOvCYll/?igsh=eHV0M2oxeXMza25q Пиксель
 
 > **AI:** Идея: Улучшенный текст: https://www.instagram.com/reel/DXHHJQ6kgic/?igsh=OTI1c3A5YnZ3emo2 — анимация https://www.instagram.com/reel/DZCnrIwsXk9/?igsh=MWluNG1sbXkxYTBzNA==...
 > **Теги:** идея, Ai Инструменты, __filed__:ai инструменты
+
+
+---
+
+## Идея — 2026-06-03
+
+Анализатор ссылок
+
+> **AI:** Идея: Анализатор ссылок
+> **Теги:** идея
