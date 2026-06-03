@@ -2902,6 +2902,18 @@ function fmtMeta(ts){
   return d.getDate()+' '+M[d.getMonth()]+', '+pad(d.getHours())+':'+pad(d.getMinutes());
 }
 function pad(x){return String(x).padStart(2,'0');}
+// Короткое время напоминания: «сегодня 21:30», «завтра 09:00», «3 июн 21:30»
+function _fmtRemShort(ts){
+  if(!ts)return'';
+  const d=new Date(ts),now=new Date();
+  const M=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  const sameDay=(a,b)=>a.getDate()===b.getDate()&&a.getMonth()===b.getMonth()&&a.getFullYear()===b.getFullYear();
+  const tomorrow=new Date(now);tomorrow.setDate(now.getDate()+1);
+  const hm=pad(d.getHours())+':'+pad(d.getMinutes());
+  if(sameDay(d,now))return'сегодня '+hm;
+  if(sameDay(d,tomorrow))return'завтра '+hm;
+  return d.getDate()+' '+M[d.getMonth()]+' '+hm;
+}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 
 // ── CALENDAR ──
@@ -5588,15 +5600,23 @@ function loadHomeFeed(){
     wrap.className='hf-wrap';
 
     // Карточка
+    const isRem=!!remFuture; // будущее напоминание → компактная строка с рамкой
     const card=document.createElement('button');
     const sectionStyle=_sectionNoteStyle(n);
-    card.className='hf-card'+(sectionStyle?' section-glass-note':'')+_noteToneClass(n);
+    card.className='hf-card'+(isRem?' hf-reminder':'')+(sectionStyle?' section-glass-note':'')+_noteToneClass(n);
     if(sectionStyle)card.style.cssText=sectionStyle;
-    card.style.background=_drillCardBg(i,sorted.length);
+    if(!isRem)card.style.background=_drillCardBg(i,sorted.length);
     const isPinned=!!n.pinned;
     const pinIcon=isPinned?`<span class="hf-pin-mark"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0015 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg></span>`:'';
     if(isPinned)card.classList.add('pinned');
-    card.innerHTML=`
+    if(isRem){
+      // Компактная строка напоминания: колокольчик · заголовок · время срабатывания
+      card.innerHTML=`
+        <span class="hf-rem-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
+        <span class="hf-rem-title">${esc(title)}${pinIcon}</span>
+        <span class="hf-rem-time">${esc(_fmtRemShort(remDt))}</span>`;
+    }else{
+      card.innerHTML=`
       <div class="hf-sig"><div class="hf-dot ${dotClass}"></div></div>
       <div class="hf-body">
         <div class="hf-title">${esc(title)}${pinIcon}</div>
@@ -5608,6 +5628,7 @@ function loadHomeFeed(){
         <div class="hf-time">${esc(timeStr)}</div>
         <div class="hf-arr">&rsaquo;</div>
       </div>`;
+    }
     card.onclick=()=>{
       if(_cardSwiping)return;
       n.id?openNoteSheetById(n.id):openNoteSheet(getNotes().findIndex(x=>x===n));

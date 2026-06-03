@@ -3347,6 +3347,27 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
   -webkit-backdrop-filter:blur(22px) saturate(1.8);
 }
 
+/* ── НАПОМИНАНИЕ — компактная строка с бирюзовой рамкой ── */
+.hf-card.hf-reminder{
+  display:flex;flex-direction:row;align-items:center;gap:9px;
+  min-height:0;padding:11px 14px;border-radius:14px;
+  background:linear-gradient(118deg,oklch(0.66 0.12 205 / .18),oklch(1 0 0 / .34));
+  border:1px solid oklch(0.56 0.12 208 / .50);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / .55),
+    0 0 0 1px oklch(0.56 0.12 208 / .12),
+    0 4px 14px -8px oklch(0.42 0.10 210 / .28);
+  animation:hf-rem-in .28s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes hf-rem-in{from{opacity:0;transform:translateY(-6px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.hf-reminder .hf-rem-ico{flex-shrink:0;display:flex;align-items:center;color:oklch(0.44 0.13 208);}
+.hf-reminder .hf-rem-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;display:flex;align-items:center;gap:5px;}
+.hf-reminder .hf-rem-time{flex-shrink:0;font-size:12px;font-weight:700;color:oklch(0.44 0.13 208);letter-spacing:.01em;}
+/* В сетке напоминание тоже компактной строкой на всю ширину ряда */
+.home-feed-wrap.hf-grid .hf-wrap:has(.hf-reminder){grid-column:1 / -1;min-height:0;}
+/* Плавное смещение карточек при перестроении ленты */
+.hf-wrap{transition:transform .26s cubic-bezier(.22,1,.36,1);}
+
 /* ── КНОПКИ — чуть светлее ── */
 .jq-btn,.home-act-btn,.bell-bar-btn,.emg-opt,.sr-item,.stats-rows,.cal-trigger,.folder-card,.drill-sec-row{
   background:oklch(1 0 0 / .65);
