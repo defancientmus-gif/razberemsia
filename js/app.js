@@ -684,6 +684,16 @@ function syncSceneMenu(){
   const s=document.getElementById('bg-scene-s');
   if(s)s.textContent=on?'Природа · луг':'Стандартный';
 }
+function toggleGlassLite(){
+  const lite=document.documentElement.classList.toggle('glass-lite');
+  localStorage.setItem('rz_glass_lite',lite?'1':'0');
+  syncGlassMenu();
+}
+function syncGlassMenu(){
+  const lite=document.documentElement.classList.contains('glass-lite');
+  const s=document.getElementById('glass-s');
+  if(s)s.textContent=lite?'Лёгкое · экономит батарею':'Живое (блюр)';
+}
 
 function updateThemeMeta(){
   const meta=document.querySelector('meta[name="theme-color"]');
@@ -704,7 +714,7 @@ function syncThemeMenu(){
 function toggleMenu(e){
   e.stopPropagation();
   const m=document.getElementById('hmenu'),b=document.getElementById('hbtn');
-  m.classList.contains('open')?closeMenu():(syncThemeMenu(),syncSceneMenu(),m.classList.add('open'),b.classList.add('open'));
+  m.classList.contains('open')?closeMenu():(syncThemeMenu(),syncSceneMenu(),syncGlassMenu(),m.classList.add('open'),b.classList.add('open'));
 }
 function closeMenu(){
   document.getElementById('hmenu').classList.remove('open');

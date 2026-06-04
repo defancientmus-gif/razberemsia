@@ -37,6 +37,7 @@
 (function(){
   // Фон-сцена (применяем до отрисовки, чтобы не было вспышки)
   try{if(localStorage.getItem('rz_bg_scene')==='1')document.documentElement.classList.add('scene-on');}catch(e){}
+  try{if(localStorage.getItem('rz_glass_lite')==='1')document.documentElement.classList.add('glass-lite');}catch(e){}
   function ready(){document.documentElement.classList.add('fonts-ready');}
   try{
     if(document.fonts&&document.fonts.load){
@@ -3350,15 +3351,23 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
    Базовый фон сильно прозрачный; точная непрозрачность задаётся инлайном
    per-note (новее = чуть плотнее) в loadHomeFeed → _drillCardBg. */
 .hf-card,.drill-note-row,.drill-grid-card,.agent-note{
-  background:oklch(1 0 0 / .14);
+  background:oklch(1 0 0 / .17);
   border-color:oklch(1 0 0 / .42);
   box-shadow:
     inset 0 1px 0 oklch(1 0 0 / .45),
     0 1px 3px oklch(0.30 0.03 215 / .05),
     0 7px 20px -6px oklch(0.30 0.04 215 / .08);
-  backdrop-filter:blur(24px) saturate(1.9);
-  -webkit-backdrop-filter:blur(24px) saturate(1.9);
+  /* дешёвый блюр (было 24+saturate — грело GPU при скролле) */
+  backdrop-filter:blur(9px);
+  -webkit-backdrop-filter:blur(9px);
+  contain:paint;
 }
+/* Лёгкое стекло — без блюра карточек (холодно/батарея). Заливку чуть плотнее для читаемости. */
+html.glass-lite .hf-card,html.glass-lite .drill-note-row,html.glass-lite .drill-grid-card,html.glass-lite .agent-note{
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  background:oklch(1 0 0 / .42)!important;
+}
+html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.66 0.12 205/.28),oklch(1 0 0/.5))!important;}
 
 /* ── НАПОМИНАНИЕ — компактная строка с бирюзовой рамкой ── */
 .hf-card.hf-reminder{
@@ -3675,6 +3684,10 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
   <button class="hmenu-item" onclick="toggleSceneBg()" id="bg-scene-item">
     <div class="hmenu-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="4"/><path d="M12 2v3M12 21v-1M4 13H2M22 13h-2M5.6 6.6L4.2 5.2M18.4 6.6l1.4-1.4"/><path d="M2 20h20" stroke-width="1.7"/></svg></div>
     <div><div class="hmenu-t">Фон</div><div class="hmenu-s" id="bg-scene-s">Стандартный</div></div>
+  </button>
+  <button class="hmenu-item" onclick="toggleGlassLite()" id="glass-item">
+    <div class="hmenu-ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M9 7h6M9 11h6"/></svg></div>
+    <div><div class="hmenu-t">Стекло</div><div class="hmenu-s" id="glass-s">Живое (блюр)</div></div>
   </button>
   <button class="hmenu-item" onclick="openStats();closeMenu()">
     <div class="hmenu-ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-4 4 3 5-7"/></svg></div>
