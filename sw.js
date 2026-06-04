@@ -1,4 +1,4 @@
-const CACHE = 'rz-v358';
+const CACHE = 'rz-v359';
 const ASSETS = [
   './',
   'index.html',

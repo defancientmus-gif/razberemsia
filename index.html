@@ -2113,15 +2113,16 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .sheet-char-count{display:none;} /* убрано */
 .sheet-footer-actions{display:flex;align-items:center;gap:6px;flex:1;}
 .sheet-cancel{display:none;} /* убрано */
-/* Save — стеклянная, углублённая */
+/* Save — стеклянная пилюля, углублённая */
 .sheet-save{
-  border-radius:14px;padding:9px 22px;
+  border-radius:50px;padding:10px 24px;
   font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sys);-webkit-appearance:none;
   background:oklch(0.96 0.012 210 / 0.45);
   border:1px solid oklch(0.75 0.04 210 / 0.45);
   color:oklch(0.38 0.10 210);
   box-shadow:inset 0 2px 6px oklch(0 0 0 / 0.08),inset 0 1px 0 oklch(1 0 0 / 0.50);
   transition:transform .12s,background .15s;backdrop-filter:blur(4px);
+  white-space:nowrap;flex-shrink:0;
 }
 .sheet-save:active{transform:scale(.96);background:oklch(0.92 0.025 210 / 0.55);}
 /* AI compact — маленькая иконка рядом с инструментами */
@@ -3231,7 +3232,7 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
 .sheet-footer{padding:8px 18px calc(env(safe-area-inset-bottom,0px) + 12px);}
 .sheet-footer-actions{gap:8px;}
 .sheet-save{
-  min-width:116px;padding:11px 22px;border-radius:15px;font-size:15px;
+  padding:11px 28px;font-size:15px;
 }
 
 /* ── DESKTOP: wider floating window ── */
