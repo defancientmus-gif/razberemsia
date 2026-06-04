@@ -1,4 +1,4 @@
-const CACHE = 'rz-v353';
+const CACHE = 'rz-v355';
 const ASSETS = [
   './',
   'index.html',
@@ -26,12 +26,13 @@ const LIB_CACHE  = 'rz-lib-v1';
 const KEEP_CACHES = [CACHE, FONT_CACHE, LIB_CACHE];
 
 self.addEventListener('activate', e => {
+  // Не вызываем clients.claim() — он захватывает страницу посреди загрузки,
+  // что ломает первый запуск PWA. Новый SW берёт управление при следующем запуске.
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => !KEEP_CACHES.includes(k)).map(k => caches.delete(k)))
     )
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {

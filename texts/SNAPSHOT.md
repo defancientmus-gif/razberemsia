@@ -1,76 +1,82 @@
 # Snapshot проекта
 
-Обновлено: 2026-05-31 после Router v1.1 `rz-v283`.
+Обновлено: 2026-06-04 после `rz-v353`.
 
 Этот файл фиксирует факты, а не желания. Если есть сомнение, проверять код и `git status`.
 
 ## Текущий деплой
 
-- **SW cache:** `rz-v283` в `sw.js`.
-- **Последний runtime-коммит:** проверить `git log -1 --oneline`.
-- **Текущая правка:** Router v1.1 синхронизирован между клиентом и Edge Function; контекстные формы и напоминания со ссылкой на заметки идут в `notes`, широкие планы/сводки идут в `deep`.
-- **Edge Function `ai`:** задеплоена 2026-05-31, Router v1.1 (`rz-v283`).
+- **SW cache:** `rz-v353` в `sw.js`.
+- **Последний runtime-коммит:** `2ebd395 rz-v353: instant startup`
+- **Edge Function `ai`:** задеплоена 2026-05-31, Router v1.1 (`rz-v283`). Если агент странно себя ведёт — передеплоить.
 - **Прод URL:** https://defancientmus-gif.github.io/razberemsia/
-- **Обновление PWA:** `sw.js` делает `skipWaiting()` и `clients.claim()`, `js/app.js` делает один reload на `controllerchange`. Это дает быстрый сценарий: правка -> cache bump -> commit/push -> через 1-2 минуты видно в PWA.
+- **Обновление PWA:** `sw.js` делает `skipWaiting()` и `clients.claim()`. Клиент НЕ перезагружается при `controllerchange` (убрано в v353 — давало рывок при старте). Новый SW подхватывает файлы при следующем запуске.
 
-## Что только что исправлено
+## Последние большие изменения (сессия 2026-06-04)
 
-- Голосовой агент больше не получает весь контекст по умолчанию.
-- Клиент `js/app.js` сам выбирает профиль запроса и отправляет только нужный объём заметок/памяти/истории.
-- Edge Function `ai` повторно проверяет профиль, вставляет заметки только для `notes/deep`, память только для `deep`, историю только для явных продолжений.
-- Router v1.1: `reminderNeedsNotes`, формы `этом/этого/которую/него`, `расскажи/перечисли`, `планы/расписание`.
-- В промпте убрано правило, которое привязывало любой неконкретный запрос к текущему разделу/папке. Теперь текущий экран используется только для слов "здесь/сюда/эта папка/этот раздел".
-- `CLARIFY` ограничен: один короткий вопрос только если действие невозможно или рискованно.
-- В шапку приложения возвращён бейдж `β rz-v...`; при запуске он сверяет реальный cache из `sw.js`.
-- Кнопка агента `Открыть заметку/напоминание` больше не полагается на `getNotes()[0]`; созданный `id` передаётся в карточку результата.
-- Кнопка `Сохранить` больше не должна зависать из-за бесконечного `_reloadViews()`.
-- Было: `function _reloadViews(){_reloadViews();}`.
-- Стало: `loadHomeFeed(); loadNotes(); loadNotepad();`.
-- Старые ссылки `pwa-feather-*` заменены на актуальные `pwa-logo-*`, чтобы не коммитить удаленные иконки с живыми ссылками.
-- Тег идеи приведен к одному канону: `идея`. Legacy-варианты `идеи`, `idea`, `ideas` нормализуются и не должны создавать отдельные AI-папки.
-- Обычное `Сохранить` теперь тоже вызывает `save_idea`, если заметка находится в контексте идеи: тег/папка `идея`, label `идея` или текст начинается с "идея/идеи".
-- Повторный быстрый клик по `Сохранить` закрыт локальным замком, чтобы не создавать дубли.
-- Проверка: `node --check js/app.js` должна проходить перед деплоем.
+### Desktop workspace (v348–v349)
+- 2-колонная раскладка от 1000px: основной контент + sidebar справа
+- Sidebar: sticky, glass, содержит быстрый ввод/агент/тетрадь
+- До v349 sidebar был слева — конфликтовал с логотипом
+
+### Анимации (v347)
+- Glass-карточка агента
+- Напоминание вылетает из кнопки (transform-origin = кнопка)
+- Открытие заметки: zoom in (scale 0.94→1)
+- Папки: staggered reveal (delay по индексу)
+
+### Перф (v350–v353)
+- blur 24→9, убрана `saturate()` — дешевле на GPU
+- `contain:paint` на карточках
+- `glass-lite` toggle в меню (для слабых устройств)
+- `font-display: swap` — нет блокирующего периода для Playfair
+- splash 600→300ms, font-gate 1500→700ms
+- SW auto-reload убран → мгновенный старт
+
+### Баги синка (исправлены ранее, ~v323)
+- Удалённые заметки воскресали → `_mergeNoteArrays` знает `trashIds`
+- Корзина перезаписывалась → `_mergeTrashArrays` (union)
+- Лимит корзины унифицирован до 200
 
 ## Важное по репозиторию
 
-- `texts/` становится канонической папкой контекста.
-- `project-memory/` больше не должен использоваться как активный источник.
-- `scripts/build-claude-handoff.sh` должен собирать handoff из `CLAUDE.md`, `texts/` и актуального runtime, а не из старого `project-memory`.
-- В git до уборки было много старых удалений и untracked-файлов. Не делать `git add -A` вслепую без понимания.
+- `texts/` — каноническая папка контекста
+- `project-memory/` — legacy, не использовать как активный источник
+- Не делать `git add -A` вслепую
+- Untracked: `supabase/migrations/20260531_realtime_user_state.sql` — проверить и закоммитить или удалить
 
 ## Runtime
 
 | Что | Где |
 | --- | --- |
 | Вход | `index.html` |
-| Основной клиент | `js/app.js` |
+| Основной клиент | `js/app.js` (~6961 строк) |
 | PWA cache/offline | `sw.js` |
 | Manifest/icons | `manifest.json`, `pwa-logo-*`, `logo-mark.png` |
-| AI Edge Function | `supabase/functions/ai/index.ts` |
+| AI Edge Function | `supabase/functions/ai/index.ts` (~840 строк) |
 | SQL migrations | `supabase/migrations/*.sql` |
 
 ## Supabase / AI
 
 - Основная Edge Function: `ai`.
-- Legacy: `smooth-processor`, не считать источником правды.
-- Секреты в Supabase Dashboard: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `GITHUB_TOKEN`.
-- Локальный код `save_idea` нацелен на `texts/IDEAS_NEAR_TERM.md`.
-- Серверная Edge Function нормализует теги, но не форсирует `идея`, потому что тот же action используется для фидбека.
-- Клиент уже использует Supabase Realtime для `user_state` + fallback polling 8с.
-- Локально есть untracked migration `supabase/migrations/20260531_realtime_user_state.sql`; не считать её официальной, пока не решено применить/закоммитить.
+- Модель: `claude-haiku-4-5-20251001` (через `ANTHROPIC_MODEL` env или дефолт).
+- Секреты в Supabase Dashboard: `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `YANDEX_STT_KEY`, `GITHUB_TOKEN`.
+- STT: Yandex SpeechKit (основной) → Groq Whisper (резерв).
+- Router v1.1: профили `none/light/notes/deep`, клиент — источник правды.
+- `save_idea` пишет идеи в GitHub коммитами через Edge Function (`texts/IDEAS_NEAR_TERM.md`).
 
 ## Открытые риски
 
-1. Router v1: после деплоя нужен живой прогон голосовых фраз. Проверить, что агент не задаёт лишние уточнения на простых командах.
-2. `ideas/`: считать legacy raw-историей. Решить, оставляем ли папку readonly или переносим новые автосохранения только в `texts/IDEAS_NEAR_TERM.md`.
-3. `save_idea`: нужен периодический живой тест заметкой с тегом/контекстом `идея`, чтобы подтвердить запись в GitHub.
-4. Supabase deployed function `ai`: если агент ведёт себя по-старому, сначала проверить, задеплоена ли новая Edge Function.
-5. Realtime migration: проверить, применялась ли `20260531_realtime_user_state.sql`; затем либо закоммитить как официальную схему, либо убрать как черновик.
+1. **БАГ 4 — папки без soft-delete**: удалённая папка воскресает при pull. Нужна миграция схемы + `_mergeTagFolders`.
+2. **БАГ 3 — self-echo broadcast**: дебаунс `_lastPullAt` защищает, но не полностью.
+3. **Realtime migration**: `20260531_realtime_user_state.sql` не закоммичена. Неизвестно, применялась ли вручную.
+4. **Edge Function**: если Router v1.1 не применяется — значит не передеплоена. Проверить через `supabase functions deploy ai --no-verify-jwt`.
+5. **glass-lite / живой тест**: нужен тест на iPhone — fog, blur, читаемость карточек на солнце.
 
 ## Проверки перед деплоем
 
 - `node --check js/app.js`
-- если менялись `index.html`, `js/app.js`, `sw.js` или кэшируемые ассеты - поднять `CACHE` в `sw.js`
+- если менялись `index.html`, `js/app.js`, `sw.js` или кэшируемые ассеты — поднять `CACHE` в `sw.js`
 - коммитить только нужные файлы
 - после push проверить PWA через обычный URL
+- после правок агента/роутера: `node scripts/smoke-agent-router.mjs`
