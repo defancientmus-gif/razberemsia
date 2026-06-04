@@ -346,28 +346,31 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 /* ── НАПОМИНАНИЯ: слайдер снизу ── */
 .remind-overlay{
   position:fixed;inset:0;z-index:600;display:none;
-  align-items:flex-end;justify-content:center;
+  align-items:center;justify-content:center;padding:16px;
 }
 .remind-overlay.open{display:flex;}
-.remind-bg{position:absolute;inset:0;background:oklch(0.14 0.018 210 / 0.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.remind-bg{position:absolute;inset:0;background:oklch(0.14 0.018 210 / 0.30);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .remind-sheet{
   position:relative;z-index:1;
-  width:100%;max-width:640px;
-  height:76dvh;
+  width:100%;max-width:440px;
+  height:min(72dvh,620px);max-height:calc(100dvh - 96px);
   display:flex;flex-direction:column;
+  /* Полупрозрачное стекло — как лист заметки */
   background:
-    radial-gradient(ellipse 80% 35% at 50% 0%, oklch(0.86 0.06 65 / 0.18), transparent 55%),
-    radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.62) 0%, transparent 36%),
-    oklch(0.978 0.012 65 / 0.97);
-  backdrop-filter:blur(48px) saturate(1.8);
-  -webkit-backdrop-filter:blur(48px) saturate(1.8);
-  border-radius:26px 26px 0 0;
-  border:1px solid oklch(1 0 0 / 0.68);
-  border-bottom:none;
-  box-shadow:0 -8px 48px oklch(0.35 0.06 65 / 0.14), inset 0 1px 0 oklch(1 0 0 / 0.82);
-  animation:remind-up .32s cubic-bezier(.22,1,.36,1);
+    radial-gradient(ellipse 120% 40% at 50% 0%, oklch(0.88 0.06 65 / 0.14), transparent 60%),
+    oklch(0.985 0.010 65 / 0.52);
+  backdrop-filter:blur(44px) saturate(1.7);
+  -webkit-backdrop-filter:blur(44px) saturate(1.7);
+  border-radius:28px;
+  border:1px solid oklch(1 0 0 / 0.6);
+  box-shadow:0 28px 80px -30px oklch(0.30 0.06 65 / 0.42), inset 0 1px 0 oklch(1 0 0 / 0.7);
+  /* Вылет из кнопки «Напомнить» (низ-лево) в центр */
+  transform-origin:26% 116%;
+  animation:remind-pop .40s cubic-bezier(.22,1,.36,1);
 }
-@keyframes remind-up{from{transform:translateY(100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes remind-pop{from{transform:translateY(30px) scale(.32);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+.remind-overlay.closing .remind-sheet{animation:remind-unpop .22s cubic-bezier(.4,0,1,1) forwards;}
+@keyframes remind-unpop{from{transform:scale(1);opacity:1;}to{transform:translateY(20px) scale(.4);opacity:0;}}
 .remind-hdr{
   display:flex;align-items:center;justify-content:space-between;
   padding:16px 18px 8px;flex-shrink:0;
@@ -1264,12 +1267,16 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 }
 .agent-card-inner{
   width:100%;max-width:380px;
-  background:linear-gradient(160deg, oklch(1 0 0 / 0.96) 0%, oklch(0.97 0.010 210 / 0.95) 100%);
-  border:1px solid oklch(1 0 0 / 0.85);
+  /* Ликвид-гласс — как лист заметки */
+  background:
+    radial-gradient(ellipse 120% 46% at 50% 0%, oklch(0.92 0.03 210 / 0.14), transparent 60%),
+    oklch(0.99 0.005 215 / 0.50);
+  backdrop-filter:blur(44px) saturate(1.7);-webkit-backdrop-filter:blur(44px) saturate(1.7);
+  border:1px solid oklch(1 0 0 / 0.6);
   border-radius:28px;
   padding:32px 24px 26px;
-  box-shadow:0 24px 56px -8px oklch(0.14 0.04 210 / 0.32),inset 0 1px 0 oklch(1 0 0 / 1);
-  transform:scale(0.88) translateY(16px);
+  box-shadow:0 28px 70px -24px oklch(0.14 0.04 210 / 0.4),inset 0 1px 0 oklch(1 0 0 / 0.7);
+  transform:scale(0.72) translateY(14px);
   opacity:0;
   transition:transform .40s cubic-bezier(.34,1.56,.64,1),opacity .28s ease;
 }
@@ -1676,13 +1683,15 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   border-radius:28px;
   border:1px solid oklch(1 0 0 / 0.62);
   box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.34),0 4px 24px -16px oklch(0.22 0.05 210 / 0.24), inset 0 1px 0 oklch(1 0 0 / 0.78);
-  animation:sheetRise .32s cubic-bezier(.22,1,.36,1);
+  animation:sheetRise .40s cubic-bezier(.22,1,.36,1);
+  transform-origin:center;
   overflow:hidden;
   will-change:transform;
   transition:background .4s cubic-bezier(.4,0,.2,1);
 }
-@keyframes sheetRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
-@keyframes sheetDrop{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(12px);}}
+/* Ликвид-гласс вылет-зум (как в рилсе) */
+@keyframes sheetRise{from{opacity:0;transform:scale(.72) translateY(14px);}60%{opacity:1;}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes sheetDrop{from{opacity:1;transform:scale(1);}to{opacity:0;transform:scale(.82) translateY(10px);}}
 .sheet.closing{animation:sheetDrop .20s cubic-bezier(.4,0,1,1) forwards;}
 
 .keyboard-open .overlay.open{align-items:flex-end;padding:8px 8px 0;}
@@ -3372,6 +3381,18 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
 /* Плавное смещение карточек при перестроении ленты */
 .hf-wrap{transition:transform .26s cubic-bezier(.22,1,.36,1);}
 
+/* ── Красивый вылет папок/разделов при открытии (стаггер) ── */
+@keyframes folder-in{from{opacity:0;transform:translateY(12px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+.sect-grid .sect-card,#drill-p0 .drill-sec-row{animation:folder-in .38s cubic-bezier(.22,1,.36,1) both;}
+.sect-grid .sect-card:nth-child(1),#drill-p0 .drill-sec-row:nth-child(1){animation-delay:.02s}
+.sect-grid .sect-card:nth-child(2),#drill-p0 .drill-sec-row:nth-child(2){animation-delay:.06s}
+.sect-grid .sect-card:nth-child(3),#drill-p0 .drill-sec-row:nth-child(3){animation-delay:.10s}
+.sect-grid .sect-card:nth-child(4),#drill-p0 .drill-sec-row:nth-child(4){animation-delay:.14s}
+.sect-grid .sect-card:nth-child(5),#drill-p0 .drill-sec-row:nth-child(5){animation-delay:.18s}
+.sect-grid .sect-card:nth-child(6),#drill-p0 .drill-sec-row:nth-child(6){animation-delay:.22s}
+.sect-grid .sect-card:nth-child(7),#drill-p0 .drill-sec-row:nth-child(7){animation-delay:.26s}
+.sect-grid .sect-card:nth-child(n+8),#drill-p0 .drill-sec-row:nth-child(n+8){animation-delay:.30s}
+
 /* ── КНОПКИ — чуть светлее ── */
 .jq-btn,.home-act-btn,.bell-bar-btn,.emg-opt,.sr-item,.stats-rows,.cal-trigger,.folder-card,.drill-sec-row{
   background:oklch(1 0 0 / .65);
@@ -3458,10 +3479,10 @@ html.fonts-ready #auth-screen.checking .auth-wordmark{
 .ai-section+.ai-section{margin-top:9px;}
 .remind-sheet,.rem-edit-sheet,#qrem-sheet{
   background:
-    radial-gradient(ellipse 78% 38% at 50% 0%,oklch(0.90 0.035 74 / .24),transparent 64%),
-    linear-gradient(180deg,oklch(0.982 0.010 72 / .96),oklch(0.948 0.014 82 / .92)) !important;
-  border-color:oklch(1 0 0 / .70) !important;
-  box-shadow:0 -16px 54px -28px oklch(0.32 0.055 70 / .38),inset 0 1.5px 0 oklch(1 0 0 / .88) !important;
+    radial-gradient(ellipse 100% 40% at 50% 0%,oklch(0.90 0.04 74 / .16),transparent 62%),
+    oklch(0.985 0.010 72 / .52) !important;
+  border-color:oklch(1 0 0 / .60) !important;
+  box-shadow:0 28px 80px -30px oklch(0.30 0.06 65 / .42),inset 0 1px 0 oklch(1 0 0 / .7) !important;
 }
 .remind-item,.remind-item2,.remind-settings,.rem-edit-q,.rem-edit-custom-row,.rcal{
   background:linear-gradient(154deg,oklch(1 0 0 / .68),oklch(0.972 0.010 74 / .54)) !important;

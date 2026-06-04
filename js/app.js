@@ -1964,7 +1964,9 @@ function openReminderPanel(){
 }
 function closeReminderPanel(){
   const overlay=document.getElementById('remind-overlay');
-  if(overlay)overlay.classList.remove('open');
+  if(!overlay)return;
+  overlay.classList.add('closing');
+  setTimeout(()=>{overlay.classList.remove('open','closing');},210);
 }
 function _remindWhenTxt(dt,now){
   const ms=dt.getTime()-now;
