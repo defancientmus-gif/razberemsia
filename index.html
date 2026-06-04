@@ -3406,7 +3406,9 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
   animation:hf-rem-in .28s cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes hf-rem-in{from{opacity:0;transform:translateY(-6px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
-.hf-reminder .hf-rem-ico{flex-shrink:0;display:flex;align-items:center;color:oklch(0.44 0.13 208);}
+.hf-reminder .hf-rem-ico{flex-shrink:0;display:flex;align-items:center;color:oklch(0.44 0.13 208);position:relative;}
+.hf-rem-pulse{position:absolute;inset:-6px;border-radius:50%;background:oklch(0.60 0.22 25/0.18);animation:rem-pulse 2s ease-in-out infinite;pointer-events:none;}
+@keyframes rem-pulse{0%,100%{transform:scale(1);opacity:.8;}50%{transform:scale(1.5);opacity:0;}}
 .hf-reminder .hf-rem-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;display:flex;align-items:center;gap:5px;}
 .hf-reminder .hf-rem-time{flex-shrink:0;font-size:12px;font-weight:700;color:oklch(0.44 0.13 208);letter-spacing:.01em;}
 /* В сетке напоминание тоже компактной строкой на всю ширину ряда */

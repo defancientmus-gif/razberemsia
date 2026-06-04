@@ -1365,7 +1365,7 @@ function openListSheet(noteId){
   } else {
     document.getElementById('sheet-body').innerHTML=`<textarea class="list-sheet-area" id="sh1" placeholder="Молоко&#10;Хлеб&#10;Яйца&#10;&#10;Вставьте или напишите — каждый пункт с новой строки"></textarea>`;
   }
-  document.getElementById('sheet-char-count').textContent='';
+  {const _scc=document.getElementById('sheet-char-count');if(_scc)_scc.textContent='';}
   ST='list';
   _openSheet();
   setTimeout(()=>{
@@ -4466,7 +4466,7 @@ function _openNoteWith(n){
   if(moreWrap)moreWrap.style.display='flex';
   document.getElementById('sheet-title').textContent='Заметка';
   document.getElementById('sheet-body').innerHTML=noteForm(n.body||n.title||'');
-  document.getElementById('sheet-char-count').textContent=(n.body||n.title||'').length+' символов';
+  {const _scc=document.getElementById('sheet-char-count');if(_scc)_scc.textContent=(n.body||n.title||'').length+' символов';}
   const _nFiledIn=getFiledFolderName(n);
   if(_nFiledIn&&isUserFolderName(_nFiledIn)){
     const _nBtn=document.getElementById('sheet-cat-btn');
@@ -4501,7 +4501,7 @@ function openSheet(type){
   closeSheetMoreMenu();
   document.getElementById('sheet-title').textContent='Новая заметка';
   document.getElementById('sheet-body').innerHTML=noteForm('');
-  document.getElementById('sheet-char-count').textContent='0 символов';
+  {const _scc=document.getElementById('sheet-char-count');if(_scc)_scc.textContent='0 символов';}
   // Если открываем из категории — подставляем её по умолчанию
   const defaultCat=(drillCategory&&typeof drillCategory==='string')?drillCategory:'заметка';
   showSheetCat(defaultCat);
@@ -5778,8 +5778,8 @@ function loadHomeFeed(){
   sorted.forEach((n,i)=>{
     // 🚦 Светофор: 🔴 просрочено → 🟡 есть напоминание → 🟢 просто заметка
     const remDt=n.reminder?new Date(n.reminder).getTime():0;
-    const remOverdue=remDt&&remDt<=now;
-    const remFuture=remDt&&remDt>now;
+    const remOverdue=remDt&&remDt<=now&&!n.reminderDone;
+    const remFuture=remDt&&remDt>now&&!n.reminderDone;
     const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
     const hasAi=!!(n.aiSummary||visibleTags.length);
     let dotClass=hasAi?'hf-dot-green':'hf-dot-none';
@@ -5810,7 +5810,7 @@ function loadHomeFeed(){
     if(isRem){
       // Компактная строка напоминания: колокольчик · заголовок · время срабатывания
       card.innerHTML=`
-        <span class="hf-rem-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
+        <span class="hf-rem-ico"><span class="hf-rem-pulse"></span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
         <span class="hf-rem-title">${esc(title)}${pinIcon}</span>
         <span class="hf-rem-time">${esc(_fmtRemShort(remDt))}</span>`;
     }else{
