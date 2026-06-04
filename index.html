@@ -2150,18 +2150,32 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 }
 .sheet-voice-btn:active{transform:scale(.95);}
 .sheet-voice-btn.rec{
-  background:oklch(0.62 0.14 25 / 0.12);
-  border-color:oklch(0.62 0.14 25 / 0.35);
-  color:var(--rose);
-  animation:voice-pulse-btn 1.4s ease-in-out infinite;
+  background:oklch(0.58 0.20 25);
+  border-color:oklch(0.52 0.20 25);
+  color:#fff;
+  animation:voice-pulse-btn 1.2s ease-in-out infinite;
 }
+.sheet-voice-btn.rec svg{stroke:#fff;}
 @keyframes voice-pulse-btn{0%,100%{box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.85),0 0 0 0 oklch(0.62 0.14 25 / 0.25);}50%{box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.85),0 0 0 6px oklch(0.62 0.14 25 / 0);}}
 .sheet-voice-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .sheet-voice-btn span{display:none;}
 .sheet-voice-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;animation:blink .9s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
-.voice-wave-row{display:none;align-items:center;justify-content:center;gap:3px;padding:6px 18px 0;height:28px;}
-.voice-wave-row.show{display:flex;}
+.voice-wave-row{display:none;align-items:center;justify-content:center;gap:4px;height:28px;}
+/* Чёткий баннер записи: «● Говорите…» + волна — видно сразу */
+.voice-wave-row.show{
+  display:flex;margin:6px 16px 0;padding:8px 16px;height:auto;border-radius:14px;
+  background:oklch(0.62 0.16 25 / 0.12);border:1px solid oklch(0.62 0.16 25 / 0.32);
+  animation:rec-banner-pulse 1.3s ease-in-out infinite;
+}
+.voice-wave-row.show::before{
+  content:'';width:9px;height:9px;border-radius:50%;background:oklch(0.58 0.20 25);
+  margin-right:6px;flex-shrink:0;animation:blink .9s ease-in-out infinite;box-shadow:0 0 8px oklch(0.58 0.20 25/.7);
+}
+.voice-wave-row.show::after{
+  content:'Говорите…';margin-left:8px;font-size:13px;font-weight:700;color:oklch(0.50 0.18 25);white-space:nowrap;
+}
+@keyframes rec-banner-pulse{0%,100%{box-shadow:0 0 0 0 oklch(0.62 0.16 25/.22);}50%{box-shadow:0 0 0 5px oklch(0.62 0.16 25/0);}}
 .vwb{width:3px;border-radius:2px;background:var(--rose);opacity:.6;animation:vwa .6s ease-in-out infinite alternate;}
 @keyframes vwa{from{transform:scaleY(.25);}to{transform:scaleY(1);}}
 .ai-transcript-block{
@@ -3478,8 +3492,9 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
   .hbtn,.jq-notes,.jq-view,.sect-card,.bbtn,.hf-card{cursor:pointer;}
 }
 @media(min-width:1000px){
-  /* Заметка/окна по центру всего рабочего стола — уже стеклянные, просто шире лимит */
-  .sheet{max-width:560px;width:min(560px,calc(100vw - 40px));}
+  /* Заметка крупнее на десктопе — полноценный лист */
+  .sheet{max-width:720px;width:min(720px,calc(100vw - 80px));height:min(86dvh,880px);max-height:calc(100dvh - 60px);}
+  .sheet-in,.sheet-body-wrap{font-size:17px;}
 }
 
 /* ── КНОПКИ — чуть светлее ── */
@@ -4096,7 +4111,7 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
       </div>
       <button class="sheet-voice-btn" id="sheet-voice-btn" onclick="toggleSheetAudioNote()" title="Голосовая заметка">
         <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-        <span id="sheet-voice-lbl">🎤 Голосовая заметка</span>
+        <span id="sheet-voice-lbl">Голосовая заметка</span>
       </button>
       <button class="sheet-undo-btn is-disabled" id="sheet-undo-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="sheetUndo()" title="Отменить" aria-disabled="true">
         <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
