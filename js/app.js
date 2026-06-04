@@ -495,9 +495,9 @@ const _appStartTs=Date.now();
 function showApp(){
   const a=document.getElementById('auth-screen');
   const m=document.getElementById('main-app');
-  // Минимум 600мс — логотип успевает появиться, нет мигания при быстром автологине
+  // Минимум 300мс — короткая шторка, без затянутого старта
   const elapsed=Date.now()-_appStartTs;
-  const delay=Math.max(0,600-elapsed);
+  const delay=Math.max(0,300-elapsed);
   if(m)m.style.display='flex'; // рендерим приложение за шторкой
   setTimeout(()=>{
     if(a){a.classList.add('hidden');setTimeout(()=>a.classList.add('gone'),420);}
