@@ -1888,6 +1888,20 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .qrem-save.ready{background:oklch(0.50 0.12 270);opacity:1;box-shadow:0 4px 20px oklch(0.40 0.14 270/0.30);}
 .qrem-save:active{transform:scale(.97);}
 .qrem-cancel{display:block;width:100%;padding:10px;background:none;border:none;color:var(--fg-l);font-size:15px;font-family:var(--sys);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;}
+/* qrem — привязка к заметке */
+.qrem-note-link-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.qrem-note-link-btn{flex:1;display:flex;align-items:center;gap:8px;padding:9px 14px;background:oklch(0.93 0.04 210/0.35);border:1.5px solid oklch(0.87 0.04 210/0.45);border-radius:12px;font-size:13px;font-weight:600;color:var(--fg-m);font-family:var(--sys);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent;overflow:hidden;}
+.qrem-note-link-btn:active{opacity:.7;}
+.qrem-note-link-btn.linked{background:oklch(0.50 0.12 270/0.10);border-color:oklch(0.50 0.12 270/0.30);color:oklch(0.38 0.14 270);}
+.qrem-note-link-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qrem-note-link-clear{background:none;border:none;color:var(--fg-l);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;flex-shrink:0;}
+.qrem-note-picker{background:oklch(0.97 0.008 210/0.85);border:1.5px solid oklch(0.88 0.02 210/0.5);border-radius:16px;padding:10px;margin-bottom:12px;max-height:240px;overflow-y:auto;}
+.qrem-picker-search{width:100%;box-sizing:border-box;border:1.5px solid oklch(0.87 0.03 210/0.5);border-radius:10px;background:oklch(1 0 0/0.7);font-size:14px;font-family:var(--sys);color:var(--fg);padding:8px 12px;outline:none;margin-bottom:6px;-webkit-appearance:none;}
+.qrem-picker-item{padding:10px 12px;border-radius:10px;font-size:14px;color:var(--fg);cursor:pointer;transition:background .1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qrem-picker-item:active,.qrem-picker-item.selected{background:oklch(0.50 0.12 270/0.10);color:oklch(0.35 0.14 270);}
+.qrem-picker-empty{padding:8px 12px;font-size:13px;color:var(--fg-l);}
+/* bell button in sheet header */
+.sheet-rem-btn.reminder-on{color:oklch(0.50 0.12 270);}
 
 /* ── REMINDER EDITOR MODAL ── */
 #rem-edit-ov{position:fixed;inset:0;z-index:9300;background:oklch(0 0 0/0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;}
@@ -4122,6 +4136,9 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
       <button class="sheet-undo-btn sheet-list-toggle" id="sheet-list-toggle-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="toggleListMode()" title="Переключить в обычную заметку">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>
+      <button class="sheet-undo-btn sheet-rem-btn" id="sheet-rem-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="openRmp('sheet')" title="Установить напоминание">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </button>
       <button class="sheet-undo-btn sheet-pin-btn" id="sheet-pin-btn" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="pinToggleFromSheet()" title="Закрепить заметку">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0015 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg>
       </button>
@@ -4770,6 +4787,17 @@ document.addEventListener('DOMContentLoaded', ()=>{
     <div class="qrem-handle"></div>
     <div class="qrem-title">🔔 Новое напоминание</div>
     <textarea class="qrem-inp" id="qrem-inp" placeholder="Что напомнить?…" rows="2"></textarea>
+    <div class="qrem-note-link-row">
+      <button class="qrem-note-link-btn" id="qrem-note-link-btn" type="button" onclick="qremToggleNotePicker()">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span class="qrem-note-link-lbl" id="qrem-note-link-lbl">Привязать к заметке</span>
+      </button>
+      <button class="qrem-note-link-clear" id="qrem-note-link-clear" type="button" onclick="qremClearLinkedNote()" style="display:none;" title="Убрать">×</button>
+    </div>
+    <div id="qrem-note-picker" class="qrem-note-picker" style="display:none;">
+      <input class="qrem-picker-search" id="qrem-picker-search" type="text" placeholder="Поиск заметки…" oninput="qremPickerSearch(this.value)">
+      <div id="qrem-picker-list"></div>
+    </div>
     <div class="qrem-chips">
       <button class="qrem-chip" onclick="qremQuick(30,this)">30 мин</button>
       <button class="qrem-chip" onclick="qremQuick(60,this)">1 час</button>

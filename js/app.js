@@ -2663,14 +2663,30 @@ function applyAiReminder(){
 // ── ЕДИНЫЙ ЛИСТ "НОВОЕ НАПОМИНАНИЕ" (заменяет двухшаговый флоу) ──
 let _qremCal=null;
 let _qremDate=null;
+let _qremLinkedNoteId=null;
 
 function openInputSheetWithReminder(){
   closeReminderPanel();
   setTimeout(()=>openQrem(),180);
 }
 
+function _qremResetPicker(){
+  _qremLinkedNoteId=null;
+  const lbl=document.getElementById('qrem-note-link-lbl');
+  if(lbl)lbl.textContent='Привязать к заметке';
+  const clr=document.getElementById('qrem-note-link-clear');
+  if(clr)clr.style.display='none';
+  const btn=document.getElementById('qrem-note-link-btn');
+  if(btn)btn.classList.remove('linked');
+  const picker=document.getElementById('qrem-note-picker');
+  if(picker)picker.style.display='none';
+  const inp=document.getElementById('qrem-inp');
+  if(inp)inp.placeholder='Что напомнить?…';
+}
+
 function openQrem(){
   _qremDate=null;_qremCal=null;
+  _qremResetPicker();
   // Инициализируем календарь сразу на +1 час
   const base=new Date(Date.now()+3600000);base.setSeconds(0,0);
   const rm=Math.round(base.getMinutes()/5)*5;
@@ -2700,7 +2716,59 @@ function closeQrem(){
     const ov=document.getElementById('qrem-ov');
     if(ov)ov.style.display='none';
     _qremCal=null;_qremDate=null;
+    _qremResetPicker();
   },320);
+}
+
+// ── ПИКЕР ЗАМЕТОК В QREM ──
+function qremToggleNotePicker(){
+  const picker=document.getElementById('qrem-note-picker');
+  if(!picker)return;
+  const open=picker.style.display!=='none';
+  if(open){picker.style.display='none';return;}
+  picker.style.display='block';
+  const search=document.getElementById('qrem-picker-search');
+  if(search){search.value='';setTimeout(()=>search.focus(),80);}
+  _qremRenderPickerList('');
+}
+
+function qremPickerSearch(q){_qremRenderPickerList(q.trim());}
+
+function _qremRenderPickerList(q){
+  const list=document.getElementById('qrem-picker-list');
+  if(!list)return;
+  let notes=getNotes();
+  if(q){
+    const lq=q.toLowerCase();
+    notes=notes.filter(n=>(n.title||'').toLowerCase().includes(lq)||(n.body||'').toLowerCase().includes(lq));
+  }
+  notes=notes.slice(0,10);
+  if(!notes.length){list.innerHTML=`<div class="qrem-picker-empty">Заметок не найдено</div>`;return;}
+  list.innerHTML=notes.map(n=>{
+    const title=esc(n.title||(n.body||'').slice(0,60)||'Заметка');
+    const sel=n.id===_qremLinkedNoteId;
+    return `<div class="qrem-picker-item${sel?' selected':''}" onclick="qremPickNote(${JSON.stringify(n.id)})">${title}</div>`;
+  }).join('');
+}
+
+function qremPickNote(id){
+  const n=getNotes().find(x=>x.id===id);
+  if(!n)return;
+  _qremLinkedNoteId=id;
+  const lbl=document.getElementById('qrem-note-link-lbl');
+  if(lbl)lbl.textContent=n.title||(n.body||'').slice(0,40)||'Заметка';
+  const clr=document.getElementById('qrem-note-link-clear');
+  if(clr)clr.style.display='inline-block';
+  const btn=document.getElementById('qrem-note-link-btn');
+  if(btn)btn.classList.add('linked');
+  const inp=document.getElementById('qrem-inp');
+  if(inp)inp.placeholder='Добавить текст к напоминанию (необязательно)…';
+  const picker=document.getElementById('qrem-note-picker');
+  if(picker)picker.style.display='none';
+}
+
+function qremClearLinkedNote(){
+  _qremResetPicker();
 }
 
 function qremQuick(minutes,btn){
@@ -2750,13 +2818,29 @@ function _qremCalSave(){} // кнопки нет, но функция нужна
 
 function qremSave(){
   const text=(document.getElementById('qrem-inp')?.value||'').trim();
-  if(!text){showToast('Напишите что напомнить');return;}
+  if(!_qremLinkedNoteId&&!text){showToast('Напишите что напомнить');return;}
   if(!_qremDate){showToast('Выберите время');return;}
   if(_qremDate.getTime()<Date.now()){showToast('Время уже прошло');return;}
+  const reminderStr=_rmpLocalStr(_qremDate);
+
+  if(_qremLinkedNoteId){
+    const notes=getNotes();
+    const n=notes.find(x=>x.id===_qremLinkedNoteId);
+    if(!n){showToast('Заметка не найдена');return;}
+    n.reminder=reminderStr;
+    n.reminderDone=false;
+    delete n.reminderDoneAt;
+    n.updatedAt=Date.now();
+    saveNotes(notes);
+    _reloadViews();scheduleAll();updateReminderDot();
+    closeQrem();
+    showToast('🔔 Напомним '+fmtDt(reminderStr));
+    return;
+  }
+
   const ts=Date.now();const id=genId();
   const auto=analyzeText(text);
   const notes=getNotes();
-  const reminderStr=_rmpLocalStr(_qremDate);
   notes.push({id,title:auto.title||text.slice(0,60),body:text,label:'заметка',reminder:reminderStr,createdAt:ts,updatedAt:ts});
   saveNotes(notes);
   _reloadViews();
@@ -4874,9 +4958,11 @@ function initSheetReminder(val){
   const row=document.getElementById('sheet-reminder-row');
   const inp=document.getElementById('sheet-reminder-in');
   const btn=document.getElementById('sheet-reminder-btn');
+  const bellBtn=document.getElementById('sheet-rem-btn');
   if(row)row.style.display=val?'flex':'none';
   if(inp)inp.value=val||'';
   if(btn)btn.textContent=val?fmtDt(val):'Выбрать время';
+  if(bellBtn)bellBtn.classList.toggle('reminder-on',!!val);
 }
 function clearSheetReminder(){
   initSheetReminder('');
@@ -5040,9 +5126,11 @@ function rmpConfirm(){
     const inp=document.getElementById('sheet-reminder-in');
     const row=document.getElementById('sheet-reminder-row');
     const btn=document.getElementById('sheet-reminder-btn');
+    const bellBtn=document.getElementById('sheet-rem-btn');
     if(inp)inp.value=val;
     if(row)row.style.display='flex';
     if(btn)btn.textContent=fmtDt(val);
+    if(bellBtn)bellBtn.classList.add('reminder-on');
   } else {
     const inp=document.getElementById('home-input-reminder');
     const btn=document.getElementById('home-reminder-btn');
