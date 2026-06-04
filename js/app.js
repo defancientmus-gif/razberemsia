@@ -767,15 +767,12 @@ let _aiOn=false;
 
 function _setSheetAiButtonState(state){
   const btn=document.getElementById('sheet-ai-btn');
-  const label=btn?.querySelector('.sheet-ai-btn-label');
-  if(!btn||!label)return;
-  const text={
-    idle:'Разобраться в заметке',
-    loading:'Разбираюсь...',
-    ready:'Разбор готов',
-    retry:'Попробовать разобраться снова'
-  };
-  label.textContent=text[state]||text.idle;
+  if(!btn)return;
+  const label=btn.querySelector('.sheet-ai-btn-label');
+  if(label){
+    const text={idle:'Разобраться в заметке',loading:'Разбираюсь...',ready:'Разбор готов',retry:'Попробовать снова'};
+    label.textContent=text[state]||text.idle;
+  }
   btn.classList.toggle('is-thinking',state==='loading');
 }
 
@@ -2234,6 +2231,7 @@ function _markReminderDone(id){
   saveNotes(notes);
   scheduleAll();
   updateReminderDot();
+  _reloadViews(); // убрать карточку с главного экрана
 }
 
 // Снять галочку — вернуть напоминание в активные
@@ -4489,7 +4487,9 @@ function _openNoteWith(n){
   initSheetRecurring(n);
   initSheetUndo(n.body||n.title||'');
   _chatNoteId=n.id;
+  window._draftImages=null;
   _openSheet();
+  if(n.images?.length)setTimeout(()=>_renderNoteImages(n.images),80);
 }
 
 function openSheet(type){
@@ -4508,6 +4508,9 @@ function openSheet(type){
   initSheetReminder('');
   initSheetRecurring(null);
   initSheetUndo('');
+  window._draftImages=null;
+  // убрать старые фото из предыдущей заметки
+  document.getElementById('note-images-wrap')?.remove();
   _openSheet();
 }
 
@@ -4821,8 +4824,8 @@ function showSheetCat(label){
   const dot=document.getElementById('sheet-cat-dot');
   const lbl=document.getElementById('sheet-cat-label');
   if(!btn)return;
-  // btn остаётся скрытым — он хранилище данных, sect-pill-row отображает состояние
-  btn.style.display='none';
+  // btn всегда виден в шапке как тег-пилл
+  btn.style.display='inline-flex';
   delete btn.dataset.userFolder; // сброс флага пользовательского раздела
   delete btn.dataset.aiTagFolder; // сброс флага AI-папки
   const col=STRIPES[label||'заметка']||STRIPES.заметка;
@@ -5304,6 +5307,14 @@ function _saveSheetCore(){
   // Если текст изменился — сбросить кэш анализа
   if(aiCache&&aiCache.bodyKey!==v1.trim().slice(0,80))aiCache=null;
   const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary,aiCache};
+  // Прикреплённые фото
+  const draftImgs=window._draftImages;
+  if(existingIdx>=0){
+    item.images=list[existingIdx].images||[];
+  } else if(draftImgs?.length){
+    item.images=draftImgs;
+  }
+  window._draftImages=null;
   if(existingIdx>=0){
     item.createdAt=list[existingIdx].createdAt||ts;
     // Save version history
@@ -5646,6 +5657,93 @@ let homeRecog=null,homeIsRec=false;
 
 // ── HOME FEED (notification cards) ──
 let _homeFeedNotes=[];
+
+// ── ПРИКРЕПЛЕНИЕ ФОТО ──
+function attachPhoto(){
+  document.getElementById('photo-file-input')?.click();
+}
+function onPhotoFileSelected(input){
+  const file=input.files?.[0];if(!file)return;
+  input.value='';
+  if(!file.type.startsWith('image/')){showToast('Только изображения');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      // Сжимаем до max 1024px по длинной стороне, JPEG 0.75
+      const MAX=1024;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl=canvas.toDataURL('image/jpeg',0.75);
+      _insertPhotoIntoNote(dataUrl);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function _insertPhotoIntoNote(dataUrl){
+  if(!EI&&!ST){showToast('Сначала открой заметку');return;}
+  // Показываем превью в body заметки
+  const body=document.getElementById('sh1');
+  if(body){
+    const pos=body.selectionStart||body.value.length;
+    const placeholder=`\n[фото]\n`;
+    body.value=body.value.slice(0,pos)+placeholder+body.value.slice(pos);
+    autoGrowTA(body);
+  }
+  // Сохраняем base64 в note.images[]
+  if(EI){
+    const notes=getNotes();
+    const n=notes.find(x=>x.id===EI);
+    if(n){
+      if(!n.images)n.images=[];
+      n.images.push({id:genId(),data:dataUrl,addedAt:Date.now()});
+      saveNotes(notes);
+      _renderNoteImages(n.images);
+      showToast('Фото добавлено ✓');
+    }
+  } else {
+    // новая заметка — пока просто в draft
+    if(!window._draftImages)window._draftImages=[];
+    window._draftImages.push({id:genId(),data:dataUrl,addedAt:Date.now()});
+    _renderNoteImages(window._draftImages);
+    showToast('Фото добавлено ✓');
+  }
+}
+function _renderNoteImages(images){
+  if(!images||!images.length)return;
+  let wrap=document.getElementById('note-images-wrap');
+  if(!wrap){
+    wrap=document.createElement('div');wrap.id='note-images-wrap';wrap.className='note-images-wrap';
+    const sa=document.getElementById('sheet-scroll-area');
+    if(sa)sa.appendChild(wrap);
+  }
+  wrap.innerHTML=images.map(img=>`
+    <div class="note-img-thumb" onclick="_viewPhoto('${img.id}')">
+      <img src="${img.data}" alt="фото" loading="lazy">
+      <button class="note-img-del" type="button" onclick="event.stopPropagation();_deleteNotePhoto('${img.id}')" title="Удалить">×</button>
+    </div>`).join('');
+}
+function _viewPhoto(id){
+  const notes=getNotes();const n=EI?notes.find(x=>x.id===EI):null;
+  const images=(n?.images||window._draftImages||[]);
+  const img=images.find(x=>x.id===id);if(!img)return;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:oklch(0 0 0/0.85);display:flex;align-items:center;justify-content:center;';
+  ov.onclick=()=>ov.remove();
+  ov.innerHTML=`<img src="${img.data}" style="max-width:95vw;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px oklch(0 0 0/0.5);">`;
+  document.body.appendChild(ov);
+}
+function _deleteNotePhoto(id){
+  if(EI){
+    const notes=getNotes();const n=notes.find(x=>x.id===EI);
+    if(n&&n.images){n.images=n.images.filter(x=>x.id!==id);saveNotes(notes);_renderNoteImages(n.images);}
+  } else {
+    if(window._draftImages){window._draftImages=window._draftImages.filter(x=>x.id!==id);_renderNoteImages(window._draftImages);}
+  }
+}
 
 function loadHomeFeed(){
   const notes=getNotes();
