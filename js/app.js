@@ -4961,102 +4961,73 @@ function showSheetCat(label){
   renderSectPills();
 }
 
-// toggleCatDropdown теперь открывает красивый bottom sheet
+// ── TAG INLINE POPOVER ──
 function toggleCatDropdown(){
-  openTagPicker();
+  const dd=document.getElementById('cat-dropdown');if(!dd)return;
+  if(dd.classList.contains('open')){dd.classList.remove('open');return;}
+  _renderCatPills(dd);
+  dd.classList.add('open');
+  setTimeout(()=>document.addEventListener('click',_closeCatDD,{once:true}),10);
 }
-
-function openTagPicker(){
-  const ov=document.getElementById('tag-picker-ov');if(!ov)return;
-  _renderTagPickerBody();
-  ov.style.display='flex';
-  requestAnimationFrame(()=>{
-    const sheet=document.getElementById('tag-picker-sheet');
-    if(sheet)sheet.style.transform='translateY(0)';
-  });
+function _closeCatDD(e){
+  const dd=document.getElementById('cat-dropdown');
+  const btn=document.getElementById('sheet-cat-btn');
+  if(dd&&!dd.contains(e.target)&&e.target!==btn&&!btn?.contains(e.target))dd.classList.remove('open');
 }
-
-function closeTagPicker(){
-  const sheet=document.getElementById('tag-picker-sheet');
-  if(sheet)sheet.style.transform='translateY(100%)';
-  setTimeout(()=>{
-    const ov=document.getElementById('tag-picker-ov');
-    if(ov)ov.style.display='none';
-  },340);
-}
-
-function _renderTagPickerBody(){
-  const body=document.getElementById('tag-picker-body');if(!body)return;
+function _renderCatPills(dd){
   const curBtn=document.getElementById('sheet-cat-btn');
   const curLabel=curBtn?.dataset.label||'заметка';
   const isUserFolder=curBtn?.dataset.userFolder==='1';
   const curAiTag=curBtn?.dataset.aiTagFolder||'';
   const curNote=EI?getNotes().find(n=>n.id===EI):null;
-
   const userFolders=getUserFolders();
   const tagFoldersList=typeof getTagFolders==='function'?getTagFolders():[];
   const pinnedList=tagFoldersList.filter(f=>f.pinned);
   const unpinnedList=tagFoldersList.filter(f=>!f.pinned);
-
-  const CHECK=`<div class="tp-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
-  let html='';
-
+  const close=`document.getElementById('cat-dropdown').classList.remove('open')`;
+  let html=`<div class="cat-pills-wrap">`;
+  // Встроенные типы
+  Object.keys(STRIPES).forEach(l=>{
+    const active=!isUserFolder&&!curAiTag&&curLabel===l;
+    const bg=active?`background:${STRIPES[l]};border-color:transparent;`:'' ;
+    html+=`<button class="cat-pill-btn${active?' active':''}" style="${bg}" onclick="selectCat('${l}');${close}">
+      <span class="cat-pill-dot" style="background:${STRIPES[l]}${active?';box-shadow:0 0 0 2px oklch(1 0 0/0.4)':''}"></span>${l}</button>`;
+  });
   // Мои разделы
-  const hasMyFolders=userFolders.length||pinnedList.length;
-  if(hasMyFolders){
-    html+=`<div class="tp-section">Мои разделы</div>`;
+  if(userFolders.length||pinnedList.length){
+    html+=`<div class="cat-pill-sep">Мои разделы</div>`;
     userFolders.forEach((f,i)=>{
       const col=_folderColor(f.idx!==undefined?f.idx:i);
       const active=isUserFolder&&curLabel.toLowerCase()===f.name.toLowerCase();
-      html+=`<div class="tp-row" onclick="selectUserFolderTag(${jsAttr(f.name)});closeTagPicker()">
-        <div class="tp-dot" style="background:${col}"></div>
-        <span class="tp-name">${esc(f.name)}</span>
-        ${active?CHECK:''}
-      </div>`;
+      const bg=active?`background:${col};border-color:transparent;`:'';
+      html+=`<button class="cat-pill-btn${active?' active':''}" style="${bg}" onclick="selectUserFolderTag(${jsAttr(f.name)});${close}">
+        <span class="cat-pill-dot" style="background:${col}${active?';box-shadow:0 0 0 2px oklch(1 0 0/0.4)':''}"></span>${esc(f.name)}</button>`;
     });
     pinnedList.forEach(f=>{
+      const col='oklch(0.55 0.12 270)';
       const active=curNote&&_noteHasAiTag(curNote,f.tag);
-      html+=`<div class="tp-row" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)});closeTagPicker()">
-        <div class="tp-dot" style="background:oklch(0.55 0.12 270)"></div>
-        <span class="tp-name">${esc(f.label||f.tag)}</span>
-        ${active?CHECK:''}
-      </div>`;
+      const bg=active?`background:${col};border-color:transparent;`:'';
+      html+=`<button class="cat-pill-btn${active?' active':''}" style="${bg}" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)});${close}">
+        <span class="cat-pill-dot" style="background:${col}${active?';box-shadow:0 0 0 2px oklch(1 0 0/0.4)':''}"></span>${esc(f.label||f.tag)}</button>`;
     });
   }
-
-  // Типы заметок
-  html+=`<div class="tp-section">Типы</div>`;
-  Object.keys(STRIPES).forEach(l=>{
-    const active=!isUserFolder&&!curAiTag&&curLabel===l;
-    html+=`<div class="tp-row" onclick="selectCat('${l}');closeTagPicker()">
-      <div class="tp-dot" style="background:${STRIPES[l]}"></div>
-      <span class="tp-name">${l}</span>
-      ${active?CHECK:''}
-    </div>`;
-  });
-
-  // Входящие (AI-папки без пина)
   if(unpinnedList.length){
-    html+=`<div class="tp-section">Входящие</div>`;
+    html+=`<div class="cat-pill-sep">Входящие</div>`;
     unpinnedList.forEach(f=>{
+      const col='oklch(0.55 0.13 290)';
       const active=curNote&&_noteHasAiTag(curNote,f.tag);
-      html+=`<div class="tp-row" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)});closeTagPicker()">
-        <div class="tp-dot" style="background:oklch(0.55 0.13 290)"></div>
-        <span class="tp-name">${esc(f.label||f.tag)}</span>
-        ${active?CHECK:''}
-      </div>`;
+      const bg=active?`background:${col};border-color:transparent;`:'';
+      html+=`<button class="cat-pill-btn${active?' active':''}" style="${bg}" onclick="selectAiTagFolder(${jsAttr(f.tag)},${jsAttr(f.label||f.tag)});${close}">
+        <span class="cat-pill-dot" style="background:${col}"></span>${esc(f.label||f.tag)}</button>`;
     });
   }
-
-  // Новый раздел
-  html+=`<div class="tp-section"></div>
-    <div class="tp-row tp-add" onclick="openFolderModal();closeTagPicker()">
-      <div class="tp-dot" style="background:oklch(0.78 0.02 210)"></div>
-      <span class="tp-name tp-add">+ Новый раздел</span>
-    </div>`;
-
-  body.innerHTML=html;
+  html+=`<button class="cat-pill-btn cat-pill-add" onclick="openFolderModal();${close}">+ Новый раздел</button>`;
+  html+='</div>';
+  dd.innerHTML=html;
 }
+function openTagPicker(){toggleCatDropdown();}
+function closeTagPicker(){document.getElementById('cat-dropdown')?.classList.remove('open');}
+function _renderTagPickerBody(){}
 function selectCat(label){
   showSheetCat(label);
   document.getElementById('cat-dropdown')?.classList.remove('open');

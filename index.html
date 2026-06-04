@@ -392,24 +392,35 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .remind-close-btn svg{width:13px;height:13px;stroke:oklch(0.38 0.06 55);stroke-width:2.4;fill:none;stroke-linecap:round;}
 .remind-new-btn{
   display:flex;align-items:center;gap:10px;
-  margin:10px 14px 8px;padding:12px 16px;
-  border-radius:16px;border:none;
-  background:linear-gradient(135deg,oklch(0.60 0.14 65),oklch(0.52 0.16 55));
-  color:#fff;font-size:15px;font-weight:600;font-family:var(--sys);
-  cursor:pointer;transition:transform .1s,filter .12s;
+  margin:6px 14px 10px;padding:10px 16px;
+  border-radius:50px;border:1px solid oklch(0.52 0.10 210/0.30);
+  background:oklch(0.96 0.012 210/0.55);
+  color:var(--accent-d);font-size:14px;font-weight:600;font-family:var(--sys);
+  cursor:pointer;transition:transform .1s,background .12s;
   -webkit-appearance:none;width:calc(100% - 28px);box-sizing:border-box;flex-shrink:0;
-  box-shadow:0 6px 18px oklch(0.52 0.16 55 / 0.22);
+  box-shadow:inset 0 1.5px 3px oklch(1 0 0/0.65);
+  display:flex;align-items:center;gap:8px;justify-content:center;
 }
-.remind-new-btn:active{transform:scale(.98);filter:brightness(.92);}
-.remind-new-btn svg{width:17px;height:17px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.remind-new-btn:active{transform:scale(.97);background:oklch(0.92 0.025 210/0.65);}
+.remind-new-btn svg{stroke:var(--accent-d);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+/* Кнопка календаря в шапке напоминаний */
+.remind-cal-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:oklch(1 0 0/0.52);border:1px solid oklch(0.88 0.02 210/0.42);
+  box-shadow:inset 0 1.5px 3px oklch(1 0 0/0.65);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-appearance:none;transition:background .12s,transform .1s;
+  color:var(--accent-d);
+}
+.remind-cal-btn:active{background:oklch(0.88 0.02 210/0.70);transform:scale(.92);}
 .remind-scroll{flex:1;overflow-y:auto;padding:4px 14px 20px;}
 .remind-scroll::-webkit-scrollbar{display:none;}
 .remind-empty{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:10px;padding:40px 0 24px;color:oklch(0.52 0.06 65);
+  gap:10px;padding:40px 0 24px;color:var(--fg-l);
 }
-.remind-empty-ico{font-size:36px;opacity:.55;}
-.remind-empty-txt{font-size:15px;font-weight:500;opacity:.7;}
+.remind-empty-ico{font-size:36px;opacity:.40;}
+.remind-empty-txt{font-size:15px;font-weight:500;opacity:.6;}
 /* Карточка напоминания — note-style с янтарным характером */
 .remind-item{
   background:
@@ -467,21 +478,21 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .remind-section-label{font-size:11px;font-weight:700;color:oklch(0.50 0.08 65);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;}
 .remind-settings{background:oklch(1 0 0/0.55);border:0.5px solid oklch(0.84 0.04 65/0.55);border-radius:14px;padding:4px 14px;}
 /* ── TickTick-style reminder rows ── */
-.remind-item2{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;background:oklch(1 0 0/0.65);border:0.5px solid oklch(0.84 0.04 65/0.32);border-radius:16px;margin-bottom:8px;box-shadow:0 1px 8px oklch(0.52 0.08 65/0.06),inset 0 1px 0 oklch(1 0 0/0.90);overflow:hidden;transition:opacity .22s ease,transform .22s ease,max-height .28s ease,margin-bottom .28s ease,padding .28s ease;}
-.remind-item2.rem-overdue{border-color:oklch(0.72 0.14 25/0.32);background:oklch(0.995 0.008 25/0.80);}
-.remind-item2.rem-soon{border-color:oklch(0.78 0.12 58/0.28);}
-.rem-cb{width:22px;height:22px;flex-shrink:0;margin-top:2px;border-radius:6px;border:2px solid oklch(0.68 0.10 200);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s,border-color .18s,transform .15s;-webkit-tap-highlight-color:transparent;padding:0;}
+.remind-item2{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;background:oklch(1 0 0/0.55);border:1px solid oklch(0.88 0.02 210/0.42);border-radius:16px;margin-bottom:8px;box-shadow:0 2px 10px oklch(0 0 0/0.05),inset 0 1px 0 oklch(1 0 0/0.80);overflow:hidden;transition:opacity .22s ease,transform .22s ease,max-height .28s ease,margin-bottom .28s ease,padding .28s ease;}
+.remind-item2.rem-overdue{border-color:oklch(0.72 0.14 25/0.35);background:oklch(0.99 0.008 15/0.65);}
+.remind-item2.rem-soon{border-color:oklch(0.74 0.12 65/0.35);}
+.rem-cb{width:22px;height:22px;flex-shrink:0;margin-top:2px;border-radius:6px;border:1.5px solid oklch(0.72 0.04 210);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s,border-color .18s,transform .15s;-webkit-tap-highlight-color:transparent;padding:0;}
 .rem-overdue .rem-cb{border-color:oklch(0.62 0.18 25);}
-.rem-soon .rem-cb{border-color:oklch(0.65 0.16 58);}
+.rem-soon .rem-cb{border-color:oklch(0.65 0.14 65);}
 .rem-cb.done{background:oklch(0.52 0.14 145);border-color:oklch(0.52 0.14 145);}
 .rem-cb-check{opacity:0;transition:opacity .14s;}
 .rem-cb.done .rem-cb-check{opacity:1;}
 .rem-body{flex:1;min-width:0;cursor:pointer;}
-.rem-name{font-size:15px;font-weight:600;color:oklch(0.22 0.04 60);line-height:1.35;}
+.rem-name{font-size:15px;font-weight:600;color:var(--fg);line-height:1.35;}
 .rem-when{font-size:12px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:6px;}
 .rem-when-overdue{color:oklch(0.50 0.20 25);}
-.rem-when-soon{color:oklch(0.52 0.16 58);}
-.rem-when-future{color:oklch(0.50 0.10 200);}
+.rem-when-soon{color:oklch(0.55 0.14 65);}
+.rem-when-future{color:var(--fg-l);}
 .rem-recur{font-weight:400;opacity:.70;font-size:11px;}
 .rem-edit-btn{width:30px;height:30px;flex-shrink:0;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center;color:oklch(0.62 0.04 210);cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;transition:background .12s;position:relative;}
 .rem-edit-btn:active{background:oklch(0.90 0.04 210/0.30);}
@@ -1784,28 +1795,51 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .sheet-close-btn:active{background:oklch(0.88 0.02 210 / 0.70);transform:scale(.92);}
 .sheet-close-btn svg{width:13px;height:13px;stroke:var(--fg-m);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-/* Category pill row — скрыта, заменена tag picker sheet */
+/* Category pill row — скрыта */
 .sheet-cat-wrap-row{display:none;}
 .sect-pill-row{display:none;}
 .sect-pill,.sect-pill-active,.sect-pill-pinned,.sect-pill-add{display:none;}
 
-/* ── TAG PICKER SHEET ── */
-#tag-picker-ov{
-  position:fixed;inset:0;z-index:9500;
-  background:oklch(0.14 0.02 210/0.40);
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  display:none;align-items:flex-end;justify-content:center;
+/* ── TAG PICKER SHEET — отключён (заменён inline popover) ── */
+#tag-picker-ov{display:none!important;}
+
+/* ── TAG INLINE POPOVER ── */
+.cat-dropdown{
+  position:absolute;
+  top:calc(100% + 6px);left:-8px;right:-8px;
+  z-index:200;
+  background:oklch(0.97 0.010 210/0.97);
+  backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border:1px solid oklch(0.90 0.02 210/0.55);
+  border-radius:18px;
+  box-shadow:0 8px 32px oklch(0 0 0/0.13),inset 0 1px 0 oklch(1 0 0/0.80);
+  padding:10px 10px 6px;
+  display:none;
+  transform-origin:top left;
 }
-#tag-picker-sheet{
-  width:100%;max-width:480px;
-  background:oklch(0.975 0.010 210/0.97);
-  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
-  border-radius:28px 28px 0 0;
-  border-top:1px solid oklch(1 0 0/0.60);
-  box-shadow:0 -8px 40px oklch(0 0 0/0.14);
-  transform:translateY(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);
-  max-height:82dvh;display:flex;flex-direction:column;
+.cat-dropdown.open{
+  display:block;
+  animation:tagPopIn .18s cubic-bezier(.22,1,.36,1);
 }
+@keyframes tagPopIn{from{opacity:0;transform:scale(.95) translateY(-4px);}to{opacity:1;transform:none;}}
+/* пилюльки тегов */
+.cat-pills-wrap{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:4px;}
+.cat-pill-sep{width:100%;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-l);padding:6px 4px 2px;opacity:.7;}
+.cat-pill-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 13px;border-radius:50px;
+  font-size:13px;font-weight:600;font-family:var(--sys);
+  border:1.5px solid oklch(0.87 0.02 210/0.45);
+  background:oklch(0.97 0.006 210/0.70);
+  color:var(--fg);cursor:pointer;-webkit-appearance:none;
+  transition:all .12s;-webkit-tap-highlight-color:transparent;
+  white-space:nowrap;
+}
+.cat-pill-btn:active{transform:scale(.93);}
+.cat-pill-btn.active{color:#fff;border-color:transparent;font-weight:700;}
+.cat-pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.cat-pill-add{border-style:dashed;opacity:.75;color:var(--accent);border-color:oklch(0.70 0.08 210/0.45);}
+.cat-pill-add:active{opacity:1;}
 .tp-handle{width:36px;height:4px;border-radius:2px;background:oklch(0.78 0.02 210);margin:14px auto 4px;flex-shrink:0;}
 .tp-header{padding:4px 20px 12px;flex-shrink:0;}
 .tp-title{font-size:17px;font-weight:700;color:var(--fg);letter-spacing:-.2px;}
@@ -1861,6 +1895,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .cat-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .cat-opt-sep{padding:6px 14px 4px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--fg-l);text-transform:uppercase;}
 
+/* sheet-cat-wrap — relative для dropdown */
+#sheet-cat-wrap{position:relative;}
 /* Divider */
 .sheet-hdr-line{height:1px;background:oklch(0.88 0.02 210 / 0.22);flex-shrink:0;margin-top:0;}
 
@@ -3894,6 +3930,10 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               Все заметки<span id="notes-count-badge" style="opacity:.5;font-weight:600;margin-left:3px;">·</span>
             </button>
+            <button class="jq-btn jq-cal" onclick="openCal()" title="Календарь">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Календарь
+            </button>
             <button class="jq-btn jq-view" id="view-mode-btn" onclick="toggleViewMenu(event)" title="Формат отображения">
               <svg id="view-mode-ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
@@ -4344,11 +4384,16 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
   <div class="remind-bg" onclick="closeReminderPanel()"></div>
   <div class="remind-sheet">
     <div class="remind-hdr">
-      <div class="remind-title"><span class="remind-title-ico">🔔</span>Напоминания</div>
-      <button class="remind-close-btn" onclick="closeReminderPanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="remind-title">Напоминания</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="remind-cal-btn" onclick="closeReminderPanel();setTimeout(openCal,180)" title="Открыть календарь">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </button>
+        <button class="remind-close-btn" onclick="closeReminderPanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
     </div>
     <button class="remind-new-btn" onclick="openInputSheetWithReminder()">
-      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Новое напоминание
     </button>
     <div class="remind-scroll" id="remind-scroll"></div>
