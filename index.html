@@ -631,6 +631,34 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   transition:background .15s,transform .15s;
 }
 .cal-done-btn:active{background:oklch(0.52 0.10 210 / 0.14);transform:scale(.98);}
+/* Calendar dots row */
+.cal-day-num{line-height:1;display:block;}
+.cal-dots-row{display:flex;gap:3px;justify-content:center;margin-top:3px;min-height:6px;}
+.cal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.cal-day.sel .cal-dots-row .cal-dot{background:oklch(1 0 0/0.85)!important;}
+/* Calendar day bigger */
+.cal-day{height:52px;}
+/* Day detail panel */
+.cal-detail{padding:0 14px 4px;border-top:1px solid oklch(0.88 0.02 210/0.20);margin-top:6px;}
+@keyframes calDetailIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.cal-detail-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 6px 8px;}
+.cal-detail-date{font-size:14px;font-weight:700;color:var(--fg);}
+.cal-detail-add{width:32px;height:32px;border-radius:50%;background:var(--accent);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px oklch(0.52 0.10 210/0.35);-webkit-appearance:none;transition:transform .1s;}
+.cal-detail-add:active{transform:scale(.90);}
+.cal-ev-list{display:flex;flex-direction:column;gap:2px;max-height:200px;overflow-y:auto;}
+.cal-ev-list::-webkit-scrollbar{display:none;}
+.cal-ev-row{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent;}
+.cal-ev-row:active{background:oklch(0.52 0.10 210/0.08);}
+.cal-ev-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cal-ev-body{flex:1;min-width:0;}
+.cal-ev-title{font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-ev-time{font-size:12px;color:var(--fg-l);margin-top:1px;}
+.cal-ev-empty{padding:16px 8px;font-size:14px;color:var(--fg-l);text-align:center;}
+/* Cal type btn active */
+.cal-type-btn.active{box-shadow:0 3px 12px oklch(0 0 0/0.12);transform:scale(1.03);border-width:2px;}
+/* cal-popup scroll */
+#cal-popup{max-height:92dvh;overflow-y:auto;display:flex;flex-direction:column;padding-bottom:24px;}
+#cal-popup::-webkit-scrollbar{display:none;}
 .year-picker{padding:12px 20px 0;max-height:240px;overflow-y:auto;display:none;flex-wrap:wrap;gap:6px;}
 .year-picker.open{display:flex;}
 .year-btn{
@@ -4137,7 +4165,8 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
       <div class="cal-day-name">Чт</div><div class="cal-day-name">Пт</div><div class="cal-day-name">Сб</div><div class="cal-day-name">Вс</div>
     </div>
     <div class="cal-days" id="cal-days"></div>
-    <button class="cal-done-btn" onclick="closeCal()">Готово</button>
+    <!-- День-детейл: появляется при выборе дня -->
+    <div class="cal-detail" id="cal-detail" style="display:none;"></div>
   </div>
 </div>
 
@@ -4847,6 +4876,37 @@ document.addEventListener('DOMContentLoaded', ()=>{
     <div id="qrem-cal-wrap"></div>
     <button class="qrem-save" id="qrem-save" onclick="qremSave()">Напомнить</button>
     <button class="qrem-cancel" onclick="closeQrem()">Отмена</button>
+  </div>
+</div>
+<!-- CAL ADD EVENT -->
+<div id="cal-add-ov" style="position:fixed;inset:0;z-index:9600;background:oklch(0.14 0.02 210/0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeCalAddEvent()">
+  <div id="cal-add-sheet" style="width:100%;max-width:480px;background:oklch(0.975 0.010 210/0.97);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-radius:28px 28px 0 0;border-top:1px solid oklch(1 0 0/0.60);box-shadow:0 -8px 40px oklch(0 0 0/0.14);transform:translateY(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);padding:0 0 32px;">
+    <div style="width:36px;height:4px;border-radius:2px;background:oklch(0.78 0.02 210);margin:14px auto 8px;"></div>
+    <div style="padding:4px 20px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:17px;font-weight:700;color:var(--fg);">Новое событие · <span id="cal-add-date-lbl" style="color:var(--accent-d)"></span></span>
+      <button onclick="closeCalAddEvent()" style="background:none;border:none;font-size:22px;color:var(--fg-l);cursor:pointer;padding:4px 8px;">✕</button>
+    </div>
+    <!-- Тип события -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px 16px;">
+      <button class="cal-type-btn" data-type="событие" onclick="calPickType('событие',this)" style="padding:10px 4px;border-radius:14px;border:1.5px solid oklch(0.87 0.04 82/0.5);background:oklch(0.95 0.02 82/0.4);font-size:12px;font-weight:600;color:oklch(0.45 0.10 82);font-family:var(--sys);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-appearance:none;transition:all .15s;">
+        <span style="font-size:20px;">📅</span>Событие
+      </button>
+      <button class="cal-type-btn" data-type="заметка" onclick="calPickType('заметка',this)" style="padding:10px 4px;border-radius:14px;border:1.5px solid oklch(0.87 0.04 210/0.5);background:oklch(0.95 0.02 210/0.4);font-size:12px;font-weight:600;color:var(--fg-m);font-family:var(--sys);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-appearance:none;transition:all .15s;">
+        <span style="font-size:20px;">🔔</span>Напомнить
+      </button>
+      <button class="cal-type-btn" data-type="день_рождения" onclick="calPickType('день_рождения',this)" style="padding:10px 4px;border-radius:14px;border:1.5px solid oklch(0.87 0.04 340/0.5);background:oklch(0.95 0.02 340/0.4);font-size:12px;font-weight:600;color:oklch(0.45 0.10 340);font-family:var(--sys);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-appearance:none;transition:all .15s;">
+        <span style="font-size:20px;">🎂</span>День рожд.
+      </button>
+      <button class="cal-type-btn" data-type="праздник" onclick="calPickType('праздник',this)" style="padding:10px 4px;border-radius:14px;border:1.5px solid oklch(0.87 0.08 55/0.5);background:oklch(0.95 0.03 55/0.4);font-size:12px;font-weight:600;color:oklch(0.45 0.12 55);font-family:var(--sys);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-appearance:none;transition:all .15s;">
+        <span style="font-size:20px;">🎊</span>Праздник
+      </button>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <textarea id="cal-add-inp" placeholder="Название события..." rows="2" style="width:100%;box-sizing:border-box;border:1.5px solid oklch(0.85 0.025 210/0.6);border-radius:16px;background:oklch(0.97 0.008 210/0.75);font-size:16px;font-family:var(--sys);color:var(--fg);padding:13px 16px;resize:none;outline:none;min-height:52px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();calSaveEvent();}"></textarea>
+    </div>
+    <div style="padding:0 16px;">
+      <button onclick="calSaveEvent()" style="width:100%;padding:15px;border:none;border-radius:20px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;font-family:var(--sys);cursor:pointer;-webkit-appearance:none;">Сохранить</button>
+    </div>
   </div>
 </div>
 </body>

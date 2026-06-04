@@ -3019,6 +3019,8 @@ const MGN=['января','февраля','марта','апреля','мая',
 function openCal(){
   YP=false;
   document.getElementById('year-picker').classList.remove('open');
+  const det=document.getElementById('cal-detail');
+  if(det){det.innerHTML='';det.style.display='none';}
   calRender();
   document.getElementById('cal-overlay').classList.add('open');
 }
@@ -3063,13 +3065,16 @@ function updCalTrigger(){
 
 function calRender(){
   const notes=getNotes();
-  const dots=new Set();
+  // Собираем события по дням: dayEvents[d] = массив цветов
+  const dayEvents={};
   notes.forEach(n=>{
-    // Точки на датах создания И напоминания
-    const dates=[n.reminder, n.createdAt?new Date(n.createdAt).toISOString().slice(0,10):null].filter(Boolean);
-    dates.forEach(s=>{
-      const p=s.slice(0,10).split('-').map(Number);
-      if(p[0]===CY&&p[1]-1===CM)dots.add(p[2]);
+    const dates=[];
+    if(n.reminder){const s=n.reminder.slice(0,10);const p=s.split('-').map(Number);if(p[0]===CY&&p[1]-1===CM)dates.push(p[2]);}
+    if(n.createdAt){const s=new Date(n.createdAt).toISOString().slice(0,10);const p=s.split('-').map(Number);if(p[0]===CY&&p[1]-1===CM&&!dates.includes(p[2]))dates.push(p[2]);}
+    dates.forEach(d=>{
+      if(!dayEvents[d])dayEvents[d]=[];
+      const col=STRIPES[n.label]||'oklch(0.70 0.03 210)';
+      dayEvents[d].push(col);
     });
   });
   document.getElementById('cal-month-label').textContent=MRU[CM]+' '+CY;
@@ -3084,17 +3089,123 @@ function calRender(){
   for(let d=1;d<=dim;d++){
     const ds=CY+'-'+pad(CM+1)+'-'+pad(d);
     const isT=d===today.getDate()&&CM===today.getMonth()&&CY===today.getFullYear();
-    const b=mkDay(d,ds,false,isT,CS===ds,dots.has(d));
-    b.onclick=()=>{CS=CS===ds?null:ds;calRender();};
+    const evColors=dayEvents[d]||[];
+    const b=mkDay(d,ds,false,isT,CS===ds,evColors);
+    b.onclick=()=>{CS=CS===ds?null:ds;calRender();calRenderDetail();};
     grid.appendChild(b);
   }
   updCalTrigger();
 }
-function mkDay(num,ds,other,isT,isSel,hasDot){
-  const b=document.createElement('button');
-  b.className='cal-day'+(other?' other':'')+(isT?' today':'')+(isSel?' sel':'');
-  b.innerHTML='<span>'+num+'</span>'+(hasDot?'<span class="cal-dot"></span>':'');
+function mkDay(num, ds, other, isT, isSel, eventColors=[]) {
+  const b = document.createElement('button');
+  b.className = 'cal-day' + (other?' other':'') + (isT?' today':'') + (isSel?' sel':'');
+  const dots = eventColors.slice(0,3).map(c =>
+    `<span class="cal-dot" style="background:${isSel?'oklch(1 0 0/0.85)':c}"></span>`
+  ).join('');
+  b.innerHTML = `<span class="cal-day-num">${num}</span>${dots?`<span class="cal-dots-row">${dots}</span>`:''}`;
   return b;
+}
+function calRenderDetail() {
+  const wrap = document.getElementById('cal-detail');
+  if (!wrap) return;
+  if (!CS) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+  const [y,m,d] = CS.split('-').map(Number);
+  const dayNames = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  const monthNames = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const dow = dayNames[new Date(y,m-1,d).getDay()];
+  const dateLabel = dow.charAt(0).toUpperCase()+dow.slice(1)+', '+d+' '+monthNames[m-1];
+  const notes = getNotes();
+  const events = notes.filter(n => {
+    const remDate = n.reminder ? n.reminder.slice(0,10) : null;
+    const creDate = n.createdAt ? new Date(n.createdAt).toISOString().slice(0,10) : null;
+    return remDate === CS || creDate === CS;
+  }).sort((a,b) => {
+    const at = a.reminder ? new Date(a.reminder).getTime() : (a.createdAt||0);
+    const bt = b.reminder ? new Date(b.reminder).getTime() : (b.createdAt||0);
+    return at - bt;
+  });
+  const STRIPES_LOCAL = typeof STRIPES !== 'undefined' ? STRIPES : {};
+  const timeStr = n => {
+    if (!n.reminder) return '';
+    const dt = new Date(n.reminder);
+    return dt.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+  };
+  let evHTML = events.length
+    ? events.map(n => {
+        const col = STRIPES_LOCAL[n.label] || 'oklch(0.70 0.03 210)';
+        const t = timeStr(n);
+        const title = esc(n.title || (n.body||'').slice(0,50) || 'Заметка');
+        return `<div class="cal-ev-row" onclick="closeCal();setTimeout(()=>openNoteSheetById(${JSON.stringify(n.id)}),260)">
+          <div class="cal-ev-dot" style="background:${col}"></div>
+          <div class="cal-ev-body">
+            <div class="cal-ev-title">${title}</div>
+            ${t?`<div class="cal-ev-time">${t}</div>`:''}
+          </div>
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--fg-l)" stroke-width="2" fill="none" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`;
+      }).join('')
+    : `<div class="cal-ev-empty">Событий нет — нажми + чтобы добавить</div>`;
+  wrap.innerHTML = `
+    <div class="cal-detail-hdr">
+      <span class="cal-detail-date">${dateLabel}</span>
+      <button class="cal-detail-add" onclick="calOpenAddEvent()" title="Добавить событие">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="cal-ev-list">${evHTML}</div>`;
+  wrap.style.display = 'block';
+  wrap.style.animation = 'calDetailIn .22s cubic-bezier(.22,1,.36,1)';
+}
+function calOpenAddEvent() {
+  if (!CS) return;
+  const [y,m,d] = CS.split('-').map(Number);
+  const dt = new Date(y, m-1, d, 12, 0, 0);
+  if (dt.getTime() < Date.now()) dt.setHours(new Date().getHours()+2, 0, 0, 0);
+  const ov = document.getElementById('cal-add-ov');
+  if (!ov) return;
+  document.getElementById('cal-add-inp').value = '';
+  document.getElementById('cal-add-date-lbl').textContent = d+' '+['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][m-1];
+  window._calAddType = 'событие';
+  document.querySelectorAll('.cal-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type==='событие'));
+  ov.style.display = 'flex';
+  requestAnimationFrame(() => {
+    document.getElementById('cal-add-sheet').style.transform = 'translateY(0)';
+    setTimeout(() => document.getElementById('cal-add-inp').focus(), 200);
+  });
+}
+function closeCalAddEvent() {
+  const sheet = document.getElementById('cal-add-sheet');
+  if (sheet) sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => {
+    const ov = document.getElementById('cal-add-ov');
+    if (ov) ov.style.display = 'none';
+  }, 320);
+}
+function calPickType(type, btn) {
+  window._calAddType = type;
+  document.querySelectorAll('.cal-type-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+function calSaveEvent() {
+  const text = (document.getElementById('cal-add-inp').value || '').trim();
+  if (!text) { showToast('Введите название события'); return; }
+  if (!CS) return;
+  const [y,m,d] = CS.split('-').map(Number);
+  const type = window._calAddType || 'событие';
+  const reminder = y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')+'T12:00';
+  const ts = Date.now();
+  const id = genId();
+  const notes = getNotes();
+  notes.unshift({
+    id, title: text, body: text, label: type,
+    reminder, createdAt: ts, updatedAt: ts
+  });
+  saveNotes(notes);
+  scheduleAll(); updateReminderDot(); _reloadViews();
+  closeCalAddEvent();
+  calRender();
+  calRenderDetail();
+  showToast('✓ Добавлено: ' + text);
 }
 
 // ── "РАЗОБРАЛИСЬ" — пометить заметку как проработанную ──
@@ -3380,7 +3491,9 @@ const STRIPES={
   идея:'oklch(0.58 0.095 292)',
   рецепт:'oklch(0.63 0.085 62)',
   адрес:'oklch(0.58 0.080 195)',
-  заметка:'oklch(0.70 0.030 210)'
+  заметка:'oklch(0.70 0.030 210)',
+  день_рождения:'oklch(0.62 0.14 340)',
+  праздник:'oklch(0.65 0.14 55)'
 };
 const CATS=Object.keys(STRIPES);
 const ICONS={
@@ -3391,7 +3504,9 @@ const ICONS={
   идея:'💡',
   рецепт:'🍽️',
   адрес:'📍',
-  заметка:'📝'
+  заметка:'📝',
+  день_рождения:'🎂',
+  праздник:'🎊'
 };
 function catIcon(label){return ICONS[safeLabel(label||'заметка')]||'📄';}
 
