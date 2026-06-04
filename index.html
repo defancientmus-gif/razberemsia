@@ -1756,16 +1756,52 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .sheet-close-btn:active{background:oklch(0.88 0.02 210 / 0.70);transform:scale(.92);}
 .sheet-close-btn svg{width:13px;height:13px;stroke:var(--fg-m);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 
-/* Category pill row — горизонтальный скролл */
-.sheet-cat-wrap-row{display:block;border-bottom:1px solid oklch(0.80 0.01 210 / .20);}
-.sect-pill-row{display:flex;align-items:center;gap:6px;padding:8px 14px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-.sect-pill-row::-webkit-scrollbar{display:none;}
-.sect-pill{display:inline-flex;align-items:center;flex-shrink:0;height:30px;padding:0 13px;border-radius:15px;font-size:13px;font-family:var(--sys);border:1px solid oklch(0.80 0.02 210 / .40);background:oklch(0.97 0.006 210 / .80);color:var(--fg);cursor:pointer;transition:transform .12s,background .15s,border-color .15s,color .15s;-webkit-appearance:none;white-space:nowrap;letter-spacing:.01em;}
-.sect-pill:active{transform:scale(.93);}
-.sect-pill-active{background:var(--pill-c,oklch(0.52 0.12 210));border-color:transparent;color:#fff;font-weight:600;box-shadow:0 2px 8px color-mix(in oklch,var(--pill-c,oklch(0.52 0.12 210)) 40%,transparent);}
-.sect-pill-pinned{border-color:oklch(0.55 0.12 270 / .35);color:oklch(0.45 0.14 270);}
-.sect-pill-add{color:var(--accent);border-style:dashed;border-color:oklch(0.70 0.08 210 / .50);background:transparent;opacity:.80;}
-.sect-pill-add:active{opacity:1;}
+/* Category pill row — скрыта, заменена tag picker sheet */
+.sheet-cat-wrap-row{display:none;}
+.sect-pill-row{display:none;}
+.sect-pill,.sect-pill-active,.sect-pill-pinned,.sect-pill-add{display:none;}
+
+/* ── TAG PICKER SHEET ── */
+#tag-picker-ov{
+  position:fixed;inset:0;z-index:9500;
+  background:oklch(0.14 0.02 210/0.40);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:none;align-items:flex-end;justify-content:center;
+}
+#tag-picker-sheet{
+  width:100%;max-width:480px;
+  background:oklch(0.975 0.010 210/0.97);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border-radius:28px 28px 0 0;
+  border-top:1px solid oklch(1 0 0/0.60);
+  box-shadow:0 -8px 40px oklch(0 0 0/0.14);
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);
+  max-height:82dvh;display:flex;flex-direction:column;
+}
+.tp-handle{width:36px;height:4px;border-radius:2px;background:oklch(0.78 0.02 210);margin:14px auto 4px;flex-shrink:0;}
+.tp-header{padding:4px 20px 12px;flex-shrink:0;}
+.tp-title{font-size:17px;font-weight:700;color:var(--fg);letter-spacing:-.2px;}
+.tp-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 24px;}
+.tp-body::-webkit-scrollbar{display:none;}
+.tp-section{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-l);padding:12px 20px 6px;}
+.tp-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;cursor:pointer;
+  transition:background .1s;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.tp-row:active{background:oklch(0.52 0.10 210/0.06);}
+.tp-row+.tp-row::before{content:'';position:absolute;top:0;left:20px;right:0;height:1px;background:oklch(0.88 0.02 210/0.22);}
+.tp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px oklch(1 0 0/0.35);}
+.tp-name{flex:1;font-size:16px;color:var(--fg);font-family:var(--sys);}
+.tp-check{width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tp-check svg{width:12px;height:12px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;}
+.tp-add{color:var(--accent);font-size:16px;}
+.tp-add .tp-dot{background:oklch(0.78 0.02 210);}
+/* десктоп: появляется по центру как маленький попап */
+@media(min-width:600px){
+  #tag-picker-sheet{border-radius:24px;margin:0 0 40px;max-height:70dvh;}
+}
 .sheet-cat-btn{
   display:inline-flex;align-items:center;gap:7px;
   background:oklch(1 0 0 / 0.58);
@@ -4160,10 +4196,6 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <!-- Category pill row — горизонтальный скролл -->
-    <div class="sheet-cat-wrap-row">
-      <div class="sect-pill-row" id="sect-pill-row"></div>
-    </div>
     <div class="sheet-hdr-line"></div>
     <div class="sheet-voice-row">
     </div>
@@ -4256,6 +4288,15 @@ html.glass-lite .hf-card.hf-reminder{background:linear-gradient(118deg,oklch(0.6
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- TAG PICKER SHEET -->
+<div id="tag-picker-ov" onclick="if(event.target===this)closeTagPicker()">
+  <div id="tag-picker-sheet">
+    <div class="tp-handle" onclick="closeTagPicker()"></div>
+    <div class="tp-header"><div class="tp-title">Тег заметки</div></div>
+    <div class="tp-body" id="tag-picker-body"></div>
+  </div>
+</div>
 
 <!-- IN-APP REMINDER BANNER -->
 <div class="inapp-remind" id="inapp-remind" style="display:none;">
