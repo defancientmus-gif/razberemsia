@@ -684,16 +684,7 @@ function syncSceneMenu(){
   const s=document.getElementById('bg-scene-s');
   if(s)s.textContent=on?'Природа · луг':'Стандартный';
 }
-function toggleGlassLite(){
-  const lite=document.documentElement.classList.toggle('glass-lite');
-  localStorage.setItem('rz_glass_lite',lite?'1':'0');
-  syncGlassMenu();
-}
-function syncGlassMenu(){
-  const lite=document.documentElement.classList.contains('glass-lite');
-  const s=document.getElementById('glass-s');
-  if(s)s.textContent=lite?'Лёгкое · экономит батарею':'Живое (блюр)';
-}
+
 
 function updateThemeMeta(){
   const meta=document.querySelector('meta[name="theme-color"]');
@@ -714,7 +705,7 @@ function syncThemeMenu(){
 function toggleMenu(e){
   e.stopPropagation();
   const m=document.getElementById('hmenu'),b=document.getElementById('hbtn');
-  m.classList.contains('open')?closeMenu():(syncThemeMenu(),syncSceneMenu(),syncGlassMenu(),m.classList.add('open'),b.classList.add('open'));
+  m.classList.contains('open')?closeMenu():(syncThemeMenu(),syncSceneMenu(),m.classList.add('open'),b.classList.add('open'));
 }
 function closeMenu(){
   document.getElementById('hmenu').classList.remove('open');
@@ -1397,7 +1388,7 @@ function saveListSheet(){
   }
   saveNotes(notes);
   clearSheetDraft();
-  loadHomeFeed();loadNotes();
+  loadAll();
   closeSheet();
   showToast(EI?'Список обновлён ✓':'Список сохранён ✓');
 }
@@ -2635,7 +2626,7 @@ function removeNoteReminder(id){
   saveNotes(notes);
   _deleteReminderFromServer(id);
   scheduleAll();
-  loadNotes();loadHomeFeed();
+  loadAll();
   renderReminderPanel();
   showToast('Напоминание удалено');
 }
@@ -3923,44 +3914,6 @@ function toggleP0Inbox(){
 // ── Горизонтальный ряд пилюль в заметке ──
 function renderSectPills(){
   return; // строка пилюль убрана — заменена tag picker sheet
-  const row=document.getElementById('sect-pill-row');if(!row)return;
-  const btn=document.getElementById('sheet-cat-btn');
-  const curLabel=btn?.dataset.label||'заметка';
-  const isUserFolder=btn?.dataset.userFolder==='1';
-  const curAiTag=btn?.dataset.aiTagFolder||'';
-
-  const userFolders=getUserFolders();
-  const tagFolders=typeof getTagFolders==='function'?getTagFolders():[];
-  const pinnedFolders=tagFolders.filter(f=>f.pinned);
-
-  const pills=[];
-
-  // Пользовательские разделы
-  userFolders.forEach((f,i)=>{
-    const col=_folderColor(f.idx!==undefined?f.idx:i);
-    const isActive=isUserFolder&&curLabel.toLowerCase()===f.name.toLowerCase();
-    pills.push({isActive,html:`<button type="button" class="sect-pill${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:${col};`:''}" onclick="selectSectPill('user',${jsAttr(f.name)})">${esc(f.name)}</button>`});
-  });
-
-  // Закреплённые папки
-  pinnedFolders.forEach(f=>{
-    const isActive=!!curAiTag&&_tagKey(curAiTag)===_tagKey(f.tag);
-    pills.push({isActive,html:`<button type="button" class="sect-pill sect-pill-pinned${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:oklch(0.50 0.14 270);`:''}" onclick="selectSectPill('ai',${jsAttr(f.tag)},${jsAttr(f.label||f.tag)})">${esc(f.label||f.tag)}</button>`});
-  });
-
-  // Встроенные типы
-  Object.keys(STRIPES).forEach(l=>{
-    const isActive=!isUserFolder&&!curAiTag&&curLabel===l;
-    pills.push({isActive,html:`<button type="button" class="sect-pill${isActive?' sect-pill-active':''}" style="${isActive?`--pill-c:${STRIPES[l]};`:''}" onclick="selectSectPill('cat','${l}')">${l}</button>`});
-  });
-
-  // Активная — первой, остальные в исходном порядке
-  pills.sort((a,b)=>Number(b.isActive)-Number(a.isActive));
-
-  let h=pills.map(p=>p.html).join('');
-  h+=`<button type="button" class="sect-pill sect-pill-add" onclick="openFolderModal()">+ раздел</button>`;
-  row.innerHTML=h;
-  row.scrollLeft=0; // активная таблетка всегда первая — откатываем в начало
 }
 
 function selectSectPill(type,value,label){
@@ -4008,7 +3961,7 @@ function promoteToSection(tag){
   if(typeof getTagFolders==='function'){
     saveTagFolders(tFolders.filter(x=>_tagKey(x.tag)!==tagLow));
   }
-  loadNotes();loadHomeFeed();
+  loadAll();
   showToast(`«${sectionName}» теперь в Архиве`+(filed?` · ${filed} заметок разобрались`:''));
 }
 
@@ -4023,7 +3976,7 @@ function pinToggleNote(id){
   n.pinnedAt=n.pinned?Date.now():null;
   n.updatedAt=Date.now();
   saveNotes(notes);
-  loadHomeFeed();loadNotes();
+  loadAll();
   showToast(n.pinned?'Заметка закреплена':'Откреплено');
 }
 function pinToggleFromSheet(){
@@ -5027,7 +4980,6 @@ function _renderCatPills(dd){
 }
 function openTagPicker(){toggleCatDropdown();}
 function closeTagPicker(){document.getElementById('cat-dropdown')?.classList.remove('open');}
-function _renderTagPickerBody(){}
 function selectCat(label){
   showSheetCat(label);
   document.getElementById('cat-dropdown')?.classList.remove('open');
@@ -5969,7 +5921,7 @@ function loadHomeFeed(){
       const notes=getNotes();
       const idx=n.id?notes.findIndex(x=>x.id===n.id):notes.findIndex(x=>x===n);
       if(idx>=0){const del=notes.splice(idx,1)[0];del._deletedAt=Date.now();const tr=getTrash();tr.unshift(del);if(tr.length>50)tr.pop();saveTrash(tr);saveNotes(notes);if(del.reminder)_deleteReminderFromServer(del.id);}
-      scheduleAll();loadHomeFeed();loadNotes();
+      scheduleAll();loadAll();
       showToast('В корзину · можно восстановить');
     };
     _makeSwipeAttach(card,delPanel);
@@ -6752,7 +6704,7 @@ function _runSingleIntent(intent,params,originalText){
     params.createdNoteTitle=note.title;
     saveNotes(notes);
     if(reminderTime)_handleReminderAfterSave(reminderTime,id,params.title||auto.title,body.slice(0,200));
-    loadHomeFeed();loadNotes();
+    loadAll();
   }
 
   if(intent==='DELETE_REMINDER'){
@@ -6766,7 +6718,7 @@ function _runSingleIntent(intent,params,originalText){
         delete n.reminder;delete n.recurring;n.updatedAt=Date.now();count++;
       }
     });
-    if(count){saveNotes(notes);scheduleAll();loadHomeFeed();loadNotes();
+    if(count){saveNotes(notes);scheduleAll();loadAll();
       showToast(count===1?'Напоминание удалено':'Удалено напоминаний: '+count);}
     else showToast('Напоминание не найдено');
   }
@@ -6833,7 +6785,7 @@ function _runSingleIntent(intent,params,originalText){
       saveNotes(notes);
       _handleReminderAfterSave(nextTs,id,title,title);
     }
-    loadHomeFeed();loadNotes();
+    loadAll();
   }
 
   if(intent==='OPEN_NOTE'||intent==='ANALYZE_NOTE'){
@@ -6868,7 +6820,7 @@ function _runSingleIntent(intent,params,originalText){
         if(!note.aiTags.map(_tagKey).includes(tag)){
           note.aiTags=normalizeAiTags([...note.aiTags,tag]);
           note.updatedAt=Date.now();
-          saveNotes(notes);loadHomeFeed();loadNotes();
+          saveNotes(notes);loadAll();
         }
         // Создать тег-папку если нет (мусорные теги пропускаем)
         if(typeof getTagFolders==='function'&&!_isJunkTag(tag)){
@@ -6906,7 +6858,7 @@ function _runSingleIntent(intent,params,originalText){
     if(planText&&planText.length>10){
       const ts=Date.now();const id=genId();const notes=getNotes();
       notes.unshift({id,title:params.title||'План',body:planText,label:'заметка',createdAt:ts,updatedAt:ts});
-      saveNotes(notes);loadHomeFeed();loadNotes();
+      saveNotes(notes);loadAll();
     }
   }
 
@@ -7191,7 +7143,7 @@ function _agentSavePlan(planText){
   const ts=Date.now();const id=genId();const notes=getNotes();
   const title='План — '+new Date(ts).toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
   notes.unshift({id,title,body:planText,label:'заметка',createdAt:ts,updatedAt:ts});
-  saveNotes(notes);loadHomeFeed();loadNotes();
+  saveNotes(notes);loadAll();
   showToast('✅ План сохранён в заметки');
   setTimeout(()=>openNoteSheetById(id),300);
 }
@@ -7225,8 +7177,7 @@ async function _cleanupPastReminders(){
 
 // Перерисовать все основные списки (без idle tasks)
 function _reloadViews(){
-  loadHomeFeed();
-  loadNotes();
+  loadAll();
   loadNotepad();
 }
 
@@ -7239,8 +7190,7 @@ function loadAll(){
 }
 function _doLoadAll(){
   _deduplicateRecurringNotes();
-  loadHomeFeed();
-  loadNotes();
+  loadAll();
   loadNotepad();
   updTrashBadge();
   if('requestIdleCallback'in window){
