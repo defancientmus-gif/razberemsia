@@ -7177,7 +7177,8 @@ async function _cleanupPastReminders(){
 
 // Перерисовать все основные списки (без idle tasks)
 function _reloadViews(){
-  loadAll();
+  loadHomeFeed();
+  loadNotes();
   loadNotepad();
 }
 
@@ -7190,7 +7191,8 @@ function loadAll(){
 }
 function _doLoadAll(){
   _deduplicateRecurringNotes();
-  loadAll();
+  loadHomeFeed();
+  loadNotes();
   loadNotepad();
   updTrashBadge();
   if('requestIdleCallback'in window){
