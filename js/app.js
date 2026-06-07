@@ -4909,7 +4909,7 @@ function showSheetCat(label){
     const h=SHEET_HUES[label]||'210';
     const c=SHEET_CHROMAS[label]||'0.010';
     const chroma2=parseFloat(c)*2.5;
-    sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 ${chroma2.toFixed(3)} ${h} / 0.22), transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 ${c} ${h} / 0.96)`;
+    sheet.style.background=`radial-gradient(ellipse 120% 40% at 50% 0%, oklch(1 0 0 / 0.18), transparent 60%), oklch(0.98 ${c} ${h} / 0.20)`;
   }
   renderSectPills();
 }
@@ -5006,7 +5006,7 @@ function selectUserFolderTag(folderName){
     }
     // Цвет раздела мягко входит в стекло листа после выбора назначения.
     const sheet=document.querySelector('#overlay .sheet');
-    if(sheet)sheet.style.background=`radial-gradient(ellipse 100% 45% at 50% 0%, ${_folderTint(folderIdx,'.15')}, transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.012 205 / 0.96)`;
+    if(sheet)sheet.style.background=`radial-gradient(ellipse 120% 40% at 50% 0%, oklch(1 0 0 / 0.18), transparent 60%), oklch(0.98 0.012 205 / 0.20)`;
   }
   document.getElementById('cat-dropdown')?.classList.remove('open');
   renderSectPills();
@@ -5031,7 +5031,7 @@ function selectAiTagFolder(tag,label){
       filingTarget.classList.add('show');
     }
     const sheet=document.querySelector('#overlay .sheet');
-    if(sheet)sheet.style.background='radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.55 0.13 290 / .12), transparent 55%), radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.60) 0%, transparent 36%), oklch(0.974 0.010 290 / 0.96)';
+    if(sheet)sheet.style.background='radial-gradient(ellipse 120% 40% at 50% 0%, oklch(1 0 0 / 0.18), transparent 60%), oklch(0.98 0.010 290 / 0.20)';
   }
   document.getElementById('cat-dropdown')?.classList.remove('open');
   renderSectPills();
