@@ -32,19 +32,18 @@
 }
 </style>
 <script>
-// Логотип-вордмарк показываем только когда Playfair реально загружен —
-// иначе виден скачок с запасного serif на Playfair (FOUT).
+// Сцена и быстрый font-gate.
+// Playfair preload-ится — в кэше грузится <50ms. Фолбэк 150ms вместо 700.
 (function(){
-  // Фон-сцена (применяем до отрисовки, чтобы не было вспышки)
   try{if(localStorage.getItem('rz_bg_scene')==='1')document.documentElement.classList.add('scene-on');}catch(e){}
   function ready(){document.documentElement.classList.add('fonts-ready');}
   try{
     if(document.fonts&&document.fonts.load){
       Promise.race([
         document.fonts.load('400 48px "Playfair Display"').then(()=>document.fonts.ready),
-        new Promise(r=>setTimeout(r,700)) // фолбэк: не ждём вечно
+        new Promise(r=>setTimeout(r,150)) // ← было 700ms
       ]).then(ready,ready);
-    }else{setTimeout(ready,300);}
+    }else{setTimeout(ready,80);}
   }catch(e){ready();}
 })();
 </script>
@@ -1428,9 +1427,9 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   align-items:center;justify-content:center;
   padding:24px 20px 48px;
   opacity:1;
-  transition:opacity .40s ease;
+  transition:opacity .22s ease; /* было .40s — ускоряем уход заставки */
 }
-#auth-screen.hidden{opacity:0;pointer-events:none;display:flex;}
+#auth-screen.hidden{opacity:0;pointer-events:none;display:flex;transition:opacity .22s ease;}
 /* auth-screen полностью скрыт только после перехода */
 #auth-screen.gone{display:none !important;}
 
@@ -3112,32 +3111,17 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
 }
 .auth-wordmark{
   font-family:'Playfair Display',serif;
-  font-size:clamp(36px,12vw,48px);
+  font-size:clamp(34px,10vw,46px);
+  font-weight:400;
   line-height:1.12;
-  padding-top:.06em;            /* запас под диакритику «ё» — не обрезается */
+  padding-top:.06em;
   color:oklch(0.25 0.055 190);
   text-align:center;
-  /* Скрыт пока Playfair не готов — чтобы не было скачка с serif */
-  opacity:0;
+  /* Показываем сразу — font-display:swap сам сделает swap без скачка.
+     Shimmer удалён: background-clip:text делал буквы "жирными" и выглядел дёшево. */
+  animation:wm-appear .22s cubic-bezier(.22,1,.36,1) both;
 }
-@keyframes wm-appear{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-@keyframes wm-shimmer{0%{background-position:-240% center;}100%{background-position:240% center;}}
-/* Появление логотипа — только после загрузки шрифта */
-html.fonts-ready .auth-wordmark{
-  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both;
-}
-html.fonts-ready #auth-screen.checking .auth-wordmark{
-  background:linear-gradient(90deg,
-    oklch(0.25 0.055 190) 0%,
-    oklch(0.25 0.055 190) 28%,
-    oklch(0.55 0.15 220) 50%,
-    oklch(0.25 0.055 190) 72%,
-    oklch(0.25 0.055 190) 100%
-  );
-  background-size:280% auto;
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  animation:wm-appear .55s cubic-bezier(.22,1,.36,1) both,wm-shimmer 2s linear infinite .6s;
-}
+@keyframes wm-appear{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .auth-logo{margin-bottom:28px;}
 .jarvis-top{padding:7px 14px 3px;}
 .jq-btn,.hf-card,.drill-sec-row,.drill-note-row{

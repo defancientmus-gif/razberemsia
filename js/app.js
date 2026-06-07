@@ -495,12 +495,13 @@ const _appStartTs=Date.now();
 function showApp(){
   const a=document.getElementById('auth-screen');
   const m=document.getElementById('main-app');
-  // Минимум 300мс — короткая шторка, без затянутого старта
+  // Минимум 80ms — даём браузеру закончить первый paint прежде чем убирать заставку.
+  // Было 300ms жёсткого ожидания — убрали, т.к. это ощущается как тормоза.
   const elapsed=Date.now()-_appStartTs;
-  const delay=Math.max(0,300-elapsed);
-  if(m)m.style.display='flex'; // рендерим приложение за шторкой
+  const delay=Math.max(0,80-elapsed);
+  if(m)m.style.display='flex';
   setTimeout(()=>{
-    if(a){a.classList.add('hidden');setTimeout(()=>a.classList.add('gone'),420);}
+    if(a){a.classList.add('hidden');setTimeout(()=>a.classList.add('gone'),240);}
   },delay);
 }
 function showAuthScr(){
