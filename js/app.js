@@ -3996,10 +3996,14 @@ function pinToggleFromSheet(){
   if(btn)btn.classList.toggle('pinned',n.pinned);
   showToast(n.pinned?'Заметка закреплена':'Откреплено');
 }function _drillCardBg(i,total){
-  // Нейтральное прозрачное стекло. Новизна = непрозрачность (новее → чуть плотнее,
-  // старее → прозрачнее), без цвета. Через прозрачность виден общий фон.
   const t=total>1?i/(total-1):0;
-  const a=(0.24-t*0.13).toFixed(2); // 0.24 новые → 0.11 старые (больше стекла)
+  const isDark=document.documentElement.classList.contains('dark');
+  if(isDark){
+    // В тёмной теме — чуть светлее фона, не белый
+    const a=(0.10-t*0.04).toFixed(2);
+    return `oklch(1 0 0 / ${a})`;
+  }
+  const a=(0.24-t*0.13).toFixed(2);
   return `oklch(1 0 0 / ${a})`;
 }
 
