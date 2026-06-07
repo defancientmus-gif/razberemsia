@@ -2802,9 +2802,9 @@ function _qremCalPick(y,m,d){
 }
 function _qremCalPrevMonth(){if(!_qremCal)return;_qremCal.month--;if(_qremCal.month<0){_qremCal.month=11;_qremCal.year--;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem',{saveBtn:false});}
 function _qremCalNextMonth(){if(!_qremCal)return;_qremCal.month++;if(_qremCal.month>11){_qremCal.month=0;_qremCal.year++;}_renderCalInto('qrem-cal-wrap',_qremCal,'qrem',{saveBtn:false});}
-function _qremCalH(){}  // барабан обрабатывает сам
-function _qremCalM(){}  // барабан обрабатывает сам
-function _qremCalSave(){} // кнопки нет, но функция нужна для безопасности
+function _qremCalH(){}
+function _qremCalM(){}
+function _qremCalSave(){}
 
 function qremSave(){
   const text=(document.getElementById('qrem-inp')?.value||'').trim();
@@ -3654,7 +3654,8 @@ function _notePreview(n){
   if(n.type==='list'&&Array.isArray(n.items)&&n.items.length){
     return n.items.slice(0,5).map(i=>i.t||'').filter(Boolean).join(' · ').slice(0,120);
   }
-  const body=(n.body||n.title||'');
+  // Убираем старый [фото] placeholder из превью — фото хранится в note.images[]
+  const body=(n.body||n.title||'').replace(/\[фото\]/g,'').trim();
   const lines=body.split('\n').filter(l=>l.trim());
   if(lines.length>1)return lines.slice(1).join(' ').trim().slice(0,120);
   return '';
@@ -5767,14 +5768,8 @@ function onPhotoFileSelected(input){
 }
 function _insertPhotoIntoNote(dataUrl){
   if(!EI&&!ST){showToast('Сначала открой заметку');return;}
-  // Показываем превью в body заметки
-  const body=document.getElementById('sh1');
-  if(body){
-    const pos=body.selectionStart||body.value.length;
-    const placeholder=`\n[фото]\n`;
-    body.value=body.value.slice(0,pos)+placeholder+body.value.slice(pos);
-    autoGrowTA(body);
-  }
+  // Фото хранится в note.images[] и показывается как превью-плитка ниже текста.
+  // Текстовый placeholder [фото] не нужен — он выглядел некрасиво в ленте.
   // Сохраняем base64 в note.images[]
   if(EI){
     const notes=getNotes();
