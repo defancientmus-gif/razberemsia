@@ -1702,8 +1702,9 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .overlay.open{display:flex;}
 .overlay-bg{
   position:absolute;inset:0;
-  background:oklch(0.18 0.02 210 / 0.18);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  /* Только тёмный тонер — без своего blur, шит сам делает blur.
+     Двойной backdrop-filter создаёт артефакты "пятен". */
+  background:oklch(0.18 0.02 210 / 0.12);
 }
 
 /* Floating sheet */
@@ -1715,15 +1716,15 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   max-height:calc(var(--vvh) - 12px);
   margin-bottom:0;
   display:flex;flex-direction:column;
-  /* Полупрозрачная «бумага»: фон слегка просвечивает, но лист читается как бумага */
+  /* Liquid glass: высокая прозрачность + умеренный blur = видно сквозь, текст чёткий */
   background:
-    radial-gradient(ellipse 120% 48% at 50% 0%, oklch(0.92 0.03 210 / 0.12), transparent 60%),
-    oklch(0.99 0.005 215 / 0.48);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+    radial-gradient(ellipse 120% 40% at 50% 0%, oklch(1 0 0 / 0.18), transparent 60%),
+    oklch(0.98 0.004 215 / 0.20);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
   border-radius:28px;
-  border:1px solid oklch(1 0 0 / 0.62);
-  box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.34),0 4px 24px -16px oklch(0.22 0.05 210 / 0.24), inset 0 1px 0 oklch(1 0 0 / 0.78);
+  border:1px solid oklch(1 0 0 / 0.55);
+  box-shadow:0 18px 70px -28px oklch(0 0 0 / 0.28),0 4px 24px -16px oklch(0.22 0.05 210 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.90), inset 0 0 0 1px oklch(0.75 0.04 210 / 0.08);
   animation:sheetRise .40s cubic-bezier(.22,1,.36,1);
   transform-origin:center;
   overflow:hidden;
@@ -2458,11 +2459,11 @@ html.dark .jarvis-feed{
 }
 html.dark .sheet{
   background:
-    radial-gradient(ellipse 100% 45% at 50% 0%, oklch(0.84 0.06 210 / 0.12), transparent 55%),
-    radial-gradient(circle at 8% 8%, oklch(1 0 0 / 0.36) 0%, transparent 36%),
-    oklch(0.975 0.010 210 / 0.72);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+    radial-gradient(ellipse 100% 40% at 50% 0%, oklch(0.70 0.05 210 / 0.20), transparent 55%),
+    oklch(0.18 0.015 210 / 0.55);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-color:oklch(1 0 0 / 0.12);
 }
 html.dark .auth-card{
   background:oklch(1 0 0 / 0.66);
