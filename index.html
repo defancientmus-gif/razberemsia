@@ -2551,6 +2551,12 @@ html.dark .jq-in::placeholder{color:var(--fg-l);}
 html.dark .sec-title{color:var(--fg-m);}
 /* Ambient blobs — скрываем в тёмной теме, фон сам по себе красивый */
 html.dark .bg-blob{opacity:0.08;}
+html.dark .bg{
+  background:
+    radial-gradient(ellipse 60% 45% at 8% 95%, oklch(0.28 0.06 235 / 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 92% 10%, oklch(0.32 0.08 230 / 0.20) 0%, transparent 50%),
+    oklch(0.13 0.025 225);
+}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
