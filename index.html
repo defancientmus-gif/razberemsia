@@ -2449,38 +2449,108 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 
 /* ── DARK THEME ── */
 html{transition:filter .35s ease;}
-html.dark{filter:invert(1) hue-rotate(180deg);color-scheme:dark;}
-html.dark img,html.dark video,html.dark canvas{filter:invert(1) hue-rotate(180deg);}
-html.dark .jarvis-feed{
-  background:oklch(0.99 0.002 210 / 0.10);
-  backdrop-filter:blur(12px) brightness(1.02);
-  -webkit-backdrop-filter:blur(12px) brightness(1.02);
+/* ── ТЁМНАЯ ТЕМА — нормальная, без filter:invert ── */
+html.dark{
+  color-scheme:dark;
+  /* Переопределяем переменные — body уже использует var(--bg)/var(--fg) */
+  --bg:         oklch(0.13 0.025 225);
+  --fg:         oklch(0.93 0.008 220);
+  --fg-m:       oklch(0.70 0.010 220);
+  --fg-l:       oklch(0.50 0.008 220);
+  --glass-bg:   oklch(1 0 0 / 0.06);
+  --glass-bd:   oklch(1 0 0 / 0.12);
+  --accent:     oklch(0.60 0.12 235);
+  --accent-d:   oklch(0.75 0.10 235);
+  --accent-sub: oklch(0.60 0.12 235 / 0.18);
+  --stone:      oklch(0.30 0.02 220);
+  --warm:       oklch(0.18 0.015 220);
 }
+/* Фон шапки и навигации */
+html.dark header{
+  background:oklch(0.16 0.025 225 / 0.85);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid oklch(1 0 0 / 0.07);
+}
+/* Карточки ленты и заметок */
+html.dark .hf-card,
+html.dark .jq-btn,
+html.dark .drill-note-row,
+html.dark .drill-grid-card{
+  background:oklch(1 0 0 / 0.06);
+  border-color:oklch(1 0 0 / 0.10);
+}
+/* Лист заметки */
 html.dark .sheet{
   background:
-    radial-gradient(ellipse 100% 40% at 50% 0%, oklch(0.70 0.05 210 / 0.20), transparent 55%),
-    oklch(0.18 0.015 210 / 0.55);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-color:oklch(1 0 0 / 0.12);
+    radial-gradient(ellipse 100% 40% at 50% 0%, oklch(0.70 0.05 210 / 0.15), transparent 55%),
+    oklch(0.18 0.020 225 / 0.75);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-color:oklch(1 0 0 / 0.10);
 }
+/* Панель агента */
+html.dark .jarvis-feed{
+  background:oklch(1 0 0 / 0.05);
+  border-color:oklch(1 0 0 / 0.08);
+}
+/* Меню */
+html.dark .hmenu{
+  background:oklch(0.17 0.025 225 / 0.95);
+  border-color:oklch(1 0 0 / 0.10);
+}
+html.dark .hmenu-item:hover,html.dark .hmenu-item:active{
+  background:oklch(1 0 0 / 0.06);
+}
+/* Auth экран */
+html.dark #auth-screen{
+  background:linear-gradient(160deg,oklch(0.14 0.025 225) 0%,oklch(0.11 0.020 230) 100%);
+}
+html.dark .auth-wordmark{color:oklch(0.88 0.010 220);}
 html.dark .auth-card{
-  background:oklch(1 0 0 / 0.66);
+  background:oklch(1 0 0 / 0.07);
+  border-color:oklch(1 0 0 / 0.12);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
 }
-html.dark .item-card{
-  background:
-    radial-gradient(circle at 20% 20%, oklch(1 0 0 / 0.30) 0%, transparent 55%),
-    oklch(1 0 0 / 0.18);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+html.dark .auth-lbl{color:var(--accent-d);}
+html.dark .auth-title,html.dark .auth-sub{color:var(--fg);}
+html.dark .auth-email-in,html.dark .otp-in{
+  background:oklch(1 0 0 / 0.06);
+  border-color:oklch(1 0 0 / 0.15);
+  color:var(--fg);
 }
-html.dark .bubble{
-  background:
-    radial-gradient(ellipse 80% 50% at 30% 15%, oklch(1 0 0 / 0.36) 0%, transparent 55%),
-    radial-gradient(circle at 80% 80%, oklch(0.75 0.08 210 / 0.10) 0%, transparent 50%),
-    oklch(0.94 0.04 210 / 0.12);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-}
+html.dark .auth-btn{background:oklch(0.50 0.14 235);}
+/* Поиск */
+html.dark .search-wrap{background:oklch(0.18 0.025 225);}
+html.dark .sr-item{background:oklch(1 0 0 / 0.05);border-color:oklch(1 0 0 / 0.08);}
+/* Папки */
+html.dark .folder-card{background:oklch(1 0 0 / 0.06);border-color:oklch(1 0 0 / 0.10);}
+/* Свайп удаление */
+html.dark .hf-del-panel{background:oklch(0.50 0.18 15 / 0.85);}
+/* Разделитель */
+html.dark .sheet-hdr-line{background:oklch(1 0 0 / 0.10);}
+/* Инпут в заметке */
+html.dark #sh1{color:var(--fg);}
+/* Toast */
+html.dark .toast-msg{background:oklch(0.20 0.025 225);border-color:oklch(1 0 0 / 0.12);color:var(--fg);}
+/* Кнопки в шапке */
+html.dark .hbtn{background:oklch(1 0 0 / 0.08);border-color:oklch(1 0 0 / 0.15);}
+html.dark .hstat-pill{background:oklch(1 0 0 / 0.08);border-color:oklch(1 0 0 / 0.15);}
+/* Overlay backdrop */
+html.dark .overlay-bg{background:oklch(0 0 0 / 0.55);}
+/* Cat dropdown */
+html.dark .cat-dropdown{background:oklch(0.17 0.025 225 / 0.97);border-color:oklch(1 0 0 / 0.10);}
+html.dark .cat-pill-btn{color:var(--fg-m);}
+html.dark .cat-pill-btn:hover{background:oklch(1 0 0 / 0.08);}
+/* Напоминания панель */
+html.dark .remind-sheet{background:oklch(0.15 0.025 225 / 0.97);}
+html.dark .remind-item2{border-color:oklch(1 0 0 / 0.10);}
+html.dark .rem-name{color:var(--fg);}
+/* Быстрый ввод */
+html.dark .jq-in{background:oklch(1 0 0 / 0.06);color:var(--fg);}
+html.dark .jq-in::placeholder{color:var(--fg-l);}
+/* Секция заголовков */
+html.dark .sec-title{color:var(--fg-m);}
+/* Ambient blobs — скрываем в тёмной теме, фон сам по себе красивый */
+html.dark .bg-blob{opacity:0.08;}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
