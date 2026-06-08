@@ -2453,7 +2453,7 @@ html{transition:filter .35s ease;}
 html.dark{
   color-scheme:dark;
   /* Переопределяем переменные — body уже использует var(--bg)/var(--fg) */
-  --bg:         oklch(0.13 0.025 225);
+  --bg:         #000;
   --fg:         oklch(0.93 0.008 220);
   --fg-m:       oklch(0.70 0.010 220);
   --fg-l:       oklch(0.50 0.008 220);
@@ -2476,8 +2476,9 @@ html.dark .hf-card,
 html.dark .jq-btn,
 html.dark .drill-note-row,
 html.dark .drill-grid-card{
-  background:oklch(1 0 0 / 0.06);
-  border-color:oklch(1 0 0 / 0.10);
+  background:oklch(1 0 0 / 0.10);
+  border-color:oklch(1 0 0 / 0.14);
+  color:oklch(0.13 0.015 230);
 }
 /* Лист заметки */
 html.dark .sheet{
@@ -2551,12 +2552,7 @@ html.dark .jq-in::placeholder{color:var(--fg-l);}
 html.dark .sec-title{color:var(--fg-m);}
 /* Ambient blobs — скрываем в тёмной теме, фон сам по себе красивый */
 html.dark .bg-blob{opacity:0.08;}
-html.dark .bg{
-  background:
-    radial-gradient(ellipse 60% 45% at 8% 95%, oklch(0.28 0.06 235 / 0.25) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 40% at 92% 10%, oklch(0.32 0.08 230 / 0.20) 0%, transparent 50%),
-    oklch(0.13 0.025 225);
-}
+html.dark .bg{background:#000;}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
