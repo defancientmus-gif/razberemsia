@@ -2476,9 +2476,12 @@ html.dark .hf-card,
 html.dark .jq-btn,
 html.dark .drill-note-row,
 html.dark .drill-grid-card{
-  background:oklch(1 0 0 / 0.10);
-  border-color:oklch(1 0 0 / 0.14);
+  /* Матовое белое стекло — плотное, текст не вытекает */
+  background:oklch(0.97 0.004 210 / 0.92) !important;
+  border:1px solid oklch(1 0 0 / 0.70) !important;
+  box-shadow:0 2px 12px oklch(0 0 0 / 0.40), inset 0 1px 0 oklch(1 0 0 / 0.95) !important;
   color:oklch(0.13 0.015 230);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
 }
 /* Лист заметки */
 html.dark .sheet{
@@ -2552,7 +2555,16 @@ html.dark .jq-in::placeholder{color:var(--fg-l);}
 html.dark .sec-title{color:var(--fg-m);}
 /* Ambient blobs — скрываем в тёмной теме, фон сам по себе красивый */
 html.dark .bg-blob{opacity:0.08;}
-html.dark .bg{background:#000;}
+html.dark .bg{
+  background:
+    /* царапины и неровности — ощущение текстуры */
+    repeating-linear-gradient(127deg, oklch(1 0 0 / 0.012) 0px, transparent 1px, transparent 8px),
+    repeating-linear-gradient(43deg,  oklch(1 0 0 / 0.008) 0px, transparent 1px, transparent 12px),
+    /* подстветка снизу — как свет от пола */
+    radial-gradient(ellipse 80% 30% at 50% 110%, oklch(0.25 0.03 240 / 0.35) 0%, transparent 60%),
+    /* грязный чёрный — чуть тёплый, не мёртвый */
+    oklch(0.11 0.008 240);
+}
 
 /* ── CLOUDS — global layer, visible through feed glass ── */
 .cloud-sky{
