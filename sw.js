@@ -1,4 +1,4 @@
-const CACHE = 'rz-v375';
+const CACHE = 'rz-v376';
 const ASSETS = [
   './',
   'index.html',
@@ -10,14 +10,20 @@ const ASSETS = [
   'pwa-logo-512.png',
   'fonts/playfair-cyrillic.woff2',
   'fonts/playfair-latin.woff2',
-  'manifest.json'
 ];
 
 self.addEventListener('install', e => {
+  // skipWaiting только после того как кэш собран.
+  // Раньше: .catch(()=>{}) глушил ошибки → старый кэш удалялся → новый пустой → офлайн ломался.
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {}))
+    caches.open(CACHE)
+      .then(c => Promise.all(
+        ASSETS.map(url =>
+          c.add(url).catch(() => {}) // каждый файл отдельно — один 404 не ломает всё
+        )
+      ))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 // Долгоживущие кеши — НЕ чистятся при обновлении версии CACHE.
