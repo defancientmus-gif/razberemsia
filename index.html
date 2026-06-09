@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Разберёмся">
-<meta name="theme-color" content="#111515">
+<meta name="theme-color" content="#e2e8ed">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="pwa-logo-180.png" sizes="180x180" id="ati">
@@ -2484,8 +2484,9 @@ html.dark{
 }
 /* Фон шапки и навигации */
 html.dark header{
-  background:oklch(0.16 0.025 225 / 0.85);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  /* Без backdrop-blur — он может давать белый артефакт на системной шапке iOS */
+  background:oklch(0.08 0.008 240);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
   border-bottom:1px solid oklch(1 0 0 / 0.07);
 }
 /* Карточки ленты и заметок — тёмное прозрачное стекло на чёрном фоне */
@@ -2575,6 +2576,23 @@ html.dark #sh1{color:var(--fg);}
 html.dark .toast-msg{background:oklch(0.20 0.025 225);border-color:oklch(1 0 0 / 0.12);color:var(--fg);}
 /* Кнопки в шапке */
 html.dark .hbtn{background:oklch(1 0 0 / 0.08);border-color:oklch(1 0 0 / 0.15);}
+/* Кнопки нижней панели — тёмное стекло, без backdrop-blur (блюрит карточки) */
+html.dark .home-bar .home-act-btn{
+  background:oklch(1 0 0 / 0.10) !important;
+  border-color:oklch(1 0 0 / 0.18) !important;
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.24), 0 2px 8px oklch(0 0 0 / 0.30) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+html.dark .home-act-btn span{color:var(--fg-m);}
+html.dark .home-act-btn svg{stroke:var(--accent-d);filter:none;}
+/* Кнопка напоминания (bell) */
+html.dark .bell-bar-btn{
+  background:oklch(1 0 0 / 0.10) !important;
+  border-color:oklch(1 0 0 / 0.18) !important;
+  color:var(--fg-m);
+}
+html.dark .bell-bar-btn svg{stroke:var(--accent-d);}
 html.dark .hstat-pill{background:oklch(1 0 0 / 0.08);border-color:oklch(1 0 0 / 0.15);}
 /* Overlay backdrop */
 html.dark .overlay-bg{background:oklch(0 0 0 / 0.55);}
