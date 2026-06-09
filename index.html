@@ -66,6 +66,7 @@ input,textarea{-webkit-user-select:text;user-select:text;}
   --gold:       oklch(0.68 0.12 80);
   --stone:      oklch(0.78 0.02 210);
   --warm:       oklch(0.94 0.015 200);
+  --fog:        oklch(0.91 0.011 212); /* цвет тумана = цвет фона */
   --r: 16px;
   --sys: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
   --vvh: 100vh;
@@ -2366,13 +2367,12 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   content:'';position:absolute;top:0;left:0;right:0;
   height:calc(env(safe-area-inset-top,0px) + 168px);
   background:linear-gradient(to bottom,
-    oklch(0.91 0.011 212) 0%,
-    oklch(0.91 0.011 212) env(safe-area-inset-top,0px),
-    oklch(0.91 0.011 212 / 0.72) calc(env(safe-area-inset-top,0px) + 36px),
-    oklch(0.91 0.011 212 / 0.42) calc(env(safe-area-inset-top,0px) + 78px),
-    oklch(0.91 0.011 212 / 0.20) calc(env(safe-area-inset-top,0px) + 112px),
-    oklch(0.91 0.011 212 / 0.08) calc(env(safe-area-inset-top,0px) + 134px),
-    oklch(0.91 0.011 212 / 0.02) calc(env(safe-area-inset-top,0px) + 152px),
+    var(--fog) 0%,
+    var(--fog) env(safe-area-inset-top,0px),
+    color-mix(in oklch, var(--fog), transparent 28%) calc(env(safe-area-inset-top,0px) + 36px),
+    color-mix(in oklch, var(--fog), transparent 58%) calc(env(safe-area-inset-top,0px) + 78px),
+    color-mix(in oklch, var(--fog), transparent 80%) calc(env(safe-area-inset-top,0px) + 112px),
+    color-mix(in oklch, var(--fog), transparent 92%) calc(env(safe-area-inset-top,0px) + 134px),
     transparent calc(env(safe-area-inset-top,0px) + 166px));
   /* Прогрессивный блюр — растворяется маской, без жёсткой границы */
   backdrop-filter:blur(11px);
@@ -2392,11 +2392,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   content:'';position:absolute;bottom:0;left:0;right:0;
   height:200px;
   background:linear-gradient(to top,
-    oklch(0.91 0.011 212 / 0.52) 0%,
-    oklch(0.91 0.011 212 / 0.34) 28%,
-    oklch(0.91 0.011 212 / 0.16) 52%,
-    oklch(0.91 0.011 212 / 0.06) 72%,
-    oklch(0.91 0.011 212 / 0.014) 88%,
+    color-mix(in oklch, var(--fog), transparent 48%) 0%,
+    color-mix(in oklch, var(--fog), transparent 66%) 28%,
+    color-mix(in oklch, var(--fog), transparent 84%) 52%,
+    color-mix(in oklch, var(--fog), transparent 94%) 72%,
     transparent 100%);
   backdrop-filter:blur(7px);
   -webkit-backdrop-filter:blur(7px);
@@ -2423,11 +2422,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   padding-bottom:14px;
   /* Блюр перенесён на ::before (растворяется маской). Здесь только тонкий тон сверху. */
   background:linear-gradient(to bottom,
-    oklch(0.91 0.011 212) 0%,
-    oklch(0.91 0.011 212) env(safe-area-inset-top,0px),
-    oklch(0.93 0.009 218 / 0.10) calc(env(safe-area-inset-top,0px) + 30px),
-    oklch(0.95 0.006 225 / 0.02) calc(env(safe-area-inset-top,0px) + 64px),
-    oklch(0.97 0.005 225 / 0) 100%);
+    var(--fog) 0%,
+    var(--fog) env(safe-area-inset-top,0px),
+    color-mix(in oklch, var(--fog), transparent 90%) calc(env(safe-area-inset-top,0px) + 30px),
+    transparent calc(env(safe-area-inset-top,0px) + 64px));
 }
 .home-wrap .hf-toolbar{
   position:absolute;top:calc(env(safe-area-inset-top,0px) + 76px);right:4px;z-index:4;padding:0;
@@ -2454,6 +2452,7 @@ html.dark{
   color-scheme:dark;
   /* Переопределяем переменные — body уже использует var(--bg)/var(--fg) */
   --bg:         #000;
+  --fog:        #000;
   --fg:         oklch(0.93 0.008 220);
   --fg-m:       oklch(0.70 0.010 220);
   --fg-l:       oklch(0.50 0.008 220);
@@ -2555,22 +2554,6 @@ html.dark .jq-in::placeholder{color:var(--fg-l);}
 html.dark .sec-title{color:var(--fg-m);}
 /* Ambient blobs — скрываем в тёмной теме, фон сам по себе красивый */
 html.dark .bg-blob{opacity:0.08;}
-/* Туманы сверху и снизу — в тёмной теме чёрные */
-html.dark .home-wrap::before{
-  background:linear-gradient(to bottom,
-    #000 0%, #000 env(safe-area-inset-top,0px),
-    oklch(0 0 0 / 0.72) calc(env(safe-area-inset-top,0px) + 36px),
-    oklch(0 0 0 / 0.42) calc(env(safe-area-inset-top,0px) + 78px),
-    oklch(0 0 0 / 0.20) calc(env(safe-area-inset-top,0px) + 112px),
-    oklch(0 0 0 / 0.08) calc(env(safe-area-inset-top,0px) + 134px),
-    transparent calc(env(safe-area-inset-top,0px) + 166px));
-}
-html.dark .home-wrap::after{
-  background:linear-gradient(to top,
-    oklch(0 0 0 / 0.52) 0%, oklch(0 0 0 / 0.34) 28%,
-    oklch(0 0 0 / 0.16) 52%, oklch(0 0 0 / 0.06) 72%,
-    transparent 100%);
-}
 html.dark .bg{
   background:
     /* царапины и неровности — ощущение текстуры */
@@ -3977,7 +3960,7 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
   <header>
     <div class="logo">
       <span class="logo-name">Разберёмся</span>
-      <span class="logo-ver" id="app-version-badge">336</span>
+      <span class="logo-ver" id="app-version-badge">378</span>
     </div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
