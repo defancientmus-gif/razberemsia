@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Разберёмся">
-<meta name="theme-color" content="#e2e8ed">
+<meta name="theme-color" content="#111515">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="pwa-logo-180.png" sizes="180x180" id="ati">
@@ -66,7 +66,16 @@ input,textarea{-webkit-user-select:text;user-select:text;}
   --gold:       oklch(0.68 0.12 80);
   --stone:      oklch(0.78 0.02 210);
   --warm:       oklch(0.94 0.015 200);
-  --fog:        oklch(0.91 0.011 212); /* цвет тумана = цвет фона */
+  --fog:    oklch(0.91 0.011 212); /* цвет тумана = цвет фона */
+  --fog-72: oklch(0.91 0.011 212 / 0.72);
+  --fog-42: oklch(0.91 0.011 212 / 0.42);
+  --fog-20: oklch(0.91 0.011 212 / 0.20);
+  --fog-08: oklch(0.91 0.011 212 / 0.08);
+  --fog-52: oklch(0.91 0.011 212 / 0.52);
+  --fog-34: oklch(0.91 0.011 212 / 0.34);
+  --fog-16: oklch(0.91 0.011 212 / 0.16);
+  --fog-06: oklch(0.91 0.011 212 / 0.06);
+  --fog-10: oklch(0.91 0.011 212 / 0.10);
   --r: 16px;
   --sys: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
   --vvh: 100vh;
@@ -2369,10 +2378,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   background:linear-gradient(to bottom,
     var(--fog) 0%,
     var(--fog) env(safe-area-inset-top,0px),
-    color-mix(in oklch, var(--fog), transparent 28%) calc(env(safe-area-inset-top,0px) + 36px),
-    color-mix(in oklch, var(--fog), transparent 58%) calc(env(safe-area-inset-top,0px) + 78px),
-    color-mix(in oklch, var(--fog), transparent 80%) calc(env(safe-area-inset-top,0px) + 112px),
-    color-mix(in oklch, var(--fog), transparent 92%) calc(env(safe-area-inset-top,0px) + 134px),
+    var(--fog-72) calc(env(safe-area-inset-top,0px) + 36px),
+    var(--fog-42) calc(env(safe-area-inset-top,0px) + 78px),
+    var(--fog-20) calc(env(safe-area-inset-top,0px) + 112px),
+    var(--fog-08) calc(env(safe-area-inset-top,0px) + 134px),
     transparent calc(env(safe-area-inset-top,0px) + 166px));
   /* Прогрессивный блюр — растворяется маской, без жёсткой границы */
   backdrop-filter:blur(11px);
@@ -2392,10 +2401,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   content:'';position:absolute;bottom:0;left:0;right:0;
   height:200px;
   background:linear-gradient(to top,
-    color-mix(in oklch, var(--fog), transparent 48%) 0%,
-    color-mix(in oklch, var(--fog), transparent 66%) 28%,
-    color-mix(in oklch, var(--fog), transparent 84%) 52%,
-    color-mix(in oklch, var(--fog), transparent 94%) 72%,
+    var(--fog-52) 0%,
+    var(--fog-34) 28%,
+    var(--fog-16) 52%,
+    var(--fog-06) 72%,
     transparent 100%);
   backdrop-filter:blur(7px);
   -webkit-backdrop-filter:blur(7px);
@@ -2424,7 +2433,7 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   background:linear-gradient(to bottom,
     var(--fog) 0%,
     var(--fog) env(safe-area-inset-top,0px),
-    color-mix(in oklch, var(--fog), transparent 90%) calc(env(safe-area-inset-top,0px) + 30px),
+    var(--fog-10) calc(env(safe-area-inset-top,0px) + 30px),
     transparent calc(env(safe-area-inset-top,0px) + 64px));
 }
 .home-wrap .hf-toolbar{
@@ -2452,7 +2461,16 @@ html.dark{
   color-scheme:dark;
   /* Переопределяем переменные — body уже использует var(--bg)/var(--fg) */
   --bg:         #000;
-  --fog:        #000;
+  --fog:    #000;
+  --fog-72: oklch(0 0 0 / 0.72);
+  --fog-42: oklch(0 0 0 / 0.42);
+  --fog-20: oklch(0 0 0 / 0.20);
+  --fog-08: oklch(0 0 0 / 0.08);
+  --fog-52: oklch(0 0 0 / 0.52);
+  --fog-34: oklch(0 0 0 / 0.34);
+  --fog-16: oklch(0 0 0 / 0.16);
+  --fog-06: oklch(0 0 0 / 0.06);
+  --fog-10: oklch(0 0 0 / 0.10);
   --fg:         oklch(0.93 0.008 220);
   --fg-m:       oklch(0.70 0.010 220);
   --fg-l:       oklch(0.50 0.008 220);
@@ -2507,6 +2525,14 @@ html.dark .sheet{
 html.dark .jarvis-feed{
   background:oklch(1 0 0 / 0.05);
   border-color:oklch(1 0 0 / 0.08);
+}
+/* Лого и дата в шапке — светлые, перебиваем хардкод из QUIET GLASS секции */
+html.dark .logo{color:var(--fg);}
+html.dark .hdate{color:var(--fg-m);}
+html.dark .logo-ver{
+  color:oklch(0.75 0.06 220);
+  background:oklch(1 0 0 / 0.08);
+  border-color:oklch(1 0 0 / 0.14);
 }
 /* Меню */
 html.dark .hmenu{
