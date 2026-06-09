@@ -2585,6 +2585,17 @@ html.dark .home-bar .home-act-btn{
 }
 html.dark .home-act-btn span{color:var(--fg-m);}
 html.dark .home-act-btn svg{stroke:var(--accent-d);filter:none;}
+/* Кнопка Агент (.new-note-btn) — тёмное стекло */
+html.dark .new-note-btn{
+  background:oklch(1 0 0 / 0.12) !important;
+  border-color:oklch(1 0 0 / 0.20) !important;
+  box-shadow:inset 0 1.5px 0 oklch(1 0 0 / 0.28), 0 4px 14px oklch(0 0 0 / 0.35) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+html.dark .new-note-btn::before{display:none;}
+html.dark .nnb-text{color:var(--fg-m);}
+html.dark .new-note-btn .nnb-ico-note{stroke:var(--accent-d);}
 /* Кнопка напоминания (bell) */
 html.dark .bell-bar-btn{
   background:oklch(1 0 0 / 0.10) !important;
