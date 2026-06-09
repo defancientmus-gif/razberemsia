@@ -2555,6 +2555,22 @@ html.dark .jq-in::placeholder{color:var(--fg-l);}
 html.dark .sec-title{color:var(--fg-m);}
 /* Ambient blobs — скрываем в тёмной теме, фон сам по себе красивый */
 html.dark .bg-blob{opacity:0.08;}
+/* Туманы сверху и снизу — в тёмной теме чёрные */
+html.dark .home-wrap::before{
+  background:linear-gradient(to bottom,
+    #000 0%, #000 env(safe-area-inset-top,0px),
+    oklch(0 0 0 / 0.72) calc(env(safe-area-inset-top,0px) + 36px),
+    oklch(0 0 0 / 0.42) calc(env(safe-area-inset-top,0px) + 78px),
+    oklch(0 0 0 / 0.20) calc(env(safe-area-inset-top,0px) + 112px),
+    oklch(0 0 0 / 0.08) calc(env(safe-area-inset-top,0px) + 134px),
+    transparent calc(env(safe-area-inset-top,0px) + 166px));
+}
+html.dark .home-wrap::after{
+  background:linear-gradient(to top,
+    oklch(0 0 0 / 0.52) 0%, oklch(0 0 0 / 0.34) 28%,
+    oklch(0 0 0 / 0.16) 52%, oklch(0 0 0 / 0.06) 72%,
+    transparent 100%);
+}
 html.dark .bg{
   background:
     /* царапины и неровности — ощущение текстуры */
