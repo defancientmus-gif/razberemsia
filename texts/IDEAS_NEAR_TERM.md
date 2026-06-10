@@ -479,3 +479,13 @@ https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета
 
 > **AI:** Идея: https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета
 > **Теги:** идея
+
+
+---
+
+## Идея — 2026-06-10
+
+Найти базу Данных с которой выгрузить модельный ряд .
+
+> **AI:** Идея: Найти базу Данных с которой выгрузить...
+> **Теги:** идея
