@@ -397,27 +397,50 @@ window.addEventListener('resize',syncViewportForKeyboard);
 
 // ── AUTH ──
 // Splash удалён — auth-screen является заставкой. Он виден сразу при загрузке.
+// Офлайн-первый запуск: входим МГНОВЕННО с последним известным юзером (rz_last_user),
+// сессия проверяется в фоне. Сеть и состояние кэша никогда не блокируют старт.
+function _lastUser(){
+  try{const u=JSON.parse(localStorage.getItem('rz_last_user')||'null');return u&&u.id?u:null;}catch(e){return null;}
+}
+function _clearLastUser(){try{localStorage.removeItem('rz_last_user');}catch(e){}}
 async function initAuth(){
+  const cached=_lastUser();
+  if(cached)await enterUser(cached);
   if(!sb){
-    setAuthChecking(false);
-    showAuthErr(sbConfigured?'Не удалось загрузить облачное подключение. Проверьте интернет и обновите страницу.':'Supabase ещё не настроен. Добавьте URL и anon key.');
+    // supabase-js не загрузилась. С кэшированным юзером работаем локально,
+    // без него — показываем ошибку на auth-экране.
+    if(!cached){
+      setAuthChecking(false);
+      showAuthErr(sbConfigured?'Не удалось загрузить облачное подключение. Проверьте интернет и обновите страницу.':'Supabase ещё не настроен. Добавьте URL и anon key.');
+    }
     return;
   }
-  // auth-card уже в checking-состоянии по HTML — ждём сессию
   try{
     const {data}=await sb.auth.getSession();
     if(data?.session?.user){
-      await enterUser(data.session.user);
-    } else {
+      if(!CU||CU.id!==data.session.user.id){
+        await enterUser(data.session.user);
+      }else{
+        // Тот же юзер: обновляем объект и догружаем облако —
+        // первая попытка loadCloudData могла упасть до установки сессии.
+        CU=data.session.user;
+        loadCloudData().then(()=>loadAll());
+      }
+    } else if(!CU){
       setAuthChecking(false); // показываем поле почты
     }
-  }catch(e){console.warn('session check failed',e);setAuthChecking(false);}
+    // Сессии нет, но вошли из кэша — остаёмся в локальном режиме.
+    // Реальный выход придёт событием SIGNED_OUT в onAuthStateChange (только онлайн).
+  }catch(e){console.warn('session check failed',e);if(!CU)setAuthChecking(false);}
   // Регистрируем после getSession — избегаем двойного enterUser через INITIAL_SESSION
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(session?.user){
       if(CU&&CU.id===session.user.id)return;
       await enterUser(session.user);
-    } else {
+    } else if(event==='SIGNED_OUT'){
+      // Только явный выход. Сетевые сбои refresh НЕ дают SIGNED_OUT —
+      // supabase-js сохраняет сессию при retryable-ошибках.
+      _clearLastUser();
       if(!CU)return;
       CU=null;CLOUD_READY_UID=null;_unsubscribeRealtime();
       const m=document.getElementById('main-app');
@@ -437,6 +460,8 @@ function showAuthErr(msg){
 }
 async function enterUser(user){
   CU=user;migrateLegacyLocal();
+  // Запоминаем юзера для мгновенного офлайн-входа при следующем запуске
+  try{localStorage.setItem('rz_last_user',JSON.stringify({id:user.id,email:user.email||''}));}catch(e){}
   // Показываем приложение сразу — облако загружается параллельно.
   // Если данные придут позже — _pullCloudIfStale и Realtime синхронизируют автоматически.
   showApp();updUI(user);loadAll();
@@ -731,6 +756,7 @@ async function doSignOut(e){
   if(e)e.preventDefault();
   if(!confirm('Выйти из аккаунта?'))return;
   try{if(sb)await sb.auth.signOut();}catch(err){console.warn('sign out failed',err);}
+  _clearLastUser();
   CU=null;CLOUD_READY_UID=null;_unsubscribeRealtime();closeMenu();go('home');
   const m=document.getElementById('main-app');if(m)m.style.display='none';
   showAuthScr();setAuthChecking(false);

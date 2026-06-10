@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Разберёмся β rz-v336</title>
-<link rel="dns-prefetch" href="https://www.gstatic.com">
-<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<title>Разберёмся</title>
 <link rel="manifest" href="manifest.json">
 <!-- Fallback inline manifest для случая если файл не найден -->
 <script>try{fetch("manifest.json").catch(()=>{const m={name:"Разберёмся",short_name:"Разберёмся",description:"Спокойный помощник рядом",start_url:"./",display:"standalone",background_color:"#eef8f6",theme_color:"#eef8f6",orientation:"portrait",icons:[{src:"pwa-logo-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"pwa-logo-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};const b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});document.querySelector('link[rel="manifest"]').href=URL.createObjectURL(b);})}catch(e){}</script>
@@ -19,6 +17,7 @@
 <link rel="icon" type="image/png" href="pwa-logo-192.png">
 <!-- Playfair Display — само-хостинг, чтобы логотип не моргал на первом входе -->
 <link rel="preload" href="fonts/playfair-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/playfair-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{
   font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:swap;
@@ -3267,8 +3266,12 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
   padding-top:.06em;
   color:oklch(0.25 0.055 190);
   text-align:center;
-  /* Показываем сразу — font-display:swap сам сделает swap без скачка.
-     Shimmer удалён: background-clip:text делал буквы "жирными" и выглядел дёшево. */
+  /* Скрыт до fonts-ready (гейт в <head>, максимум 150ms) — иначе виден
+     скачок с запасного serif на Playfair. Шрифт локальный + preload + SW-кэш,
+     так что обычно готов за <50ms. */
+  opacity:0;
+}
+html.fonts-ready .auth-wordmark{
   animation:wm-appear .22s cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes wm-appear{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -4566,8 +4569,10 @@ header{padding:15px 16px 9px;padding-top:calc(env(safe-area-inset-top,0px) + 15p
   </div>
 </div>
 
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" as="script">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- supabase-js v2.108.1 вендорится локально (js/vendor/) — кэшируется SW как обычный ассет.
+     CDN-вариант никогда не попадал в кэш: <script> без crossorigin = opaque response = r.ok false.
+     Поэтому тотальный офлайн ломался, а каждый онлайн-запуск качал 200KB из сети. -->
+<script src="js/vendor/supabase.js"></script>
 <script src="js/app.js"></script>
 <script>
 // ── SPELL FIX — переменные состояния ──

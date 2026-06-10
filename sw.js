@@ -1,8 +1,9 @@
-const CACHE = 'rz-v386';
+const CACHE = 'rz-v387';
 const ASSETS = [
   './',
   'index.html',
   'js/app.js',
+  'js/vendor/supabase.js',
   'manifest.json',
   'logo-mark.png',
   'pwa-logo-180.png',
@@ -26,10 +27,9 @@ self.addEventListener('install', e => {
   );
 });
 
-// Долгоживущие кеши — НЕ чистятся при обновлении версии CACHE.
-const FONT_CACHE = 'rz-fonts-v1';
-const LIB_CACHE  = 'rz-lib-v1';
-const KEEP_CACHES = [CACHE, FONT_CACHE, LIB_CACHE];
+// Все ассеты (включая supabase-js и шрифты) — локальные, живут в основном кэше.
+// rz-fonts-v1 / rz-lib-v1 удалены: Google Fonts больше нет, библиотека вендорится.
+const KEEP_CACHES = [CACHE];
 
 self.addEventListener('activate', e => {
   // Не вызываем clients.claim() — он захватывает страницу посреди загрузки,
@@ -46,40 +46,7 @@ self.addEventListener('fetch', e => {
 
   const url = e.request.url;
 
-  // Google Fonts — cache-first, без версии (шрифты не меняются)
-  if (url.includes('fonts.gstatic.com') || url.includes('fonts.googleapis.com')) {
-    e.respondWith(
-      caches.open(FONT_CACHE).then(fc =>
-        fc.match(e.request).then(cached => {
-          if (cached) return cached;
-          return fetch(e.request).then(r => {
-            if (r.ok) fc.put(e.request, r.clone());
-            return r;
-          }).catch(() => cached || new Response('', {status: 503}));
-        })
-      )
-    );
-    return;
-  }
-
-  // CDN-библиотека supabase-js — cache-first, чтобы приложение стартовало ОФЛАЙН.
-  // Без неё sb=null → не пускает в приложение даже с локальными заметками.
-  if (url.includes('cdn.jsdelivr.net')) {
-    e.respondWith(
-      caches.open(LIB_CACHE).then(lc =>
-        lc.match(e.request).then(cached => {
-          if (cached) return cached;
-          return fetch(e.request).then(r => {
-            if (r.ok) lc.put(e.request, r.clone());
-            return r;
-          }).catch(() => cached || new Response('', {status: 503}));
-        })
-      )
-    );
-    return;
-  }
-
-  // Прочие кросс-доменные запросы (Supabase API и т.д.) — не перехватываем.
+  // Кросс-доменные запросы (Supabase API и т.д.) — не перехватываем.
   // SW не должен мешать API-запросам возвращать их ошибки напрямую клиенту.
   if (!url.startsWith(self.location.origin)) return;
 
