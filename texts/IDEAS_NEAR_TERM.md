@@ -469,3 +469,13 @@ https://www.instagram.com/p/DZAIWs0ib0n/?img_index=1&igsh=MTdhNHhmcGdmYzA3MQ==
 - Изучить существующие аналоги
 - Определить основной функционал
 - Набросать макет интерфейса
+
+
+---
+
+## Идея — 2026-06-10
+
+https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета
+
+> **AI:** Идея: https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета
+> **Теги:** идея
