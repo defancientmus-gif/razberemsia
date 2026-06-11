@@ -968,9 +968,10 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .hf-dot-amber{background:oklch(0.74 0.18 68);box-shadow:0 0 0 2px oklch(0.74 0.18 68/0.20);animation:dot-pulse-amber 2.4s ease-in-out infinite;}
 .hf-dot-green{background:oklch(0.58 0.18 145);box-shadow:0 0 0 2px oklch(0.58 0.18 145/0.18);animation:dot-pulse-green 3s ease-in-out infinite;}
 .hf-dot-none{background:oklch(0.80 0.02 210);}
-@keyframes dot-pulse-red{0%,100%{opacity:1;}50%{opacity:.65;box-shadow:0 0 0 4px oklch(0.60 0.22 25/0.10);}}
-@keyframes dot-pulse-amber{0%,100%{opacity:1;}50%{opacity:.7;box-shadow:0 0 0 4px oklch(0.74 0.18 68/0.08);}}
-@keyframes dot-pulse-green{0%,100%{opacity:1;}50%{opacity:.75;box-shadow:0 0 0 4px oklch(0.58 0.18 145/0.07);}}
+/* Пульс точек: только opacity+scale — box-shadow в keyframes = перерисовка каждой карточки каждый кадр */
+@keyframes dot-pulse-red{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.65;transform:scale(1.25);}}
+@keyframes dot-pulse-amber{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.7;transform:scale(1.2);}}
+@keyframes dot-pulse-green{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.75;transform:scale(1.15);}}
 @keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.25}}
 .hf-body{flex:1;min-width:0;}
 .hf-title{font-size:14px;font-weight:600;color:var(--fg);line-height:1.35;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1222,8 +1223,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   padding:17px 8px 13px;border:none;cursor:pointer;-webkit-appearance:none;font-family:var(--sys);
   border-radius:26px;
   background:linear-gradient(155deg,oklch(1 0 0/.90),oklch(0.97 0.018 210/.78),oklch(0.95 0.030 215/.60));
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  /* Без backdrop-filter: кнопка ПЛАВАЕТ (infinite transform) — движущийся blur
+     пересчитывается каждый кадр и греет телефон. Заливка .90 — блюр всё равно не виден. */
   border:1px solid oklch(0.96 0.022 210/.88);
   box-shadow:
     0 -5px 20px oklch(0.52 0.14 210/.14),
@@ -1250,10 +1251,11 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 }
 /* ::after не нужен — убран чтобы не течь в backdrop-filter панели */
 .new-note-btn::after{content:none;}
-/* Плавание: только transform + upward glow (не вниз, не в панель) */
+/* Плавание: ТОЛЬКО transform. box-shadow в keyframes = перерисовка каждый кадр = греет телефон.
+   Статичная тень остаётся на самой кнопке. */
 @keyframes nnb-float{
-  0%,100%{transform:perspective(700px) rotateX(-6deg);box-shadow:0 -4px 18px oklch(0.52 0.14 210/.14),0 4px 12px oklch(0 0 0/.10),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
-  50%{transform:perspective(700px) rotateX(-7deg) scale(1.025);box-shadow:0 -8px 28px oklch(0.52 0.16 210/.22),0 4px 12px oklch(0 0 0/.10),inset 0 2.5px 0 oklch(1 0 0/.96),inset 0 -2px 0 oklch(0.82 0.04 210/.22),inset 1.5px 0 0 oklch(1 0 0/.55),inset -1.5px 0 0 oklch(1 0 0/.55);}
+  0%,100%{transform:perspective(700px) rotateX(-6deg);}
+  50%{transform:perspective(700px) rotateX(-7deg) scale(1.025);}
 }
 /* Агент слушает — удержание */
 .new-note-btn.holding{
@@ -1708,6 +1710,18 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   padding:max(12px, env(safe-area-inset-top, 12px)) 8px 0;
 }
 .overlay.open{display:flex;}
+/* Пока открыт любой оверлей — фоновые infinite-анимации СТОЯТ.
+   Анимированный пиксель под blur(20px) листа = пересчёт блюра каждый кадр = телефон греется. */
+body:has(.overlay.open) .new-note-btn,
+body:has(.overlay.open) .home-bar .home-act-btn,
+body:has(.overlay.open) .nnb-spark,
+body:has(.overlay.open) .rz-portal,
+body:has(.overlay.open) .rz-portal::before,
+body:has(.overlay.open) .hf-dot-red,
+body:has(.overlay.open) .hf-dot-amber,
+body:has(.overlay.open) .hf-dot-green,
+body:has(.overlay.open) .remind-item-dot.overdue,
+body:has(.overlay.open) .hf-rem-pulse{animation-play-state:paused!important;}
 .overlay-bg{
   position:absolute;inset:0;
   /* Только тёмный тонер — без своего blur, шит сам делает blur.
@@ -1736,7 +1750,8 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   animation:sheetRise .26s cubic-bezier(.22,1,.36,1);
   transform-origin:center;
   overflow:hidden;
-  will-change:transform;
+  /* will-change убран: постоянный композитный слой + backdrop-filter давал
+     фантомный кадр-снапшот при закрытии (display:none сносит слой с опозданием) */
   transition:background .4s cubic-bezier(.4,0,.2,1);
 }
 /* «Магический папирус»: резко разворачивается и пружинно встаёт на место.
@@ -1749,7 +1764,15 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
   to{opacity:1;transform:scale(1) translateY(0);}
 }
 @keyframes sheetDrop{from{opacity:1;transform:scale(1);}to{opacity:0;transform:scale(.82) translateY(10px);}}
-.sheet.closing{animation:sheetDrop .20s cubic-bezier(.4,0,1,1) forwards;}
+.sheet.closing{
+  animation:sheetDrop .20s cubic-bezier(.4,0,1,1) forwards;
+  /* Блюр снимаем сразу при закрытии: к моменту display:none блюр-слоя уже нет —
+     iOS не успевает показать устаревший снапшот (то самое мерцание-фантом).
+     Фон чуть плотнее, чтобы потеря блюра не читалась за 0.2s. */
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  background:oklch(0.97 0.006 215 / 0.55);
+  transition:none;
+}
 
 .keyboard-open .overlay.open{align-items:flex-end;padding:8px 8px 0;}
 .keyboard-open .sheet{
@@ -2526,6 +2549,10 @@ html.dark .sheet{
     oklch(0.18 0.020 225 / 0.75);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-color:oklch(1 0 0 / 0.10);
+}
+html.dark .sheet.closing{
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  background:oklch(0.16 0.018 225 / 0.88);
 }
 /* Панель агента */
 html.dark .jarvis-feed{
@@ -3345,8 +3372,9 @@ html.fonts-ready .auth-wordmark{
 .home-bar .home-act-btn{
   flex:1;max-width:110px;padding:12px 8px 10px;border-radius:22px;
   background:linear-gradient(155deg,oklch(1 0 0/.86),oklch(0.975 0.014 212/.66),oklch(0.95 0.024 215/.48))!important;
-  backdrop-filter:blur(12px)!important;
-  -webkit-backdrop-filter:blur(12px)!important;
+  /* Без backdrop-filter: кнопки плавают (infinite transform) — движущийся blur греет GPU */
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
   border:1px solid oklch(0.97 0.018 210/.82)!important;
   box-shadow:
     0 -4px 16px oklch(0.52 0.13 210/.12),
@@ -3410,9 +3438,11 @@ html.fonts-ready .auth-wordmark{
 .agent-lbl{margin-top:7px;font-size:12px;}
 .agent-card-ico{display:none;}
 .agent-card-head{margin-bottom:10px;}
+/* Дыхание: только scale — box-shadow в keyframes перерисовывал 4 слоя тени каждый кадр.
+   Живой пульс даёт кольцо ::before (agent-glass-ring, opacity+scale — дёшево). */
 @keyframes agent-glass-rest{
-  0%,100%{transform:scale(1);box-shadow:inset 0 2px 4px oklch(1 0 0/.98),inset 0 -14px 30px oklch(0.60 0.10 202/.16),0 10px 34px -4px oklch(0.36 0.10 205/.22),0 0 0 1.5px oklch(0.68 0.08 202/.10)}
-  48%{transform:scale(1.024);box-shadow:inset 0 2px 4px #fff,inset 0 -14px 30px oklch(0.60 0.10 202/.22),0 14px 40px -4px oklch(0.36 0.10 205/.32),0 0 0 4px oklch(0.68 0.08 202/.14)}
+  0%,100%{transform:scale(1)}
+  48%{transform:scale(1.024)}
 }
 
   26%{opacity:.78}
