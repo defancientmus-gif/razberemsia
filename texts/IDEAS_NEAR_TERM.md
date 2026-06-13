@@ -509,3 +509,15 @@ https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета
 
 > **AI:** Идея: Проверьте возможность подключения мониторинга всех моих...
 > **Теги:** идея
+
+
+---
+
+## Идея — 2026-06-13
+
+https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета
+
+https://www.instagram.com/reel/DZhZ_8oMG74/?igsh=MWU4cTU3NHR6eWR1Zg== - канва+гмини - редактор фото
+
+> **AI:** Идея: https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета https://www.instagram.com/reel/DZhZ_8oMG74/?igsh=MWU4cTU3NHR6eWR1Zg== - канва+гмини...
+> **Теги:** идея
