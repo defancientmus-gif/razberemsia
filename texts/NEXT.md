@@ -2,9 +2,15 @@
 
 ## Текущий runtime
 
-- **SW cache:** `rz-v390`
+- **SW cache:** `rz-v391`
 - **Прод:** https://defancientmus-gif.github.io/razberemsia/
 - **Деплой:** `./deploy.sh "описание"`
+
+> ⚠️ **РУЧНОЙ ШАГ (cross-device для надгробий папок):** применить миграцию
+> `supabase/migrations/20260614_folder_tombstones.sql` в Dashboard → SQL Editor.
+> До неё надгробия работают локально (single-device); клиент сам начнёт синхронизировать
+> метки, как только увидит колонку `folder_tombstones` в SELECT. Облачное сохранение
+> НЕ ломается без миграции (поле шлётся только при `_tombColOk`).
 
 ---
 
@@ -48,7 +54,11 @@
 
 ## 🚨 ОТКРЫТЫЕ БАГИ
 
-1. **БАГ 4 — папки без soft-delete**: удалённая папка воскресает при pull с другого устройства. Нужна миграция схемы + `_mergeTagFolders` с tombstone-логикой.
+1. ~~**БАГ 4 — папки без soft-delete**~~ ✅ **ИСПРАВЛЕНО (rz-v391)**: надгробия (tombstones).
+   - Локальное хранилище `rz_folder_tombs` `{tags:{key:ts},users:{nameLow:ts}}`, TTL 120д.
+   - `deleteTagFolder`/`deleteUserFolder` ставят метку. `_mergeCloudFolders` после union зовёт `_applyTombs` — выкидывает папку, удалённую позже создания (пересозданная позже метки — остаётся, строгое `>`).
+   - Метки синхронизируются через колонку `folder_tombstones` (graceful: шлём только при `_tombColOk`). До миграции — single-device.
+   - 6 юнит-тестов чистой логики прошли. **Проверить на 2 устройствах ПОСЛЕ применения миграции.**
 2. **БАГ 3 — self-echo broadcast**: debounce защищает не полностью, лишний pull при медленном соединении.
 3. **Inline tag picker позиционирование**: нужен живой тест на iPhone — может уходить за край экрана.
 4. **Свайп на reminder-карточках**: после редизайна не проверялось.
