@@ -215,26 +215,85 @@ function cloudAllowed(){return !!(sb&&CU&&CU.id);}
 function _getLocalSyncedAt(){return localStorage.getItem('rz_folders_synced_at')||'';}
 function _setLocalSyncedAt(ts){if(ts)localStorage.setItem('rz_folders_synced_at',ts);}
 
+// ── НАДГРОБИЯ ПАПОК (tombstones) — лечат воскрешение удалённых папок при синхронизации ──
+// Без них _mergeByKey (чистый union) возвращал удалённую папку из облака.
+// Структура: {tags:{<tagKey>:deletedAtMs}, users:{<nameLow>:deletedAtMs}}
+const FOLDER_TOMB_KEY='rz_folder_tombs';
+const _TOMB_TTL=120*24*3600*1000; // 120 дней — потом метка не нужна (папку точно не воскресят)
+let _tombColOk=false; // знаем ли мы, что в облаке есть колонка folder_tombstones
+function _pruneTombMap(map){
+  const now=Date.now();const out={};
+  Object.keys(map||{}).forEach(k=>{const t=+map[k]||0;if(t&&now-t<_TOMB_TTL)out[k]=t;});
+  return out;
+}
+function getFolderTombs(){
+  try{const o=JSON.parse(localStorage.getItem(scopedKey(FOLDER_TOMB_KEY))||'{}');
+    return{tags:_pruneTombMap(o.tags),users:_pruneTombMap(o.users)};}
+  catch(e){return{tags:{},users:{}};}
+}
+function _saveFolderTombs(t,push){
+  localStorage.setItem(scopedKey(FOLDER_TOMB_KEY),JSON.stringify({tags:t.tags||{},users:t.users||{}}));
+  if(push!==false)queueCloudSave();
+}
+function _tombFolder(kind,key){
+  if(!key)return;
+  const t=getFolderTombs();
+  (kind==='users'?t.users:t.tags)[key]=Date.now();
+  _saveFolderTombs(t);
+}
+// Слить две карты надгробий — берём наибольшую (самую свежую) метку по ключу
+function _mergeTombMaps(a,b){
+  const out={...(a||{})};
+  Object.keys(b||{}).forEach(k=>{out[k]=Math.max(+out[k]||0,+b[k]||0);});
+  return _pruneTombMap(out);
+}
+// Выкинуть из списка папок те, что удалены позже своего создания (и не пересозданы)
+function _applyTombs(folders,tombMap,keyFn){
+  if(!Array.isArray(folders))return folders;
+  return folders.filter(f=>{
+    const k=keyFn(f);if(!k)return true;
+    const del=+tombMap[k]||0;if(!del)return true;
+    return (f.createdAt||0)>del; // пересоздана после удаления → оставляем
+  });
+}
+
 // Простой last-write-wins: если облако новее нашего последнего пуша — берём папки с облака.
 // Для личного приложения этого достаточно: один пользователь редко меняет папки одновременно на двух устройствах.
-function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt){
+function _mergeCloudFolders(cloudUserFolders,cloudTagFolders,cloudUpdatedAt,cloudTombs){
   let changed=false;
   const localSyncedAt=_getLocalSyncedAt();
   const cloudIsNewer=!localSyncedAt||(cloudUpdatedAt&&cloudUpdatedAt>localSyncedAt);
+
+  // Сначала сливаем надгробия — они нужны до фильтрации папок.
+  // Метки приходят из облака независимо от cloudIsNewer: удаление с любого устройства должно дойти.
+  const localTombs=getFolderTombs();
+  let tombs=localTombs;
+  if(cloudTombs&&typeof cloudTombs==='object'){
+    const merged={tags:_mergeTombMaps(localTombs.tags,cloudTombs.tags),users:_mergeTombMaps(localTombs.users,cloudTombs.users)};
+    if(!_sameJson(localTombs,merged)){_saveFolderTombs(merged,false);changed=true;}
+    tombs=merged;
+  }
 
   if(cloudIsNewer){
     if(Array.isArray(cloudUserFolders)){
       const local=getUserFolders();
       // Если облако пустое, а локально есть данные — доверяем локальным
-      const next=cloudUserFolders.length===0&&local.length>0?local:_mergeUserFolderList(local,cloudUserFolders);
+      let next=cloudUserFolders.length===0&&local.length>0?local:_mergeUserFolderList(local,cloudUserFolders);
+      next=_applyTombs(next,tombs.users,f=>String(f.name||'').trim().toLowerCase());
       if(!_sameJson(local,next)){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(next));changed=true;}
     }
     if(Array.isArray(cloudTagFolders)&&typeof getTagFolders==='function'){
       const localTags=getTagFolders();
-      const next=cloudTagFolders.length===0&&localTags.length>0?localTags:_mergeTagFolderList(localTags,cloudTagFolders);
+      let next=cloudTagFolders.length===0&&localTags.length>0?localTags:_mergeTagFolderList(localTags,cloudTagFolders);
+      next=_applyTombs(next,tombs.tags,f=>_tagKey(f.tag));
       if(!_sameJson(localTags,next)){localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(next));changed=true;}
     }
   } else {
+    // Локальное новее — но если надгробия с облака отфильтровали локальные папки, применим и это
+    const localTags=getTagFolders();const tNext=_applyTombs(localTags,tombs.tags,f=>_tagKey(f.tag));
+    if(!_sameJson(localTags,tNext)){localStorage.setItem(scopedKey('rz_tag_folders'),JSON.stringify(tNext));changed=true;}
+    const localU=getUserFolders();const uNext=_applyTombs(localU,tombs.users,f=>String(f.name||'').trim().toLowerCase());
+    if(!_sameJson(localU,uNext)){localStorage.setItem(scopedKey('rz_user_folders'),JSON.stringify(uNext));changed=true;}
     // Локальное новее — пушим в облако
     queueCloudSave();
   }
@@ -287,7 +346,9 @@ function _applyCloudData(data){
   }
   if(Array.isArray(data.history))localStorage.setItem(scopedKey('rz_history'),JSON.stringify(data.history));
   if(Array.isArray(data.ai_memory))localStorage.setItem(scopedKey('rz_ai_memory'),JSON.stringify(data.ai_memory));
-  _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at);
+  // Колонка folder_tombstones существует, если ключ присутствует в строке (даже null/{})
+  if('folder_tombstones' in data)_tombColOk=true;
+  _mergeCloudFolders(data.user_folders,data.tag_folders,data.updated_at,data.folder_tombstones);
   if(typeof data.name==='string')localStorage.setItem(scopedKey('rz_name'),data.name);
   return true;
 }
@@ -335,6 +396,9 @@ async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
     const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),ai_memory:getAiMemory(),user_folders:getUserFolders(),tag_folders:typeof getTagFolders==='function'?getTagFolders():[],name:readText('rz_name'),updated_at:new Date().toISOString()};
+    // Надгробия шлём только когда знаем, что колонка есть — иначе upsert упадёт на «column does not exist»
+    // и сломает ВСЁ облачное сохранение. До миграции метки работают локально (single-device).
+    if(_tombColOk)payload.folder_tombstones=getFolderTombs();
     const{error}=await sb.from('user_state').upsert(payload,{onConflict:'user_id'});
     if(error)throw error;
     _setLocalSyncedAt(payload.updated_at);
@@ -3484,6 +3548,7 @@ function openDrillAdd(){
 function deleteUserFolder(name){
   const folders=getUserFolders().filter(f=>f.name!==name);
   saveUserFolders(folders);
+  _tombFolder('users',String(name).trim().toLowerCase()); // надгробие против воскрешения из облака
   // Чистим _filed_in: теги в заметках, чтобы не зависали как "разобрались"
   const nameLow=String(name).toLowerCase();
   const notes=getNotes();
@@ -3958,6 +4023,7 @@ function deleteTagFolder(tag){
   if(!f)return;
   const label=f.label||f.tag;
   saveTagFolders(folders.filter(x=>_tagKey(x.tag)!==tagLow));
+  _tombFolder('tags',tagLow); // надгробие — чтобы не воскресла из облака
   loadNotes();
   showToast(`Папка «${label}» удалена`);
 }
