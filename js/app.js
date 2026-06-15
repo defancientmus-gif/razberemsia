@@ -4186,6 +4186,17 @@ function _renderAgentInbox(el,notes){
   </div>`;
 }
 
+// Время-группа заметки по дате создания: Сегодня / Вчера / На этой неделе / Ранее
+function _timeBucket(ts){
+  if(!ts)return 'Ранее';
+  const now=new Date();
+  const startToday=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  if(ts>=startToday)return 'Сегодня';
+  if(ts>=startToday-86400000)return 'Вчера';
+  if(ts>=startToday-6*86400000)return 'На этой неделе';
+  return 'Ранее';
+}
+
 function _drillP1(){
   const el=document.getElementById('drill-p1');if(!el)return;
   _initPTR(el);
@@ -4238,31 +4249,31 @@ function _drillP1(){
     });
     h+='</div>';
   } else {
+    // \u00ab\u0412\u0441\u0435 \u0437\u0430\u043c\u0435\u0442\u043a\u0438\u00bb (\u0431\u0435\u0437 \u0444\u0438\u043b\u044c\u0442\u0440\u0430) \u2014 \u0433\u0440\u0443\u043f\u043f\u0438\u0440\u0443\u0435\u043c \u043f\u043e \u0432\u0440\u0435\u043c\u0435\u043d\u0438. \u0412 \u0440\u0430\u0437\u0434\u0435\u043b\u0430\u0445/\u043f\u0430\u043f\u043a\u0430\u0445 \u043f\u0440\u043e\u0441\u0442\u043e \u0441\u043f\u043e\u043a\u043e\u0439\u043d\u044b\u0439 \u0441\u043f\u0438\u0441\u043e\u043a.
+    const grouped=drillCategory===null&&drillAiTag===null;
+    let curBucket=null;
     notes.forEach((n,i)=>{
       if(i>=_drillP1Limit)return;
+      if(grouped){
+        const bucket=_timeBucket(n.createdAt||n.updatedAt);
+        if(bucket!==curBucket){curBucket=bucket;h+=`<div class="drill-time-group">${bucket}</div>`;}
+      }
       const preview=_notePreview(n);
-      const visibleTags=(n.aiTags||[]).filter(tag=>!_isFiledFolderTag(tag));
-      const hasAi=!!(n.aiSummary||visibleTags.length);
       const hasBell=!!n.reminder;
       const resolved=!viewingUserFolder&&isNoteResolved(n);
-      const aiBadge=hasAi&&!resolved?`<span class="drill-note-ai">\u2736 AI</span>`:'';
-      const bellBadge=hasBell?`<span class="drill-note-bell"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
-      const resolvedBadge=resolved?`<span class="note-resolved-row">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</span>`:'';
+      // \u0421\u043f\u043e\u043a\u043e\u0439\u043d\u0430\u044f \u043a\u0430\u0440\u0442\u043e\u0447\u043a\u0430: \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 + \u043d\u0430\u043c\u0451\u043a + \u0432\u0440\u0435\u043c\u044f. \u0422\u0438\u0445\u0438\u0439 \u043a\u043e\u043b\u043e\u043a\u043e\u043b\u044c\u0447\u0438\u043a \u2014 \u0435\u0441\u043b\u0438 \u0435\u0441\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435.
+      const bell=hasBell?`<span class="drill-note-bell-ico"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>`:'';
       const sectionStyle=_sectionNoteStyle(n);
-      const tagChips=visibleTags.slice(0,3).map(t=>`<span class="drill-note-tag-chip${isIdeaTag(t)?' idea-tag-chip':''}" onclick="event.stopPropagation();drillGo(1,{aiTag:${jsAttr(t)}})">${esc(t)}</span>`).join('');
       const selRow=_selectMode&&_selectedNoteIds.has(n.id);
       h+=`<div class="drill-note-row${resolved?' resolved':''}${sectionStyle?' section-glass-note':''}${_noteToneClass(n)}${selRow?' note-selected':''}" ${sectionStyle?`style="${sectionStyle}"`:''} data-nid="${esc(n.id)}" onclick="drillPickNote(${i})">
         <div class="note-select-circle${selRow?' note-sel-checked':''}"></div>
         <div class="drill-note-body">
-          <div class="drill-note-title">${esc(n.title)}</div>
+          <div class="drill-note-title">${esc(n.title)}${bell}</div>
           ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
           <div class="drill-note-foot">
             <span class="drill-note-time">${esc(fmtMeta(n.createdAt||n.updatedAt))}</span>
-            ${bellBadge}${aiBadge}
           </div>
-          ${tagChips?`<div class="drill-note-tags">${tagChips}</div>`:''}
         </div>
-        ${resolvedBadge}
       </div>`;
     });
   }

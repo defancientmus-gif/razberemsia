@@ -3119,6 +3119,12 @@ html.dark .bg{
 .drill-note-preview{font-size:13px;color:var(--fg-l);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .drill-note-foot{display:flex;align-items:center;gap:6px;margin-top:6px;}
 .drill-note-time{font-size:11px;color:var(--fg-l);}
+/* Заголовок время-группы (Сегодня/Вчера/...) — тихий, воздушный */
+.drill-time-group{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-l);opacity:.85;margin:20px 4px 9px;}
+.drill-time-group:first-child{margin-top:4px;}
+/* Тихий колокольчик у названия — намёк, не сигнал тревоги */
+.drill-note-bell-ico{display:inline-flex;vertical-align:-1px;margin-left:7px;color:oklch(0.66 0.115 70);}
+html.dark .drill-note-bell-ico{color:oklch(0.74 0.11 75);}
 
 /* ── DRILL GRID VIEW ── */
 .drill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px;}
