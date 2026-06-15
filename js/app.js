@@ -6696,6 +6696,7 @@ function _agentRoutingPlan(text){
 async function _processAgentQuery(text,alts=[]){
   window.speechSynthesis?.cancel(); // прерываем озвучку если агент уже говорит
   _setAgentState('thinking');
+  _showAgentThinking('Разбираюсь…'); // живая карточка сразу — видно что агент работает
 
   // ── Таймаут агента: 30 сек, продление ещё на 30 сек ──
   const ac=new AbortController();
@@ -6711,10 +6712,10 @@ async function _processAgentQuery(text,alts=[]){
   _armAbort(30000);
 
   try{
-    if(!sb){_cleanTimers();showToast('Нет подключения к серверу');_setAgentState('idle');return;}
+    if(!sb){_cleanTimers();showToast('Нет подключения к серверу');_closeAgentCard();return;}
     const sess=await sb.auth.getSession();
     const token=sess?.data?.session?.access_token;
-    if(!token){_cleanTimers();showToast('Войдите в аккаунт — агент недоступен');_setAgentState('idle');return;}
+    if(!token){_cleanTimers();showToast('Войдите в аккаунт — агент недоступен');_closeAgentCard();return;}
     const routing=_agentRoutingPlan(text);
     const memoryContext=routing.includeMemory?(getAiMemoryContext?.()??[]):[];
     const _allNotes=getNotes();
@@ -6747,15 +6748,15 @@ async function _processAgentQuery(text,alts=[]){
     });
     _cleanTimers();
     let data;
-    try{data=await res.json();}catch(e){showToast('Ошибка ответа сервера');_setAgentState('idle');return;}
+    try{data=await res.json();}catch(e){showToast('Ошибка ответа сервера');_closeAgentCard();return;}
     _setAgentState('idle');
-    if(!res.ok||data.error){showToast('Агент: '+(data.error||'ошибка '+res.status));return;}
-    if(!data.intent){showToast('Агент не понял намерение');return;}
+    if(!res.ok||data.error){_closeAgentCard();showToast('Агент: '+(data.error||'ошибка '+res.status));return;}
+    if(!data.intent){_closeAgentCard();showToast('Агент не понял намерение');return;}
     _pushAgentHistory(text,data.response,data.intent);
     _executeAgentIntent(data,text);
   }catch(e){
     _cleanTimers();
-    _setAgentState('idle');
+    _closeAgentCard();
     if(e?.name==='AbortError'){showToast('Агент не успел ответить — попробуйте ещё раз');return;}
     showToast('Нет сети — '+String(e?.message||'').slice(0,40));
   }
@@ -6770,8 +6771,8 @@ function _executeAgentIntent(result,originalText){
 
   const firstIntent=actions[0].intent;
 
-  // Для удалений карточка не нужна — тост уже дал фидбек
-  if(firstIntent==='DELETE_NOTE'||firstIntent==='DELETE_REMINDER')return;
+  // Для удалений карточка-ответ не нужна — тост уже дал фидбек, гасим «думаю»
+  if(firstIntent==='DELETE_NOTE'||firstIntent==='DELETE_REMINDER'){_closeAgentCard();return;}
 
   // options могут быть на верхнем уровне (старый формат) или внутри params первого action (CLARIFY в новом формате)
   const options=Array.isArray(result.options)&&result.options.length
@@ -7014,19 +7015,35 @@ function _agentSpeak(text){
 }
 
 let _agentCardTimer=null;
+// Живая карточка «думаю» — показываем СРАЗУ как агент начал, чтобы было видно что он работает.
+// Та же карточка потом превращается в ответ (без вспышки).
+function _showAgentThinking(label){
+  let card=document.getElementById('agent-card');
+  const fresh=!card;
+  if(fresh){card=document.createElement('div');card.id='agent-card';card.className='agent-card';document.body.appendChild(card);}
+  card.classList.add('thinking');
+  card.onclick=null;
+  card.innerHTML=`<div class="agent-card-inner agent-card-thinking-inner">
+    <div class="agent-think-orb">✦</div>
+    <div class="agent-think-dots"><i></i><i></i><i></i></div>
+    <div class="agent-think-lbl">${esc(label||'Разбираюсь…')}</div>
+  </div>`;
+  if(fresh)requestAnimationFrame(()=>card.classList.add('show'));else card.classList.add('show');
+}
 function _showAgentCardDebounced(intent,response,params,options){
-  // Если уже есть карточка ожидающая показа — заменяем на новую (агент выдал лучший ответ)
+  // Карточка «думаю» уже на экране — ответ показываем быстро, без искусственной задержки
   if(_agentCardTimer){clearTimeout(_agentCardTimer);}
-  const needsImmediate=['CLARIFY','QUESTION','FIND_DOCTOR','MAKE_PLAN','DAILY_BRIEFING']; // требуют ответа — сразу
-  const delay=needsImmediate.includes(intent)?0:1200;
+  const needsImmediate=['CLARIFY','QUESTION','FIND_DOCTOR','MAKE_PLAN','DAILY_BRIEFING'];
+  const delay=needsImmediate.includes(intent)?0:250;
   _agentCardTimer=setTimeout(()=>{_agentCardTimer=null;_showAgentCard(intent,response,params,options);},delay);
 }
 function _showAgentCard(intent,response,params,options){
-  document.getElementById('agent-card')?.remove();
   const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎'};
   const hasOpts=Array.isArray(options)&&options.length>0;
-  // Не закрываем автоматически если есть варианты выбора — пользователь должен успеть нажать
-  const autoClose=!hasOpts&&!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD','CREATE_TAG_FOLDER'].includes(intent);
+  // Не закрываем автоматически: есть варианты выбора, содержательный ответ (анализ/план/разбор),
+  // или интент-ответ. Иначе разбор «Все заметки за месяц» исчезал в никуда через 7 сек.
+  const _longAnswer=(response||'').length>=160;
+  const autoClose=!hasOpts&&!_longAnswer&&!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD','CREATE_TAG_FOLDER','ANALYZE_NOTE'].includes(intent);
 
   // ── КНОПКИ НАВИГАЦИИ — ведут к тому что агент только что создал/нашёл ──
   let openBtn='';
@@ -7094,11 +7111,14 @@ function _showAgentCard(intent,response,params,options){
     ?`<button class="agent-card-cancel" onclick="_closeAgentCard(this)">Отмена</button>`
     :`<button class="agent-card-btn" onclick="_closeAgentCard(this)">Готово</button>`;
 
-  const card=document.createElement('div');
-  card.id='agent-card';card.className='agent-card';
   const voiceOn=_agentVoiceEnabled();
   const speakBtn=window.speechSynthesis
     ?`<button class="agent-card-speak${voiceOn?' voice-on':''}" onclick="_speakBtnTap(${jsAttr(response)})" title="${voiceOn?'Выключить голос':'Включить голос'}">🔊</button>`:'';
+  // Переиспользуем карточку «думаю» — плавное превращение в ответ, без вспышки/пересоздания
+  let card=document.getElementById('agent-card');
+  const fresh=!card;
+  if(fresh){card=document.createElement('div');card.id='agent-card';card.className='agent-card';document.body.appendChild(card);}
+  card.classList.remove('thinking');
   card.innerHTML=`<div class="agent-card-inner">
     <div class="agent-card-head">
       <div class="agent-card-ico">${icons[intent]||'✦'}</div>
@@ -7114,11 +7134,8 @@ function _showAgentCard(intent,response,params,options){
     ${closeBtn}
   </div>`;
   // Клик на затемнённый фон = закрыть (только для autoClose карточек)
-  if(autoClose){
-    card.addEventListener('click',e=>{if(e.target===card){_closeAgentCard(card);}},{passive:true});
-  }
-  document.body.appendChild(card);
-  requestAnimationFrame(()=>card.classList.add('show'));
+  card.onclick=autoClose?(e=>{if(e.target===card)_closeAgentCard(card);}):null;
+  if(fresh)requestAnimationFrame(()=>card.classList.add('show'));else card.classList.add('show');
   if(autoClose)setTimeout(()=>{_closeAgentCard(card);},7000);
   // Автовоспроизведение — если голос включён
   if(voiceOn&&response){setTimeout(()=>_agentSpeak(response),350);}

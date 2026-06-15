@@ -1365,6 +1365,17 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .agent-card-opt{padding:14px 10px;background:oklch(0.95 0.025 210);color:var(--accent-d);border:1.5px solid oklch(0.87 0.06 210/0.45);border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;line-height:1.35;font-family:var(--sys);}
 .agent-card-opts--clarify .agent-card-opt{padding:16px 18px;font-size:16px;border-radius:18px;text-align:left;}
 .agent-card-opt:active{background:oklch(0.90 0.05 210);transform:scale(.97);}
+/* Состояние «думаю» — живой шар + дышащие точки, чтобы было видно что агент работает */
+.agent-card-thinking-inner{text-align:center;padding:38px 24px 34px;}
+.agent-think-orb{font-size:40px;line-height:1;display:inline-block;animation:agent-orb 1.8s ease-in-out infinite;filter:drop-shadow(0 2px 12px oklch(0.55 0.13 210/.32));}
+@keyframes agent-orb{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.13);opacity:1;}}
+.agent-think-dots{display:flex;gap:7px;justify-content:center;margin:18px 0 13px;}
+.agent-think-dots i{width:8px;height:8px;border-radius:50%;background:oklch(0.55 0.11 210);display:block;animation:agent-dot 1.2s ease-in-out infinite;}
+.agent-think-dots i:nth-child(2){animation-delay:.18s;}
+.agent-think-dots i:nth-child(3){animation-delay:.36s;}
+@keyframes agent-dot{0%,100%{opacity:.3;transform:translateY(0);}50%{opacity:1;transform:translateY(-4px);}}
+.agent-think-lbl{font-size:14px;color:var(--fg-l);letter-spacing:.01em;}
+html.dark .agent-think-dots i{background:oklch(0.68 0.11 210);}
 .agent-card-ask{display:flex;gap:6px;margin-top:10px;margin-bottom:4px;}
 .agent-card-ask-inp{flex:1;background:oklch(0.94 0.012 210);border:none;border-radius:12px;padding:10px 13px;font-size:14px;font-family:var(--sys);color:var(--fg);outline:none;min-width:0;}
 .agent-card-ask-inp::placeholder{color:oklch(0.65 0.04 210);}
