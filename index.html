@@ -3728,64 +3728,61 @@ html.fonts-ready .auth-wordmark{
    DESKTOP — рабочее пространство 2 колонки (от 1000px)
    Телефонная вёрстка ниже не трогается.
    ══════════════════════════════════════════════════ */
+.hdesk{display:none;}
 @media(min-width:1000px){
-  .app{max-width:1200px;height:100vh;}
-  /* Десктоп: шапка — настоящий бар с фоном, чтобы лента не просвечивала под лого */
-  header{padding:18px 26px 12px;background:oklch(0.965 0.012 215 / 0.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid oklch(0.9 0.015 215 / 0.6);}
-  html.dark header{background:oklch(0.15 0.012 235 / 0.86);border-bottom:1px solid oklch(1 0 0 / 0.06);}
-  .logo{font-size:26px;}
-  .screens{padding:0 18px 18px;}
+  .app{max-width:1280px;height:100vh;}
+  /* Шапка — PWA-стекло во всю ширину; держит меню и кнопки агента */
+  header{
+    display:flex;align-items:center;gap:16px;padding:11px 24px;min-height:62px;
+    background:linear-gradient(to bottom,oklch(0.975 0.012 215 / 0.86),oklch(0.96 0.012 215 / 0.70));
+    backdrop-filter:blur(22px) saturate(1.08);-webkit-backdrop-filter:blur(22px) saturate(1.08);
+    border-bottom:1px solid oklch(0.88 0.015 215 / 0.55);
+  }
+  html.dark header{
+    background:linear-gradient(to bottom,oklch(0.17 0.014 235 / 0.88),oklch(0.13 0.012 235 / 0.74));
+    border-bottom:1px solid oklch(1 0 0 / 0.06);
+  }
+  .logo{font-size:24px;flex:0 0 auto;}
+  .hcenter{display:none;}                 /* освобождаем место под меню */
+  .hdesk{display:flex;align-items:center;gap:8px;}
+  .hdesk-act{margin-left:auto;}           /* кнопки агента + поиск/дом — к правому краю */
+
+  /* Меню в шапке — горизонтальный ряд */
+  header .jarvis-quick{flex-direction:row;align-items:center;gap:8px;margin:0;width:auto;}
+  header .jq-btn{height:40px;white-space:nowrap;}
+
+  /* Кнопки агента в шапке — компактные, без парения/3D */
+  header .home-act-row{gap:8px;margin:0;}
+  header .home-act-btn,header .new-note-btn,header .home-mic-btn{
+    animation:none!important;transform:none!important;
+    flex:0 0 auto;width:auto;max-width:none;min-width:0;
+    height:52px;padding:7px 16px;border-radius:15px;
+  }
+
+  .screens{padding:0;}
   #s-home{padding:0;overflow:hidden;}
 
-  /* HOME → грид: [лента 1fr] [рейл 300] (меню справа) */
-  .home-wrap{
-    display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr;
-    gap:20px;padding:6px 4px 4px;overflow:visible;align-items:stretch;
-  }
-  /* Стеклянная панель-сайдбар справа (через ::before, фог не нужен) */
-  .home-wrap::after{display:none;}
-  .home-wrap::before{
-    display:block;position:absolute;right:0;left:auto;top:66px;bottom:4px;width:300px;height:auto;
-    background:oklch(1 0 0 / .34);
-    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-    border:1px solid oklch(1 0 0 / .5);border-radius:26px;
-    box-shadow:inset 0 1px 0 oklch(1 0 0/.6),0 18px 50px -28px oklch(0.3 0.05 215/.4);
-    -webkit-mask:none;mask:none;z-index:0;
-  }
-
-  /* Верх правого рейла: «Все заметки» + формат — вертикально */
-  .home-wrap .jarvis-top{
-    position:static;z-index:2;grid-column:2;grid-row:1;
-    align-self:start;justify-self:stretch;
-    padding:78px 18px 0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;
-    margin:0;
-  }
-  .home-wrap .jarvis-quick{flex-direction:column;align-items:stretch;gap:10px;}
-  .home-wrap .jq-notes{justify-content:flex-start;}
-  .home-wrap .jq-view{width:100%;height:44px;border-radius:14px;}
-
-  /* Нижние кнопки → низ правого рейла */
-  .home-wrap .home-bar{
-    position:static;z-index:2;grid-column:2;grid-row:1;
-    align-self:end;justify-self:stretch;
-    padding:0 18px 22px;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:auto;
-  }
-  .home-wrap .home-bar .home-act-row{gap:10px;justify-content:center;}
+  /* HOME — лента на всю ширину, правого рейла больше нет */
+  .home-wrap{display:block;padding:0;overflow:hidden;height:100%;}
+  .home-wrap::before,.home-wrap::after{display:none;}
+  .home-wrap .jarvis-top,.home-wrap .home-bar{display:none;}   /* содержимое уехало в шапку */
   .home-wrap .ptr-bar,.home-wrap .hf-toolbar{display:none!important;}
 
-  /* Лента → левая колонка, широкая адаптивная сетка */
+  /* Меню формата — под шапкой, у левого края */
+  #view-menu{top:74px;right:auto;left:24px;}
+
+  /* Лента — широкая сетка на всю ширину под шапкой */
   .home-wrap .home-feed-wrap{
-    position:static;z-index:1;grid-column:1;grid-row:1;
-    inset:auto;padding:66px 4px 24px;
+    position:static;inset:auto;height:100%;
+    padding:78px 24px 28px;
     -webkit-mask:none;mask:none;overflow-y:auto;
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;align-content:start;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:14px;align-content:start;
   }
-  /* Переключатель вида работает и на десктопе: список/компактно → одна колонка, плитки → сетка */
-  .home-wrap .home-feed-wrap:not(.hf-grid){grid-template-columns:minmax(0,600px);justify-content:center;gap:9px;}
+  /* Переключатель вида: список/компактно → одна колонка по центру, плитки → сетка */
+  .home-wrap .home-feed-wrap:not(.hf-grid){grid-template-columns:minmax(0,680px);justify-content:center;gap:9px;}
   .home-wrap .home-feed-wrap:not(.hf-grid) .hf-card{min-height:0;height:auto;}
   .home-wrap .home-feed-wrap.compact{gap:6px;}
   .home-wrap .home-feed-wrap .hf-wrap{margin-bottom:0;min-height:128px;}
-  /* карточки-плитки на десктопе всегда */
   .home-wrap .home-feed-wrap .hf-card{
     display:flex;flex-direction:column;align-items:stretch;gap:6px;position:relative;
     height:100%;min-height:128px;padding:15px 16px 12px;border-radius:18px;
@@ -3796,7 +3793,6 @@ html.fonts-ready .auth-wordmark{
   .home-wrap .home-feed-wrap .hf-preview{-webkit-line-clamp:4;}
   .home-wrap .home-feed-wrap .hf-right{order:2;flex-direction:row;align-items:center;justify-content:flex-end;margin-top:auto;}
   .home-wrap .home-feed-wrap .hf-arr{display:none;}
-  /* напоминание — на всю ширину сетки, компактной строкой */
   .home-wrap .home-feed-wrap .hf-wrap:has(.hf-reminder){grid-column:1/-1;min-height:0;}
   .home-wrap .home-feed-wrap .hf-card.hf-reminder{flex-direction:row;align-items:center;min-height:0;height:auto;}
 
@@ -4101,10 +4097,14 @@ html.fonts-ready .auth-wordmark{
       <span class="logo-name">Разберёмся</span>
       <span class="logo-ver" id="app-version-badge">378</span>
     </div>
+    <!-- Десктоп: слот под меню (Все заметки/Календарь/вид) — JS переносит сюда .jarvis-quick -->
+    <div class="hdesk hdesk-nav" id="hdesk-nav"></div>
     <div class="hcenter">
       <div class="hdate" id="hdate"></div>
       <div class="hclock" id="hclock"></div>
     </div>
+    <!-- Десктоп: слот под кнопки агента (Напомнить/Агент/Голос) — JS переносит сюда .home-act-row -->
+    <div class="hdesk hdesk-act" id="hdesk-act"></div>
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="hbtn" onclick="openSearch()" title="Поиск">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

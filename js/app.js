@@ -7328,9 +7328,32 @@ window.addEventListener('load',()=>{
   // Так старт всегда мгновенный, а обновление подхватывается на следующий запуск.
 });
 
+// ── DESKTOP HEADER ──
+// На десктопе (≥1000px) меню «Все заметки/Календарь/вид» и кнопки агента переезжают
+// в шапку — она широкая. На мобайле возвращаются на свои места. Идемпотентно.
+function _syncDesktopHeader(){
+  const nav=document.getElementById('hdesk-nav');
+  const act=document.getElementById('hdesk-act');
+  if(!nav||!act)return;
+  const desk=window.matchMedia('(min-width:1000px)').matches;
+  const quick=document.querySelector('.jarvis-quick');
+  const actRow=document.querySelector('.home-act-row');
+  if(desk){
+    if(quick&&quick.parentElement!==nav)nav.appendChild(quick);
+    if(actRow&&actRow.parentElement!==act)act.appendChild(actRow);
+  }else{
+    const jt=document.querySelector('.jarvis-top');
+    const hb=document.querySelector('.home-bar');
+    if(quick&&jt&&quick.parentElement!==jt)jt.insertBefore(quick,jt.firstChild);
+    if(actRow&&hb&&actRow.parentElement!==hb)hb.insertBefore(actRow,hb.firstChild);
+  }
+}
+
 // ── INIT ──
 // Логотип — чистый CSS-анимация, никакого JS не нужно.
 // Google Fonts использует display=swap, поэтому логотип виден сразу.
 
 initAuth();
 _syncAppVersionBadge();
+_syncDesktopHeader();
+window.matchMedia('(min-width:1000px)').addEventListener('change',_syncDesktopHeader);
