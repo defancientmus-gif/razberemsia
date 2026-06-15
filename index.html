@@ -3730,7 +3730,9 @@ html.fonts-ready .auth-wordmark{
    ══════════════════════════════════════════════════ */
 @media(min-width:1000px){
   .app{max-width:1200px;height:100vh;}
-  header{padding:18px 26px 12px;}
+  /* Десктоп: шапка — настоящий бар с фоном, чтобы лента не просвечивала под лого */
+  header{padding:18px 26px 12px;background:oklch(0.965 0.012 215 / 0.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid oklch(0.9 0.015 215 / 0.6);}
+  html.dark header{background:oklch(0.15 0.012 235 / 0.86);border-bottom:1px solid oklch(1 0 0 / 0.06);}
   .logo{font-size:26px;}
   .screens{padding:0 18px 18px;}
   #s-home{padding:0;overflow:hidden;}
@@ -3743,7 +3745,7 @@ html.fonts-ready .auth-wordmark{
   /* Стеклянная панель-сайдбар справа (через ::before, фог не нужен) */
   .home-wrap::after{display:none;}
   .home-wrap::before{
-    display:block;position:absolute;right:0;left:auto;top:6px;bottom:4px;width:300px;height:auto;
+    display:block;position:absolute;right:0;left:auto;top:66px;bottom:4px;width:300px;height:auto;
     background:oklch(1 0 0 / .34);
     -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
     border:1px solid oklch(1 0 0 / .5);border-radius:26px;
@@ -3755,7 +3757,7 @@ html.fonts-ready .auth-wordmark{
   .home-wrap .jarvis-top{
     position:static;z-index:2;grid-column:2;grid-row:1;
     align-self:start;justify-self:stretch;
-    padding:22px 18px 0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+    padding:78px 18px 0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;
     margin:0;
   }
   .home-wrap .jarvis-quick{flex-direction:column;align-items:stretch;gap:10px;}
@@ -3774,10 +3776,14 @@ html.fonts-ready .auth-wordmark{
   /* Лента → левая колонка, широкая адаптивная сетка */
   .home-wrap .home-feed-wrap{
     position:static;z-index:1;grid-column:1;grid-row:1;
-    inset:auto;padding:6px 4px 24px;
+    inset:auto;padding:66px 4px 24px;
     -webkit-mask:none;mask:none;overflow-y:auto;
     display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;align-content:start;
   }
+  /* Переключатель вида работает и на десктопе: список/компактно → одна колонка, плитки → сетка */
+  .home-wrap .home-feed-wrap:not(.hf-grid){grid-template-columns:minmax(0,600px);justify-content:center;gap:9px;}
+  .home-wrap .home-feed-wrap:not(.hf-grid) .hf-card{min-height:0;height:auto;}
+  .home-wrap .home-feed-wrap.compact{gap:6px;}
   .home-wrap .home-feed-wrap .hf-wrap{margin-bottom:0;min-height:128px;}
   /* карточки-плитки на десктопе всегда */
   .home-wrap .home-feed-wrap .hf-card{
