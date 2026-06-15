@@ -785,12 +785,24 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .folder-card:nth-child(6){animation-delay:.20s;}
 /* Заметки внутри папки всплывают так же мягко, как папки.
    Анимируется swipe-обёртка (строки) и grid-карточка — one-shot, GPU-дёшево. */
-.drill-note-swipe-wrap,.drill-grid-card{animation:folderIn .30s cubic-bezier(.22,1,.36,1) both;}
-.drill-note-swipe-wrap:nth-child(2),.drill-grid-card:nth-child(2){animation-delay:.04s;}
-.drill-note-swipe-wrap:nth-child(3),.drill-grid-card:nth-child(3){animation-delay:.08s;}
-.drill-note-swipe-wrap:nth-child(4),.drill-grid-card:nth-child(4){animation-delay:.12s;}
-.drill-note-swipe-wrap:nth-child(5),.drill-grid-card:nth-child(5){animation-delay:.16s;}
-.drill-note-swipe-wrap:nth-child(6),.drill-grid-card:nth-child(6){animation-delay:.20s;}
+/* Выплывающая лента «Все заметки»: заголовки время-групп и карточки всплывают по очереди (мягкое перо).
+   Класс .reveal ставится только при входе/навигации — «показать ещё» не пере-анимирует уже видимое. */
+#drill-p1.reveal > .drill-time-group,
+#drill-p1.reveal > .drill-note-swipe-wrap{animation:folderIn .34s cubic-bezier(.22,1,.36,1) both;}
+#drill-p1.reveal > *:nth-child(1){animation-delay:.02s;}
+#drill-p1.reveal > *:nth-child(2){animation-delay:.06s;}
+#drill-p1.reveal > *:nth-child(3){animation-delay:.10s;}
+#drill-p1.reveal > *:nth-child(4){animation-delay:.14s;}
+#drill-p1.reveal > *:nth-child(5){animation-delay:.18s;}
+#drill-p1.reveal > *:nth-child(6){animation-delay:.22s;}
+#drill-p1.reveal > *:nth-child(7){animation-delay:.26s;}
+#drill-p1.reveal > *:nth-child(8){animation-delay:.30s;}
+#drill-p1.reveal .drill-grid-card{animation:folderIn .32s cubic-bezier(.22,1,.36,1) both;}
+#drill-p1.reveal .drill-grid-card:nth-child(2){animation-delay:.05s;}
+#drill-p1.reveal .drill-grid-card:nth-child(3){animation-delay:.10s;}
+#drill-p1.reveal .drill-grid-card:nth-child(4){animation-delay:.15s;}
+#drill-p1.reveal .drill-grid-card:nth-child(5){animation-delay:.19s;}
+#drill-p1.reveal .drill-grid-card:nth-child(6){animation-delay:.23s;}
 .folder-card:nth-child(7){animation-delay:.24s;}
 .folder-ico{font-size:24px;margin-bottom:8px;display:block;line-height:1;position:relative;z-index:1;}
 .folder-name{font-size:13px;font-weight:700;color:var(--fg);display:block;margin-bottom:5px;letter-spacing:-.1px;position:relative;z-index:1;}

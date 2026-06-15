@@ -3637,6 +3637,7 @@ let _drillTouchX=0;
 let _drillSwipeInited=false;
 let _drillGrid=(()=>{const v=localStorage.getItem('rz_drill_grid');return v!==null?v==='1':true;})();
 let _drillP1Limit=10;
+let _drillReveal=false,_drillRevealT=null; // выплывающая анимация только при входе, не при «показать ещё»
 let _drillHandledSwipe=false; // флаг: drill-свайп обработан, не дублировать в глобальном хендлере
 let _selectMode=false;
 let _selectedNoteIds=new Set();
@@ -3765,7 +3766,7 @@ function loadNotes(){
 }
 
 function drillGo(level,data){
-  if(level===1)_drillP1Limit=10; // сбросить пагинацию при входе в список
+  if(level===1){_drillP1Limit=10;_drillReveal=true;} // сбросить пагинацию + включить выплывание при входе в список
   if(data&&data.category!==undefined){drillCategory=data.category;drillAiTag=null;}
   if(data&&data.aiTag!==undefined){drillAiTag=normalizeIdeaTag(data.aiTag);drillCategory=null;}
   if(data&&data.noteId!==undefined)drillNoteId=data.noteId;
@@ -4199,6 +4200,7 @@ function _timeBucket(ts){
 
 function _drillP1(){
   const el=document.getElementById('drill-p1');if(!el)return;
+  const doReveal=_drillReveal;_drillReveal=false; // одноразовое выплывание при входе
   _initPTR(el);
   let notes=getNotes();
   if(drillCategory!==null)notes=notes.filter(n=>safeLabel(n.label||'\u0437\u0430\u043c\u0435\u0442\u043a\u0430')===drillCategory);
@@ -4283,6 +4285,9 @@ function _drillP1(){
   }
   el.innerHTML=h;
   _attachDrillNoteSwipe(el);
+  // Выплывающая лента — только при входе (doReveal), снимаем класс после проигрыша
+  if(doReveal){el.classList.add('reveal');clearTimeout(_drillRevealT);_drillRevealT=setTimeout(()=>el.classList.remove('reveal'),820);}
+  else el.classList.remove('reveal');
 }
 function _drillShowMore(){
   const el=document.getElementById('drill-p1');
