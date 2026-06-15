@@ -521,3 +521,13 @@ https://www.instagram.com/reel/DZhZ_8oMG74/?igsh=MWU4cTU3NHR6eWR1Zg== - канв
 
 > **AI:** Идея: https://www.instagram.com/reel/DZDAGU1sAq2/?igsh=OGkza2I5YjNyZTI2 - цвета https://www.instagram.com/reel/DZhZ_8oMG74/?igsh=MWU4cTU3NHR6eWR1Zg== - канва+гмини...
 > **Теги:** идея
+
+
+---
+
+## Идея — 2026-06-15
+
+Купить другой кабель тайпси, органайзер для комода, другую систему блоков, место для Алисы.
+
+> **AI:** Нужно купить кабель USB-C, органайзер для комода, систему блоков и место для Алисы.
+> **Теги:** идея, покупки, дом
