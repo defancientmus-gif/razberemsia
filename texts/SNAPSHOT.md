@@ -8,7 +8,7 @@
 
 - **SW cache:** `rz-v353` в `sw.js`.
 - **Последний runtime-коммит:** `2ebd395 rz-v353: instant startup`
-- **Edge Function `ai`:** задеплоена 2026-05-31, Router v1.1 (`rz-v283`). Если агент странно себя ведёт — передеплоить.
+- **Edge Function `ai`:** передеплоена **2026-06-16** — убраны уточняющие вопросы (CLARIFY почти никогда, `options` всегда `[]`, «действуй не спрашивай»). До этого Router v1.1 (`rz-v283`, 2026-05-31). Если агент странно себя ведёт — передеплоить `supabase functions deploy ai --no-verify-jwt`.
 - **Прод URL:** https://defancientmus-gif.github.io/razberemsia/
 - **Обновление PWA:** `sw.js` делает `skipWaiting()` и `clients.claim()`. Клиент НЕ перезагружается при `controllerchange` (убрано в v353 — давало рывок при старте). Новый SW подхватывает файлы при следующем запуске.
 
