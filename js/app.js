@@ -6452,10 +6452,15 @@ function agentTap(){
 function startAgentVoice(){
   if(_agentRecording||_agentRec||_agentStopWAV)return;
   if(!CU){showToast('Сначала войдите в аккаунт');return;}
-  if(navigator.mediaDevices?.getUserMedia&&(window.AudioContext||window.webkitAudioContext)){
-    _startAgentVoiceWAV();
+  // Родное распознавание (как у голосовой заметки) слышит ЛУЧШЕ серверного Whisper —
+  // тот же движок, что отлично работает в надиктовке. Whisper — fallback где SR недоступен.
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){
+    _startAgentVoiceSR();
+  } else if(navigator.mediaDevices?.getUserMedia&&(window.AudioContext||window.webkitAudioContext)){
+    _startAgentVoiceWAV(); // серверный Whisper — для standalone PWA где SR недоступен
   } else {
-    _startAgentVoiceSR(); // абсолютный fallback для очень старых браузеров
+    showToast('Голосовой ввод не поддерживается');
   }
 }
 
