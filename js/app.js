@@ -3977,7 +3977,7 @@ function _drillP0(){
     const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,0);
     const badge=totalIncoming>0?`<span class="drill-incoming-badge">${totalIncoming}</span>`:'';
     h+=`<div class="sect-hdr-row sect-hdr-incoming" onclick="toggleP0Inbox()">
-      <span class="sect-hdr-label">Входящие</span>${badge}
+      <span class="sect-hdr-label">На разбор</span>${badge}
       <span class="sect-hdr-chev${_p0InboxCollapsed?' collapsed':''}">${_CHEV_SVG}</span>
     </div>`;
     if(!_p0InboxCollapsed){
@@ -5089,7 +5089,7 @@ function _renderCatPills(dd){
     });
   }
   if(unpinnedList.length){
-    html+=`<div class="cat-pill-sep">Входящие</div>`;
+    html+=`<div class="cat-pill-sep">На разбор</div>`;
     unpinnedList.forEach(f=>{
       const col='oklch(0.55 0.13 290)';
       const active=curNote&&_noteHasAiTag(curNote,f.tag);
