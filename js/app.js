@@ -6541,7 +6541,7 @@ async function _startAgentVoiceWAV(){
         const res=await fetch(SUPABASE_EDGE_URL,{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({action:'transcribe',payload:{audio_base64:b64}})
+          body:JSON.stringify({action:'transcribe',payload:{audio_base64:b64,sample_rate:actualRate}})
         });
         const data=await res.json();
         console.info('[rz] agent voice timing', {
