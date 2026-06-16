@@ -323,6 +323,9 @@ function _ensureIdeaInboxTagFolder(notes){
   }
   // Папка уже есть (пришла с облака или создана ранее) — просто возвращаем
   if(folders.some(f=>isIdeaTag(f.tag)))return folders;
+  // Пользователь удалил Входящие — уважаем надгробие, не воскрешаем
+  const _tombs=typeof getFolderTombs==='function'?getFolderTombs():null;
+  if(_tombs&&_tombs.tags&&_tombs.tags[IDEA_TAG])return folders;
   // Создаём только если есть хотя бы одна заметка с тегом идея
   const list=Array.isArray(notes)?notes:getNotes();
   if(!list.some(_noteHasIdea))return folders;
@@ -3645,6 +3648,7 @@ let _selectLongPressTimer=null;
 let _selectLongPressNid=null;
 let _p0SectCollapsed=localStorage.getItem('rz_p0_sect_col')==='1';
 let _p0InboxCollapsed=localStorage.getItem('rz_p0_inbox_col')==='1';
+let _justPinnedTag=null; // подсветить только что закреплённую папку — видно куда уехала
 
 // ── AI Context Engine ──────────────────────────────────────────────────────
 // Трекинг поведения: сколько раз открыта каждая заметка, где сейчас пользователь
@@ -3855,8 +3859,12 @@ function pinTagFolder(tag){
   if(!f)return;
   f.pinned=true;
   saveTagFolders(folders);
+  // Раскрываем «Мои разделы» и подсвечиваем — чтобы было ВИДНО куда уехала папка
+  _p0SectCollapsed=false;try{localStorage.setItem('rz_p0_sect_col','');}catch(e){}
+  _justPinnedTag=tagLow;
   loadNotes();
-  showToast(`«${f.label||f.tag}» закреплена в разделах`);
+  requestAnimationFrame(()=>{const el=document.getElementById('drill-p0');if(el)el.scrollTop=0;});
+  showToast(`«${f.label||f.tag}» → Мои разделы ↑`);
 }
 function unpinTagFolder(tag){
   if(typeof getTagFolders!=='function')return;
@@ -3936,7 +3944,8 @@ function _drillP0(){
     // Закреплённые папки
     pinnedFolders.forEach(f=>{
       const cnt=notes.filter(n=>_noteHasAiTag(n,f.tag)).length;
-      h+=`<div class="sect-card sect-card-pinned" data-nav-folder="${esc(f.tag)}">
+      const justAdded=_tagKey(f.tag)===_justPinnedTag?' just-added':'';
+      h+=`<div class="sect-card sect-card-pinned${justAdded}" data-nav-folder="${esc(f.tag)}">
         <button type="button" class="sect-card-del" onclick="unpinTagFolder(${jsAttr(f.tag)})" title="Открепить">${_PIN_SVG}</button>
         <div class="sect-card-ico sect-card-ico-pin">${_BOOK_SVG}</div>
         <div class="sect-card-name">${esc(f.label||f.tag)}</div>
@@ -3992,6 +4001,7 @@ function _drillP0(){
 
   el.innerHTML=h;
   el.scrollTop=_savedScroll; // восстановить позицию
+  if(_justPinnedTag){_justPinnedTag=null;setTimeout(()=>{el.querySelector('.sect-card.just-added')?.classList.remove('just-added');},1600);} // снять подсветку после вспышки
 }
 
 function toggleP0Sect(){

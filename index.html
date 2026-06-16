@@ -3069,6 +3069,9 @@ html.dark .bg{
 .sect-card-del{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.22;-webkit-appearance:none;padding:0;color:var(--fg);transition:opacity .15s,background .15s;z-index:2;touch-action:manipulation;}
 .sect-card-del:active,.sect-card-del:hover{opacity:.80;background:oklch(0.88 0.08 15/0.22);}
 .sect-card-pinned{background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.007 270 / .46))!important;}
+/* Только что закреплённая папка — мягкая вспышка, видно куда уехала */
+.sect-card.just-added{animation:cardJustAdded 1.5s cubic-bezier(.22,1,.36,1);}
+@keyframes cardJustAdded{0%{box-shadow:0 0 0 0 oklch(0.55 0.14 270/.5),0 1px 8px oklch(0 0 0/.06);transform:scale(1.04);}45%{box-shadow:0 0 0 5px oklch(0.55 0.14 270/.18),0 6px 18px oklch(0.5 0.1 270/.2);}100%{box-shadow:0 0 0 0 oklch(0.55 0.14 270/0),0 1px 8px oklch(0 0 0/.06);transform:scale(1);}}
 .sect-card-ico-pin{background:oklch(0.55 0.12 270 / .10)!important;color:oklch(0.50 0.14 270)!important;font-size:16px!important;}
 .sect-card-stripe{background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.005 210 / .46))!important;}
 .sect-card-empty{grid-column:1/-1;padding:8px 4px;font-size:13px;color:var(--fg-l);line-height:1.5;}
