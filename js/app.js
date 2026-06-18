@@ -3520,6 +3520,9 @@ function confirmFolderCreate(){
   const inp=document.getElementById('folder-modal-inp');
   const name=(inp?.value||'').trim();
   if(!name){inp?.focus();return;}
+  // Если раздел создаётся из ОТКРЫТОГО листа заметки — сразу выбрать его назначением,
+  // чтобы заметка при сохранении упала именно туда (а не в пустой раздел).
+  const sheetOpen=document.getElementById('overlay')?.classList.contains('open')&&(ST==='note'||ST==='list');
   if(_fmodType==='tag'){
     // Создать папку-входящие (tag folder)
     if(typeof getTagFolders==='function'){
@@ -3531,6 +3534,7 @@ function confirmFolderCreate(){
         _drillP0();
         showToast('Папка «'+name+'» создана');
       }
+      if(sheetOpen&&typeof selectAiTagFolder==='function')selectAiTagFolder(tagLow,normalizeIdeaTag(name));
     }
   } else {
     // Создать раздел (user folder)
@@ -3541,6 +3545,7 @@ function confirmFolderCreate(){
       loadNotes();
       showToast('Раздел «'+name+'» создан');
     }
+    if(sheetOpen&&typeof selectUserFolderTag==='function')selectUserFolderTag(name);
   }
   closeFolderModal();
 }
