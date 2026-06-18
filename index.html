@@ -3099,6 +3099,20 @@ html.dark .shelf-master{background:oklch(1 0 0/.08);border-color:oklch(1 0 0/.12
 html.dark .shelf-row{background:oklch(1 0 0/.06);border-color:oklch(1 0 0/.1);}
 html.dark .shelf-row-draft{background:oklch(1 0 0/.03);border-color:oklch(1 0 0/.14);}
 html.dark .shelf-count{background:oklch(1 0 0/.1);}
+/* ── СТЕКЛЯННЫЕ КАПЛИ-ПАПКИ (драг-доска) ── */
+.bub-board{position:relative;width:100%;margin-top:6px;}
+.bub{position:absolute;width:104px;height:88px;border-radius:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(ellipse 86% 50% at 50% 19%,oklch(1 0 0/.6),transparent 72%),radial-gradient(circle at 29% 25%,oklch(1 0 0/.88),transparent 15%),oklch(0.99 0.004 222/.46);
+  border:1px solid oklch(1 0 0/.82);
+  box-shadow:inset 0 2px 2px oklch(1 0 0/.9),inset 0 -10px 18px oklch(0.66 0.07 250/.13),0 8px 20px -6px oklch(0.4 0.07 248/.28);
+  transition:transform .32s cubic-bezier(.34,1.2,.64,1),box-shadow .2s;}
+.bub-lift{box-shadow:inset 0 2px 2px oklch(1 0 0/.95),0 20px 38px -8px oklch(0.4 0.09 248/.45)!important;cursor:grabbing;}
+.bub-name{font-size:13px;font-weight:600;color:var(--fg);text-shadow:0 1px 0 oklch(1 0 0/.5);max-width:90px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bub-cnt{font-size:11px;color:var(--fg-l);}
+.bub-draft{background:oklch(1 0 0/.32);border-style:dashed;border-color:oklch(0.78 0.02 215/.7);box-shadow:0 4px 12px -6px oklch(0.4 0.05 230/.18);}
+html.dark .bub{background:radial-gradient(ellipse 86% 50% at 50% 19%,oklch(1 0 0/.14),transparent 72%),radial-gradient(circle at 29% 25%,oklch(1 0 0/.22),transparent 15%),oklch(0.32 0.02 232/.55);border-color:oklch(1 0 0/.14);box-shadow:inset 0 1.5px 0 oklch(1 0 0/.22),0 8px 20px -6px oklch(0 0 0/.4);}
+html.dark .bub-name{text-shadow:none;}
+html.dark .bub-draft{background:oklch(1 0 0/.05);border-color:oklch(1 0 0/.16);}
 @keyframes cardJustAdded{0%{box-shadow:0 0 0 0 oklch(0.55 0.14 270/.5),0 1px 8px oklch(0 0 0/.06);transform:scale(1.04);}45%{box-shadow:0 0 0 5px oklch(0.55 0.14 270/.18),0 6px 18px oklch(0.5 0.1 270/.2);}100%{box-shadow:0 0 0 0 oklch(0.55 0.14 270/0),0 1px 8px oklch(0 0 0/.06);transform:scale(1);}}
 .sect-card-ico-pin{background:oklch(0.55 0.12 270 / .10)!important;color:oklch(0.50 0.14 270)!important;font-size:16px!important;}
 .sect-card-stripe{background:linear-gradient(152deg,oklch(1 0 0 / .65),oklch(0.97 0.005 210 / .46))!important;}

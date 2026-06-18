@@ -3909,6 +3909,43 @@ function _folderGlyph(tintFill,strokeCol){
 function _folderPeek(arr){
   return arr.slice(0,3).map(n=>(n.title||(n.body||'').split('\n')[0]||'').trim().slice(0,28)).filter(Boolean).join(' · ');
 }
+// ── СТЕКЛЯННЫЕ КАПЛИ-ПАПКИ: раскладка (позиции) ──
+function _bubbleLayout(){try{return JSON.parse(localStorage.getItem(scopedKey('rz_bubble_layout'))||'{}');}catch(e){return{};}}
+function _saveBubbleLayout(o){try{localStorage.setItem(scopedKey('rz_bubble_layout'),JSON.stringify(o||{}));}catch(e){}}
+// Драг капель: тащи = двигать (сохраняем позицию), короткий тап = открыть папку. Только transform — без лагов.
+function _initBubbleDrag(){
+  const board=document.getElementById('bub-board');if(!board)return;
+  let drag=null,sx=0,sy=0,ox=0,oy=0,moved=false;
+  board.querySelectorAll('.bub').forEach(el=>{
+    el.addEventListener('pointerdown',e=>{
+      drag=el;moved=false;sx=e.clientX;sy=e.clientY;ox=parseFloat(el.style.left)||0;oy=parseFloat(el.style.top)||0;
+      el.style.transition='box-shadow .15s';el.style.zIndex='50';el.classList.add('bub-lift');
+      el.style.transform='scale(1.08)';
+      try{el.setPointerCapture(e.pointerId);}catch(_){}
+    });
+    el.addEventListener('pointermove',e=>{
+      if(drag!==el)return;const dx=e.clientX-sx,dy=e.clientY-sy;
+      if(Math.abs(dx)+Math.abs(dy)>6)moved=true;
+      el.style.transform=`translate(${dx}px,${dy}px) scale(1.08)`;
+    });
+    const end=e=>{
+      if(drag!==el)return;drag=null;el.classList.remove('bub-lift');el.style.zIndex='';
+      el.style.transition='transform .32s cubic-bezier(.34,1.2,.64,1),box-shadow .2s';
+      if(!moved){ // короткий тап → открыть папку
+        el.style.transform='';
+        const nf=el.dataset.navf,nc=el.dataset.navc;
+        if(nf!==undefined)drillGo(1,{aiTag:nf}); else if(nc!==undefined)drillGo(1,{category:nc||null});
+        return;
+      }
+      const dx=e.clientX-sx,dy=e.clientY-sy;
+      const nx=Math.max(0,ox+dx),ny=Math.max(0,oy+dy);
+      el.style.transform='';el.style.left=nx+'px';el.style.top=ny+'px';
+      const lay=_bubbleLayout();lay[el.dataset.key]={x:Math.round(nx),y:Math.round(ny)};_saveBubbleLayout(lay);
+    };
+    el.addEventListener('pointerup',end);
+    el.addEventListener('pointercancel',()=>{if(drag===el){drag=null;el.classList.remove('bub-lift');el.style.zIndex='';el.style.transform='';}});
+  });
+}
 function _drillP0(){
   const el=document.getElementById('drill-p0');if(!el)return;
   const _savedScroll=el.scrollTop; // сохранить скролл перед перерисовкой
@@ -3925,95 +3962,46 @@ function _drillP0(){
   const stripeEntries=Object.keys(STRIPES).filter(l=>l!=='заметка'&&notes.some(n=>safeLabel(n.label||'заметка')===l));
 
   let h='';
-  const _recent=(a,b)=>(b.createdAt||0)-(a.createdAt||0);
 
-  // ── ВСЕ ЗАМЕТКИ — мастер-вход в полную ленту (сверху, как главная полка) ──
+  // ── ВСЕ ЗАМЕТКИ — мастер-вход в полную ленту (стабильно сверху) ──
   h+=`<button type="button" class="shelf-master" data-nav-cat="">
     <span class="shelf-master-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></span>
     <span class="shelf-master-body"><b>Все заметки</b><span>вся лента целиком</span></span>
     <span class="shelf-master-cnt">${notes.length}</span>
   </button>`;
 
-  // ── МОИ ПОЛКИ — строки с заглядом внутрь (витрина того, что разложено) ──
-  const hasAny=userFolders.length||pinnedFolders.length||stripeEntries.length;
-  if(hasAny){
-    h+=`<div class="sect-hdr-row" onclick="toggleP0Sect()">
-      <span class="sect-hdr-label">Мои разделы</span>
-      <span class="sect-hdr-chev${_p0SectCollapsed?' collapsed':''}">${_CHEV_SVG}</span>
-    </div>`;
-    if(!_p0SectCollapsed){
-      h+=`<div class="shelf-list">`;
-      // Пользовательские разделы
-      userFolders.forEach((f,i)=>{
-        const fNameLow=f.name.toLowerCase();
-        const inside=notes.filter(n=>getFiledFolderName(n)===fNameLow).sort(_recent);
-        const idx=f.idx!==undefined?f.idx:i;
-        const col=_folderColor(idx),tint=_folderTint(idx,'0.18'),peek=_folderPeek(inside);
-        h+=`<div class="shelf-row" data-nav-folder="${esc(f.name)}">
-          ${_folderGlyph(tint,col)}
-          <div class="shelf-body"><div class="shelf-name">${esc(f.name)}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div>
-          <span class="shelf-count">${inside.length}</span>
-          <button type="button" class="sect-card-del shelf-act" onclick="deleteUserFolder(${jsAttr(f.name)})" title="Удалить">${_X_SVG}</button>
-        </div>`;
-      });
-      // Закреплённые папки агента
-      pinnedFolders.forEach(f=>{
-        const inside=notes.filter(n=>_noteHasAiTag(n,f.tag)).sort(_recent);
-        const justAdded=_tagKey(f.tag)===_justPinnedTag?' just-added':'';
-        const peek=_folderPeek(inside);
-        h+=`<div class="shelf-row${justAdded}" data-nav-folder="${esc(f.tag)}">
-          ${_folderGlyph('oklch(0.55 0.13 290 / 0.16)','oklch(0.50 0.13 290)')}
-          <div class="shelf-body"><div class="shelf-name">${esc(f.label||f.tag)}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div>
-          <span class="shelf-count">${inside.length}</span>
-          <button type="button" class="folder-pin-btn shelf-act" onclick="unpinTagFolder(${jsAttr(f.tag)})" title="Открепить">${_PIN_SVG}</button>
-        </div>`;
-      });
-      // Встроенные категории
-      stripeEntries.forEach(l=>{
-        const inside=notes.filter(n=>safeLabel(n.label||'заметка')===l).sort(_recent);
-        const col=STRIPES[l],peek=_folderPeek(inside);
-        h+=`<div class="shelf-row" data-nav-cat="${esc(l)}">
-          ${_folderGlyph(col.replace(')',' / 0.14)'),col)}
-          <div class="shelf-body"><div class="shelf-name">${esc(l.charAt(0).toUpperCase()+l.slice(1))}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div>
-          <span class="shelf-count">${inside.length}</span>
-        </div>`;
-      });
-      h+=`</div>`;
-    }
-  }
+  // ── ДОСКА СТЕКЛЯННЫХ КАПЕЛЬ-ПАПОК ──
+  // Каждая капля = папка. Тащи = двигать, тап = открыть. Черновики «на разбор» — пунктиром.
+  const items=[];
+  userFolders.forEach((f,i)=>items.push({key:'u:'+f.name.toLowerCase(),name:f.name,count:notes.filter(n=>getFiledFolderName(n)===f.name.toLowerCase()).length,navf:f.name,draft:false}));
+  pinnedFolders.forEach(f=>items.push({key:'t:'+_tagKey(f.tag),name:f.label||f.tag,count:notes.filter(n=>_noteHasAiTag(n,f.tag)).length,navf:f.tag,draft:false}));
+  stripeEntries.forEach(l=>items.push({key:'s:'+l,name:l.charAt(0).toUpperCase()+l.slice(1),count:notes.filter(n=>safeLabel(n.label||'заметка')===l).length,navc:l,draft:false}));
+  aiOnlyFolders.forEach(f=>items.push({key:'a:'+_tagKey(f.tag),name:f.label||f.tag,count:notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,navf:f.tag,draft:true}));
 
-  // ── НА РАЗБОР — черновики агента (тихо, ждут решения) ──
-  if(aiOnlyFolders.length){
-    const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,0);
-    const badge=totalIncoming>0?`<span class="drill-incoming-badge">${totalIncoming}</span>`:'';
-    h+=`<div class="sect-hdr-row sect-hdr-incoming" onclick="toggleP0Inbox()">
-      <span class="sect-hdr-label">На разбор</span>${badge}
-      <span class="sect-hdr-chev${_p0InboxCollapsed?' collapsed':''}">${_CHEV_SVG}</span>
-    </div>`;
-    if(!_p0InboxCollapsed){
-      h+=`<div class="shelf-list">`;
-      aiOnlyFolders.forEach(f=>{
-        const inside=notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).sort(_recent);
-        const peek=_folderPeek(inside);
-        h+=`<div class="shelf-row shelf-row-draft" data-nav-folder="${esc(f.tag)}">
-          ${_folderGlyph('oklch(0.55 0.05 215 / 0.10)','oklch(0.6 0.04 215)')}
-          <div class="shelf-body"><div class="shelf-name">${esc(f.label||f.tag)}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div>
-          <span class="shelf-count">${inside.length}</span>
-          <button type="button" class="folder-pin-btn shelf-act" title="Закрепить" onclick="pinTagFolder(${jsAttr(f.tag)})">${_PIN_SVG}</button>
-          <button type="button" class="folder-del-btn shelf-act" title="Удалить" onclick="deleteTagFolder(${jsAttr(f.tag)})">${_X_SVG}</button>
-        </div>`;
-      });
-      h+=`</div>`;
-    }
-  }
-
-  if(!hasAny&&!aiOnlyFolders.length){
-    h+=`<div class="sect-card-empty">Скажи агенту что записать — полки появятся сами</div>`;
+  if(items.length){
+    const bw=104,bh=88,gap=10,pad=4;
+    const boardW=el.clientWidth||window.innerWidth||360;
+    const cols=Math.max(2,Math.floor((boardW-pad*2+gap)/(bw+gap)));
+    const layout=_bubbleLayout();
+    let maxBottom=0,bub='';
+    items.forEach((it,i)=>{
+      const pos=layout[it.key];
+      const x=pos?pos.x:(pad+(i%cols)*(bw+gap));
+      const y=pos?pos.y:(pad+Math.floor(i/cols)*(bh+gap));
+      maxBottom=Math.max(maxBottom,y+bh);
+      const navAttr=it.navf!==undefined?`data-navf="${esc(it.navf)}"`:`data-navc="${esc(it.navc||'')}"`;
+      bub+=`<div class="bub${it.draft?' bub-draft':''}" data-key="${esc(it.key)}" ${navAttr} style="left:${x}px;top:${y}px;">
+        <span class="bub-name">${esc(it.name)}</span><span class="bub-cnt">${it.count}</span>
+      </div>`;
+    });
+    h+=`<div class="bub-board" id="bub-board" style="height:${maxBottom+pad+6}px;">${bub}</div>`;
+  } else {
+    h+=`<div class="sect-card-empty">Скажи агенту что записать — капли-папки появятся сами</div>`;
   }
 
   el.innerHTML=h;
   el.scrollTop=_savedScroll; // восстановить позицию
-  if(_justPinnedTag){_justPinnedTag=null;setTimeout(()=>{el.querySelector('.shelf-row.just-added,.sect-card.just-added')?.classList.remove('just-added');},1600);} // снять подсветку
+  _initBubbleDrag();
 }
 
 function toggleP0Sect(){
