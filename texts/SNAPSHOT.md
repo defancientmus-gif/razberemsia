@@ -8,7 +8,7 @@
 
 - **SW cache:** `rz-v398` в `sw.js`.
 - **Последний runtime-коммит:** `0525e4f rz-v398: fix Yandex STT sample_rate`
-- **Edge Function `ai`:** передеплоена **2026-06-16** — убраны уточняющие вопросы (CLARIFY почти никогда, `options` всегда `[]`, «действуй не спрашивай»). Передеплой: `supabase functions deploy ai --no-verify-jwt` (Docker не нужен, грузит исходник).
+- **Edge Function `ai`:** передеплоена **2026-06-18** — добавлен интент **GUIDE** (агент-проводник, пошаговое ведение) + дерево решений против путаницы инструментов + правило «один проход» (экономия лимита). До этого 2026-06-16 (убраны CLARIFY/options). Передеплой: `supabase functions deploy ai --no-verify-jwt` (Docker не нужен, грузит исходник).
 - **Прод URL:** https://defancientmus-gif.github.io/razberemsia/
 - **Обновление PWA:** `sw.js` делает `skipWaiting()`, НЕ вызывает `clients.claim()` (убран в v354 — ломал первый запуск). Клиент НЕ перезагружается при `controllerchange`. Новый SW подхватывает файлы при следующем запуске → старт всегда мгновенный.
 
