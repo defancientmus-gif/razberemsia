@@ -1360,6 +1360,11 @@ mark.sr-hl{background:oklch(0.92 0.10 210 / 0.45);border-radius:3px;padding:0 1p
 .agent-card-speak:active{opacity:1;}
 .agent-card-speak.voice-on{opacity:1;filter:drop-shadow(0 0 6px oklch(0.65 0.18 210/.8));}
 .agent-card-txt{font-size:16px;line-height:1.65;color:var(--fg);text-align:center;margin-bottom:22px;white-space:pre-wrap;}
+/* GUIDE — пошаговое ведение: крупные читаемые шаги, по одному действию */
+.agent-guide-steps{list-style:none;counter-reset:gstep;margin:4px 0 20px;padding:0;display:flex;flex-direction:column;gap:10px;text-align:left;}
+.agent-guide-steps li{counter-increment:gstep;position:relative;padding:11px 14px 11px 46px;background:oklch(0.97 0.012 210/.6);border:1px solid oklch(0.88 0.02 210/.5);border-radius:14px;font-size:15px;line-height:1.5;color:var(--fg);}
+.agent-guide-steps li::before{content:counter(gstep);position:absolute;left:11px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--accent,oklch(0.45 0.12 255));color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+html.dark .agent-guide-steps li{background:oklch(1 0 0/.06);border-color:oklch(1 0 0/.12);}
 .agent-card-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .agent-card-opts--clarify{grid-template-columns:1fr;gap:10px;margin-bottom:8px;}
 .agent-card-opt{padding:14px 10px;background:oklch(0.95 0.025 210);color:var(--accent-d);border:1.5px solid oklch(0.87 0.06 210/0.45);border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;line-height:1.35;font-family:var(--sys);}

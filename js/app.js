@@ -6690,11 +6690,14 @@ function _agentRoutingPlan(text){
   const tagAction=_agentRouteWord(t,'тег|ярлык')&&_agentRouteWord(t,'добавь|поставь|пометь|отнеси|разбери');
   const broadNotes=/(сводк|что у меня|что запис|что есть|за день|все замет|всё что|список дел)/.test(t);
   const plan=_agentRouteWord(t,'план[а-я]*|маршрут|составь|составить|распланируй|порядок дел|расписани[а-я]*');
+  // GUIDE — пошаговое ведение: чужие заметки не нужны → держим профиль лёгким (экономия лимита)
+  const guide=/(как мне |как (войти|зайти|настроить|перевести|позвонить|отправить|оплатит|зарегистр|установить)|помоги (войти|зайти|настроить|перевести|позвонить|оплатит|установить|разобраться с)|не получается |не могу (войти|зайти|найти пароль|позвонить|оплатит)|проведи меня|научи меня)/.test(t);
 
   let profile='light';
   if(quickWrite||(reminder&&!reminderNeedsNotes))profile='none';
   if(reminderNeedsNotes||destructive||tagAction||noteAction||continuation)profile='notes';
   if(broadNotes||plan)profile='deep';
+  if(guide&&!broadNotes&&!plan&&!destructive)profile='light'; // ведение — без заметок
 
   const deep=profile==='deep';
   const notes=profile==='notes'||deep;
@@ -7053,12 +7056,13 @@ function _showAgentCardDebounced(intent,response,params,options){
   _agentCardTimer=setTimeout(()=>{_agentCardTimer=null;_showAgentCard(intent,response,params,options);},delay);
 }
 function _showAgentCard(intent,response,params,options){
-  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎'};
+  const icons={CREATE_NOTE:'📝',SET_REMINDER:'🔔',SET_RECURRING:'🔁',CLARIFY:'🤔',CREATE_TAG_FOLDER:'🗂',TAG_NOTE:'🏷',OPEN_NOTE:'📖',ANALYZE_NOTE:'🔍',QUESTION:'💬',FIND_DOCTOR:'🏥',READ_NOTE_ALOUD:'🔊',DAILY_BRIEFING:'📅',MAKE_PLAN:'🗺',FIND_NOTES:'🔎',GUIDE:'🧭'};
   const hasOpts=Array.isArray(options)&&options.length>0;
-  // Не закрываем автоматически: есть варианты выбора, содержательный ответ (анализ/план/разбор),
-  // или интент-ответ. Иначе разбор «Все заметки за месяц» исчезал в никуда через 7 сек.
+  // Шаги GUIDE — пошаговое ведение (бабушке войти куда-то и т.п.)
+  const guideSteps=intent==='GUIDE'&&Array.isArray(params?.steps)?params.steps.filter(s=>typeof s==='string'&&s.trim()).slice(0,8):null;
+  // Не закрываем автоматически: варианты, содержательный ответ, интент-ответ, или пошаговое ведение.
   const _longAnswer=(response||'').length>=160;
-  const autoClose=!hasOpts&&!_longAnswer&&!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD','CREATE_TAG_FOLDER','ANALYZE_NOTE'].includes(intent);
+  const autoClose=!hasOpts&&!_longAnswer&&!guideSteps&&!['QUESTION','FIND_DOCTOR','CLARIFY','MAKE_PLAN','DAILY_BRIEFING','READ_NOTE_ALOUD','CREATE_TAG_FOLDER','ANALYZE_NOTE','GUIDE'].includes(intent);
 
   // ── КНОПКИ НАВИГАЦИИ — ведут к тому что агент только что создал/нашёл ──
   let openBtn='';
@@ -7103,6 +7107,15 @@ function _showAgentCard(intent,response,params,options){
     savePlanBtn=`<button class="agent-card-open" onclick="_agentSavePlan(${jsAttr(response)})">Сохранить план</button>`;
   }
 
+  // GUIDE — пронумерованные шаги + гейт «Сохранить как заметку» (одно касание, без вызова API)
+  let guideStepsHtml='';
+  let saveGuideBtn='';
+  if(guideSteps&&guideSteps.length){
+    guideStepsHtml='<ol class="agent-guide-steps">'+guideSteps.map(s=>`<li>${esc(s)}</li>`).join('')+'</ol>';
+    const topic=params.topic||response||'Инструкция';
+    saveGuideBtn=`<button class="agent-card-open" onclick="_agentSaveGuide(${jsAttr(topic)},${jsAttr(JSON.stringify(guideSteps))})">Сохранить как заметку</button>`;
+  }
+
   const isClarify=intent==='CLARIFY';
 
   // Кнопки-опции
@@ -7140,10 +7153,12 @@ function _showAgentCard(intent,response,params,options){
       ${speakBtn}
     </div>
     <div class="agent-card-txt">${esc(response)}</div>
+    ${guideStepsHtml}
     ${optBtns}
     ${openBtn}
     ${openFolderBtn}
     ${savePlanBtn}
+    ${saveGuideBtn}
     ${promoteBtn}
     ${askRow}
     ${closeBtn}
@@ -7285,6 +7300,20 @@ function _agentSavePlan(planText){
   notes.unshift({id,title,body:planText,label:'заметка',createdAt:ts,updatedAt:ts});
   saveNotes(notes);loadAll();
   showToast('✅ План сохранён в заметки');
+  setTimeout(()=>openNoteSheetById(id),300);
+}
+// GUIDE — сохранить пошаговую инструкцию в заметку (одно касание, без вызова API)
+function _agentSaveGuide(topic,stepsJson){
+  window.speechSynthesis?.cancel();_setAgentState('idle');
+  document.getElementById('agent-card')?.remove();
+  let steps=[];try{steps=JSON.parse(stepsJson||'[]');}catch(e){}
+  if(!Array.isArray(steps)||!steps.length)return;
+  const ts=Date.now();const id=genId();const notes=getNotes();
+  const title=(topic&&topic.trim())?topic.trim().slice(0,80):'Инструкция';
+  const body=steps.map((s,i)=>`${i+1}. ${s}`).join('\n');
+  notes.unshift({id,title,body,label:'заметка',createdAt:ts,updatedAt:ts});
+  saveNotes(notes);loadAll();
+  showToast('✅ Инструкция сохранена в заметки');
   setTimeout(()=>openNoteSheetById(id),300);
 }
 
