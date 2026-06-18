@@ -3979,29 +3979,18 @@ function _drillP0(){
   aiOnlyFolders.forEach(f=>items.push({key:'a:'+_tagKey(f.tag),name:f.label||f.tag,count:notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,navf:f.tag,draft:true}));
 
   if(items.length){
-    const bw=104,bh=88,gap=10,pad=4;
-    const boardW=el.clientWidth||window.innerWidth||360;
-    const cols=Math.max(2,Math.floor((boardW-pad*2+gap)/(bw+gap)));
-    const layout=_bubbleLayout();
-    let maxBottom=0,bub='';
-    items.forEach((it,i)=>{
-      const pos=layout[it.key];
-      const x=pos?pos.x:(pad+(i%cols)*(bw+gap));
-      const y=pos?pos.y:(pad+Math.floor(i/cols)*(bh+gap));
-      maxBottom=Math.max(maxBottom,y+bh);
-      const navAttr=it.navf!==undefined?`data-navf="${esc(it.navf)}"`:`data-navc="${esc(it.navc||'')}"`;
-      bub+=`<div class="bub${it.draft?' bub-draft':''}" data-key="${esc(it.key)}" ${navAttr} style="left:${x}px;top:${y}px;">
-        <span class="bub-name">${esc(it.name)}</span><span class="bub-cnt">${it.count}</span>
-      </div>`;
+    let bub='';
+    items.forEach(it=>{
+      const navAttr=it.navf!==undefined?`data-nav-folder="${esc(it.navf)}"`:`data-nav-cat="${esc(it.navc||'')}"`;
+      bub+=`<div class="bub${it.draft?' bub-draft':''}" ${navAttr}><span class="bub-name">${esc(it.name)}</span><span class="bub-cnt">${it.count}</span></div>`;
     });
-    h+=`<div class="bub-board" id="bub-board" style="height:${maxBottom+pad+6}px;">${bub}</div>`;
+    h+=`<div class="bub-grid">${bub}</div>`;
   } else {
-    h+=`<div class="sect-card-empty">Скажи агенту что записать — капли-папки появятся сами</div>`;
+    h+=`<div class="sect-card-empty">Скажи агенту что записать — папки появятся сами</div>`;
   }
 
   el.innerHTML=h;
   el.scrollTop=_savedScroll; // восстановить позицию
-  _initBubbleDrag();
 }
 
 function toggleP0Sect(){
