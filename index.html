@@ -3031,6 +3031,17 @@ html.dark .bg{
   box-sizing:border-box;
 }
 .drill-panel::-webkit-scrollbar{display:none;}
+/* ── ПК: Заметки в ДВЕ ПАНЕЛИ — папки слева, содержимое справа (удобно управляться) ── */
+@media(min-width:1000px){
+  .drill-track{position:static;width:100%;height:100%;display:grid;grid-template-columns:312px 1fr;transform:none!important;transition:none;}
+  .drill-track .drill-panel{flex:none;}
+  #drill-p0{border-right:1px solid oklch(0.88 0.015 215/.5);padding:14px 16px 48px;}
+  #drill-p1{padding:16px 26px 56px;}
+  #drill-p2{display:none;}
+  #drill-back-btn{display:none;}
+  html.dark #drill-p0{border-right-color:oklch(1 0 0/.08);}
+  .drill-p1-hint{display:flex;align-items:center;justify-content:center;height:55%;color:var(--fg-l);font-size:15px;text-align:center;padding:24px;line-height:1.5;}
+}
 
 /* Section rows — Panel 0 */
 .drill-sec-row{

@@ -3970,27 +3970,56 @@ function _drillP0(){
     <span class="shelf-master-cnt">${notes.length}</span>
   </button>`;
 
-  // ── ДОСКА СТЕКЛЯННЫХ КАПЕЛЬ-ПАПОК ──
-  // Каждая капля = папка. Тащи = двигать, тап = открыть. Черновики «на разбор» — пунктиром.
-  const items=[];
-  userFolders.forEach((f,i)=>items.push({key:'u:'+f.name.toLowerCase(),name:f.name,count:notes.filter(n=>getFiledFolderName(n)===f.name.toLowerCase()).length,navf:f.name,draft:false}));
-  pinnedFolders.forEach(f=>items.push({key:'t:'+_tagKey(f.tag),name:f.label||f.tag,count:notes.filter(n=>_noteHasAiTag(n,f.tag)).length,navf:f.tag,draft:false}));
-  stripeEntries.forEach(l=>items.push({key:'s:'+l,name:l.charAt(0).toUpperCase()+l.slice(1),count:notes.filter(n=>safeLabel(n.label||'заметка')===l).length,navc:l,draft:false}));
-  aiOnlyFolders.forEach(f=>items.push({key:'a:'+_tagKey(f.tag),name:f.label||f.tag,count:notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,navf:f.tag,draft:true}));
-
-  if(items.length){
-    let bub='';
-    items.forEach(it=>{
-      const navAttr=it.navf!==undefined?`data-nav-folder="${esc(it.navf)}"`:`data-nav-cat="${esc(it.navc||'')}"`;
-      bub+=`<div class="bub${it.draft?' bub-draft':''}" ${navAttr}><span class="bub-name">${esc(it.name)}</span><span class="bub-cnt">${it.count}</span></div>`;
-    });
-    h+=`<div class="bub-grid">${bub}</div>`;
-  } else {
-    h+=`<div class="sect-card-empty">Скажи агенту что записать — папки появятся сами</div>`;
+  // ── СПОКОЙНАЯ ВИТРИНА СТРОК-ПОЛОК (наш стиль: тихо, видно что внутри) ──
+  const _recent=(a,b)=>(b.createdAt||0)-(a.createdAt||0);
+  const hasAny=userFolders.length||pinnedFolders.length||stripeEntries.length;
+  if(hasAny){
+    h+=`<div class="sect-hdr-row" onclick="toggleP0Sect()"><span class="sect-hdr-label">Мои разделы</span><span class="sect-hdr-chev${_p0SectCollapsed?' collapsed':''}">${_CHEV_SVG}</span></div>`;
+    if(!_p0SectCollapsed){
+      h+=`<div class="shelf-list">`;
+      userFolders.forEach((f,i)=>{
+        const inside=notes.filter(n=>getFiledFolderName(n)===f.name.toLowerCase()).sort(_recent);
+        const idx=f.idx!==undefined?f.idx:i,col=_folderColor(idx),tint=_folderTint(idx,'0.18'),peek=_folderPeek(inside);
+        h+=`<div class="shelf-row" data-nav-folder="${esc(f.name)}">${_folderGlyph(tint,col)}<div class="shelf-body"><div class="shelf-name">${esc(f.name)}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div><span class="shelf-count">${inside.length}</span><button type="button" class="sect-card-del shelf-act" onclick="deleteUserFolder(${jsAttr(f.name)})" title="Удалить">${_X_SVG}</button></div>`;
+      });
+      pinnedFolders.forEach(f=>{
+        const inside=notes.filter(n=>_noteHasAiTag(n,f.tag)).sort(_recent);
+        const justAdded=_tagKey(f.tag)===_justPinnedTag?' just-added':'',peek=_folderPeek(inside);
+        h+=`<div class="shelf-row${justAdded}" data-nav-folder="${esc(f.tag)}">${_folderGlyph('oklch(0.55 0.13 290 / 0.16)','oklch(0.50 0.13 290)')}<div class="shelf-body"><div class="shelf-name">${esc(f.label||f.tag)}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div><span class="shelf-count">${inside.length}</span><button type="button" class="folder-pin-btn shelf-act" onclick="unpinTagFolder(${jsAttr(f.tag)})" title="Открепить">${_PIN_SVG}</button></div>`;
+      });
+      stripeEntries.forEach(l=>{
+        const inside=notes.filter(n=>safeLabel(n.label||'заметка')===l).sort(_recent);
+        const col=STRIPES[l],peek=_folderPeek(inside);
+        h+=`<div class="shelf-row" data-nav-cat="${esc(l)}">${_folderGlyph(col.replace(')',' / 0.14)'),col)}<div class="shelf-body"><div class="shelf-name">${esc(l.charAt(0).toUpperCase()+l.slice(1))}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div><span class="shelf-count">${inside.length}</span></div>`;
+      });
+      h+=`</div>`;
+    }
+  }
+  if(aiOnlyFolders.length){
+    const totalIncoming=aiOnlyFolders.reduce((acc,f)=>acc+notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).length,0);
+    const badge=totalIncoming>0?`<span class="drill-incoming-badge">${totalIncoming}</span>`:'';
+    h+=`<div class="sect-hdr-row sect-hdr-incoming" onclick="toggleP0Inbox()"><span class="sect-hdr-label">На разбор</span>${badge}<span class="sect-hdr-chev${_p0InboxCollapsed?' collapsed':''}">${_CHEV_SVG}</span></div>`;
+    if(!_p0InboxCollapsed){
+      h+=`<div class="shelf-list">`;
+      aiOnlyFolders.forEach(f=>{
+        const inside=notes.filter(n=>_noteHasAiTag(n,f.tag)&&!isNoteResolved(n)).sort(_recent),peek=_folderPeek(inside);
+        h+=`<div class="shelf-row shelf-row-draft" data-nav-folder="${esc(f.tag)}">${_folderGlyph('oklch(0.55 0.05 215 / 0.10)','oklch(0.6 0.04 215)')}<div class="shelf-body"><div class="shelf-name">${esc(f.label||f.tag)}</div>${peek?`<div class="shelf-peek">${esc(peek)}</div>`:''}</div><span class="shelf-count">${inside.length}</span><button type="button" class="folder-pin-btn shelf-act" title="Закрепить" onclick="pinTagFolder(${jsAttr(f.tag)})">${_PIN_SVG}</button><button type="button" class="folder-del-btn shelf-act" title="Удалить" onclick="deleteTagFolder(${jsAttr(f.tag)})">${_X_SVG}</button></div>`;
+      });
+      h+=`</div>`;
+    }
+  }
+  if(!hasAny&&!aiOnlyFolders.length){
+    h+=`<div class="sect-card-empty">Скажи агенту что записать — полки появятся сами</div>`;
   }
 
   el.innerHTML=h;
   el.scrollTop=_savedScroll; // восстановить позицию
+  if(_justPinnedTag){_justPinnedTag=null;setTimeout(()=>{el.querySelector('.shelf-row.just-added')?.classList.remove('just-added');},1600);}
+  // ПК-две-панели: на уровне 0 правая панель показывает подсказку (заполнится при клике на раздел)
+  const _p1=document.getElementById('drill-p1');
+  if(_p1&&drillLevel===0&&window.matchMedia('(min-width:1000px)').matches){
+    _p1.innerHTML='<div class="drill-p1-hint">Выбери раздел слева —<br>заметки покажутся здесь</div>';
+  }
 }
 
 function toggleP0Sect(){
