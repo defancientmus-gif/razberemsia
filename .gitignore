@@ -6,4 +6,11 @@
 .claude/
 claude-handoff/
 supabase/.temp/
-backups/*.tar.gz
+backups/
+incoming/
+files.zip
+.playwright-mcp/
+graphify-out/
+*.mp4
+desktop.png
+reel.html
