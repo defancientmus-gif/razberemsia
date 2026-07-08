@@ -211,9 +211,10 @@ function getAiMemoryContext(){
   return mem.slice(0,7);
 }
 function cloudAllowed(){return !!(sb&&CU&&CU.id);}
-// Timestamp последнего успешного cloud-push (ISO string)
-function _getLocalSyncedAt(){return localStorage.getItem('rz_folders_synced_at')||'';}
-function _setLocalSyncedAt(ts){if(ts)localStorage.setItem('rz_folders_synced_at',ts);}
+// Timestamp последнего успешного cloud-push (ISO string). Привязан к аккаунту (scopedKey) —
+// иначе при смене пользователя на одном устройстве метка от старого аккаунта путает сравнение.
+function _getLocalSyncedAt(){return localStorage.getItem(scopedKey('rz_folders_synced_at'))||'';}
+function _setLocalSyncedAt(ts){if(ts)localStorage.setItem(scopedKey('rz_folders_synced_at'),ts);}
 
 // ── НАДГРОБИЯ ПАПОК (tombstones) — лечат воскрешение удалённых папок при синхронизации ──
 // Без них _mergeByKey (чистый union) возвращал удалённую папку из облака.
@@ -398,7 +399,18 @@ function queueCloudSave(){
 async function saveCloudNow(){
   if(!cloudAllowed())return;
   try{
-    const payload={user_id:CU.id,notes:getNotes(),trash:getTrash(),history:getHistory(),ai_memory:getAiMemory(),user_folders:getUserFolders(),tag_folders:typeof getTagFolders==='function'?getTagFolders():[],name:readText('rz_name'),updated_at:new Date().toISOString()};
+    // Сверяемся со свежим состоянием облака перед перезаписью — без этого push слепо
+    // заливает локальный срез устройства и стирает заметки другого устройства, которые
+    // ещё не долетели через pull (гонка между устройствами, БАГ: «не синхронится в обе стороны»).
+    let notes=getNotes(),trash=getTrash();
+    try{
+      const{data:cloud}=await sb.from('user_state').select('notes,trash').eq('user_id',CU.id).maybeSingle();
+      if(cloud){
+        if(Array.isArray(cloud.notes))notes=_mergeNoteArrays(notes,cloud.notes);
+        if(Array.isArray(cloud.trash))trash=_mergeTrashArrays(trash,cloud.trash);
+      }
+    }catch(_){}
+    const payload={user_id:CU.id,notes,trash,history:getHistory(),ai_memory:getAiMemory(),user_folders:getUserFolders(),tag_folders:typeof getTagFolders==='function'?getTagFolders():[],name:readText('rz_name'),updated_at:new Date().toISOString()};
     // Надгробия шлём только когда знаем, что колонка есть — иначе upsert упадёт на «column does not exist»
     // и сломает ВСЁ облачное сохранение. До миграции метки работают локально (single-device).
     if(_tombColOk)payload.folder_tombstones=getFolderTombs();
@@ -1723,7 +1735,7 @@ async function _pullCloudIfStale(){
     if(changed||foldersChanged)loadAll();
     // Если после merge локальные заметки отличаются от облака — пушим мерж в облако
     if(changed)queueCloudSave();
-  }catch(_){}
+  }catch(e){console.warn('[rz:sync] pull failed',e);}
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
