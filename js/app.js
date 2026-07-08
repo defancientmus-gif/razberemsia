@@ -216,6 +216,19 @@ function cloudAllowed(){return !!(sb&&CU&&CU.id);}
 function _getLocalSyncedAt(){return localStorage.getItem(scopedKey('rz_folders_synced_at'))||'';}
 function _setLocalSyncedAt(ts){if(ts)localStorage.setItem(scopedKey('rz_folders_synced_at'),ts);}
 
+// Заметка ещё не долетела до облака: изменена позже последнего успешного cloud-push.
+// Если push молча не проходит (протухшая сессия и т.п.) — метка не обновляется,
+// и всё что копится с этого момента честно помечается как несинхронизированное.
+function _noteUnsynced(n){
+  if(!cloudAllowed())return false;
+  const syncedAt=Date.parse(_getLocalSyncedAt()||'');
+  if(!syncedAt)return false; // ещё ни разу не синхронизировались в этом аккаунте — не спамим на старте
+  const notedAt=n.updatedAt||n.createdAt||0;
+  return notedAt>syncedAt;
+}
+const CLOUD_PENDING_ICO='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M22.61 16.95A5 5 0 0018 10h-1.26a8 8 0 00-7.05-6M5 5a8 8 0 004 15h9a5 5 0 001.7-.3"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function _cloudPendingBadge(n){return _noteUnsynced(n)?`<span class="note-cloud-pending" title="Ещё не сохранено в облако">${CLOUD_PENDING_ICO}</span>`:'';}
+
 // ── НАДГРОБИЯ ПАПОК (tombstones) — лечат воскрешение удалённых папок при синхронизации ──
 // Без них _mergeByKey (чистый union) возвращал удалённую папку из облака.
 // Структура: {tags:{<tagKey>:deletedAtMs}, users:{<nameLow>:deletedAtMs}}
@@ -4285,6 +4298,7 @@ function _drillP1(){
           <span class="drill-note-time">${esc(fmtMeta(n.createdAt||n.updatedAt))}</span>
           ${hasBell?'<span style="font-size:10px">\ud83d\udd14</span>':''}
           ${hasAi&&!resolved?'<span style="font-size:9px;color:var(--accent-d);font-weight:700">AI</span>':''}
+          ${_cloudPendingBadge(n)}
         </div>
         ${resolved?'<div class="note-resolved-stamp">\u0440\u0430\u0437\u043e\u0431\u0440\u0430\u043b\u0438\u0441\u044c</div>':''}
       </div>`;
@@ -4314,6 +4328,7 @@ function _drillP1(){
           ${preview?`<div class="drill-note-preview">${esc(preview)}</div>`:''}
           <div class="drill-note-foot">
             <span class="drill-note-time">${esc(fmtMeta(n.createdAt||n.updatedAt))}</span>
+            ${_cloudPendingBadge(n)}
           </div>
         </div>
       </div>`;
@@ -6052,7 +6067,7 @@ function loadHomeFeed(){
         <div style="margin-top:${(hasAi||n.type==='list')?'4px':'0'}">${aiBadge}${typeTag}</div>
       </div>
       <div class="hf-right">
-        <div class="hf-time">${esc(timeStr)}</div>
+        <div class="hf-time">${esc(timeStr)}${_cloudPendingBadge(n)}</div>
         <div class="hf-arr">&rsaquo;</div>
       </div>`;
     }
