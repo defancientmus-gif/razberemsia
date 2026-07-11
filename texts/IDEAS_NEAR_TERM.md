@@ -531,3 +531,14 @@ https://www.instagram.com/reel/DZhZ_8oMG74/?igsh=MWU4cTU3NHR6eWR1Zg== - канв
 
 > **AI:** Нужно купить кабель USB-C, органайзер для комода, систему блоков и место для Алисы.
 > **Теги:** идея, покупки, дом
+
+
+---
+
+## Идея — 2026-07-11
+
+Идеи для тока: 
+https://www.instagram.com/reel/DZJ6vDuTE5R/?igsh=ZmxocG13NDJtMzI=
+
+> **AI:** Идея: Идеи для тока: https://www.instagram.com/reel/DZJ6vDuTE5R/?igsh=ZmxocG13NDJtMzI=
+> **Теги:** идея
