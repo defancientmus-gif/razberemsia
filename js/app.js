@@ -347,6 +347,89 @@ function _ensureIdeaInboxTagFolder(notes){
   saveTagFolders(next);
   return next;
 }
+// ── САМОЗАТАЧИВАЮЩИЙСЯ КЛАССИФИКАТОР ТЕГОВ (курс «алгоритмы вместо ИИ», 2026-07-18) ──
+// Правила — данные, не код: {tags:{"покупки":{kw:["купить",...]},...}, updatedAt}.
+// Дешёвый локальный проход вешает теги без сети. Каждый полный ИИ-разбор даёт
+// обучающий пример; накопились — ОДИН запрос tune_rules перетачивает правила.
+// v1: правила живут на устройстве (не синхронизируются) — каждое затачивается само.
+const TAG_RULES_KEY='rz_tag_rules';
+const TAG_EXAMPLES_KEY='rz_tag_examples';
+const _RULES_MIN_EXAMPLES=30;   // переточка существующих правил: столько новых примеров...
+const _RULES_MIN_DAYS=7;        // ...или прошло столько дней (и есть хотя бы 8 примеров)
+const _RULES_BOOTSTRAP_MIN=20;  // стартовая генерация: минимум размеченных заметок
+function getTagRules(){try{return JSON.parse(localStorage.getItem(scopedKey(TAG_RULES_KEY))||'null');}catch(e){return null;}}
+function _saveTagRules(r){try{localStorage.setItem(scopedKey(TAG_RULES_KEY),JSON.stringify(r));}catch(e){}}
+function _getTagExamples(){try{return JSON.parse(localStorage.getItem(scopedKey(TAG_EXAMPLES_KEY))||'[]');}catch(e){return[];}}
+// Пример «текст → правильные теги». Компактно (приватность + вес): 140 символов, максимум 60 записей.
+function _logTagExample(text,actualTags){
+  const tags=(actualTags||[]).filter(t=>!_isFiledFolderTag(t));
+  if(!tags.length)return;
+  const arr=_getTagExamples();
+  arr.push({t:String(text||'').slice(0,140),a:tags,ts:Date.now()});
+  while(arr.length>60)arr.shift();
+  try{localStorage.setItem(scopedKey(TAG_EXAMPLES_KEY),JSON.stringify(arr));}catch(e){}
+}
+// Локальная классификация по словарю ключевых слов. {tags, sure}.
+// sure=false → зовём ИИ как раньше; ничего не ломается, просто не сэкономили.
+function _localClassify(text){
+  const rules=getTagRules();
+  if(!rules||!rules.tags)return{tags:[],sure:false};
+  const low=(' '+String(text||'').toLowerCase().replace(/ё/g,'е')+' ');
+  const scored=[];
+  Object.keys(rules.tags).forEach(tag=>{
+    const kw=(rules.tags[tag]&&rules.tags[tag].kw)||[];
+    let hits=0;
+    kw.forEach(w=>{if(w&&low.includes(String(w).toLowerCase().replace(/ё/g,'е')))hits++;});
+    if(hits)scored.push({tag,hits});
+  });
+  scored.sort((a,b)=>b.hits-a.hits);
+  const top=scored.slice(0,2).map(s=>s.tag);
+  // Уверенность: ≥2 попадания у лучшего тега, или 1 точное на совсем короткой заметке
+  const sure=!!scored.length&&(scored[0].hits>=2||(scored[0].hits>=1&&String(text||'').length<=60));
+  return{tags:normalizeAiTags(top),sure};
+}
+// Переточка: не чаще раза за сессию, тихо в фоне после старта.
+let _sharpenTriedThisSession=false;
+async function _maybeSharpenTagRules(){
+  if(_sharpenTriedThisSession||!cloudAllowed()||!navigator.onLine)return;
+  _sharpenTriedThisSession=true;
+  try{
+    const rules=getTagRules();
+    const fresh=_getTagExamples();
+    if(!rules){
+      // Стартовая генерация — примеры из уже размеченных заметок (один запрос за всю жизнь устройства)
+      const seed=getNotes()
+        .filter(n=>(n.aiTags||[]).some(t=>!_isFiledFolderTag(t)))
+        .slice(0,80)
+        .map(n=>({t:((n.title||'')+' '+(n.body||'')).trim().slice(0,140),a:(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t))}));
+      if(seed.length<_RULES_BOOTSTRAP_MIN)return; // мало данных — пусть копится
+      await _tuneRulesRequest(null,seed);
+      return;
+    }
+    const days=(Date.now()-(rules.updatedAt||0))/86400000;
+    if(fresh.length>=_RULES_MIN_EXAMPLES||(days>=_RULES_MIN_DAYS&&fresh.length>=8)){
+      await _tuneRulesRequest(rules,fresh);
+    }
+  }catch(e){console.warn('[rz:rules] sharpen failed',e);}
+}
+async function _tuneRulesRequest(rules,examples){
+  const session=await sb.auth.getSession();
+  const token=session?.data?.session?.access_token;
+  if(!token)return;
+  const res=await fetch(SUPABASE_EDGE_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({action:'tune_rules',payload:{rules:rules?{tags:rules.tags}:null,examples}})
+  });
+  if(!res.ok){console.warn('[rz:rules] tune_rules failed',res.status);return;}
+  const data=await res.json();
+  if(data&&data.rules&&data.rules.tags&&Object.keys(data.rules.tags).length){
+    _saveTagRules({tags:data.rules.tags,updatedAt:Date.now()});
+    try{localStorage.setItem(scopedKey(TAG_EXAMPLES_KEY),'[]');}catch(e){}
+    console.log('[rz:rules] правила переточены:',Object.keys(data.rules.tags).length,'тегов');
+  }
+}
+
 // Применить данные из облака в localStorage. Merge по id — офлайн-заметки не теряются.
 function _applyCloudData(data){
   if(!data)return false;
@@ -561,6 +644,8 @@ async function enterUser(user){
   _maybeOnboard();
   // Realtime WebSocket — задержка 1.5с чтобы auth-сессия успела установиться
   setTimeout(_subscribeRealtime, 1500);
+  // Самозаточка классификатора — тихо в фоне, когда запуск уже отработал
+  setTimeout(_maybeSharpenTagRules, 9000);
   // Восстановить push-подписку при каждом логине (endpoint может смениться)
   if(notifGranted())_ensurePushSubscription();
 }
@@ -1074,6 +1159,7 @@ async function runAiAnalysis(text,_unused,attempt=0){
     const summary=typeof data.summary==='string'?data.summary:'';
     const tags=normalizeAiTags(data.tags||[]);
     const actions=Array.isArray(data.actions)?data.actions:[];
+    _logTagExample(text,tags); // каждый полный разбор — обучающий пример для локального классификатора
     autoLabel=tagsToPrimaryLabel(tags);
     if(autoLabel){
       const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
@@ -1100,6 +1186,35 @@ async function runAiAnalysis(text,_unused,attempt=0){
     if(bodyEl)bodyEl.innerHTML=`<div class="ai-panel-inner"><div class="ai-err">${esc(msg)}</div></div>`;
     _setSheetAiButtonState('retry');
   }
+}
+
+// Гейт авто-анализа: короткую простую заметку размечает локальный классификатор — без сети.
+// Не уверен → полный runAiAnalysis как раньше (и его результат станет обучающим примером).
+// aiCache НЕ пишем: ручной клик на «анализ» всегда даёт полный ИИ-разбор.
+function _smartAnalyze(text){
+  const simple=text.length<=80&&!text.includes('\n');
+  if(simple){
+    const c=_localClassify(text);
+    if(c.sure&&c.tags.length){
+      if(EI){
+        const list=getNotes();
+        const idx=list.findIndex(n=>n.id===EI);
+        if(idx>=0){
+          list[idx].aiTags=normalizeAiTags([...(list[idx].aiTags||[]),...c.tags]);
+          saveNotes(list);
+        }
+      }
+      const autoLabel=tagsToPrimaryLabel(c.tags);
+      if(autoLabel){
+        const curCat=document.getElementById('sheet-cat-btn')?.dataset.label||'заметка';
+        if(curCat==='заметка'){showSheetCat(autoLabel);showCatHint(autoLabel);}
+      }
+      if(document.getElementById('ai-overlay-body'))_renderAiResult('',c.tags,[],null,text);
+      console.log('[rz:rules] теги локально, без ИИ:',c.tags.join(', '));
+      return;
+    }
+  }
+  runAiAnalysis(text,null);
 }
 
 // ── RENDER AI RESULT ──
@@ -6271,7 +6386,7 @@ function startSheetAudioNote(){
     }
     if(_aiOn){
       const t=document.getElementById('sh1')?.value||'';
-      if(_aiOn&&t.length>14)runAiAnalysis(t,null);
+      if(_aiOn&&t.length>14)_smartAnalyze(t);
     }
   };
   sheetAudioRecog.start();
