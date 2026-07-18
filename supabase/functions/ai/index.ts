@@ -308,6 +308,64 @@ ${safeText}`,
     return json({ rewritten });
   }
 
+  // ── TUNE_RULES — самозаточка локального классификатора тегов ──
+  // ИИ не работает вместо алгоритма — ИИ перетачивает правила алгоритма.
+  // Один запрос обновляет JSON-словарь ключевых слов; дальше клиент вешает теги бесплатно.
+  if (action === 'tune_rules') {
+    const { rules, examples } = payload ?? {};
+    const ex = (Array.isArray(examples) ? examples : [])
+      .filter((e: unknown) => e && typeof (e as { t?: unknown }).t === 'string' && Array.isArray((e as { a?: unknown }).a))
+      .slice(0, 80);
+    if (ex.length < 8) return json({ error: 'Not enough examples' }, 400);
+
+    const exLines = ex.map((e: { t: string; a: unknown[] }) =>
+      `- «${e.t.slice(0, 140)}» → [${e.a.map((t) => String(t).slice(0, 24)).slice(0, 5).join(', ')}]`).join('\n');
+    const rulesBlock = rules && typeof rules === 'object'
+      ? `Текущие правила (JSON):\n${JSON.stringify(rules).slice(0, 4000)}\n`
+      : 'Правил ещё нет — составь словарь с нуля.\n';
+
+    const prompt = `Ты оптимизатор правил классификации заметок в приложении «Разберёмся».
+Локальный алгоритм на устройстве вешает теги по словарю ключевых слов, БЕЗ обращения к ИИ.
+Твоя задача — по примерам реальных заметок пользователя составить или уточнить этот словарь.
+
+${rulesBlock}
+Примеры «текст заметки → правильные теги» (реальные заметки этого пользователя):
+${exLines}
+
+Верни ТОЛЬКО JSON, без markdown и пояснений:
+{"tags":{"<тег>":{"kw":["ключевое слово или короткая фраза", ...]}, ...}}
+
+Правила составления словаря:
+- Теги бери ТОЛЬКО из примеров, не выдумывай новых.
+- В kw — слова-корни и устойчивые фразы в нижнем регистре, по которым тег угадывается надёжно
+  (пример для покупок: "купить", "заказать", "забрать").
+- Лучше меньше слов, но точных: слово, встречающееся в разных темах, НЕ включать.
+- До 12 kw на тег.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: ANTHROPIC_MODEL, max_tokens: 900, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) return json({ error: data?.error?.message || 'Anthropic request failed' }, res.status);
+
+    const parsed = parseJsonObject(data.content?.[0]?.text ?? '{}');
+    if (!parsed || typeof parsed.tags !== 'object' || !parsed.tags) return json({ error: 'AI returned invalid rules' }, 502);
+
+    // Санитизация: строки в нижнем регистре, жёсткие лимиты — правила поедут прямо в клиентский словарь
+    const outTags: Record<string, { kw: string[] }> = {};
+    Object.keys(parsed.tags).slice(0, 30).forEach((tag) => {
+      const kwRaw = Array.isArray(parsed.tags[tag]?.kw) ? parsed.tags[tag].kw : [];
+      const kw = kwRaw.map((w: unknown) => String(w).toLowerCase().trim())
+        .filter((w: string) => w.length >= 3 && w.length <= 40).slice(0, 12);
+      const tagClean = String(tag).trim().toLowerCase().slice(0, 24);
+      if (tagClean && kw.length) outTags[tagClean] = { kw };
+    });
+    if (!Object.keys(outTags).length) return json({ error: 'Empty rules' }, 502);
+    return json({ rules: { tags: outTags } });
+  }
+
   // ── SAVE_IDEA ──
   // Сохраняет заметку-идею в texts/IDEAS_NEAR_TERM.md (append)
   if (action === 'save_idea') {
