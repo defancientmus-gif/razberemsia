@@ -3096,8 +3096,12 @@ function stripReminderCommand(text){
     .trim();
 }
 
-function parseVoiceReminder(text){
+// Слова-намерения: без них голосовая заметка НЕ превращается в напоминание.
+// «завтра были на море в 15» — рассказ, а не просьба напомнить (ложняки 18.07).
+const _REMIND_INTENT=/напомн|не забы|уведомлен|будильник|разбуди/i;
+function parseVoiceReminder(text,force){
   if(!text)return null;
+  if(!force&&!_REMIND_INTENT.test(text))return null;
   const t=text.toLowerCase();
   const now=new Date();
   let base=null; // base date (без времени)
@@ -3105,11 +3109,16 @@ function parseVoiceReminder(text){
 
   // ── «через N часов/минут» ──
   const thruM=t.match(/через\s+(\d+|полчаса|час|[\wа-яё]+)\s*(часа?|час(ов)?|минут[ыа]?|мин\.?)?/);
-  if(thruM){
+  // «через дорогу/друга» — не время: слово должно быть числом (цифрой или прописью) либо стоять с единицей
+  if(thruM&&!( /^\d+$/.test(thruM[1])||thruM[1]==='полчаса'||thruM[1]==='час'||_WNUM[thruM[1]]!==undefined||thruM[2] )){
+    // не временная конструкция — пропускаем блок
+  } else if(thruM){
     const raw=thruM[1];const unit=thruM[2]||'';
     let amount=parseInt(raw)||_WNUM[raw]||(raw==='полчаса'?0.5:1);
     const d=new Date(now);
-    if(raw==='полчаса'||unit.startsWith('мин')){d.setMinutes(d.getMinutes()+Math.round(amount*60));}
+    // «полчаса» — amount в часах (0.5×60); «N минут» — amount УЖЕ в минутах (баг: ×60 давал 30 мин → 30 часов)
+    if(raw==='полчаса'){d.setMinutes(d.getMinutes()+30);}
+    else if(unit.startsWith('мин')){d.setMinutes(d.getMinutes()+Math.round(amount));}
     else{d.setHours(d.getHours()+amount);}
     // Округляем до 5 минут
     d.setSeconds(0);d.setMinutes(Math.ceil(d.getMinutes()/5)*5);
@@ -3148,10 +3157,11 @@ function parseVoiceReminder(text){
   }
 
   // ── «утром» «днём» «вечером» «ночью» ──
-  if(t.match(/\bутром\b/)){h=8;}
-  else if(t.match(/\bднём\b|в обед/)){h=13;}
-  else if(t.match(/\bвечером\b/)){h=19;}
-  else if(t.match(/\bночью\b/)){h=22;}
+  // ВАЖНО: \b не работает с кириллицей в JS — только includes/явные границы
+  if(t.includes('утром')){h=8;}
+  else if(t.includes('днём')||t.includes('днем')||t.includes('в обед')){h=13;}
+  else if(t.includes('вечером')){h=19;}
+  else if(t.includes('ночью')){h=22;}
 
   // ── «в/на N:MM» или «в/на N часов» числом ──
   const digitM=t.match(/(?:в|на)\s+(\d{1,2})(?::(\d{2}))?\s*(?:час|утра|дня|вечера|ночи)?/);
@@ -5965,7 +5975,8 @@ function analyzeText(text){
   let label=tagsToPrimaryLabel(rawTags)||'заметка';
   let reminder=null;
   const now=new Date();
-  const timeM=text.match(/в\s+(\d{1,2})[:\.](\d{2})/);
+  // Время в тексте — ещё не просьба напомнить: без слова-намерения напоминание не ставим
+  const timeM=_REMIND_INTENT.test(text)?text.match(/в\s+(\d{1,2})[:\.](\d{2})/):null;
   const tomM=/завтра/i.test(text);
   if(timeM){
     const h=parseInt(timeM[1]),m=parseInt(timeM[2]);
@@ -6981,7 +6992,8 @@ function _runSingleIntent(intent,params,originalText){
   if(intent==='SET_REMINDER'){
     const ts=Date.now();const notes=getNotes();const id=genId();
     const body=params.body||originalText;
-    const reminderTime=parseVoiceReminder(originalText)||parseVoiceReminder(params.when||'')||null;
+    // force=true: интент SET_REMINDER уже подтверждён LLM-ом — слово «напомни» не требуем
+    const reminderTime=parseVoiceReminder(originalText,true)||parseVoiceReminder(params.when||'',true)||null;
     const auto=analyzeText(body);
     const note={id,title:params.title||auto.title,body,label:'заметка',
       reminder:reminderTime,  // parseVoiceReminder уже возвращает ISO
