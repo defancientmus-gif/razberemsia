@@ -375,11 +375,19 @@ function _localClassify(text){
   const rules=getTagRules();
   if(!rules||!rules.tags)return{tags:[],sure:false};
   const low=(' '+String(text||'').toLowerCase().replace(/ё/g,'е')+' ');
+  // Маркер сверяем С НАЧАЛОМ СЛОВА, а не подстрокой (урок соседа-Гили: «апи» внутри
+  // «зАПИсаться» однажды увело мысль не в тот поток). Фразы с пробелом — ищем целиком.
+  const _words=low.split(/[^a-zа-я0-9]+/).filter(Boolean);
   const scored=[];
   Object.keys(rules.tags).forEach(tag=>{
     const kw=(rules.tags[tag]&&rules.tags[tag].kw)||[];
     let hits=0;
-    kw.forEach(w=>{if(w&&low.includes(String(w).toLowerCase().replace(/ё/g,'е')))hits++;});
+    kw.forEach(w=>{
+      const k=String(w||'').toLowerCase().replace(/ё/g,'е').trim();
+      if(!k)return;
+      if(k.includes(' ')){if(low.includes(k))hits++;}
+      else if(_words.some(word=>word.startsWith(k)))hits++;
+    });
     if(hits)scored.push({tag,hits});
   });
   scored.sort((a,b)=>b.hits-a.hits);
