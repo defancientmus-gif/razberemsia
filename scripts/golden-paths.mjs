@@ -65,6 +65,7 @@ const pieces = [
   extractFunction('parseDt'),
   extractFunction('_tsToIso'),
   extractFunction('_nextRecurringTime'),
+  extractFunction('_applyTombs'),
 ];
 vm.runInContext(pieces.join('\n'), context);
 const run = (expr) => vm.runInContext(expr, context);
@@ -175,6 +176,28 @@ section('ПУТЬ 4 · повторяющееся напоминание нах�
 {
   run('globalThis.__n = _nextRecurringTime(["09:00","21:00"])');
   check('следующее время в будущем, валидное', run('typeof __n==="number" && __n>Date.now()-1000'));
+}
+
+// ── ПУТЬ 1 (удаление папок) + мультидевайс: надгробия не воскрешают удалённое ──
+// Тот же класс, что rz-v407: папка, удалённая на одном устройстве, не должна ожить
+// из облака на другом. И наоборот — пересозданная позже удаления папка должна выжить.
+// Раньше это стерегли 6 разовых юнит-тестов вне щита (BAG 4); теперь — на каждой сборке.
+section('ПУТЬ 1 · надгробия папок: удалённое не воскресает, пересозданное живёт (BAG 4)');
+{
+  const key = 'f=>f.name';
+  run(`globalThis.__kf = ${key}`);
+  // папка удалена (метка 100) позже создания (10) → выкидывается при merge с облаком
+  run('globalThis.__f = _applyTombs([{name:"старое",createdAt:10}], {"старое":100}, __kf)');
+  check('удалённая папка НЕ воскресает из облака', run('__f.length===0'));
+  // та же папка пересоздана (createdAt 200) уже ПОСЛЕ удаления (100) → остаётся
+  run('globalThis.__f = _applyTombs([{name:"старое",createdAt:200}], {"старое":100}, __kf)');
+  check('пересозданная после удаления папка выживает (строгое >)', run('__f.length===1'));
+  // папка без надгробия — не трогаем
+  run('globalThis.__f = _applyTombs([{name:"живое",createdAt:10}], {"другое":100}, __kf)');
+  check('папка без метки удаления остаётся', run('__f.length===1 && __f[0].name==="живое"'));
+  // порча входа (не массив) — graceful, не роняет синхронизацию
+  run('globalThis.__f = _applyTombs(null, {}, __kf)');
+  check('битый вход (не массив) не роняет merge', run('__f===null'));
 }
 
 // ── ИТОГ ──
