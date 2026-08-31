@@ -207,9 +207,11 @@
 
 ## Realtime migration
 
-`supabase/migrations/20260531_realtime_user_state.sql` — файл не закоммичен.
+`supabase/migrations/20260531_realtime_user_state.sql` — **закоммичен 02.06** (`246a98d`,
+«stt: Groq Whisper only, realtime+columns migrations»). Запись «файл не закоммичен» висела
+здесь три месяца и врала каждому следующему заходу — снял штаб 31.08 после сверки с git.
 Содержит: `ALTER TABLE user_state REPLICA IDENTITY FULL` + добавление в публикацию realtime.
-Не ясно, применялась ли вручную через Dashboard. Перед коммитом — уточнить у Жени.
+**Открытым остаётся другое:** применялась ли миграция вручную через Dashboard — это к Жене.
 
 ---
 
