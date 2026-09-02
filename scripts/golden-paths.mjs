@@ -39,12 +39,24 @@ function extractConstLine(name) {
 }
 
 // Подставные хранилища — тест сам задаёт данные, реальные функции их читают.
-const state = { notes: [], trash: [], tagRules: null };
+const state = { notes: [], trash: [], tagRules: null, aiCalled: false };
 const context = vm.createContext({
   console,
   getNotes: () => state.notes,
   getTrash: () => state.trash,
   getTagRules: () => state.tagRules,
+  // Заглушки окружения — чтобы продуктовый путь разбора можно было гонять без браузера.
+  // Сеть НЕ дёргаем: runAiAnalysis только отмечает факт вызова.
+  saveNotes: (arr) => { state.notes = arr; },
+  runAiAnalysis: () => { state.aiCalled = true; },
+  showSheetCat: () => {},
+  showCatHint: () => {},
+  _renderAiResult: () => {},
+  EI: null,
+  document: { getElementById: () => null },
+  // TAG_TO_CAT — многострочная карта тег→категория; для этих проверок важны сами теги,
+  // а не подпись категории, поэтому пустой объект (tagsToPrimaryLabel вернёт null).
+  TAG_TO_CAT: {},
 });
 
 // Порядок важен: сначала константы и мелкие хелперы, потом то, что на них опирается.
@@ -62,6 +74,8 @@ const pieces = [
   extractFunction('_mergeTrashArrays'),
   extractFunction('_searchNotes'),
   extractFunction('_localClassify'),
+  extractFunction('tagsToPrimaryLabel'),
+  extractFunction('_smartAnalyze'),
   extractFunction('parseDt'),
   extractFunction('_tsToIso'),
   extractFunction('_nextRecurringTime'),
@@ -139,6 +153,28 @@ section('ПУТЬ 3 · поиск находит по смыслу (aiSummary/т
   run('globalThis.__s = _searchNotes("п")');
   check('запрос <2 символов не возвращает мусор', run('__s.active.length===0 && __s.trash.length===0'));
   state.notes = [];
+}
+
+// ── ПУТЬ 3 · ЧЕСТНАЯ ВЕРСИЯ: смысл кладёт ПРОДУКТ, а не фикстура ──
+// Проверки выше кладут aiSummary руками — они стерегут фикстуру, а не путь.
+// Здесь запись проходит продуктовым путём (_smartAnalyze), как при реальном сохранении.
+// Замер 03.09 на живой базе: 151 заметка, aiSummary только у 40 (26%) → поиск по смыслу
+// не работает для 111 записей. Эти проверки обязаны краснеть, пока это так.
+section('ПУТЬ 3 · смысл создаёт ПРОДУКТ (не фикстура) — короткая запись становится находимой');
+{
+  state.trash = [];
+  state.tagRules = { tags: { дом: { kw: ['домофон', 'подъезд', 'код'] } } };
+  // «Код от домофона 4729» — 20 символов, ровно тот случай, ради которого продукт продаётся
+  state.notes = [{ id: 'q1', title: 'Код от домофона', body: '4729', updatedAt: 3 }];
+  run('EI = "q1"');
+  run('_smartAnalyze("Код от домофона 4729")');
+  const enriched = run('(getNotes()[0].aiSummary||"").length > 0 || (getNotes()[0].aiTags||[]).length > 0');
+  check('продукт сам разметил короткую запись (не фикстура)', enriched);
+  // главный вопрос продукта: найдётся ли ДРУГИМ словом, которого нет в тексте
+  run('globalThis.__s = _searchNotes("подъезд")');
+  check('находится словом, которого нет в тексте («подъезд» → «Код от домофона»)',
+        run('__s.active.some(n=>n.id==="q1")'));
+  state.notes = []; run('EI = null');
 }
 
 // ── ПУТЬ 1 (авто-тег) + 3 (findability): локальный классификатор по началу слова ──
