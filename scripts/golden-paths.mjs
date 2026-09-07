@@ -75,6 +75,8 @@ const pieces = [
   extractFunction('_searchNotes'),
   extractFunction('_localClassify'),
   extractFunction('tagsToPrimaryLabel'),
+  extractFunction('_senseTrail'),
+  extractFunction('_enrichNewNote'),
   extractFunction('_smartAnalyze'),
   extractFunction('parseDt'),
   extractFunction('_tsToIso'),
@@ -175,6 +177,20 @@ section('ПУТЬ 3 · смысл создаёт ПРОДУКТ (не фикст
   check('находится словом, которого нет в тексте («подъезд» → «Код от домофона»)',
         run('__s.active.some(n=>n.id==="q1")'));
   state.notes = []; run('EI = null');
+
+  // Запись, созданная ОБЫЧНЫМ путём (главная строка / голос с главной), тоже обязана
+  // получать смысл. Раньше разбор жил только в голосовой ветке при включённой ИИ-панели —
+  // отсюда 111 записей из 151 без смысла. Эта проверка стережёт, чтобы не отвалилось снова.
+  run('globalThis.__n = _enrichNewNote({id:"q2", title:"Код от домофона", body:"4729"})');
+  check('новая запись обогащается при сохранении (не только в голосовой ветке)',
+        run('(__n.aiTags||[]).length > 0 && (__n._sense||"").length > 0'));
+  state.notes = [run('__n')];
+  run('globalThis.__s = _searchNotes("подъезд")');
+  check('запись с главной находится словом не из текста', run('__s.active.some(n=>n.id==="q2")'));
+  // и не выдумывает смысл там, где правило не сработало
+  run('globalThis.__e = _enrichNewNote({id:"q3", title:"асдфг", body:"йцукен"})');
+  check('без уверенного правила смысл НЕ выдумывается', run('!__e._sense'));
+  state.notes = [];
 }
 
 // ── ПУТЬ 1 (авто-тег) + 3 (findability): локальный классификатор по началу слова ──
