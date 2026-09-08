@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#eef4f8">
+<title>Разберёмся · облако</title>
+<style>
+:root{
+  --air:oklch(0.975 0.008 220);
+  --air-deep:oklch(0.93 0.018 225);
+  --ink:oklch(0.22 0.02 235);
+  --ink-soft:oklch(0.52 0.015 235);
+  --glass:oklch(1 0 0 / .62);
+  --glass-bd:oklch(1 0 0 / .70);
+  --perо:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;overflow:hidden;}
+body{
+  font:400 17px/1.45 -apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 18%, oklch(1 0 0 / .9), transparent 60%),
+    linear-gradient(180deg, var(--air) 0%, var(--air-deep) 100%);
+  overscroll-behavior:none;
+}
+
+/* ── СЛОЙ 1 · вид сверху: через лупу видно окно заметок ───────────────── */
+#sky{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  transition:transform .62s var(--perо),opacity .5s var(--perо);will-change:transform,opacity;}
+#sky.dive{transform:scale(3.4);opacity:0;pointer-events:none;}
+
+/* далёкие карточки — «реальное окно заметок» под лупой */
+#far{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;
+  padding:22vh 12vw;filter:blur(3px);opacity:.5;transform:scale(.86);
+  transition:filter .6s var(--перо),opacity .6s var(--perо);}
+.far-card{background:var(--glass);border:1px solid var(--glass-bd);border-radius:18px;
+  padding:13px 16px;box-shadow:inset 0 1px 0 oklch(1 0 0/.9),0 4px 14px -6px oklch(0.32 0.04 230/.14);}
+.far-t{font-size:15px;font-weight:600;line-height:1.3;}
+.far-b{font-size:13px;color:var(--ink-soft);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* облако */
+#glow{position:relative;width:min(78vw,340px);aspect-ratio:1;z-index:2;}
+#cv{width:100%;height:100%;display:block;}
+
+/* слова приветствия */
+#hello{position:absolute;left:0;right:0;bottom:12vh;text-align:center;z-index:3;
+  padding:0 34px;pointer-events:none;}
+#hello h1{margin:0 0 8px;font-size:19px;font-weight:600;letter-spacing:.01em;}
+#hello p{margin:0;font-size:15px;color:var(--ink-soft);line-height:1.5;
+  opacity:0;transform:translateY(6px);animation:rise .5s var(--perо) forwards;}
+#hello p:nth-of-type(1){animation-delay:.35s}
+#hello p:nth-of-type(2){animation-delay:.75s}
+#hello p:nth-of-type(3){animation-delay:1.15s}
+@keyframes rise{to{opacity:1;transform:none}}
+
+#again{position:absolute;left:50%;transform:translateX(-50%);bottom:5vh;z-index:4;
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--glass);border:1px solid var(--glass-bd);border-radius:22px;
+  padding:9px 16px;font:inherit;font-size:13.5px;color:var(--ink-soft);cursor:pointer;
+  box-shadow:inset 0 1px 0 oklch(1 0 0/.9),0 3px 12px -5px oklch(0.32 0.04 230/.16);
+  transition:transform .14s var(--perо);}
+#again:active{transform:translateX(-50%) scale(.96);}
+
+/* ── СЛОЙ 2 · чат с заметками ─────────────────────────────────────────── */
+#chat{position:fixed;inset:0;display:flex;flex-direction:column;
+  opacity:0;transform:scale(.94);pointer-events:none;
+  transition:opacity .5s var(--perо) .12s,transform .55s var(--perо) .12s;}
+#chat.in{opacity:1;transform:none;pointer-events:auto;}
+
+#feed{flex:1;overflow-y:auto;padding:calc(env(safe-area-inset-top,12px) + 18px) 16px 12px;
+  display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch;}
+#feed::-webkit-scrollbar{display:none}
+.day{align-self:center;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-soft);opacity:.75;margin:8px 0 2px;}
+.msg{max-width:86%;align-self:flex-start;
+  background:var(--glass);border:1px solid var(--glass-bd);border-radius:19px;
+  padding:11px 15px;box-shadow:inset 0 1px 0 oklch(1 0 0/.92),0 4px 13px -6px oklch(0.32 0.04 230/.13);
+  animation:msgIn .3s var(--perо) both;}
+@keyframes msgIn{from{opacity:0;transform:translateY(9px) scale(.97)}to{opacity:1;transform:none}}
+.msg .t{font-size:16px;font-weight:600;line-height:1.32;}
+.msg .b{font-size:14.5px;color:var(--ink-soft);line-height:1.45;margin-top:3px;white-space:pre-wrap;}
+.msg .w{font-size:11.5px;color:var(--ink-soft);opacity:.7;margin-top:6px;}
+.msg.mine{align-self:flex-end;background:oklch(0.955 0.02 228 / .82);}
+.msg.her{align-self:flex-start;background:oklch(0.96 0.03 232 / .8);border-color:oklch(0.86 0.05 232/.5);}
+
+/* нижняя строка + облачко-кнопка */
+#bar{flex:none;display:flex;align-items:flex-end;gap:10px;
+  padding:10px 14px calc(env(safe-area-inset-bottom,14px) + 12px);}
+#orb{flex:none;width:54px;height:54px;position:relative;cursor:pointer;touch-action:none;}
+#orbcv{width:100%;height:100%;display:block;}
+#say{flex:1;min-height:46px;max-height:34vh;resize:none;overflow-y:auto;
+  background:var(--glass);border:1px solid var(--glass-bd);border-radius:23px;
+  padding:12px 16px;font:inherit;font-size:16.5px;color:var(--ink);
+  box-shadow:inset 0 1px 0 oklch(1 0 0/.9);outline:none;}
+#say::placeholder{color:var(--ink-soft);opacity:.85}
+#send{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid var(--glass-bd);
+  background:var(--glass);color:var(--ink);font-size:19px;cursor:pointer;
+  box-shadow:inset 0 1px 0 oklch(1 0 0/.9);transition:transform .14s var(--perо);}
+#send:active{transform:scale(.93)}
+
+/* подсказка жеста + состояние */
+#state{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,14px) + 78px);
+  text-align:center;font-size:14px;color:var(--ink-soft);
+  opacity:0;transition:opacity .25s var(--perо);pointer-events:none;z-index:6;}
+#state.on{opacity:1}
+
+/* режим ИИ — небесная подсветка всего экрана */
+#aura{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;
+  background:radial-gradient(ellipse 90% 60% at 50% 88%, oklch(0.86 0.075 235 / .55), transparent 62%);
+  transition:opacity .45s var(--perо);}
+#aura.on{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="aura"></div>
+
+<!-- ── вид сверху ── -->
+<section id="sky">
+  <div id="far"></div>
+  <div id="glow"><canvas id="cv"></canvas></div>
+  <div id="hello">
+    <h1>Разберёмся</h1>
+    <p>Коснись — и пиши всё подряд.</p>
+    <p>Задержи — я слушаю голосом.</p>
+    <p>Задержи и веди вверх — отвечу сама.</p>
+  </div>
+  <button id="again" type="button">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+    прослушать ещё раз
+  </button>
+</section>
+
+<!-- ── чат ── -->
+<section id="chat">
+  <div id="feed"></div>
+  <div id="bar">
+    <div id="orb"><canvas id="orbcv"></canvas></div>
+    <textarea id="say" rows="1" placeholder="пиши всё подряд…"></textarea>
+    <button id="send" type="button" aria-label="сохранить">↑</button>
+  </div>
+</section>
+<div id="state"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════════
+   ОБЛАКО — прототип интерфейса 2.0. Отдельный файл, прод не трогает.
+   Работает на ЖИВЫХ заметках: читает и пишет тот же localStorage,
+   что и основное приложение (ключ rz_<uid>_notes).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── данные: находим ключ основного приложения ─────────────────────────── */
+function notesKey(){
+  let best=null,bestLen=-1;
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k||!k.startsWith('rz_')||!k.endsWith('_notes'))continue;
+    try{
+      const arr=JSON.parse(localStorage.getItem(k)||'[]');
+      if(Array.isArray(arr)&&arr.length>bestLen){best=k;bestLen=arr.length;}
+    }catch(e){}
+  }
+  return best||'rz_cloud_notes';
+}
+const KEY=notesKey();
+const RULES_KEY=KEY.replace(/_notes$/,'_tag_rules');
+function getNotes(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){return[];}}
+function putNotes(a){try{localStorage.setItem(KEY,JSON.stringify(a));}catch(e){}}
+function getRules(){try{return JSON.parse(localStorage.getItem(RULES_KEY)||'null');}catch(e){return null;}}
+
+/* смысловой след — та же логика, что в ядре 2.0 (js/app.js) */
+function senseTrail(text,tags){
+  const r=getRules();if(!r||!r.tags||!tags.length)return'';
+  const low=String(text||'').toLowerCase().replace(/ё/g,'е');
+  const words=low.split(/[^a-zа-я0-9]+/).filter(Boolean);
+  const out=[];
+  tags.forEach(t=>{
+    const kw=(r.tags[t]&&r.tags[t].kw)||[];
+    kw.forEach(w=>{
+      const k=String(w||'').toLowerCase().trim();if(!k||out.includes(k))return;
+      const has=k.includes(' ')?low.includes(k):words.some(x=>x.startsWith(k));
+      if(!has)out.push(k);
+    });
+  });
+  return out.join(' ');
+}
+function classify(text){
+  const r=getRules();if(!r||!r.tags)return[];
+  const low=(' '+String(text||'').toLowerCase().replace(/ё/g,'е')+' ');
+  const words=low.split(/[^a-zа-я0-9]+/).filter(Boolean);
+  const sc=[];
+  Object.keys(r.tags).forEach(tag=>{
+    let h=0;((r.tags[tag]||{}).kw||[]).forEach(w=>{
+      const k=String(w||'').toLowerCase().trim();if(!k)return;
+      if(k.includes(' ')?low.includes(k):words.some(x=>x.startsWith(k)))h++;
+    });
+    if(h)sc.push({tag,h});
+  });
+  sc.sort((a,b)=>b.h-a.h);
+  const sure=sc.length&&(sc[0].h>=2||(sc[0].h>=1&&text.length<=60));
+  return sure?sc.slice(0,2).map(s=>s.tag):[];
+}
+
+/* ── речь: она говорит ─────────────────────────────────────────────────── */
+let VOICE=null;
+function pickVoice(){
+  const all=speechSynthesis.getVoices().filter(v=>/^ru/i.test(v.lang));
+  VOICE=all.find(v=>/milena|katya|alyona|алёна|милена/i.test(v.name))||all[0]||null;
+}
+pickVoice();
+if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=pickVoice;
+function say(text,after){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ru-RU';u.rate=.94;u.pitch=1.14;u.volume=.95;
+    if(VOICE)u.voice=VOICE;
+    if(after)u.onend=after;
+    speechSynthesis.speak(u);
+  }catch(e){if(after)after();}
+}
+const WELCOME='Привет. Я Разберёмся. Коснись меня — и пиши всё подряд, я сама пойму, что это. Задержи палец — я буду слушать. Задержи и веди вверх — и я отвечу.';
+
+/* ── облако: объёмный туман, закрученный спиралью (WebGL) ──────────────────
+   Свет проходит сквозь слои влаги: плотность считается шумом по спирально
+   искажённым координатам, каналы расходятся по радиусу — так рождается
+   преломление. Одна полноэкранная плоскость, без библиотек. */
+const VERT='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+const FRAG=`precision highp float;
+uniform vec2 res; uniform float t, ai, loud, dense;
+// мягкий шум и его сумма — из этого строится «влага»
+vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return fract(sin(p)*43758.5453)*2.-1.;}
+float nz(vec2 p){
+  vec2 i=floor(p),f=fract(p); vec2 u=f*f*(3.-2.*f);
+  return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),
+             mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p){
+  float v=0.,a=.5;
+  for(int i=0;i<5;i++){v+=a*nz(p);p*=2.03;p+=vec2(1.7,9.2);a*=.5;}
+  return v;
+}
+// плотность тумана в точке: спиральное закручивание + дыхание
+float dens(vec2 uv,float k){
+  float r=length(uv), an=atan(uv.y,uv.x);
+  an+=r*2.6-t*.10;                       // витки спирали, медленно вращаются
+  vec2 q=vec2(cos(an),sin(an))*r;
+  float f=fbm(q*2.7+vec2(0.,t*.07)+k);   // волны, плывущие сквозь себя
+  f+=.5*fbm(q*5.9-vec2(t*.045,0.));
+  float body=smoothstep(.92,.04,r);      // мягкий шар без краёв
+  float d=body*(.55+f*.62)+body*body*.5;
+  return max(d,0.);
+}
+void main(){
+  vec2 uv=(gl_FragCoord.xy*2.-res)/min(res.x,res.y);
+  uv/= (1.+loud*.10);                    // на голос облако раскрывается
+  float r=length(uv);
+  // три пробы со сдвигом — свет расщепляется на слоях влаги
+  float disp=.014+loud*.010;
+  float dr=dens(uv*(1.-disp),0.);
+  float dg=dens(uv,1.7);
+  float db=dens(uv*(1.+disp),3.4);
+  vec3 d=vec3(dr,dg,db)*dense;
+  // белое ядро → в режиме ИИ уходит в небесную синь
+  vec3 warm=vec3(1.,1.,1.);
+  vec3 cold=vec3(.62,.80,1.);
+  vec3 tint=mix(warm,cold,ai*.85);
+  float core=exp(-r*r*4.2)*(.55+loud*.35);
+  vec3 col=tint*(d*.85)+tint*core;
+  float a=clamp(d.g*.95+core*.9,0.,1.);
+  a*=smoothstep(1.06,.35,r);             // растворяется в воздухе, без обреза
+  gl_FragColor=vec4(col,a*(.86+ai*.12));
+}`;
+function makeCloud(canvas,opts){
+  const o=Object.assign({dense:1.0,cap:2},opts||{});
+  const gl=canvas.getContext('webgl',{alpha:true,premultipliedAlpha:false,antialias:false});
+  if(!gl)return{ai(){},loud(){},stop(){}};
+  function sh(type,src){
+    const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))console.warn(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const pr=gl.createProgram();
+  gl.attachShader(pr,sh(gl.VERTEX_SHADER,VERT));
+  gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FRAG));
+  gl.linkProgram(pr);gl.useProgram(pr);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'p');
+  gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const U={res:gl.getUniformLocation(pr,'res'),t:gl.getUniformLocation(pr,'t'),
+           ai:gl.getUniformLocation(pr,'ai'),loud:gl.getUniformLocation(pr,'loud'),
+           dense:gl.getUniformLocation(pr,'dense')};
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+
+  let raf=0,alive=true,ai=0,aiT=0,loud=0,loudT=0,t0=0;
+  function size(){
+    const b=canvas.getBoundingClientRect();
+    const dpr=Math.min(window.devicePixelRatio||1,o.cap);
+    const w=Math.max(1,Math.round(b.width*dpr)),h=Math.max(1,Math.round(b.height*dpr));
+    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+    gl.viewport(0,0,canvas.width,canvas.height);
+    gl.uniform2f(U.res,canvas.width,canvas.height);
+  }
+  size();
+  const ro=new ResizeObserver(size);ro.observe(canvas);
+  function frame(now){
+    if(!alive)return;
+    raf=requestAnimationFrame(frame);
+    if(!t0)t0=now;
+    ai+=(aiT-ai)*.05; loud+=(loudT-loud)*.12;
+    gl.uniform1f(U.t,(now-t0)/1000);
+    gl.uniform1f(U.ai,ai);gl.uniform1f(U.loud,loud);gl.uniform1f(U.dense,o.dense);
+    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+  }
+  raf=requestAnimationFrame(frame);
+  // не жечь батарею, когда экран не смотрят (урок перегрева rz-v389)
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){alive=false;cancelAnimationFrame(raf);}
+    else if(!alive){alive=true;t0=0;raf=requestAnimationFrame(frame);}
+  });
+  return{
+    ai(v){aiT=v?1:0;},
+    loud(v){loudT=Math.max(0,Math.min(1,v));},
+    stop(){alive=false;cancelAnimationFrame(raf);ro.disconnect();}
+  };
+}
+
+/* ── далёкое окно заметок под лупой ────────────────────────────────────── */
+function paintFar(){
+  const far=document.getElementById('far');
+  const notes=getNotes().slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,6);
+  far.innerHTML=notes.map(n=>{
+    const t=(n.title||(n.body||'').split('\n')[0]||'заметка').slice(0,44);
+    const b=(n.body||'').replace(/\s+/g,' ').slice(0,60);
+    return '<div class="far-card"><div class="far-t">'+esc(t)+'</div>'+
+           (b?'<div class="far-b">'+esc(b)+'</div>':'')+'</div>';
+  }).join('');
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ── лента чата ────────────────────────────────────────────────────────── */
+function when(ts){
+  if(!ts)return'';
+  const d=new Date(ts),now=new Date();
+  const day=864e5, a=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  if(ts>=a)return'сегодня '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  if(ts>=a-day)return'вчера';
+  return d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+}
+function paintFeed(scroll){
+  const feed=document.getElementById('feed');
+  const notes=getNotes().slice().sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).slice(-40);
+  let html='',lastDay='';
+  notes.forEach(n=>{
+    const d=when(n.createdAt).replace(/ \d\d:\d\d$/,'');
+    if(d&&d!==lastDay){lastDay=d;html+='<div class="day">'+esc(d)+'</div>';}
+    const t=n.title||(n.body||'').split('\n')[0]||'заметка';
+    const b=(n.body||'')===t?'':(n.body||'');
+    html+='<div class="msg mine"><div class="t">'+esc(t)+'</div>'+
+          (b?'<div class="b">'+esc(b.slice(0,400))+'</div>':'')+
+          '<div class="w">'+esc(when(n.createdAt))+'</div></div>';
+  });
+  feed.innerHTML=html||'<div class="day">пока пусто — скажи что-нибудь</div>';
+  if(scroll!==false)requestAnimationFrame(()=>{feed.scrollTop=feed.scrollHeight;});
+}
+function herSays(text){
+  const feed=document.getElementById('feed');
+  const el=document.createElement('div');
+  el.className='msg her';
+  el.innerHTML='<div class="b">'+esc(text)+'</div>';
+  feed.appendChild(el);
+  requestAnimationFrame(()=>{feed.scrollTop=feed.scrollHeight;});
+}
+
+/* ── сохранение: тот же формат, что у основного приложения ─────────────── */
+function saveNote(text){
+  const t=text.trim();if(!t)return null;
+  const ts=Date.now();
+  const id=Math.random().toString(36).slice(2)+ts.toString(36);
+  const words=t.split(/\s+/);
+  const title=words.slice(0,6).join(' ')+(words.length>6?'…':'');
+  const note={id,title,body:t,label:'заметка',createdAt:ts,updatedAt:ts,fromPad:true};
+  const tags=classify(t);
+  if(tags.length){
+    note.aiTags=tags;
+    const tr=senseTrail(t,tags);
+    if(tr)note._sense=tr;
+  }
+  const all=getNotes();all.push(note);putNotes(all);
+  return note;
+}
+
+/* ── состояние экрана ──────────────────────────────────────────────────── */
+const stateEl=document.getElementById('state');
+let stateT=0;
+function state(msg,hold){
+  clearTimeout(stateT);
+  if(!msg){stateEl.classList.remove('on');return;}
+  stateEl.textContent=msg;stateEl.classList.add('on');
+  if(!hold)stateT=setTimeout(()=>stateEl.classList.remove('on'),1900);
+}
+
+/* ── сборка ────────────────────────────────────────────────────────────── */
+const skyCloud=makeCloud(document.getElementById('cv'),{count:160,glow:.055});
+const orbCloud=makeCloud(document.getElementById('orbcv'),{count:52,glow:.10,size:.66,spin:.00028});
+paintFar();
+
+let entered=false;
+function dive(){
+  if(entered)return;entered=true;
+  speechSynthesis.cancel();
+  document.getElementById('sky').classList.add('dive');
+  document.getElementById('chat').classList.add('in');
+  paintFeed();
+  setTimeout(()=>state('пиши всё подряд · держи облачко — говори'),650);
+}
+document.getElementById('sky').addEventListener('click',e=>{
+  if(e.target.closest('#again'))return;
+  dive();
+});
+document.getElementById('again').addEventListener('click',e=>{
+  e.stopPropagation();say(WELCOME);
+});
+
+/* приветствие — при первом касании экрана (браузеры не дают говорить раньше) */
+let greeted=false;
+function greet(){
+  if(greeted)return;greeted=true;
+  say(WELCOME);
+}
+['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,greet,{once:true}));
+
+/* ── голос: слушает ────────────────────────────────────────────────────── */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,heard='',listening=false,aiMode=false;
+function listen(ai){
+  if(!SR){state('голос недоступен в этом браузере');return;}
+  if(listening)return;
+  aiMode=!!ai;heard='';listening=true;
+  orbCloud.ai(aiMode);skyCloud.ai(aiMode);
+  document.getElementById('aura').classList.toggle('on',aiMode);
+  state(aiMode?'слушаю · спроси меня':'слушаю…',true);
+  rec=new SR();rec.lang='ru-RU';rec.continuous=true;rec.interimResults=true;
+  rec.onresult=e=>{
+    let fin='',mid='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const r=e.results[i];
+      if(r.isFinal)fin+=r[0].transcript;else mid+=r[0].transcript;
+    }
+    if(fin)heard+=(heard?' ':'')+fin.trim();
+    orbCloud.loud(Math.min(1,(mid.length+fin.length)/40));
+    if(heard||mid)state((aiMode?'спрашиваешь: ':'слышу: ')+(heard+' '+mid).trim().slice(-60),true);
+  };
+  rec.onerror=e=>{if(e.error!=='no-speech')state('не расслышала: '+e.error);};
+  rec.onend=()=>{
+    listening=false;rec=null;orbCloud.loud(0);
+    const text=heard.trim();
+    if(!text){state('ничего не услышала');reset();return;}
+    if(aiMode){
+      herSays('Ты спросил: «'+text+'». Я пока учусь отвечать — но записала, чтобы не потерять.');
+      say('Записала. Отвечать научусь скоро.');
+      saveNote(text);paintFeed();
+    }else{
+      saveNote(text);paintFeed();
+      state('записала ✓');
+      say('Записала.');
+    }
+    reset();
+  };
+  try{rec.start();}catch(e){listening=false;state('микрофон занят');reset();}
+}
+function reset(){
+  aiMode=false;orbCloud.ai(0);skyCloud.ai(0);
+  document.getElementById('aura').classList.remove('on');
+}
+function stopListen(){if(rec)try{rec.stop();}catch(e){}}
+
+/* ── жесты на облачке: тап · удержание · удержание+вверх ───────────────── */
+const orb=document.getElementById('orb');
+let holdT=0,startY=0,held=false,swiped=false;
+orb.addEventListener('pointerdown',e=>{
+  e.preventDefault();startY=e.clientY;held=false;swiped=false;
+  orb.setPointerCapture&&orb.setPointerCapture(e.pointerId);
+  holdT=setTimeout(()=>{held=true;listen(false);},340);
+});
+orb.addEventListener('pointermove',e=>{
+  if(!held||swiped)return;
+  if(startY-e.clientY>60){          // повёл вверх — зовёт её саму
+    swiped=true;
+    if(listening){stopListen();setTimeout(()=>listen(true),260);}
+    else listen(true);
+  }
+});
+orb.addEventListener('pointerup',()=>{
+  clearTimeout(holdT);
+  if(held){stopListen();return;}
+  document.getElementById('say').focus();   // короткий тап — писать руками
+});
+orb.addEventListener('pointercancel',()=>{clearTimeout(holdT);if(held)stopListen();});
+
+/* ── тот же жест на первом экране ──────────────────────────────────────── */
+const sky=document.getElementById('sky');
+let skyHold=0,skyStartY=0,skyHeld=false;
+sky.addEventListener('pointerdown',e=>{
+  if(e.target.closest('#again'))return;
+  skyStartY=e.clientY;skyHeld=false;
+  skyHold=setTimeout(()=>{skyHeld=true;dive();listen(false);},340);
+});
+sky.addEventListener('pointermove',e=>{
+  if(!skyHeld)return;
+  if(skyStartY-e.clientY>60&&!aiMode){stopListen();setTimeout(()=>listen(true),260);}
+});
+sky.addEventListener('pointerup',()=>{clearTimeout(skyHold);if(skyHeld)stopListen();});
+
+/* ── письмо руками ─────────────────────────────────────────────────────── */
+const say$=document.getElementById('say');
+function commit(){
+  const t=say$.value.trim();if(!t)return;
+  saveNote(t);say$.value='';say$.style.height='auto';
+  paintFeed();state('записала ✓');
+}
+document.getElementById('send').addEventListener('click',commit);
+say$.addEventListener('input',()=>{say$.style.height='auto';say$.style.height=Math.min(say$.scrollHeight,240)+'px';});
+say$.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();commit();}
+});
+</script>
+</body>
+</html>
