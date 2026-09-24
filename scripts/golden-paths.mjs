@@ -13,6 +13,9 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 
+// Граница дня проверяется по Москве, где живёт Женя, а не по поясу машины, где гонится щит.
+process.env.TZ = 'Europe/Moscow';
+
 const source = fs.readFileSync('js/app.js', 'utf8');
 
 function extractFunction(name) {
@@ -64,6 +67,7 @@ const pieces = [
   extractFunction('_localClassify'),
   extractFunction('parseDt'),
   extractFunction('_tsToIso'),
+  extractFunction('_dayKey'),
   extractFunction('_nextRecurringTime'),
   extractFunction('_applyTombs'),
 ];
@@ -198,6 +202,18 @@ section('ПУТЬ 1 · надгробия папок: удалённое не в
   // порча входа (не массив) — graceful, не роняет синхронизацию
   run('globalThis.__f = _applyTombs(null, {}, __kf)');
   check('битый вход (не массив) не роняет merge', run('__f===null'));
+}
+
+// ── ПУТЬ 3 (календарь): запись стоит в СВОЁМ дне ──
+// Раньше календарь брал день через toISOString() — по UTC: мысль в 01:30 по Москве
+// падала на вчера, и никто не видел (точка выглядит одинаково). Тихая неправда.
+section('ПУТЬ 3 · календарь считает день по локальной полуночи, не по UTC');
+{
+  // 24.09 01:30 МСК = 23.09 22:30 UTC
+  check('запись в 01:30 МСК стоит в своём дне, не во вчерашнем', run('_dayKey(Date.UTC(2026,8,23,22,30))==="2026-09-24"'));
+  // 23.09 23:30 МСК = 23.09 20:30 UTC
+  check('запись в 23:30 МСК не уезжает на завтра', run('_dayKey(Date.UTC(2026,8,23,20,30))==="2026-09-23"'));
+  check('в календаре не осталось дня по UTC (toISOString().slice(0,10))', !/toISOString\(\)\.slice\(0,\s*10\)/.test(source));
 }
 
 // ── ИТОГ ──
