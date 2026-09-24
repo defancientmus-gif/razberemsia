@@ -2134,6 +2134,9 @@ function _tsToIso(ts){
   const d=new Date(ts);
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
 }
+// День записи по ЛОКАЛЬНОЙ полуночи ('2026-09-24'). Единственный способ считать день:
+// toISOString() даёт UTC — запись в 01:30 по Москве падала бы на вчера.
+function _dayKey(ts){return _tsToIso(ts).slice(0,10);}
 
 function _nextRecurringTime(times){
   const now=new Date();
@@ -3313,7 +3316,7 @@ function calRender(){
   notes.forEach(n=>{
     const dates=[];
     if(n.reminder){const s=n.reminder.slice(0,10);const p=s.split('-').map(Number);if(p[0]===CY&&p[1]-1===CM)dates.push(p[2]);}
-    if(n.createdAt){const s=new Date(n.createdAt).toISOString().slice(0,10);const p=s.split('-').map(Number);if(p[0]===CY&&p[1]-1===CM&&!dates.includes(p[2]))dates.push(p[2]);}
+    if(n.createdAt){const s=_dayKey(n.createdAt);const p=s.split('-').map(Number);if(p[0]===CY&&p[1]-1===CM&&!dates.includes(p[2]))dates.push(p[2]);}
     dates.forEach(d=>{
       if(!dayEvents[d])dayEvents[d]=[];
       const col=STRIPES[n.label]||'oklch(0.70 0.03 210)';
@@ -3360,7 +3363,7 @@ function calRenderDetail() {
   const notes = getNotes();
   const events = notes.filter(n => {
     const remDate = n.reminder ? n.reminder.slice(0,10) : null;
-    const creDate = n.createdAt ? new Date(n.createdAt).toISOString().slice(0,10) : null;
+    const creDate = n.createdAt ? _dayKey(n.createdAt) : null;
     return remDate === CS || creDate === CS;
   }).sort((a,b) => {
     const at = a.reminder ? new Date(a.reminder).getTime() : (a.createdAt||0);
