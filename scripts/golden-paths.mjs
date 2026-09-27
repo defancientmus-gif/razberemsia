@@ -61,6 +61,10 @@ const pieces = [
   extractFunction('normalizeAiTags'),
   extractFunction('_isFiledFolderTag'),
   extractFunction('pad'),
+  extractConstLine('AI_LAYER_FIELDS'),
+  extractFunction('_touchAi'),
+  extractFunction('_aiFieldEmpty'),
+  extractFunction('_mergeAiLayer'),
   extractFunction('_mergeNoteArrays'),
   extractFunction('_mergeTrashArrays'),
   extractFunction('_searchNotes'),
@@ -109,6 +113,43 @@ section('ПУТЬ 1+5 · слияние заметок не теряет и не
   run('globalThis.__m = _mergeNoteArrays([], [{id:"z",body:"zombie",updatedAt:99}])');
   check('удалённая заметка НЕ воскресает из облака', run('__m.length===0'));
   state.trash = [];
+}
+
+// ── ПУТЬ 3: разбор и ответ ИИ доживают до следующего запуска ──
+// Корень 5 аудита штаба 18.09: с 08.07 ни один ответ ИИ не сохранился. Поля ИИ
+// писались в существующую заметку без отметки времени, облако с той же updatedAt
+// считалось таким же свежим и затирало разбор ещё до отправки. Тост «✦ ИИ ответил»
+// показывался, работа модели и квота уходили впустую. Щит был зелёный (24/24),
+// потому что ничью при слиянии никто не проверял.
+section('ПУТЬ 3 · разбор и ответ ИИ не пропадают при синхронизации (корень 5, аудит 18.09)');
+{
+  state.trash = [];
+  // ничья по updatedAt: облако без разбора больше НЕ съедает свежие теги
+  run('globalThis.__m = _mergeNoteArrays([{id:"e",updatedAt:10,aiUpdatedAt:20,aiTags:["дом"],aiSummary:"СУТЬ"}], [{id:"e",updatedAt:10,aiTags:[]}])');
+  check('ничья по updatedAt: теги разбора выживают', run('__m.length===1 && __m[0].aiTags.length===1 && __m[0].aiTags[0]==="дом"'));
+  check('ничья по updatedAt: суть разбора выживает', run('__m[0].aiSummary==="СУТЬ"'));
+
+  // ответ ИИ (aiReply/aiChat) на ничьей — тот же класс потери
+  run('globalThis.__m = _mergeNoteArrays([{id:"f",updatedAt:10,aiUpdatedAt:20,aiReply:"ОТВЕТ-ИИ",aiChat:[{role:"ai",text:"ОТВЕТ-ИИ"}]}], [{id:"f",updatedAt:10,aiReply:null,aiChat:null}])');
+  check('ничья по updatedAt: ответ ИИ выживает', run('__m[0].aiReply==="ОТВЕТ-ИИ" && __m[0].aiChat.length===1'));
+
+  // тело правили на другом устройстве (оно свежее), но разбор был позже правки — переносим
+  run('globalThis.__m = _mergeNoteArrays([{id:"g",body:"stale",updatedAt:5,aiUpdatedAt:40,aiReply:"ОТВЕТ-ИИ"}], [{id:"g",body:"fresh",updatedAt:30}])');
+  check('разбор переезжает на свежее тело с другого устройства', run('__m[0].body==="fresh" && __m[0].aiReply==="ОТВЕТ-ИИ"'));
+
+  // а вот ПОЗЖЕ правку человека переносом не перебиваем: убрал тег — тег не воскресает
+  run('globalThis.__m = _mergeNoteArrays([{id:"h",updatedAt:5,aiUpdatedAt:5,aiTags:["дом","работа"]}], [{id:"h",updatedAt:50,aiUpdatedAt:5,aiTags:["дом"]}])');
+  check('убранный человеком тег НЕ воскресает из старого разбора', run('__m[0].aiTags.length===1 && __m[0].aiTags[0]==="дом"'));
+
+  // отметка слоя ИИ — отдельная: поднимать updatedAt нельзя (урок rz-v407 обратной стороной)
+  run('globalThis.__n = {id:"i",updatedAt:777}; _touchAi(__n)');
+  check('_touchAi ставит отметку слоя ИИ', run('__n.aiUpdatedAt>0'));
+  check('_touchAi НЕ поднимает updatedAt тела (не спорит с правкой человека)', run('__n.updatedAt===777'));
+
+  // правка заметки не должна стирать ответ ИИ: saveNote собирает item из prev
+  // (чистой функцией это не проверить — лист читает DOM; проверяем сам путь в коде)
+  check('saveNote переносит поля из prev, а не собирает заметку с нуля', /const item=\{\.\.\.\(prev\|\|\{\}\)/.test(source));
+  state.notes = [];
 }
 
 // ── ПУТЬ 1 (удаление) + корзина ──

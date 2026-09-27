@@ -55,8 +55,13 @@ echo "✓ CACHE: $CURRENT → $NEXT"
 # Ограничено первыми 15 строками (шапка файла) — иначе sed цепляет любое упоминание
 # этой фразы в историческом тексте ниже (уже наступали на эти грабли).
 if [ -f "$SNAPSHOT" ]; then
-  DEPLOY_LINE="- **Последний деплой:** $(date '+%Y-%m-%d %H:%M') · $NEXT · $MSG"
+  # Только первая строка сообщения: многострочное описание рвало sed («unescaped
+  # newline inside substitute pattern») и деплой падал уже после подъёма версии.
+  MSG_ONE=$(printf '%s' "$MSG" | head -1)
+  DEPLOY_LINE="- **Последний деплой:** $(date '+%Y-%m-%d %H:%M') · $NEXT · $MSG_ONE"
   sed -i '' "1,15 s/- \*\*Последний деплой:\*\*.*/$(echo "$DEPLOY_LINE" | sed 's/[\/&]/\\&/g')/" "$SNAPSHOT"
+  # Строка SW cache в шапке тоже отставала (показывала v411 при живом v412)
+  sed -i '' "1,15 s/- \*\*SW cache:\*\* \`rz-v[0-9]*\`/- **SW cache:** \`$NEXT\`/" "$SNAPSHOT"
   echo "✓ SNAPSHOT обновлён"
 fi
 

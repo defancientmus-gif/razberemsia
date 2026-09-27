@@ -162,6 +162,39 @@ function getNotes(){
   return notes;
 }
 function saveNotes(notes){writeJson('rz_notes',notes);}
+
+// ── Слой ИИ: своя отметка времени ───────────────────────────────────────────
+// Разбор и ответ ИИ пишутся в УЖЕ существующую заметку. До 27.09 они писались
+// без отметки времени: при слиянии облачная копия с той же updatedAt считалась
+// такой же свежей и затирала разбор ещё до отправки, а потом и локально.
+// С 08.07 (rz-v407) не сохранился ни один ответ ИИ, хотя тост показывался.
+// Поднимать updatedAt нельзя: тогда служебная запись начнёт выигрывать гонку
+// у настоящей правки с другого устройства (тот же урок rz-v407, обратной стороной).
+// Поэтому у слоя ИИ своя отметка aiUpdatedAt, и сливается он отдельно от тела.
+const AI_LAYER_FIELDS=['aiTags','aiSummary','aiCache','aiChat','aiReply','aiReplyLike'];
+function _touchAi(note){if(note)note.aiUpdatedAt=Date.now();return note;}
+function _aiFieldEmpty(v){
+  if(v==null||v==='')return true;
+  if(Array.isArray(v))return v.length===0;
+  if(typeof v==='number')return v===0;
+  return false;
+}
+// Переносит слой ИИ с проигравшей стороны на победителя. Два случая:
+// 1) у проигравшего слой ИИ свежее И человек не правил заметку позже — берём целиком;
+// 2) у победителя поле пустое — заполняем (ничья по отметкам, старые заметки без неё).
+// Иначе не трогаем: правка человека главнее переноса разбора (aiTags хранит и его папки).
+function _mergeAiLayer(win,lose){
+  if(!win||!lose)return win;
+  const wt=win.aiUpdatedAt||0,lt=lose.aiUpdatedAt||0;
+  const donorFresh=lt>wt&&lt>=(win.updatedAt||0);
+  AI_LAYER_FIELDS.forEach(f=>{
+    const lv=lose[f];
+    if(_aiFieldEmpty(lv))return;
+    if(donorFresh||_aiFieldEmpty(win[f]))win[f]=lv;
+  });
+  if(lt>wt)win.aiUpdatedAt=lt;
+  return win;
+}
 function getTrash(){return readJson('rz_trash',[]);}
 function saveTrash(trash){writeJson('rz_trash',trash);}
 function getHistory(){return readJson('rz_history',[]);}
@@ -1006,6 +1039,7 @@ function toggleAiPanel(){
       if(!Array.isArray(note.aiTags)||!note.aiTags.length){
         list[idx].aiTags=normalizeAiTags(note.aiCache.tags||[]);
         list[idx].aiSummary=note.aiCache.summary||'';
+        _touchAi(list[idx]);
         saveNotes(list);
       }
       _renderAiResult(note.aiCache.summary,note.aiCache.tags,note.aiCache.actions,null,text);
@@ -1182,6 +1216,7 @@ async function runAiAnalysis(text,_unused,attempt=0){
         list[idx].aiCache={summary:summary||'',tags,actions,bodyKey:text.slice(0,80)};
         list[idx].aiTags=normalizeAiTags([...tags,...filedTags]);
         list[idx].aiSummary=summary||'';
+        _touchAi(list[idx]);
         saveNotes(list);
       }
     }
@@ -1209,6 +1244,7 @@ function _smartAnalyze(text){
         const idx=list.findIndex(n=>n.id===EI);
         if(idx>=0){
           list[idx].aiTags=normalizeAiTags([...(list[idx].aiTags||[]),...c.tags]);
+          _touchAi(list[idx]);
           saveNotes(list);
         }
       }
@@ -1400,6 +1436,7 @@ async function _fetchChatReply(noteId, text){
     n.aiReplyLike=n.aiReplyLike||0;
     // Обратная совместимость
     n.aiReply=reply;
+    _touchAi(n);
     saveNotes(notes);
     // Обновить пузырь — если элемент ещё в DOM, обновить его;
     // если нет (пользователь переключил вкладку и назад) — пересобрать весь фид
@@ -1460,6 +1497,7 @@ function rateReply(noteId, val){
   const n=notes.find(x=>x.id===noteId);
   if(!n)return;
   n.aiReplyLike=val;
+  _touchAi(n);
   saveNotes(notes);
   _renderReplyBubble(noteId);
 }
@@ -1515,6 +1553,7 @@ async function sendNoteChat(){
   if(!Array.isArray(n.aiChat))n.aiChat=[];
   // Добавляем сообщение пользователя
   n.aiChat.push({role:'user',text,ts:Date.now()});
+  _touchAi(n);
   saveNotes(notes);
   if(inp)inp.value='';
   renderNoteChat(n);
@@ -1542,6 +1581,7 @@ async function sendNoteChat(){
         if(n2){
           if(!Array.isArray(n2.aiChat))n2.aiChat=[];
           n2.aiChat.push({role:'ai',text:reply,ts:Date.now()});
+          _touchAi(n2);
           saveNotes(notes2);
           renderNoteChat(n2);
           // Прокрутить вниз после ответа AI
@@ -1808,14 +1848,18 @@ function _mergeNoteArrays(local,cloud){
   (Array.isArray(cloud)?cloud:[]).forEach(n=>{
     if(n.id&&!trashIds.has(n.id))byId.set(n.id,n);
   });
-  // Потом локальные — перезаписываем если локальная новее
+  // Потом локальные — перезаписываем если локальная новее.
+  // Тело заметки решает updatedAt, слой ИИ — своя отметка (см. _mergeAiLayer):
+  // при ничьей облако больше не съедает свежий разбор.
   (Array.isArray(local)?local:[]).forEach(n=>{
     if(!n.id)return;
     const c=byId.get(n.id);
     if(!c){
       byId.set(n.id,n);
     } else if((n.updatedAt||0)>(c.updatedAt||0)){
-      byId.set(n.id,n);
+      byId.set(n.id,_mergeAiLayer({...n},c));
+    } else {
+      byId.set(n.id,_mergeAiLayer({...c},n));
     }
   });
   return Array.from(byId.values());
@@ -3619,6 +3663,7 @@ function migrateLegacyFolderPlacements(){
     const matched=folders.find(folder=>note.aiTags.some(tag=>String(tag).toLowerCase()===String(folder.name).toLowerCase()));
     if(!matched)return;
     note.aiTags=[...note.aiTags,_filedFolderTag(matched.name)];
+    note.updatedAt=Date.now(); // иначе подшивка проиграет облаку при слиянии
     changed=true;
   });
   if(changed)saveNotes(notes);
@@ -5692,7 +5737,13 @@ function _saveSheetCore(){
   const ts=Date.now();
   // Если текст изменился — сбросить кэш анализа
   if(aiCache&&aiCache.bodyKey!==v1.trim().slice(0,80))aiCache=null;
-  const item={id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary,aiCache};
+  // Всё, что не правится в листе, переносим из prev: ответ ИИ (aiChat/aiReply/
+  // aiReplyLike), отметка слоя ИИ, поля, которых здесь ещё нет. До 27.09 item
+  // собирался с нуля, и правка заметки молча стирала ответ ИИ — в истории
+  // 14 таких снимков (корень 5 аудита штаба 18.09).
+  const item={...(prev||{}),id:existingIdx>=0?EI:genId(),title,body:v1.trim(),label:v3,reminder:v2||null,updatedAt:ts,aiTags,aiSummary,aiCache};
+  // Напоминание переставили — снимаем прошлое гашение, иначе новое не сработает.
+  if(prev&&(prev.reminder||null)!==(item.reminder||null)){delete item.reminderDone;delete item.reminderDoneAt;}
   // Прикреплённые фото
   const draftImgs=window._draftImages;
   if(existingIdx>=0){
