@@ -195,6 +195,50 @@ function _mergeAiLayer(win,lose){
   if(lt>wt)win.aiUpdatedAt=lt;
   return win;
 }
+// ── Доказательство, что дело сделано ────────────────────────────────────────
+// Напоминание гасло ровно одним путём — ручным тапом. Человек надиктовал
+// «купил молоко», а колокольчик всё звенит: система не читает то, что ей сказали.
+// Женя кнопкой 26.09: гасить по доказательству можно, но С ПОДТВЕРЖДЕНИЕМ —
+// само не закрывает, спрашивает. Цена ошибки несимметрична: ложное закрытие =
+// человек тихо пропустил таблетку, ложный вопрос = один лишний тап. Поэтому
+// детектор строгий и молчит, когда не уверен.
+//
+// Совершённое действие отличаем от намерения по окончанию: «купил» — да,
+// «купить» — нет (это сам текст напоминания). Тот же урок, что у классификатора
+// после Гили: совпадение по началу слова, а не подстрокой.
+// «решил» сюда НЕ берём: чаще про решение, а не про сделанное («решил не ехать»).
+const DONE_VERB_STEMS=['купи','оплати','заплати','отправи','позвони','дозвони','забра','отда','сдела','додела','сходи','съезди','приня','выпи','пое','записа','сда','взя','почини','встрети','получи','постави','убра','помы','постира','закры','подписа','заказа','зашё'];
+const DONE_PARTICIPLES=['готово','сделано','оплачено','отправлено','выполнено','закрыто','куплено','забрано'];
+// Границы слова руками: \b в JS считает словом только латиницу, на кириллице врёт.
+const _CYR_EDGE='[^а-яёa-z]';
+const DONE_VERB_RE=new RegExp('(^|'+_CYR_EDGE+')('+DONE_VERB_STEMS.join('|')+')л(а|и|о)?(ся|сь)?(?='+_CYR_EDGE+'|$)','i');
+const DONE_PART_RE=new RegExp('(^|'+_CYR_EDGE+')('+DONE_PARTICIPLES.join('|')+')(?='+_CYR_EDGE+'|$)','i');
+// Рядом стоящее отрицание или намерение снимает доказательство: «ещё не купил»,
+// «забыл купить», «надо купить» — это НЕ сделано.
+const DONE_NEGATORS_RE=new RegExp('(^|'+_CYR_EDGE+')(не|ни|надо|нужно|хочу|хотел|должен|должна|планиру|собира|забыл|забудь|успе)','i');
+function _evidenceOfDone(text){
+  const s=String(text||'');
+  if(!s.trim())return null;
+  for(const re of [DONE_VERB_RE,DONE_PART_RE]){
+    const m=re.exec(s);
+    if(!m)continue;
+    // смотрим короткий отрезок перед словом — там живёт «не», «надо», «забыл»
+    const before=s.slice(Math.max(0,m.index-34),m.index+(m[1]||'').length);
+    if(DONE_NEGATORS_RE.test(before))continue;
+    return {word:m[0].trim()};
+  }
+  return null;
+}
+// Доказательство может прийти отдельной заметкой («купил молоко»), а напоминание
+// висит на другой («купить молоко»). Связываем их только по общему значимому
+// слову — иначе спросим не про то напоминание, и человек перестанет верить вопросу.
+const _LINK_STOPWORDS=['это','этот','эта','нужно','надо','завтра','сегодня','вечером','утром','потом','чтобы','когда','себе','меня','тебе','всё','уже','ещё','было','быть','день','дела','дело'];
+function _sharedKeyword(a,b){
+  const words=t=>String(t||'').toLowerCase().split(/[^а-яёa-z0-9]+/i)
+    .filter(w=>w.length>=4&&!_LINK_STOPWORDS.includes(w)&&!_evidenceOfDone(w));
+  const setB=new Set(words(b));
+  return words(a).find(w=>setB.has(w))||'';
+}
 function getTrash(){return readJson('rz_trash',[]);}
 function saveTrash(trash){writeJson('rz_trash',trash);}
 function getHistory(){return readJson('rz_history',[]);}
@@ -2528,6 +2572,30 @@ function _markReminderUndone(id){
   renderReminderPanel();
 }
 
+// Предложить погасить напоминание, когда в тексте появилось доказательство.
+// САМО НЕ ГАСИТ — только спрашивает, гасит один тап человека (Женя 26.09).
+// Спрашиваем один раз на напоминание за запуск: вопрос, повторённый трижды,
+// раздражает сильнее, чем лишний колокольчик.
+const _doneOffered=new Set();
+function _offerReminderClose(noteId){
+  const notes=getNotes();
+  const src=notes.find(n=>n.id===noteId);
+  if(!src)return;
+  const active=n=>n.reminder&&!n.reminderDone;
+  // Сначала — напоминание на самой заметке: доказательство дописали туда же.
+  let target=active(src)?src:null;
+  if(!target){
+    // Иначе доказательство пришло отдельной заметкой («купил молоко» голосом) —
+    // связываем только по общему значимому слову, чтобы не спросить не про то.
+    const srcText=(src.title||'')+' '+(src.body||'');
+    target=notes.find(n=>n.id!==noteId&&active(n)&&_sharedKeyword(srcText,(n.title||'')+' '+(n.body||'')))||null;
+  }
+  if(!target||_doneOffered.has(target.id))return;
+  _doneOffered.add(target.id);
+  const what=String(target.title||'дело').trim().slice(0,32);
+  const id=target.id;
+  showActionToast(`«${what}» — уже сделано?`,'Закрыть',()=>doneReminder(id));
+}
 function doneReminder(noteId){
   // Убираем напоминание (выполнено) — с анимацией исчезновения карточки
   const notes=getNotes();
@@ -5775,6 +5843,11 @@ function _saveSheetCore(){
   _reloadViews();
   closeSheet();
   showToast(wasNew?'Сохранено ✓':'Изменено ✓');
+  // В тексте появилось доказательство, что дело сделано → предложить погасить
+  // напоминание. Задержка — чтобы не перебить «Сохранено ✓» на полуслове.
+  if(!_evidenceOfDone(prev?.body||'')&&_evidenceOfDone(item.body)){
+    setTimeout(()=>_offerReminderClose(item.id),1900);
+  }
   // Возврат в папку после сохранения (и создания, и редактирования)
   if(_wasInNotes&&_prevDrillLevel>=1){
     setTimeout(()=>{

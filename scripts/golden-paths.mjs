@@ -65,6 +65,15 @@ const pieces = [
   extractFunction('_touchAi'),
   extractFunction('_aiFieldEmpty'),
   extractFunction('_mergeAiLayer'),
+  extractConstLine('DONE_VERB_STEMS'),
+  extractConstLine('DONE_PARTICIPLES'),
+  extractConstLine('_CYR_EDGE'),
+  extractConstLine('DONE_VERB_RE'),
+  extractConstLine('DONE_PART_RE'),
+  extractConstLine('DONE_NEGATORS_RE'),
+  extractConstLine('_LINK_STOPWORDS'),
+  extractFunction('_evidenceOfDone'),
+  extractFunction('_sharedKeyword'),
   extractFunction('_mergeNoteArrays'),
   extractFunction('_mergeTrashArrays'),
   extractFunction('_searchNotes'),
@@ -214,6 +223,40 @@ section('ПУТЬ 4 · время напоминания разбирается 
   run('globalThis.__due = (()=>{const t=parseDt("2026-08-27T09:30").getTime();const adv=30*60*1000;const at5min=t-5*60*1000;const at2h=t-2*60*60*1000;return {near:(t-at5min>=0&&t-at5min<=adv),far:(t-at2h>=0&&t-at2h<=adv)};})()');
   check('за 5 мин — в окне срабатывания', run('__due.near===true'));
   check('за 2 часа — ещё рано, не срабатывает', run('__due.far===false'));
+}
+
+// ── ПУТЬ 4: доказательство «уже сделано» отличается от намерения ──
+// Женя 26.09 разрешил гасить напоминание по тексту, но ТОЛЬКО с подтверждением.
+// Здесь стережём детектор: ложное доказательство = человек тихо пропустил таблетку.
+// «купить» — это сам текст напоминания, «купил» — доказательство; отрицание рядом
+// («ещё не купил», «надо купить») снимает доказательство.
+section('ПУТЬ 4 · доказательство сделанного строгое: «купил» да, «купить» нет');
+{
+  check('«купил молоко» — доказательство', run('!!_evidenceOfDone("купил молоко")'));
+  check('«оплатил интернет» — доказательство', run('!!_evidenceOfDone("оплатил интернет")'));
+  check('«готово» — доказательство', run('!!_evidenceOfDone("готово")'));
+  check('«записался к врачу» — доказательство (возвратное -ся)', run('!!_evidenceOfDone("записался к врачу")'));
+  check('«купить молоко» НЕ доказательство (это само напоминание)', run('_evidenceOfDone("купить молоко")===null'));
+  check('«ещё не купил» НЕ доказательство (отрицание)', run('_evidenceOfDone("ещё не купил")===null'));
+  check('«надо купить хлеб» НЕ доказательство (намерение)', run('_evidenceOfDone("надо купить хлеб")===null'));
+  check('«забыл купить» НЕ доказательство', run('_evidenceOfDone("забыл купить")===null'));
+  check('«выкупались в море» НЕ доказательство (урок Гили: не подстрокой)', run('_evidenceOfDone("выкупались в море")===null'));
+  // Этот случай упирается именно в границу слова: внутри «заготовок» лежит «готово».
+  // Без границы детектор объявил бы дело сделанным по обрывку чужого слова.
+  check('«готово» внутри другого слова («заготовок») не считается', run('_evidenceOfDone("заготовок побольше")===null'));
+  check('пустой текст — молчит, а не «сделано»', run('_evidenceOfDone("")===null'));
+  // связка «доказательство отдельной заметкой» ↔ «напоминание»
+  check('«купил молоко» связывается с напоминанием «купить молоко»', run('_sharedKeyword("купил молоко","Купить молоко")==="молоко"'));
+  check('«купил молоко» НЕ связывается с «позвонить маме»', run('_sharedKeyword("купил молоко","позвонить маме")===""'));
+  check('связка не цепляется за служебные слова («надо», «завтра»)', run('_sharedKeyword("купил молоко завтра","надо завтра позвонить")===""'));
+  // Сам гаситель спрашивает, а не закрывает. Проверяем не отступ и не расстояние
+  // в символах, а факт: в теле функции каждый вызов doneReminder висит на кнопке.
+  const offerBody = (source.match(/function _offerReminderClose\(noteId\)\{[\s\S]*?\n\}/) || [''])[0];
+  check('гаситель напоминания есть в коде', offerBody.length > 0);
+  check('погашение идёт через подтверждение (showActionToast), не молча', /showActionToast\(/.test(offerBody));
+  const doneCalls = (offerBody.match(/doneReminder\(/g) || []).length;
+  const onButton = (offerBody.match(/\(\)=>doneReminder\(/g) || []).length;
+  check('doneReminder зовётся ТОЛЬКО из кнопки подтверждения', doneCalls > 0 && doneCalls === onButton);
 }
 
 // ── ПУТЬ 4 (повтор): напоминание гаснет и перепланируется ──
