@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # deploy.sh — быстрый деплой фронта
 # Использование: ./deploy.sh "описание правки"
-# Делает: bump sw cache → обновить SNAPSHOT → git add → commit → push
+# Делает: проверить ветку → синтаксис → щит → bump sw cache → SNAPSHOT → commit → push
+# Порядок важен: версия поднимается ТОЛЬКО после зелёного щита. Раньше было наоборот,
+# и упавший щит оставлял sw.js с поднятым номером без коммита (аудит штаба 18.09).
 
 set -e
 
@@ -9,12 +11,17 @@ MSG="${1:-"update frontend"}"
 SW="sw.js"
 SNAPSHOT="texts/SNAPSHOT.md"
 
-# 1. Поднять CACHE в sw.js
-CURRENT=$(grep -o "rz-v[0-9]*" "$SW" | head -1)
-NUM=$(echo "$CURRENT" | grep -o "[0-9]*$")
-NEXT="rz-v$((NUM + 1))"
-sed -i '' "s/${CURRENT}/${NEXT}/" "$SW"
-echo "✓ CACHE: $CURRENT → $NEXT"
+# 0. Прод едет только с main. Push идёт в main, а кодер часто сидит на v2-experiment:
+# без этой проверки «деплой одной командой» выкатил бы экспериментальную ветку (аудит 18.09).
+BRANCH=$(git branch --show-current)
+if [ "$BRANCH" != "main" ]; then
+  echo "❌ Деплой только с main, сейчас: ${BRANCH:-<detached>}."
+  echo "   Нужное из ветки перенеси в main осознанно (merge/cherry-pick), потом деплой."
+  exit 1
+fi
+if [ -f .git/MERGE_HEAD ]; then
+  echo "❌ Слияние не закончено (.git/MERGE_HEAD) — сначала доведи его, потом деплой."; exit 1
+fi
 
 # 2. Проверить синтаксис JS перед деплоем
 NODE_BIN=$(which node 2>/dev/null || echo "/opt/homebrew/bin/node")
@@ -37,6 +44,13 @@ else
   echo "❌ Node.js не найден — щит не прогнать, деплой отменён (не пропускаю молча)."; exit 1
 fi
 
+# 2.9. Поднять CACHE в sw.js — только теперь, когда щит зелёный.
+CURRENT=$(grep -o "rz-v[0-9]*" "$SW" | head -1)
+NUM=$(echo "$CURRENT" | grep -o "[0-9]*$")
+NEXT="rz-v$((NUM + 1))"
+sed -i '' "s/${CURRENT}/${NEXT}/" "$SW"
+echo "✓ CACHE: $CURRENT → $NEXT"
+
 # 3. Обновить строку "Последний деплой" в SNAPSHOT.md
 # Ограничено первыми 15 строками (шапка файла) — иначе sed цепляет любое упоминание
 # этой фразы в историческом тексте ниже (уже наступали на эти грабли).
@@ -46,12 +60,22 @@ if [ -f "$SNAPSHOT" ]; then
   echo "✓ SNAPSHOT обновлён"
 fi
 
+# 3.5. Та же версия в NEXT.md — иначе раздел «Текущий runtime» отстаёт и врёт
+# соседям и следующему заходу (в аудите отставал на две ступени).
+NEXTMD="texts/NEXT.md"
+if [ -f "$NEXTMD" ]; then
+  sed -i '' "s/- \*\*SW cache:\*\* \`rz-v[0-9]*\`/- **SW cache:** \`$NEXT\`/" "$NEXTMD"
+  git add "$NEXTMD"
+fi
+
 # 4. Добавить изменённые фронтовые файлы
 git add "$SW"
 if [ -f "$SNAPSHOT" ]; then
   git add "$SNAPSHOT"
 fi
-for F in index.html js/app.js manifest.json; do
+# Щит и smoke — тоже часть деплоя: их правки уезжали мимо коммита, потому что
+# в этом списке не было scripts/ (нашёл заходом 27.09).
+for F in index.html js/app.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs; do
   if git diff --name-only -- "$F" 2>/dev/null | grep -q .; then
     git add "$F"
   fi
