@@ -95,8 +95,43 @@ body{font-family:var(--sys);background:var(--bg);color:var(--fg);font-size:17px;
 }
 /* bg-blobs removed */
 
-/* ── ФОН-СЦЕНА (солнечный луг) — включается через домик, виден сквозь стекло карточек ── */
+/* ── ФОН-СЦЕНА (небо над водой-зеркалом, фото 30.09) — включается через домик, видна сквозь стекло карточек.
+   Горизонт на 44 % высоты у обеих ориентаций. Сверху — мягкий светлый туман (не затемнение),
+   чтобы облака не пестрили под шапкой и первой карточкой. Строка без image-set — запасной jpg. ── */
 html.scene-on .bg{
+  background-color:oklch(0.86 0.04 225);
+  background-image:
+    linear-gradient(to bottom, oklch(0.97 0.012 220 / .52) 0%, oklch(0.97 0.012 220 / .26) 34%, transparent 62%),
+    url(img/scene/foto-2560.jpg);
+  background-image:
+    linear-gradient(to bottom, oklch(0.97 0.012 220 / .52) 0%, oklch(0.97 0.012 220 / .26) 34%, transparent 62%),
+    image-set(url(img/scene/foto-2560.webp) type("image/webp"), url(img/scene/foto-2560.jpg) type("image/jpeg"));
+  background-size:cover;background-position:center 44%;background-repeat:no-repeat;
+}
+@media (min-width:1500px) and (min-resolution:2dppx){
+  html.scene-on .bg{
+    background-image:
+      linear-gradient(to bottom, oklch(0.97 0.012 220 / .52) 0%, oklch(0.97 0.012 220 / .26) 34%, transparent 62%),
+      url(img/scene/foto-3840.jpg);
+    background-image:
+      linear-gradient(to bottom, oklch(0.97 0.012 220 / .52) 0%, oklch(0.97 0.012 220 / .26) 34%, transparent 62%),
+      image-set(url(img/scene/foto-3840.webp) type("image/webp"), url(img/scene/foto-3840.jpg) type("image/jpeg"));
+  }
+}
+@media (orientation:portrait){
+  html.scene-on .bg{
+    background-image:
+      linear-gradient(to bottom, oklch(0.97 0.012 220 / .52) 0%, oklch(0.97 0.012 220 / .26) 34%, transparent 62%),
+      url(img/scene/foto-port-1215.jpg);
+    background-image:
+      linear-gradient(to bottom, oklch(0.97 0.012 220 / .52) 0%, oklch(0.97 0.012 220 / .26) 34%, transparent 62%),
+      image-set(url(img/scene/foto-port-1215.webp) type("image/webp"), url(img/scene/foto-port-1215.jpg) type("image/jpeg"));
+  }
+}
+
+/* ── ЛУГ (прежняя сцена до 30.09) — живёт под классом scene-meadow.
+   Откат на луг одной командой: git revert коммита «фон-сцена: небо над водой». ── */
+html.scene-meadow .bg{
   background:
     /* солнечные лучи — еле заметные */
     repeating-conic-gradient(from 0deg at 28% 16%,

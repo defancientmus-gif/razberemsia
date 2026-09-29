@@ -970,7 +970,7 @@ function toggleSceneBg(){
 function syncSceneMenu(){
   const on=document.documentElement.classList.contains('scene-on');
   const s=document.getElementById('bg-scene-s');
-  if(s)s.textContent=on?'Природа · луг':'Стандартный';
+  if(s)s.textContent=on?'Небо над водой':'Стандартный';
 }
 
 
