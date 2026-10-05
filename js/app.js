@@ -510,6 +510,7 @@ async function _tuneRulesRequest(rules,examples){
   const data=await res.json();
   if(data&&data.rules&&data.rules.tags&&Object.keys(data.rules.tags).length){
     _saveTagRules({tags:data.rules.tags,updatedAt:Date.now()});
+    _backfillSense(); // правила обновились — старым записям тоже положен смысл
     try{localStorage.setItem(scopedKey(TAG_EXAMPLES_KEY),'[]');}catch(e){}
     console.log('[rz:rules] правила переточены:',Object.keys(data.rules.tags).length,'тегов');
   }
@@ -731,6 +732,8 @@ async function enterUser(user){
   setTimeout(_subscribeRealtime, 1500);
   // Самозаточка классификатора — тихо в фоне, когда запуск уже отработал
   setTimeout(_maybeSharpenTagRules, 9000);
+  // Если словарь уже есть с прошлых заходов — догоняем историю сразу, не дожидаясь переточки
+  setTimeout(_backfillSense, 3000);
   // Восстановить push-подписку при каждом логине (endpoint может смениться)
   if(notifGranted())_ensurePushSubscription();
 }
@@ -1278,6 +1281,65 @@ async function runAiAnalysis(text,_unused,attempt=0){
 // Гейт авто-анализа: короткую простую заметку размечает локальный классификатор — без сети.
 // Не уверен → полный runAiAnalysis как раньше (и его результат станет обучающим примером).
 // aiCache НЕ пишем: ручной клик на «анализ» всегда даёт полный ИИ-разбор.
+// Смысловой след: сработало правило «дом» по слову «домофон» — значит остальные слова
+// этого правила («подъезд», «код») тоже ведут к записи. Кладём их в невидимое поле `_sense`,
+// по которому ищет _searchNotes. Без этого «записал и забыл, вспомнил когда надо» не работает:
+// замер 03.09 — 151 заметка, смысл был только у 40, поиск шёл голой подстрокой.
+// Поле служебное: человеку не показывается, в aiSummary («суть» для глаз) не лезет.
+function _senseTrail(text,tags){
+  const rules=getTagRules();
+  if(!rules||!rules.tags||!tags||!tags.length)return '';
+  const low=String(text||'').toLowerCase().replace(/ё/g,'е');
+  const words=low.split(/[^a-zа-я0-9]+/).filter(Boolean);
+  const out=[];
+  tags.forEach(tag=>{
+    const kw=(rules.tags[_tagKey(tag)]&&rules.tags[_tagKey(tag)].kw)||(rules.tags[tag]&&rules.tags[tag].kw)||[];
+    kw.forEach(w=>{
+      const k=String(w||'').toLowerCase().replace(/ё/g,'е').trim();
+      if(!k||out.includes(k))return;
+      // слово уже в тексте — его и так найдут дословно, в след не дублируем
+      const already=k.includes(' ')?low.includes(k):words.some(x=>x.startsWith(k));
+      if(!already)out.push(k);
+    });
+  });
+  return out.join(' ');
+}
+// Обогащение НОВОЙ записи при сохранении: теги + смысловой след, локально, без сети и без DOM.
+// Ставится на все главные пути записи — раньше разбор жил только в голосовой ветке
+// и только при вручную включённой ИИ-панели (_aiOn=false по умолчанию),
+// поэтому половина базы оставалась без смысла и не находилась поиском.
+function _enrichNewNote(note){
+  if(!note||note._sense)return note;
+  const text=((note.title||'')+' '+(note.body||'')).trim();
+  if(!text)return note;
+  const c=_localClassify(text);
+  if(!c.sure||!c.tags.length)return note;   // не уверены — не выдумываем, ИИ дополнит позже
+  note.aiTags=normalizeAiTags([...(note.aiTags||[]),...c.tags]);
+  const trail=_senseTrail(text,c.tags);
+  if(trail)note._sense=trail;
+  return note;
+}
+// Догнать историю: записи, сделанные до появления смыслового следа, тоже должны находиться.
+// Локально, 0 токенов, без сети. updatedAt НЕ трогаем — иначе служебная разметка начнёт
+// выигрывать гонку слияния у настоящих правок с другого устройства (урок rz-v407).
+// Видимые теги старых записей тоже не трогаем — человек мог их убирать; след только невидимый.
+function _backfillSense(){
+  const rules=getTagRules();
+  if(!rules||!rules.tags)return 0;
+  const list=getNotes();
+  let n=0;
+  list.forEach(note=>{
+    if(note._sense)return;
+    const text=((note.title||'')+' '+(note.body||'')).trim();
+    if(!text)return;
+    const c=_localClassify(text);
+    if(!c.sure||!c.tags.length)return;
+    const trail=[...c.tags.filter(t=>!(note.aiTags||[]).includes(t)),_senseTrail(text,c.tags)].join(' ').trim();
+    if(trail){note._sense=trail;n++;}
+  });
+  if(n){saveNotes(list);console.log('[rz:rules] смысл добавлен записям:',n);}
+  return n;
+}
 function _smartAnalyze(text){
   const simple=text.length<=80&&!text.includes('\n');
   if(simple){
@@ -1288,6 +1350,8 @@ function _smartAnalyze(text){
         const idx=list.findIndex(n=>n.id===EI);
         if(idx>=0){
           list[idx].aiTags=normalizeAiTags([...(list[idx].aiTags||[]),...c.tags]);
+          const trail=_senseTrail(text,c.tags);
+          if(trail)list[idx]._sense=((list[idx]._sense||'')+' '+trail).trim();
           _touchAi(list[idx]);
           saveNotes(list);
         }
@@ -6132,7 +6196,7 @@ function saveNotepad(){
   const ts=Date.now();
   const nidPad=genId();
   const notes=getNotes();
-  notes.push({id:nidPad,title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+  notes.push(_enrichNewNote({id:nidPad,title,body:text,label,reminder,createdAt:ts,updatedAt:ts,fromPad:true}));
   saveNotes(notes);
   inp.value='';inp.style.height='auto';
   _reloadViews();
@@ -6726,7 +6790,7 @@ function startHomeVoice(){
       const ts=Date.now();
       const notes=getNotes();
       const nidVoice=genId();
-      notes.push({id:nidVoice,title:auto.title,body:cleanBody,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true});
+      notes.push(_enrichNewNote({id:nidVoice,title:auto.title,body:cleanBody,label:auto.label,reminder,createdAt:ts,updatedAt:ts,fromPad:true}));
       saveNotes(notes);
       _reloadViews();
       showToast(reminder?'Записал · напомню '+fmtDt(reminder):'Записал ✓');
@@ -7544,6 +7608,7 @@ function _searchNotes(q){
     return (n.title||'').toLowerCase().includes(lq)
       ||(n.body||'').toLowerCase().includes(lq)
       ||(n.aiSummary||'').toLowerCase().includes(lq)
+      ||(n._sense||'').toLowerCase().includes(lq)
       ||(n.aiTags||[]).filter(t=>!_isFiledFolderTag(t)).some(t=>t.toLowerCase().includes(lq)||(tagQuery&&_tagKey(t).includes(tagQuery)))
       ||(n.items||[]).some(i=>(i.t||i.text||'').toLowerCase().includes(lq));
   }
