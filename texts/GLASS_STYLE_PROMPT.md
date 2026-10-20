@@ -42,14 +42,18 @@ Things 3 — НЕ Material Design (никакого ripple/elevation/резки�
    ```css
    background: linear-gradient(158deg, oklch(1 0 0 / .82) 0%, oklch(0.965 0.012 210 / .72) 100%);
    ```
-2. **Рамка** — не серая, а белая полупрозрачная (имитирует толщину стекла на срезе):
+2. **Кромка — завёрнутый край, без рамки.** Кольца 1px вокруг стекла нет: толщину даёт
+   свет изнутри, а не обводка (Женя 19.10: «нужны ли эти рамочки вокруг граней… завернуть
+   и слегонца размыть», выбрал «Завёрнутый край»; канон штата, первым — Гили c67d1f8):
    ```css
-   border: 1px solid oklch(1 0 0 / .70);
+   border: 0;
    ```
-3. **Тень — ДВЕ штуки одновременно**, это ключевой трюк:
+3. **Тень — свет изнутри + парение снаружи**, это ключевой трюк:
    ```css
    box-shadow:
-     inset 0 1px 0 oklch(1 0 0 / .94),      /* внутренний блик сверху = толщина стекла */
+     inset 0 1.5px 1px -.5px oklch(1 0 0 / .95),  /* тонкий свет сверху = толщина стекла */
+     inset 0 0 22px oklch(1 0 0 / .34),           /* мягкое свечение по краю внутрь = матовость */
+     inset 0 -12px 20px -16px oklch(1 0 0 / .5),  /* подсвет снизу = край завёрнут */
      0 4px 13px -3px oklch(0.32 0.035 210 / .11); /* внешняя тень = отрыв от фона, едва видна */
    ```
    Внешняя тень **холодного оттенка** (не чёрная), низкая (offset маленький, blur средний,
@@ -63,12 +67,16 @@ Things 3 — НЕ Material Design (никакого ripple/elevation/резки�
 Не «тёмный градиент», а **однородное тёмное стекло с лёгким backdrop-blur**:
 ```css
 background: oklch(1 0 0 / 0.07);
-border: 1px solid oklch(1 0 0 / 0.13);
-box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.20), 0 2px 10px oklch(0 0 0 / 0.30);
+border: 0;
+box-shadow:
+  inset 0 1.5px 1px -.5px oklch(1 0 0 / 0.22),
+  inset 0 0 18px oklch(1 0 0 / 0.06),
+  inset 0 -10px 16px -14px oklch(1 0 0 / 0.10),
+  0 2px 10px oklch(0 0 0 / 0.30);
 backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 ```
-Внутренний блик остаётся (иначе пропадает ощущение стекла), внешняя тень становится чёрной
-(на чёрном фоне холодная тень не работает).
+Завёрнутый край остаётся и здесь, только свет изнутри тише (на тёмном белое .34 читается
+как молочная плёнка), внешняя тень становится чёрной (на чёрном фоне холодная не работает).
 
 ### Уровень 2 — превью в ленте и открытая заметка (настоящий backdrop-filter)
 
@@ -84,10 +92,11 @@ background:
     oklch(0.94 0.015 220 / 0.28) 100%);
 backdrop-filter: blur(12px) brightness(1.04);
 -webkit-backdrop-filter: blur(12px) brightness(1.04);
-border: 1px solid oklch(1 0 0 / 0.55);
+border: 0;                               /* завёрнутый край, без кольца */
 box-shadow:
-  inset 0 1.5px 0 oklch(1 0 0 / 0.90),   /* верхний блик */
-  inset 0 -1px 0 oklch(0.80 0.04 210 / 0.12), /* нижняя грань стекла */
+  inset 0 1.5px 1px -.5px oklch(1 0 0 / 0.95), /* тонкий свет сверху */
+  inset 0 0 22px oklch(1 0 0 / 0.34),          /* свечение по краю = матовость */
+  inset 0 -12px 20px -16px oklch(1 0 0 / 0.5), /* подсвет снизу = край завёрнут */
   0 2px 8px oklch(0.35 0.08 210 / 0.06),
   0 8px 24px oklch(0.35 0.08 210 / 0.08);  /* «тень парения» — мягкий ореол снизу */
 border-radius: 16px;
@@ -104,12 +113,13 @@ background:
 backdrop-filter: blur(20px);
 -webkit-backdrop-filter: blur(20px);
 border-radius: 28px;
-border: 1px solid oklch(1 0 0 / 0.55);
+border: 0;   /* и внутреннего кольца inset 0 0 0 1px тоже нет — это та же рамка */
 box-shadow:
   0 18px 70px -28px oklch(0 0 0 / 0.28),
   0 4px 24px -16px oklch(0.22 0.05 210 / 0.18),
-  inset 0 1px 0 oklch(1 0 0 / 0.90),
-  inset 0 0 0 1px oklch(0.75 0.04 210 / 0.08);
+  inset 0 1.5px 1px -.5px oklch(1 0 0 / 0.95),
+  inset 0 0 22px oklch(1 0 0 / 0.34),
+  inset 0 -12px 20px -16px oklch(1 0 0 / 0.5);
 ```
 Радиальный градиент сверху (не диагональный линейный, как у мелких карточек) — свет
 идёт из одной точки над листом, будто заметка освещена сверху как страница на столе.
@@ -128,8 +138,8 @@ box-shadow:
 - Все цвета — **только `oklch()`**, никогда hex/rgb. Это не эстетика, а инженерия:
   oklch даёт предсказуемую светлоту при смешивании альфа-каналов между темами.
 - Оттенок почти всегда **холодный синевато-серый** (`210–220` по hue) — «облачный», не тёплый серый.
-- Блик (`inset 0 1px 0`) — **всегда чуть белее/светлее фона самой карточки**, имитирует
-  скос стекла, ловящий свет сверху.
+- Блик (`inset 0 1.5px 1px -.5px`) — **всегда чуть белее/светлее фона самой карточки**, имитирует
+  скос стекла, ловящий свет сверху; вместе со свечением по краю и подсветом снизу заменяет рамку.
 - Внешняя тень — **никогда чёрная в лоб** (`oklch(0 0 0 / …)` слишком резко читается);
   в светлой теме используем чуть тонированную тень `oklch(0.32 0.035 210 / …)` — тень
   того же холодного оттенка, что и сама сцена, поэтому карточка не «прилипает» визуально.
@@ -178,6 +188,8 @@ box-shadow:
 
 - ❌ Сплошной однотонный фон карточки без градиента — сразу выглядит «плоско», не стеклянно.
 - ❌ Тень без `inset`-блика — без него нет ощущения толщины стекла, просто плоская плашка с тенью.
+- ❌ Рамка `border: 1px solid` белым или кольцо `inset 0 0 0 1px` вокруг стекла — читается как
+    обводка, не как толщина (Женя 19.10 «нужны ли эти рамочки»). Край даёт свет изнутри.
 - ❌ Чёрная тень без тонировки в цвет сцены — читается как Material Design/Bootstrap.
 - ❌ `border-radius` < 12px — острые углы = не керамика.
 - ❌ Overshoot/пружина в анимации появления — читается как баг, не как «лёгкость».
@@ -193,9 +205,13 @@ box-shadow:
 ```css
 .glass-card{
   background: linear-gradient(158deg, oklch(1 0 0 / .82) 0%, oklch(0.965 0.012 210 / .72) 100%);
-  border: 1px solid oklch(1 0 0 / .70);
+  border: 0;
   border-radius: 18px;
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / .94), 0 4px 13px -3px oklch(0.32 0.035 210 / .11);
+  box-shadow:
+    inset 0 1.5px 1px -.5px oklch(1 0 0 / .95),
+    inset 0 0 22px oklch(1 0 0 / .34),
+    inset 0 -12px 20px -16px oklch(1 0 0 / .5),
+    0 4px 13px -3px oklch(0.32 0.035 210 / .11);
   transition: transform .12s;
 }
 .glass-card:active{ transform: scale(.98); }
@@ -208,8 +224,12 @@ box-shadow:
 
 html.dark .glass-card{
   background: oklch(1 0 0 / 0.07);
-  border: 1px solid oklch(1 0 0 / 0.13);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.20), 0 2px 10px oklch(0 0 0 / 0.30);
+  border: 0;
+  box-shadow:
+    inset 0 1.5px 1px -.5px oklch(1 0 0 / 0.22),
+    inset 0 0 18px oklch(1 0 0 / 0.06),
+    inset 0 -10px 16px -14px oklch(1 0 0 / 0.10),
+    0 2px 10px oklch(0 0 0 / 0.30);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
 ```
@@ -226,10 +246,11 @@ html.dark .glass-card{
     linear-gradient(155deg, oklch(1 0 0 / 0.62) 0%, oklch(0.97 0.010 215 / 0.38) 55%, oklch(0.94 0.015 220 / 0.28) 100%);
   backdrop-filter: blur(12px) brightness(1.04);
   -webkit-backdrop-filter: blur(12px) brightness(1.04);
-  border: 1px solid oklch(1 0 0 / 0.55);
+  border: 0;
   box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / 0.90),
-    inset 0 -1px 0 oklch(0.80 0.04 210 / 0.12),
+    inset 0 1.5px 1px -.5px oklch(1 0 0 / 0.95),
+    inset 0 0 22px oklch(1 0 0 / 0.34),
+    inset 0 -12px 20px -16px oklch(1 0 0 / 0.5),
     0 2px 8px oklch(0.35 0.08 210 / 0.06),
     0 8px 24px oklch(0.35 0.08 210 / 0.08);
   border-radius: 16px;
@@ -242,12 +263,13 @@ html.dark .glass-card{
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 28px;
-  border: 1px solid oklch(1 0 0 / 0.55);
+  border: 0;
   box-shadow:
     0 18px 70px -28px oklch(0 0 0 / 0.28),
     0 4px 24px -16px oklch(0.22 0.05 210 / 0.18),
-    inset 0 1px 0 oklch(1 0 0 / 0.90),
-    inset 0 0 0 1px oklch(0.75 0.04 210 / 0.08);
+    inset 0 1.5px 1px -.5px oklch(1 0 0 / 0.95),
+    inset 0 0 22px oklch(1 0 0 / 0.34),
+    inset 0 -12px 20px -16px oklch(1 0 0 / 0.5);
   animation: sheetRise .32s cubic-bezier(.22,1,.36,1);
 }
 @keyframes sheetRise{
