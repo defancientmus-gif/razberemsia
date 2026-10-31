@@ -162,6 +162,7 @@ header{padding:12px 16px 8px;padding-top:calc(env(safe-area-inset-top,0px) + 12p
 .logo-feather svg{width:22px;height:22px;stroke:var(--accent-d);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 6px oklch(0.54 0.13 210 / 0.25));}
 .logo-name{overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .logo-ver{font-size:10px;color:oklch(0.52 0.08 210 / 0.70);font-family:var(--sys);font-weight:700;letter-spacing:.01em;padding:1px 5px 2px;border-radius:999px;background:oklch(0.93 0.02 210 / 0.50);border:1px solid oklch(0.80 0.05 210 / 0.30);line-height:1;flex:0 0 auto;align-self:flex-end;margin-bottom:2px;}
+.logo-ver.is-stale{cursor:pointer;}
 
 .hcenter{display:flex;flex-direction:column;align-items:center;margin:0 auto;}
 .hdate{font-size:11px;font-weight:500;color:var(--fg-l);letter-spacing:.01em;}
@@ -4201,7 +4202,7 @@ html.fonts-ready .auth-wordmark{
   <header>
     <div class="logo">
       <span class="logo-name">Разберёмся</span>
-      <span class="logo-ver" id="app-version-badge">378</span>
+      <span class="logo-ver" id="app-version-badge"></span>
     </div>
     <!-- Десктоп: слот под меню (Все заметки/Календарь/вид) — JS переносит сюда .jarvis-quick -->
     <div class="hdesk hdesk-nav" id="hdesk-nav"></div>

@@ -1,4 +1,4 @@
-const CACHE = 'rz-v416';
+const CACHE = 'rz-v417';
 const ASSETS = [
   './',
   'index.html',
@@ -20,7 +20,9 @@ self.addEventListener('install', e => {
     caches.open(CACHE)
       .then(c => Promise.all(
         ASSETS.map(url =>
-          c.add(url).catch(() => {}) // каждый файл отдельно — один 404 не ломает всё
+          // cache:'reload' — мимо HTTP-кеша браузера: GitHub Pages держит файлы 10 мин,
+          // и новый кэш собирался из вчерашнего app.js под новым номером (31.10).
+          c.add(new Request(url, { cache: 'reload' })).catch(() => {}) // каждый файл отдельно — один 404 не ломает всё
         )
       ))
       .then(() => self.skipWaiting())

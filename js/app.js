@@ -7027,17 +7027,38 @@ function _pushAgentHistory(userText,agentResponse,intent){
   if(_agentHistory.length>4)_agentHistory.shift();  // держим только 4 хода
 }
 
+// Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
+// Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
+const APP_BUILD='rz-v417';
+
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
   if(!el)return;
+  const mine=parseInt(APP_BUILD.slice(4),10);
+  el.textContent=String(mine); // только цифра: "416"
   fetch('sw.js?v='+Date.now(),{cache:'no-store'})
     .then(r=>r.ok?r.text():'')
     .then(t=>{
       const m=String(t).match(/const CACHE = ['"]rz-v(\d+)['"]/);
-      if(m?.[1])el.textContent=m[1]; // только цифра: "286"
+      const live=m?parseInt(m[1],10):0;
+      if(live<=mine)return;
+      // На сервере новее — бейдж говорит об этом и по тапу берёт свежее.
+      el.textContent='↻ '+live;
+      el.title='Есть обновление — нажми';
+      el.classList.add('is-stale');
+      el.onclick=()=>{
+        navigator.serviceWorker?.getRegistration().then(r=>r?.update()).catch(()=>{})
+          .finally(()=>location.reload());
+      };
     })
     .catch(()=>{});
 }
+// PWA на iPhone неделями живёт в фоне — проверяем при каждом возвращении.
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  navigator.serviceWorker?.getRegistration().then(r=>r?.update()).catch(()=>{});
+  _syncAppVersionBadge();
+});
 
 function _agentRouteWord(text,variants){
   return new RegExp(`(^|[^a-zа-я0-9_])(?:${variants})(?=$|[^a-zа-я0-9_])`).test(text);
