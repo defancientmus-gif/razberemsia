@@ -49,7 +49,10 @@ CURRENT=$(grep -o "rz-v[0-9]*" "$SW" | head -1)
 NUM=$(echo "$CURRENT" | grep -o "[0-9]*$")
 NEXT="rz-v$((NUM + 1))"
 sed -i '' "s/${CURRENT}/${NEXT}/" "$SW"
-echo "✓ CACHE: $CURRENT → $NEXT"
+# Бейдж в шапке показывает APP_BUILD из app.js — номер той версии, что реально работает.
+sed -i '' "s/^const APP_BUILD='rz-v[0-9]*';/const APP_BUILD='${NEXT}';/" js/app.js
+grep -q "^const APP_BUILD='${NEXT}';" js/app.js || { echo "❌ APP_BUILD в js/app.js не равен $NEXT — бейдж будет врать, деплой отменён."; sed -i '' "s/${NEXT}/${CURRENT}/" "$SW"; exit 1; }
+echo "✓ CACHE: $CURRENT → $NEXT (sw.js + бейдж app.js)"
 
 # 3. Обновить строку "Последний деплой" в SNAPSHOT.md
 # Ограничено первыми 15 строками (шапка файла) — иначе sed цепляет любое упоминание
