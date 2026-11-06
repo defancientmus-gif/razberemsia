@@ -606,7 +606,8 @@ async function saveCloudNow(){
     }
   }catch(e){
     console.warn('cloud save failed',e);
-    if(navigator.onLine)showToast('Не удалось сохранить в облако');
+    if(_isCloudRestErr(e?.status,e))_markCloudResting();
+    else if(navigator.onLine)showToast('Не удалось сохранить в облако');
   }
 }
 function setAuthChecking(checking){
@@ -1989,15 +1990,44 @@ function _mergeTrashArrays(local,cloud){
   return result;
 }
 
+// Облако «отдыхает» (402 — кончился трафик тарифа, 503 — недоступно): не пугаем ошибкой
+// на каждое сохранение, говорим один раз спокойно и реже стучимся. Всё лежит на устройстве.
+let _cloudRestingUntil=0,_cloudRestToldAt=0;
+function _isCloudRestErr(status,err){
+  const m=String(err?.message||err||'');
+  return status===402||status===503||/exceed_|restricted|quota/i.test(m);
+}
+function _markCloudResting(){
+  _cloudRestingUntil=Date.now()+60000;
+  if(Date.now()-_cloudRestToldAt>30*60000){
+    _cloudRestToldAt=Date.now();
+    showToast('Облако отдыхает — всё сохранено на телефоне, дошлю само');
+  }
+}
+function _markCloudAwake(){_cloudRestingUntil=0;}
+// Версия облака, которую уже скачали и слили. Опрос сначала спрашивает только updated_at
+// (байты), а целую строку со всеми заметками качает лишь при новой версии. До 06.11 опрос
+// каждые 8 с тянул select('*') целиком — вероятная причина exceed_egress_quota.
+let _lastPulledCloudAt='';
 let _lastPullAt=0;
 async function _pullCloudIfStale(){
   if(!cloudAllowed()||!CU)return;
+  if(Date.now()<_cloudRestingUntil)return;
   const age=Date.now()-_lastPullAt;
   if(age<3000)return;
   _lastPullAt=Date.now();
   try{
-    const {data}=await sb.from('user_state').select('*').eq('user_id',CU.id).maybeSingle();
+    const probe=await sb.from('user_state').select('updated_at').eq('user_id',CU.id).maybeSingle();
+    if(probe.error){if(_isCloudRestErr(probe.status,probe.error))_markCloudResting();return;}
+    _markCloudAwake();
+    const probeAt=probe.data?.updated_at||'';
+    if(!probe.data)return;
+    const syncedAt=_getLocalSyncedAt();
+    if(probeAt&&(probeAt===_lastPulledCloudAt||(syncedAt&&probeAt<=syncedAt)))return;
+    const {data,error,status}=await sb.from('user_state').select('*').eq('user_id',CU.id).maybeSingle();
+    if(error){if(_isCloudRestErr(status,error))_markCloudResting();return;}
     if(!data)return;
+    _lastPulledCloudAt=data.updated_at||'';
     let changed=false;
     const cloudUpdatedAt=data.updated_at||'';
     const localSyncedAt=_getLocalSyncedAt();
@@ -7029,7 +7059,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 
 // Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
 // Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
-const APP_BUILD='rz-v417';
+const APP_BUILD='rz-v418';
 
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');

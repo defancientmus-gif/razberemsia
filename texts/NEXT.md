@@ -43,7 +43,7 @@
 
 ## Текущий runtime
 
-- **SW cache:** `rz-v417`
+- **SW cache:** `rz-v418`
 - **Edge Function `ai`:** передеплоена 2026-07-18 (action `tune_rules` — самозаточка классификатора)
 - **Прод:** https://defancientmus-gif.github.io/razberemsia/
 - **Деплой:** `./deploy.sh "описание"`
