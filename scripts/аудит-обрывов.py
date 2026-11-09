@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Аудит после обрывов сети (Женя 09.11 21:22 «После таких разрывов с сетью надо аудиты проводить»).
+
+Только чтение. Смотрит журналы сессий Claude Code за последние N часов:
+  · какие окна ловили ошибку API (403 «регион», ECONNRESET, нет ответа);
+  · какие после обрыва НЕ сделали ни одного хода — встали (их надо поднять);
+  · после чьего обрыва Женя писал «продолжи» — его повтор;
+  · в каких проектах ~/Documents лежит незакоммиченное.
+Писем не шлёт — вывод читает тот, кто зовёт (поднять.py, ревизор).
+
+  python3 scripts/аудит-обрывов.py            # за 12 часов
+  python3 scripts/аудит-обрывов.py --часов 3
+"""
+import argparse, glob, json, os, subprocess, sys
+from datetime import datetime, timedelta, timezone
+
+MSK = timezone(timedelta(hours=3))
+ДОК = os.path.expanduser("~/Documents/")
+
+
+def текст(d):
+    c = (d.get("message") or {}).get("content") if isinstance(d.get("message"), dict) else ""
+    if isinstance(c, str):
+        return c
+    if isinstance(c, list) and c and isinstance(c[0], dict):
+        return c[0].get("text", "") or ""
+    return ""
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--часов", type=float, default=12)
+    a = ap.parse_args()
+    с = datetime.now(timezone.utc) - timedelta(hours=a.часов)
+    встали, повторы, обрывов = [], [], 0
+    for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*.jsonl")):
+        if os.path.getmtime(f) < с.timestamp():
+            continue
+        rows = []
+        for line in open(f, errors="ignore"):
+            try:
+                d = json.loads(line)
+                t = datetime.fromisoformat(d["timestamp"].replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if t >= с:
+                rows.append((t, d))
+        cwd = next((d.get("cwd") for _, d in reversed(rows) if d.get("cwd")), f)
+        где = cwd.replace(ДОК, "") or cwd
+        for i, (t, d) in enumerate(rows):
+            if not d.get("isApiErrorMessage"):
+                continue
+            обрывов += 1
+            после = [x for _, x in rows[i + 1:] if x.get("type") == "assistant" and not x.get("isApiErrorMessage")]
+            когда = t.astimezone(MSK).strftime("%H:%M")
+            if not после:
+                встали.append(f"{когда} {где} [{os.path.basename(f)[:8]}] — {текст(d)[:60]}")
+            след = next((текст(x) for _, x in rows[i + 1:] if x.get("type") == "user" and isinstance((x.get("message") or {}).get("content"), str)), "")
+            if след.strip().lower().startswith("продолж"):
+                повторы.append(f"{когда} {где} — Женя написал «{след.strip()[:30]}»")
+    print(f"Обрывов API за {a.часов:g} ч: {обрывов}")
+    print(f"Встали после обрыва (ни одного хода): {len(встали)}")
+    for s in встали:
+        print("   ·", s)
+    print(f"Женя сам писал «продолжи» после обрыва: {len(повторы)}")
+    for s in повторы:
+        print("   ·", s)
+    грязь = []
+    for p in sorted(glob.glob(ДОК + "*/.git")):
+        repo = os.path.dirname(p)
+        out = subprocess.run(["git", "-C", repo, "status", "--porcelain"], capture_output=True, text=True).stdout.splitlines()
+        out = [o for o in out if "__pycache__" not in o]
+        if out:
+            лог = subprocess.run(["git", "-C", repo, "log", "-1", "--format=%cr"], capture_output=True, text=True).stdout.strip()
+            грязь.append(f"{os.path.basename(repo)}: {len(out)} незакоммич., последний коммит {лог}")
+    print(f"Проекты с незакоммиченным: {len(грязь)}")
+    for s in грязь:
+        print("   ·", s)
+    return 1 if встали or повторы else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
