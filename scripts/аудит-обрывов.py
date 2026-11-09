@@ -5,6 +5,8 @@
   · какие окна ловили ошибку API (403 «регион», ECONNRESET, нет ответа);
   · какие после обрыва НЕ сделали ни одного хода — встали (их надо поднять);
   · после чьего обрыва Женя писал «продолжи» — его повтор;
+  · чьи запросы срезал хук «Интернета нет» (ошибки API при этом нет, ходов тоже):
+    фоновый запуск без единого хода = потерян, в живом окне = пропало одно сообщение;
   · в каких проектах ~/Documents лежит незакоммиченное.
 Писем не шлёт — вывод читает тот, кто зовёт (поднять.py, ревизор).
 
@@ -32,7 +34,7 @@ def main():
     ap.add_argument("--часов", type=float, default=12)
     a = ap.parse_args()
     с = datetime.now(timezone.utc) - timedelta(hours=a.часов)
-    встали, повторы, молчат, обрывов = [], [], [], 0
+    встали, повторы, молчат, срезы, потеряно, обрывов = [], [], [], [], 0, 0
     for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*.jsonl")):
         if os.path.getmtime(f) < с.timestamp():
             continue
@@ -58,6 +60,17 @@ def main():
             след = next((текст(x) for _, x in rows[i + 1:] if x.get("type") == "user" and isinstance((x.get("message") or {}).get("content"), str)), "")
             if след.strip().lower().startswith("продолж"):
                 повторы.append(f"{когда} {где} — Женя написал «{след.strip()[:30]}»")
+        # Третий вид (09.11 21:28–21:52, 10.11 00:13): хук «Интернета нет» срезал запрос до отправки.
+        # Ошибки API нет. Фоновый запуск остаётся без единого хода — повторять «когда сеть вернётся» некому.
+        for i, (t, d) in enumerate(rows):
+            c = d.get("content")
+            if d.get("type") != "system" or not isinstance(c, str) or "blocked by hook" not in c or "Интернета нет" not in c:
+                continue
+            что = " ".join(c.split("Original prompt:", 1)[-1].split())[:90]
+            жив = any(x.get("type") == "assistant" for _, x in rows[i + 1:])
+            потеряно += 0 if жив else 1
+            исход = "окно живо, это сообщение пропало" if жив else "ПОТЕРЯН ЗАПУСК, ходов после нет"
+            срезы.append(f"{t.astimezone(MSK).strftime('%H:%M')} {где} [{os.path.basename(f)[:8]}] — {исход}: «{что}»")
         # Второй вид остановки (09.11 21:22–21:28): ошибки API нет, но последнее слово в окне —
         # не ассистента (стоп фильтра, «Сеть вернулась… выполни сейчас», оборванный ответ инструмента).
         хв = [(t, d) for t, d in rows if d.get("type") in ("user", "assistant")]
@@ -85,6 +98,9 @@ def main():
     print(f"Женя сам писал «продолжи» после обрыва: {len(повторы)}")
     for s in повторы:
         print("   ·", s)
+    print(f"Срезано хуком «Интернета нет»: {len(срезы)}, из них потеряно запусков целиком: {потеряно}")
+    for s in sorted(срезы):
+        print("   ·", s)
     грязь = []
     for p in sorted(glob.glob(ДОК + "*/.git")):
         repo = os.path.dirname(p)
@@ -96,7 +112,7 @@ def main():
     print(f"Проекты с незакоммиченным: {len(грязь)}")
     for s in грязь:
         print("   ·", s)
-    return 1 if встали or повторы or молчат else 0
+    return 1 if встали or повторы or молчат or срезы else 0
 
 
 if __name__ == "__main__":
