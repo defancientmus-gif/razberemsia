@@ -32,6 +32,7 @@ def текст(d):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--часов", type=float, default=12)
+    ap.add_argument("--подробно", action="store_true", help="срезанный запрос целиком (700 зн.) и время последнего хода окна")
     a = ap.parse_args()
     с = datetime.now(timezone.utc) - timedelta(hours=a.часов)
     встали, повторы, молчат, срезы, потеряно, обрывов = [], [], [], [], 0, 0
@@ -66,10 +67,13 @@ def main():
             c = d.get("content")
             if d.get("type") != "system" or not isinstance(c, str) or "blocked by hook" not in c or "Интернета нет" not in c:
                 continue
-            что = " ".join(c.split("Original prompt:", 1)[-1].split())[:90]
-            жив = any(x.get("type") == "assistant" for _, x in rows[i + 1:])
+            что = " ".join(c.split("Original prompt:", 1)[-1].split())[:700 if a.подробно else 90]
+            ходы = [y for y, x in rows[i + 1:] if x.get("type") == "assistant"]
+            жив = bool(ходы)
             потеряно += 0 if жив else 1
             исход = "окно живо, это сообщение пропало" if жив else "ПОТЕРЯН ЗАПУСК, ходов после нет"
+            if a.подробно and жив:
+                исход += f" (последний ход {ходы[-1].astimezone(MSK).strftime('%H:%M')})"
             срезы.append(f"{t.astimezone(MSK).strftime('%H:%M')} {где} [{os.path.basename(f)[:8]}] — {исход}: «{что}»")
         # Второй вид остановки (09.11 21:22–21:28): ошибки API нет, но последнее слово в окне —
         # не ассистента (стоп фильтра, «Сеть вернулась… выполни сейчас», оборванный ответ инструмента).
