@@ -32,7 +32,7 @@ def main():
     ap.add_argument("--часов", type=float, default=12)
     a = ap.parse_args()
     с = datetime.now(timezone.utc) - timedelta(hours=a.часов)
-    встали, повторы, обрывов = [], [], 0
+    встали, повторы, молчат, обрывов = [], [], [], 0
     for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*.jsonl")):
         if os.path.getmtime(f) < с.timestamp():
             continue
@@ -58,9 +58,29 @@ def main():
             след = next((текст(x) for _, x in rows[i + 1:] if x.get("type") == "user" and isinstance((x.get("message") or {}).get("content"), str)), "")
             if след.strip().lower().startswith("продолж"):
                 повторы.append(f"{когда} {где} — Женя написал «{след.strip()[:30]}»")
+        # Второй вид остановки (09.11 21:22–21:28): ошибки API нет, но последнее слово в окне —
+        # не ассистента (стоп фильтра, «Сеть вернулась… выполни сейчас», оборванный ответ инструмента).
+        хв = [(t, d) for t, d in rows if d.get("type") in ("user", "assistant")]
+        if хв and not хв[-1][1].get("isApiErrorMessage"):
+            t, d = хв[-1]
+            тихо = (datetime.now(timezone.utc) - t).total_seconds() / 60
+            if d.get("type") == "user" and тихо >= 3:
+                s = json.dumps(d.get("message", ""), ensure_ascii=False)
+                if "safety classifier" in s:
+                    почему = "стоп фильтра безопасности"
+                elif "Сеть вернулась" in s:
+                    почему = "сеть вернулась, сообщение не подхвачено"
+                elif "tool_result" in s:
+                    почему = "оборван посреди хода"
+                else:
+                    почему = "сообщение без ответа"
+                молчат.append(f"{t.astimezone(MSK).strftime('%H:%M')} {где} [{os.path.basename(f)[:8]}] — {почему}, тишина {тихо:.0f} мин")
     print(f"Обрывов API за {a.часов:g} ч: {обрывов}")
     print(f"Встали после обрыва (ни одного хода): {len(встали)}")
     for s in встали:
+        print("   ·", s)
+    print(f"Замолчали без ошибки API (последнее слово не ассистента): {len(молчат)}")
+    for s in молчат:
         print("   ·", s)
     print(f"Женя сам писал «продолжи» после обрыва: {len(повторы)}")
     for s in повторы:
@@ -76,7 +96,7 @@ def main():
     print(f"Проекты с незакоммиченным: {len(грязь)}")
     for s in грязь:
         print("   ·", s)
-    return 1 if встали or повторы else 0
+    return 1 if встали or повторы or молчат else 0
 
 
 if __name__ == "__main__":
