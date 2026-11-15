@@ -698,6 +698,9 @@ async function initAuth(){
       }
       if(вошлиЧерезТг){
         // setSession выше поднимет onAuthStateChange → enterUser; тут не дублируем.
+        // Страховка: если событие не придёт (сеть, старый браузер) — не держим
+        // человека на крутилке, а показываем обычный вход.
+        setTimeout(()=>{if(!CU)setAuthChecking(false);},4000);
       }else{
         setAuthChecking(false); // показываем поле почты
       }
@@ -7070,7 +7073,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 
 // Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
 // Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
-const APP_BUILD='rz-v418';
+const APP_BUILD='rz-v419';
 
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
