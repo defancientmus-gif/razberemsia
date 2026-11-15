@@ -3,6 +3,7 @@
 // Secrets: ANTHROPIC_API_KEY, GROQ_API_KEY, YANDEX_STT_KEY, GITHUB_TOKEN — Supabase Dashboard → Settings → Edge Functions
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { проверитьInitData, почтаДляТг, парольДляТг } from './tg-auth.ts';
 
 const ANTHROPIC_KEY   = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const ANTHROPIC_MODEL = Deno.env.get('ANTHROPIC_MODEL')?.trim() || 'claude-haiku-4-5-20251001';
@@ -217,14 +218,54 @@ Deno.serve(async (req) => {
   if (!ANTHROPIC_KEY)          return json({ error: 'ANTHROPIC_API_KEY is not configured' }, 500);
   if (!SB_URL || !SB_ANON)    return json({ error: 'Supabase env is not configured' }, 500);
 
+  let body;
+  try { body = await req.json(); } catch (_) { return json({ error: 'Invalid JSON body' }, 400); }
+  const { action, payload } = body ?? {};
+
+  // ── TG_AUTH — вход через телеграм (Mini App). Стоит ДО проверки сессии:
+  // человек ещё не вошёл, сессии у него нет, а вход мы как раз и выдаём.
+  // Токен бота живёт только в секретах, клиент присылает сырой initData.
+  if (action === 'tg_auth') {
+    const initData = String(payload?.initData ?? '');
+    const TG_TOKEN   = Deno.env.get('TELEGRAM_BOT_TOKEN') ?? '';
+    const SB_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    if (!TG_TOKEN)   return json({ error: 'Telegram вход не настроен: нет TELEGRAM_BOT_TOKEN' }, 503);
+    if (!SB_SERVICE) return json({ error: 'Telegram вход не настроен: нет service role' }, 503);
+
+    const проверка = await проверитьInitData(initData, TG_TOKEN);
+    if (!проверка.ok) return json({ error: 'Telegram вход не принят', reason: проверка.причина }, 401);
+
+    const admin  = createClient(SB_URL, SB_SERVICE, { auth: { persistSession: false } });
+    // Свой клиент для входа: общий `sb` объявлен ниже, а он тут ещё не существует.
+    const входной = createClient(SB_URL, SB_ANON);
+    const email  = почтаДляТг(проверка.id);
+    const пароль = await парольДляТг(проверка.id, TG_TOKEN);
+
+    // Человек уже заходил — войдём; нет — заведём. Обе ветки кончаются одним входом ниже.
+    const { error: createErr } = await admin.auth.admin.createUser({
+      email, password: пароль, email_confirm: true,
+      user_metadata: { tg_id: проверка.id, tg_name: проверка.имя, via: 'telegram' },
+    });
+    if (createErr && !/already|exists|registered/i.test(createErr.message)) {
+      console.error('[rz] tg_auth createUser', createErr.message);
+      return json({ error: 'Не удалось завести вход' }, 500);
+    }
+
+    const { data: вход, error: signErr } = await входной.auth.signInWithPassword({ email, password: пароль });
+    if (signErr || !вход?.session) {
+      console.error('[rz] tg_auth signIn', signErr?.message);
+      return json({ error: 'Не удалось войти' }, 401);
+    }
+    return json({
+      session: { access_token: вход.session.access_token, refresh_token: вход.session.refresh_token },
+      user: { id: вход.session.user?.id ?? '', tg_id: проверка.id, name: проверка.имя },
+    });
+  }
+
   const auth = req.headers.get('Authorization') ?? '';
   const sb   = createClient(SB_URL, SB_ANON, { global: { headers: { Authorization: auth } } });
   const { data: { user }, error: authError } = await sb.auth.getUser();
   if (authError || !user) return json({ error: 'Unauthorized' }, 401);
-
-  let body;
-  try { body = await req.json(); } catch (_) { return json({ error: 'Invalid JSON body' }, 400); }
-  const { action, payload } = body ?? {};
 
   // ── ANALYZE ──
   if (action === 'analyze') {

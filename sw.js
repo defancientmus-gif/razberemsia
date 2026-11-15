@@ -3,6 +3,7 @@ const ASSETS = [
   './',
   'index.html',
   'js/app.js',
+  'js/tg-auth.js',
   'js/vendor/supabase.js',
   'manifest.json',
   'logo-mark.png',

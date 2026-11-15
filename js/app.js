@@ -689,7 +689,18 @@ async function initAuth(){
         loadCloudData().then(()=>loadAll());
       }
     } else if(!CU){
-      setAuthChecking(false); // показываем поле почты
+      // Мы в телеграме — пробуем войти по подписи телеграма, без почты и кода.
+      // Не вышло — тихо остаёмся на обычном входе, человек ничего не теряет.
+      let вошлиЧерезТг=false;
+      if(window.rzTgAuth&&window.rzTgAuth.внутриТелеграма()){
+        setAuthChecking(true);
+        вошлиЧерезТг=await window.rzTgAuth.войти();
+      }
+      if(вошлиЧерезТг){
+        // setSession выше поднимет onAuthStateChange → enterUser; тут не дублируем.
+      }else{
+        setAuthChecking(false); // показываем поле почты
+      }
     }
     // Сессии нет, но вошли из кэша — остаёмся в локальном режиме.
     // Реальный выход придёт событием SIGNED_OUT в onAuthStateChange (только онлайн).

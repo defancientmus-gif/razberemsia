@@ -39,9 +39,22 @@ if [ -x "$NODE_BIN" ]; then
   echo "Гоню золотой щит (golden-paths + smoke-agent-router)..."
   "$NODE_BIN" scripts/golden-paths.mjs || { echo "❌ Золотой щит упал — деплой отменён (см. вывод выше)."; exit 1; }
   "$NODE_BIN" scripts/smoke-agent-router.mjs || { echo "❌ Smoke голосового агента упал — деплой отменён."; exit 1; }
+  "$NODE_BIN" scripts/tg-auth-client.mjs || { echo "❌ Щит входа через телеграм (клиент) упал — деплой отменён."; exit 1; }
   echo "✓ Щит цел"
 else
   echo "❌ Node.js не найден — щит не прогнать, деплой отменён (не пропускаю молча)."; exit 1
+fi
+
+# 2.7. Щит входа через телеграм (TypeScript, deno). Гоняется, только если deno есть:
+# без него не проверить, но и не выдумываем «зелёное» — говорим вслух.
+DENO_BIN=$(which deno 2>/dev/null || echo "")
+if [ -n "$DENO_BIN" ] && [ -f supabase/functions/ai/tg-auth.test.ts ]; then
+  echo "Гоню щит входа через телеграм..."
+  "$DENO_BIN" test supabase/functions/ai/tg-auth.test.ts >/dev/null 2>&1 \
+    || { echo "❌ Щит входа через телеграм красный — деплой отменён (deno test supabase/functions/ai/tg-auth.test.ts)."; exit 1; }
+  echo "✓ Вход через телеграм цел"
+else
+  echo "⚠️  deno не найден — щит входа через телеграм не прогнан (это не «зелёное»)"
 fi
 
 # 2.9. Поднять CACHE в sw.js — только теперь, когда щит зелёный.
@@ -83,7 +96,7 @@ if [ -f "$SNAPSHOT" ]; then
 fi
 # Щит и smoke — тоже часть деплоя: их правки уезжали мимо коммита, потому что
 # в этом списке не было scripts/ (нашёл заходом 27.09).
-for F in index.html js/app.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs; do
+for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs; do
   if git diff --name-only -- "$F" 2>/dev/null | grep -q .; then
     git add "$F"
   fi
