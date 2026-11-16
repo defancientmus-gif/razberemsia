@@ -96,7 +96,10 @@ if [ -f "$SNAPSHOT" ]; then
 fi
 # Щит и smoke — тоже часть деплоя: их правки уезжали мимо коммита, потому что
 # в этом списке не было scripts/ (нашёл заходом 27.09).
-for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs; do
+# Вход через телеграм (16.11): сам серверный код и оба его щита в списке не были —
+# щит гоняется в деплое, а его правка уехала бы мимо коммита. Список сверен с
+# теми файлами, что деплой реально проверяет (deno test / node).
+for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs scripts/tg-auth-client.mjs supabase/functions/ai/tg-auth.ts supabase/functions/ai/tg-auth.test.ts supabase/functions/ai/index.ts; do
   if git diff --name-only -- "$F" 2>/dev/null | grep -q .; then
     git add "$F"
   fi
