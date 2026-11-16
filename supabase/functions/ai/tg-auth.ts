@@ -6,12 +6,19 @@
 // Спека: https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 //   secret_key = HMAC_SHA256(key="WebAppData", data=bot_token)
 //   hash       = HMAC_SHA256(key=secret_key,  data=data_check_string)
-//   data_check_string = "key=value", отсортированные по key, склеенные "\n", БЕЗ hash и БЕЗ signature.
+//   data_check_string = "key=value", отсортированные по key, склеенные "\n", БЕЗ hash.
 //   Поля, у которых пустое значение, в строку не входят (parse_qsl keep_blank_values=false).
 //
 // Отличие от третьей стороны (Ed25519 `signature`): там подпись проверяется публичным
 // ключом Telegram и бот-токен не нужен. Нам он есть, поэтому берём HMAC — он проще и
-// не тянет внешних ключей. `signature` в data_check_string не входит в обоих случаях.
+// не тянет внешних ключей.
+//
+// ⚠ signature из строки НЕ выкидывать. Проза спеки читается двояко («без hash и без
+// signature» относится к Ed25519-ветке), но по букве ломается живой вход: телеграм
+// кладёт `signature` в initData и считает `hash` по строке, где `signature` УЖЕ есть.
+// Проверено на живом образце соседа (`Телеграм/miniapp.py`, в проде с 05.11 — там
+// выкидывается только `hash`); свой тест это не ловил, потому что подписывал данные
+// без `signature` — то есть проверял сам себя. Эталон — initData с signature (тест ниже).
 
 const ЖИВЁТ_С = 24 * 3600; // initData старше суток не принимаем (как в miniapp.py Телеграма)
 
@@ -56,8 +63,7 @@ export async function проверитьInitData(
 
   const присланный = поля.get('hash') ?? '';
   if (!присланный) return { ok: false, причина: 'нет hash' };
-  поля.delete('hash');
-  поля.delete('signature'); // третьесторонняя подпись в HMAC-строку не входит
+  поля.delete('hash'); // только hash: `signature` входит в подписанную строку (см. шапку)
 
   const строка = [...поля.keys()].sort().map((к) => `${к}=${поля.get(к)}`).join('\n');
   const секрет = await hmacSha256('WebAppData', token);
