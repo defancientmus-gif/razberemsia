@@ -7073,7 +7073,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 
 // Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
 // Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
-const APP_BUILD='rz-v419';
+const APP_BUILD='rz-v420';
 
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
