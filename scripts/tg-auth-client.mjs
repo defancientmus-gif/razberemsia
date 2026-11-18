@@ -145,6 +145,73 @@ console.log('Щит клиента: вход через телеграм\n');
     'SDK телеграма стоит ДО js/tg-auth.js (порядок — часть работы)');
 }
 
+// 7. Второй заход внутри телеграма — БОЕВОЙ путь app.js, а не только модуль.
+// Дыра 18.11: вход стоял под `else if(!CU)`, а enterUser пишет rz_last_user в кэш.
+// На втором запуске (сессия Supabase истекла, кэш есть) ветка входа не выполнялась
+// вовсе — человек с живым initData оставался без облака. Этот щит гоняет НАСТОЯЩИЙ
+// initAuth из js/app.js, а не пересказ: подставной модуль проверял бы выдумку.
+{
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const начало = app.indexOf('async function initAuth(){');
+  const конец = app.indexOf('function showAuthErr(msg){');
+  проверка(начало >= 0 && конец > начало,
+    'initAuth найден в js/app.js (щит держится за живой код, не за копию)');
+
+  if (начало >= 0 && конец > начало) {
+    const initAuth = app.slice(начало, конец);
+    // Запускаем initAuth в песочнице с замыканием CU внутри — как в приложении.
+    const сценарий = async (кэш) => {
+      const кодСцены = `
+        let CU = null;
+        const след = { телеграмПробовали:false, экранПочты:false, вошлиЧерезТг:false, приложениеПоказано:false };
+        const sb = {
+          auth: {
+            getSession: async () => ({ data: { session: null } }),
+            onAuthStateChange(){},
+          }
+        };
+        const window = { rzTgAuth: { внутриТелеграма: () => true,
+          войти: async () => { след.телеграмПробовали = true; след.вошлиЧерезТг = true; return true; } } };
+        const localStorage = {
+          getItem: (k) => k==='rz_last_user' ? КЭШ : null,
+          setItem(){}, removeItem(){},
+        };
+        const document = { getElementById: () => null, querySelector: () => null };
+        function _lastUser(){ try{ const u=JSON.parse(localStorage.getItem('rz_last_user')||'null'); return u&&u.id?u:null; }catch(e){ return null; } }
+        function _clearLastUser(){}
+        function setAuthChecking(){}
+        function showAuthErr(){}
+        function showApp(){ след.приложениеПоказано = true; }
+        function updUI(){}
+        function loadAll(){}
+        function loadCloudData(){ return { then(){} }; }
+        function _maybeOnboard(){}
+        function _subscribeRealtime(){}
+        function _unsubscribeRealtime(){}
+        function notifGranted(){ return false; }
+        function _ensurePushSubscription(){}
+        function _maybeSharpenTagRules(){}
+        function _backfillSense(){}
+        function migrateLegacyLocal(){}
+        async function enterUser(u){ след.вошлиЧерезТг = true; CU = u; след.приложениеПоказано = true; }
+        ${initAuth}
+        return (async () => { await initAuth(); return след; })();
+      `;
+      return await new Function('КЭШ', кодСцены)(кэш);
+    };
+
+    const первый = await сценарий(null);
+    проверка(первый.телеграмПробовали === true,
+      'первый заход в телеграме (кэша нет): вход по подписи пробуется');
+
+    const второй = await сценарий(JSON.stringify({ id: 'tg42', email: 'tg42@tg.razberemsia.local' }));
+    проверка(второй.телеграмПробовали === true,
+      'второй заход в телеграме (кэш есть, сессия истекла): вход по подписи ВСЁ РАВНО пробуется');
+    проверка(второй.экранПочты === false,
+      'второй заход: человека не выкидывает на экран почты посреди приложения');
+  }
+}
+
 console.log('');
 if (провалов) {
   console.error(`❌ Щит клиента красный: провалов ${провалов}`);
