@@ -19,6 +19,23 @@ from datetime import datetime, timedelta, timezone
 MSK = timezone(timedelta(hours=3))
 ДОК = os.path.expanduser("~/Documents/")
 
+# Закрытые места Жени (Отдушина, 23.11 23:21): сказанное там не выходит в отчёты штата.
+# Отсев общий, держит Дом (Домик/scripts/zakrytye.py). Модуль пропал — работаем как раньше.
+try:
+    sys.path.insert(0, os.path.expanduser("~/Documents/Домик/scripts"))
+    from zakrytye import закрыто as _закрыто
+except Exception:
+    _закрыто = None
+
+
+def закрытый_журнал(f):
+    if _закрыто is None:
+        return False
+    try:
+        return bool(_закрыто(f))
+    except Exception:
+        return False
+
 
 def текст(d):
     c = (d.get("message") or {}).get("content") if isinstance(d.get("message"), dict) else ""
@@ -37,6 +54,8 @@ def main():
     с = datetime.now(timezone.utc) - timedelta(hours=a.часов)
     встали, повторы, молчат, срезы, потеряно, обрывов = [], [], [], [], 0, 0
     for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*.jsonl")):
+        if закрытый_журнал(f):
+            continue  # закрытое окно: не открываем и не упоминаем
         if os.path.getmtime(f) < с.timestamp():
             continue
         rows = []
