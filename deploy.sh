@@ -40,6 +40,7 @@ if [ -x "$NODE_BIN" ]; then
   "$NODE_BIN" scripts/golden-paths.mjs || { echo "❌ Золотой щит упал — деплой отменён (см. вывод выше)."; exit 1; }
   "$NODE_BIN" scripts/smoke-agent-router.mjs || { echo "❌ Smoke голосового агента упал — деплой отменён."; exit 1; }
   "$NODE_BIN" scripts/tg-auth-client.mjs || { echo "❌ Щит входа через телеграм (клиент) упал — деплой отменён."; exit 1; }
+  "$NODE_BIN" scripts/server-address.mjs || { echo "❌ Щит адреса сервера упал — при переезде облака клиент уедет на мёртвую дверь, деплой отменён."; exit 1; }
   echo "✓ Щит цел"
 else
   echo "❌ Node.js не найден — щит не прогнать, деплой отменён (не пропускаю молча)."; exit 1
@@ -99,8 +100,11 @@ fi
 # Вход через телеграм (16.11): сам серверный код и оба его щита в списке не были —
 # щит гоняется в деплое, а его правка уехала бы мимо коммита. Список сверен с
 # теми файлами, что деплой реально проверяет (deno test / node).
-for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs scripts/tg-auth-client.mjs supabase/functions/ai/tg-auth.ts supabase/functions/ai/tg-auth.test.ts supabase/functions/ai/index.ts; do
-  if git diff --name-only -- "$F" 2>/dev/null | grep -q .; then
+# Адрес сервера (25.11): новый щит — новый файл, а `git diff` его не видит
+# (untracked) — берём `git status --porcelain`, иначе первый же деплой уехал бы
+# без щита, который сам же и запускается.
+for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs scripts/tg-auth-client.mjs scripts/server-address.mjs supabase/functions/ai/tg-auth.ts supabase/functions/ai/tg-auth.test.ts supabase/functions/ai/index.ts; do
+  if [ -n "$(git status --porcelain -- "$F" 2>/dev/null)" ]; then
     git add "$F"
   fi
 done

@@ -1,5 +1,8 @@
 const SUPABASE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_YtwehFnevo4R3UpmOnTTXQ_j4PQY21D';
+// Дверь Edge Function выводим из адреса базы, а не пишем второй строкой: при переезде
+// облака адрес меняется в одном месте, и клиент не может уехать на мёртвую дверь.
+const SUPABASE_EDGE_URL=SUPABASE_URL+'/functions/v1/ai';
 const sbConfigured=/^https:\/\//.test(SUPABASE_URL)&&SUPABASE_ANON_KEY&&!SUPABASE_ANON_KEY.startsWith('PASTE_');
 const sb=sbConfigured&&window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
   auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,flowType:'pkce'}
@@ -1068,7 +1071,6 @@ function go(id){
 }
 
 // ── AI PANEL ──
-const SUPABASE_EDGE_URL='https://izvwgyudjbxlixzrgpuv.supabase.co/functions/v1/ai';
 let _aiOn=false;
 
 function _setSheetAiButtonState(state){
