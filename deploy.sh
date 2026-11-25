@@ -41,6 +41,7 @@ if [ -x "$NODE_BIN" ]; then
   "$NODE_BIN" scripts/smoke-agent-router.mjs || { echo "❌ Smoke голосового агента упал — деплой отменён."; exit 1; }
   "$NODE_BIN" scripts/tg-auth-client.mjs || { echo "❌ Щит входа через телеграм (клиент) упал — деплой отменён."; exit 1; }
   "$NODE_BIN" scripts/server-address.mjs || { echo "❌ Щит адреса сервера упал — при переезде облака клиент уедет на мёртвую дверь, деплой отменён."; exit 1; }
+  "$NODE_BIN" scripts/perehod-server.mjs || { echo "❌ Щит переезда облака упал — заметки человека потеряются при смене сервера, деплой отменён."; exit 1; }
   echo "✓ Щит цел"
 else
   echo "❌ Node.js не найден — щит не прогнать, деплой отменён (не пропускаю молча)."; exit 1
@@ -103,7 +104,10 @@ fi
 # Адрес сервера (25.11): новый щит — новый файл, а `git diff` его не видит
 # (untracked) — берём `git status --porcelain`, иначе первый же деплой уехал бы
 # без щита, который сам же и запускается.
-for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs scripts/tg-auth-client.mjs scripts/server-address.mjs supabase/functions/ai/tg-auth.ts supabase/functions/ai/tg-auth.test.ts supabase/functions/ai/index.ts; do
+# Переезд облака (26.11): щит переезда в списке запускаемых — значит и в списке add,
+# иначе его правка уедет мимо коммита (те же грабли, что scripts/ 27.09 и tg-auth 16.11).
+# deploy.sh в списке — чтобы правка самого пути сборки не оставалась незакоммиченной.
+for F in index.html js/app.js js/tg-auth.js manifest.json cloud.html scripts/golden-paths.mjs scripts/smoke-agent-router.mjs scripts/tg-auth-client.mjs scripts/server-address.mjs scripts/perehod-server.mjs supabase/functions/ai/tg-auth.ts supabase/functions/ai/tg-auth.test.ts supabase/functions/ai/index.ts deploy.sh; do
   if [ -n "$(git status --porcelain -- "$F" 2>/dev/null)" ]; then
     git add "$F"
   fi

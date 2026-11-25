@@ -159,11 +159,19 @@ console.log('Щит клиента: вход через телеграм\n');
 
   if (начало >= 0 && конец > начало) {
     const initAuth = app.slice(начало, конец);
+    // Переезд облака (26.11): initAuth теперь спрашивает, не сменился ли сервер.
+    // Берём НАСТОЯЩИЕ функции из app.js, а не заглушку: заглушка прятала бы поломку.
+    const блокПереезда = app.slice(app.indexOf('function _lastUser(){'), начало);
+    const адрес = (app.match(/^const SUPABASE_URL='([^']+)';/m) || [])[1] || '';
+    проверка(блокПереезда.includes('_serverMoved') && адрес,
+      'метка сервера найдена в app.js рядом с initAuth');
     // Запускаем initAuth в песочнице с замыканием CU внутри — как в приложении.
     const сценарий = async (кэш) => {
       const кодСцены = `
         let CU = null;
         const след = { телеграмПробовали:false, экранПочты:false, вошлиЧерезТг:false, приложениеПоказано:false };
+        const SUPABASE_URL = ${JSON.stringify(адрес)};
+        const navigator = { onLine: true };
         const sb = {
           auth: {
             getSession: async () => ({ data: { session: null } }),
@@ -174,11 +182,9 @@ console.log('Щит клиента: вход через телеграм\n');
           войти: async () => { след.телеграмПробовали = true; след.вошлиЧерезТг = true; return true; } } };
         const localStorage = {
           getItem: (k) => k==='rz_last_user' ? КЭШ : null,
-          setItem(){}, removeItem(){},
+          setItem(){}, removeItem(){}, length: 0, key: () => null,
         };
         const document = { getElementById: () => null, querySelector: () => null };
-        function _lastUser(){ try{ const u=JSON.parse(localStorage.getItem('rz_last_user')||'null'); return u&&u.id?u:null; }catch(e){ return null; } }
-        function _clearLastUser(){}
         function setAuthChecking(){}
         function showAuthErr(){}
         function showApp(){ след.приложениеПоказано = true; }
@@ -194,6 +200,7 @@ console.log('Щит клиента: вход через телеграм\n');
         function _backfillSense(){}
         function migrateLegacyLocal(){}
         async function enterUser(u){ след.вошлиЧерезТг = true; CU = u; след.приложениеПоказано = true; }
+        ${блокПереезда}
         ${initAuth}
         return (async () => { await initAuth(); return след; })();
       `;

@@ -668,9 +668,81 @@ function _lastUser(){
   try{const u=JSON.parse(localStorage.getItem('rz_last_user')||'null');return u&&u.id?u:null;}catch(e){return null;}
 }
 function _clearLastUser(){try{localStorage.removeItem('rz_last_user');}catch(e){}}
+
+// ── ПЕРЕЕЗД ОБЛАКА ──
+// Адрес базы — единственный признак «мы на другом сервере». Прежний сервер выдал
+// человеку свой uuid, новый выдаст новый: заметки под старым ключом не пропадут, но
+// телефон покажет пусто. Поэтому в rz_last_user лежит метка сервера, а мост переносит
+// полку на новый ключ — и только если почта та же (чужой аккаунт на телефоне не заберёт).
+function _serverId(){try{return new URL(SUPABASE_URL).host;}catch(e){return '';}}
+function _serverRef(){try{return new URL(SUPABASE_URL).hostname.split('.')[0];}catch(e){return '';}}
+function _serverMoved(cached){
+  if(!cached)return false;
+  const now=_serverId();
+  if(cached.server)return cached.server!==now;
+  // Метки нет — человек входил до этой сборки. Переезд выдаёт ключ сессии прежнего
+  // проекта: supabase хранит его как sb-<project-ref>-auth-token, а ref у нового
+  // сервера другой. Сверяем по факту в памяти телефона, а не по дате сборки.
+  try{
+    const ref=_serverRef();
+    for(let i=0;i<localStorage.length;i++){
+      const m=(localStorage.key(i)||'').match(/^sb-(.+)-auth-token$/);
+      if(m&&m[1]!==ref)return true;
+    }
+  }catch(e){}
+  return false;
+}
+// Пустое значение не считается данными: в новый ключ можно класть поверх него.
+function _emptyValue(v){return v===null||v===undefined||v===''||v==='[]'||v==='{}'||v==='null';}
+function _moveScope(fromId,toId){
+  if(!fromId||!toId||fromId===toId)return 0;
+  const from='rz_'+fromId+'_',to='rz_'+toId+'_';
+  let moved=0;
+  try{
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf(from)===0)keys.push(k);}
+    keys.forEach(k=>{
+      const val=localStorage.getItem(k);
+      if(_emptyValue(val))return;
+      const nk=to+k.slice(from.length);
+      if(!_emptyValue(localStorage.getItem(nk)))return; // свежее на новом ключе не затираем
+      localStorage.setItem(nk,val);moved++;
+    });
+    const ob='rz_onboarded_'+fromId,nb='rz_onboarded_'+toId;
+    if(moved&&localStorage.getItem(ob)&&localStorage.getItem(nb)===null)localStorage.setItem(nb,localStorage.getItem(ob));
+  }catch(e){}
+  return moved;
+}
+function _bridgeAccount(prev,user){
+  if(!prev||!user||!prev.id||!user.id||prev.id===user.id)return 0;
+  const a=String(prev.email||'').trim().toLowerCase();
+  const b=String(user.email||'').trim().toLowerCase();
+  if(!a||a!==b)return 0; // почта — замок, а не догадка
+  return _moveScope(prev.id,user.id);
+}
+function _showMovedNote(cached){
+  setAuthChecking(false);
+  const note=document.getElementById('auth-moved');
+  if(note){
+    note.textContent='Мы переехали на свой сервер — войдите по коду ещё раз. Заметки на телефоне целы.';
+    note.style.display='block';
+  }
+  // Почту подставляем, чтобы не набирать заново. Служебную почту телеграма — нет:
+  // человек её не знает, ему нужен вход по подписи телеграма.
+  const em=document.getElementById('email-input');
+  const mail=String((cached&&cached.email)||'');
+  if(em&&mail&&!/@tg\.razberemsia\.local$/i.test(mail)&&!em.value)em.value=mail;
+}
+
 async function initAuth(){
   const cached=_lastUser();
-  if(cached)await enterUser(cached);
+  // Сервер сменился → вход по кэшу писал бы новые заметки под старым uuid мимо
+  // нового облака. Без сети не запираем: работаем локально, метку сервера не трогаем —
+  // на первом запуске с сетью попросим войти и мост перенесёт полку под новый uuid.
+  const moved=_serverMoved(cached);
+  const offline=navigator.onLine===false;
+  if(cached&&(!moved||offline))await enterUser(cached,{keepServer:moved});
+  if(moved&&!offline)_showMovedNote(cached);
   if(!sb){
     // supabase-js не загрузилась. С кэшированным юзером работаем локально,
     // без него — показываем ошибку на auth-экране.
@@ -745,14 +817,26 @@ function showAuthErr(msg){
   const errEl=codeActive?otpErr:emailErr;
   if(errEl){errEl.textContent=msg;errEl.style.display='block';}
 }
-async function enterUser(user){
-  CU=user;migrateLegacyLocal();
-  // Запоминаем юзера для мгновенного офлайн-входа при следующем запуске
-  try{localStorage.setItem('rz_last_user',JSON.stringify({id:user.id,email:user.email||''}));}catch(e){}
+async function enterUser(user,opts){
+  const prev=_lastUser();
+  CU=user;
+  // Мост переезда: тот же человек (почта), но новый uuid — переносим полку под новый
+  // ключ ДО loadAll/облака, иначе телефон покажет пусто. Старые ключи не удаляем.
+  const bridged=_bridgeAccount(prev,user);
+  migrateLegacyLocal();
+  // Запоминаем юзера для мгновенного офлайн-входа и сервер, на котором он входил:
+  // по метке узнаём переезд, когда почта и uuid уже не совпадут.
+  // keepServer — вход по кэшу без сети на новом сервере: метку НЕ перезаписываем,
+  // иначе переезд потеряется и человек навсегда останется под старым uuid.
+  try{
+    if(opts&&opts.keepServer&&prev)localStorage.setItem('rz_last_user',JSON.stringify(prev));
+    else localStorage.setItem('rz_last_user',JSON.stringify({id:user.id,email:user.email||'',server:_serverId()}));
+  }catch(e){}
   // Показываем приложение сразу — облако загружается параллельно.
   // Если данные придут позже — _pullCloudIfStale и Realtime синхронизируют автоматически.
   showApp();updUI(user);loadAll();
   loadCloudData().then(()=>loadAll()); // применить облако и перерисовать когда придёт
+  if(bridged)queueCloudSave(); // перенесённая полка должна доехать до нового облака
   _maybeOnboard();
   // Realtime WebSocket — задержка 1.5с чтобы auth-сессия успела установиться
   setTimeout(_subscribeRealtime, 1500);
@@ -7083,7 +7167,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 
 // Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
 // Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
-const APP_BUILD='rz-v421';
+const APP_BUILD='rz-v422';
 
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
