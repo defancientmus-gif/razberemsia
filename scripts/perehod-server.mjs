@@ -69,7 +69,7 @@ function склад(начальные = {}) {
 }
 
 /** Песочница с настоящими initAuth/enterUser из app.js и заглушками вокруг. */
-function песочница({ store, online = true, session = null, tg = false } = {}) {
+function песочница({ store, online = true, session = null, tg = false, url = адрес } = {}) {
   const след = { показано: false, проверка: null, очередь: 0, ошибка: '', облако: false, tg: false };
   const элемент = { note: { style: {}, textContent: '' }, email: { value: '' } };
   const document = {
@@ -103,7 +103,7 @@ function песочница({ store, online = true, session = null, tg = false }
     return { initAuth, enterUser, _serverMoved, _bridgeAccount, _moveScope, _serverId, _lastUser, getCU: () => CU };
   `;
   const api = new Function('__store', '__online', '__document', '__window', '__sb', '__url', '__след', код)(
-    store, online, document, window, sb, адрес, след);
+    store, online, document, window, sb, url, след);
   return { api, след, элемент };
 }
 
@@ -123,15 +123,30 @@ function песочница({ store, online = true, session = null, tg = false }
     'метка текущего сервера → переезда нет (обычный офлайн-вход не ломаем)');
 }
 {
+  // Человек входил до этой сборки: метки нет, но в памяти остался ключ сессии
+  // ПРЕЖНЕГО адреса этого приложения, а база уже новая.
   const п = песочница({
     store: склад({
       rz_last_user: JSON.stringify({ id: 'u1', email: 'a@x' }),
-      // человек входил до этой сборки: метки нет, но сессия прежнего проекта в памяти есть
-      ['sb-oldproj-auth-token']: '{"access_token":"старый"}',
+      ['sb-' + ref + '-auth-token']: '{"access_token":"старый"}',
     }),
+    url: 'https://newproj.supabase.co',
   });
   проверка(п.api._serverMoved(п.api._lastUser()) === true,
-    'метки нет, но ключ сессии прежнего проекта → переезд всё равно замечен');
+    'метки нет, но ключ сессии прежнего адреса нашего приложения → переезд замечен');
+}
+{
+  // Ловушка живого дома: GitHub Pages делит localStorage со всеми сайтами аккаунта.
+  // Рядом живёт «БУ.шка» со своим Supabase — её ключ сессии НЕ наш переезд.
+  const п = песочница({
+    store: склад({
+      rz_last_user: JSON.stringify({ id: 'u1', email: 'a@x' }),
+      ['sb-vnylpvmhelzlxusvydab-auth-token']: '{"access_token":"соседний"}',
+    }),
+    url: 'https://newproj.supabase.co',
+  });
+  проверка(п.api._serverMoved(п.api._lastUser()) === false,
+    'ключ сессии ЧУЖОГО приложения на том же домене (БУ.шка) → не переезд');
 }
 {
   const п = песочница({

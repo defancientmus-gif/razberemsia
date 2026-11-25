@@ -674,6 +674,10 @@ function _clearLastUser(){try{localStorage.removeItem('rz_last_user');}catch(e){
 // человеку свой uuid, новый выдаст новый: заметки под старым ключом не пропадут, но
 // телефон покажет пусто. Поэтому в rz_last_user лежит метка сервера, а мост переносит
 // полку на новый ключ — и только если почта та же (чужой аккаунт на телефоне не заберёт).
+// Прежние адреса базы ЭТОГО приложения. Чужой Supabase на том же домене не считается:
+// GitHub Pages делит localStorage со всеми сайтами аккаунта (рядом живёт «БУ.шка»
+// со своим проектом), и её ключ сессии не должен выглядеть как наш переезд.
+const PREV_SERVER_REFS=['izvwgyudjbxlixzrgpuv'];
 function _serverId(){try{return new URL(SUPABASE_URL).host;}catch(e){return '';}}
 function _serverRef(){try{return new URL(SUPABASE_URL).hostname.split('.')[0];}catch(e){return '';}}
 function _serverMoved(cached){
@@ -687,7 +691,7 @@ function _serverMoved(cached){
     const ref=_serverRef();
     for(let i=0;i<localStorage.length;i++){
       const m=(localStorage.key(i)||'').match(/^sb-(.+)-auth-token$/);
-      if(m&&m[1]!==ref)return true;
+      if(m&&m[1]!==ref&&PREV_SERVER_REFS.indexOf(m[1])>=0)return true;
     }
   }catch(e){}
   return false;
@@ -7167,7 +7171,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 
 // Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
 // Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
-const APP_BUILD='rz-v422';
+const APP_BUILD='rz-v423';
 
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
