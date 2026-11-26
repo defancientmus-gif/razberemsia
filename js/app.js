@@ -589,7 +589,18 @@ async function saveCloudNow(){
     // ещё не долетели через pull (гонка между устройствами, БАГ: «не синхронится в обе стороны»).
     let notes=getNotes(),trash=getTrash();
     try{
-      const{data:cloud}=await sb.from('user_state').select('notes,trash').eq('user_id',CU.id).maybeSingle();
+      // Трафик (27.11, облако упиралось в 5 ГБ): сперва спрашиваем только updated_at.
+      // Если в облаке ровно наша прошлая запись — сверять нечего, всю строку не качаем.
+      // Сравнение — равенство моментов (Date.parse), а не «больше/меньше»: часы устройств
+      // могут расходиться, а равенство от этого не ломается. Любая чужая запись → полная сверка.
+      const syncedAt=_getLocalSyncedAt();
+      let needFull=true;
+      if(syncedAt){
+        const probe=await sb.from('user_state').select('updated_at').eq('user_id',CU.id).maybeSingle();
+        const pAt=probe.data?.updated_at;
+        if(!probe.error&&pAt&&Date.parse(pAt)===Date.parse(syncedAt))needFull=false;
+      }
+      const{data:cloud}=needFull?await sb.from('user_state').select('notes,trash').eq('user_id',CU.id).maybeSingle():{data:null};
       if(cloud){
         if(Array.isArray(cloud.notes))notes=_mergeNoteArrays(notes,cloud.notes);
         if(Array.isArray(cloud.trash))trash=_mergeTrashArrays(trash,cloud.trash);
@@ -2030,13 +2041,10 @@ function _subscribeRealtime(){
   _unsubscribeRealtime();
   clearTimeout(_realtimeRetryT);
   _realtimeChannel=sb.channel('rz_sync_'+CU.id)
-    // Канал 1: postgres_changes — пассивный, срабатывает при записи в БД
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_state',filter:'user_id=eq.'+CU.id},(payload)=>{
-      const cloudUpdatedAt=payload.new?.updated_at||'';
-      const localSyncedAt=_getLocalSyncedAt();
-      if(!localSyncedAt||cloudUpdatedAt>localSyncedAt){_lastPullAt=0;_pullCloudIfStale();}
-    })
-    // Канал 2: broadcast — активный, Device A сам сигналит при сохранении
+    // postgres_changes снят 27.11: он присылал КАЖДОМУ устройству (и самому сохранившему)
+    // всю строку с заметками и корзиной на каждое сохранение — лишний трафик облака.
+    // Будит то же самое broadcast ниже, страхует опрос updated_at раз в 8 с.
+    // Broadcast — активный, Device A сам сигналит при сохранении
     // Работает без postgres_changes миграции, мгновенно
     .on('broadcast',{event:'saved'},(payload)=>{
       const cloudUpdatedAt=payload?.payload?.at||'';
@@ -7171,7 +7179,7 @@ function _pushAgentHistory(userText,agentResponse,intent){
 
 // Версия, которая РАБОТАЕТ в этой странице. deploy.sh держит её равной CACHE в sw.js.
 // Раньше бейдж читал номер с сервера — Женя видел новый, а смотрел вчерашнее (25.08).
-const APP_BUILD='rz-v423';
+const APP_BUILD='rz-v424';
 
 function _syncAppVersionBadge(){
   const el=document.getElementById('app-version-badge');
